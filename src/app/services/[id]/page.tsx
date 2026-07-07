@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
-import { SEED_SERVICES } from "@/data/mocks/seed";
-import { useCartStore } from "@/lib/store";
+import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice } from "@/lib/utils/formatters";
 
 const MOCK_REVIEWS = [
@@ -26,7 +25,8 @@ export default function ServiceDetailPage() {
   const addItem = useCartStore((s) => s.addItem);
 
   const id = params.id as string;
-  const service = SEED_SERVICES.find((s) => s.id === id);
+  const services = usePrototypeStore((s) => s.services);
+  const service = services.find((s) => s.id === id);
 
   const [selectedVariantId, setSelectedVariantId] = useState(service?.variants?.[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);

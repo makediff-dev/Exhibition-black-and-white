@@ -45,25 +45,30 @@ export function FileUpload({
 
 export function StepIndicator({ steps, currentStep }: { steps: string[]; currentStep: number }) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2">
-      {steps.map((step, i) => (
-        <div key={step} className="flex items-center gap-2 shrink-0">
-          <div
-            className={cn(
-              "flex h-7 w-7 items-center justify-center text-xs font-medium border",
-              i < currentStep ? "bg-gray-900 text-white border-gray-900" :
-              i === currentStep ? "border-gray-900 text-gray-900" :
-              "border-gray-300 text-gray-400"
-            )}
-          >
-            {i + 1}
+    <div className="pb-2">
+      <p className="text-xs text-gray-600 mb-2 sm:hidden">
+        Шаг {currentStep + 1} из {steps.length}: {steps[currentStep]}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+        {steps.map((step, i) => (
+          <div key={step} className="flex items-center gap-2 shrink-0">
+            <div
+              className={cn(
+                "flex h-7 w-7 items-center justify-center text-xs font-medium border shrink-0",
+                i < currentStep ? "bg-gray-900 text-white border-gray-900" :
+                i === currentStep ? "border-gray-900 text-gray-900" :
+                "border-gray-300 text-gray-400"
+              )}
+            >
+              {i + 1}
+            </div>
+            <span className={cn("text-xs hidden sm:inline", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
+              {step}
+            </span>
+            {i < steps.length - 1 && <div className="hidden sm:block w-4 h-px bg-gray-300" />}
           </div>
-          <span className={cn("text-xs hidden sm:inline", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
-            {step}
-          </span>
-          {i < steps.length - 1 && <div className="w-4 h-px bg-gray-300" />}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

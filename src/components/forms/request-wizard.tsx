@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Info, MapPin, Star } from "lucide-react";
 import { TorConstructor } from "@/components/forms/tor-constructor";
 import { Button } from "@/components/ui/button";
 import { FileUpload, StepIndicator } from "@/components/ui/file-upload";
@@ -10,10 +10,11 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
 import { REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
-import type { Request, RequestFormat, TorSection } from "@/data/types";
+import type { Contractor, Request, RequestFormat, TorSection } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
@@ -22,7 +23,7 @@ const STEPS = [
   "Формат",
   "Категория",
   "Мероприятие",
-  "География",
+  "Регион и исполнители",
   "Описание",
   "Сроки",
   "Бюджет",
@@ -32,6 +33,20 @@ const STEPS = [
 ];
 
 const FORMATS: RequestFormat[] = ["open_request", "closed_request", "urgent", "safe_deal"];
+
+function quickCheck(contractor: Contractor) {
+  const ok = contractor.verified && contractor.rating >= 4.5;
+  return {
+    verdict: ok ? "Норм" : ("Требует внимания" as string),
+    ok,
+    checks: [
+      { label: "Верификация на платформе", ok: contractor.verified },
+      { label: "Рейтинг ≥ 4.5", ok: contractor.rating >= 4.5 },
+      { label: "Отзывы (≥ 5)", ok: contractor.reviewCount >= 5 },
+      { label: "Собственное производство", ok: contractor.hasProduction },
+    ],
+  };
+}
 
 export interface RequestWizardData {
   format: RequestFormat;
@@ -80,6 +95,7 @@ export function RequestWizard({ initialFormat, onPublished }: RequestWizardProps
   const { requestWizardDraft, setRequestWizardDraft } = usePrototypeStore();
   const { showToast } = useToast();
   const [step, setStep] = useState(0);
+  const [checkContractor, setCheckContractor] = useState<Contractor | null>(null);
   const [data, setData] = useState<RequestWizardData>(() => {
     const draft = requestWizardDraft as Partial<RequestWizardData>;
     if (draft && Object.keys(draft).length > 0) {
@@ -281,15 +297,25 @@ export function RequestWizard({ initialFormat, onPublished }: RequestWizardProps
             <div className="border border-gray-300 p-4 space-y-2">
               <p className="text-sm font-medium">Пригласить исполнителей</p>
               {SEED_CONTRACTORS.slice(0, 6).map((c) => (
-                <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={data.invitedContractorIds.includes(c.id)}
-                    onChange={() => toggleContractor(c.id)}
-                    className="border-gray-900"
-                  />
-                  {c.name} · {c.city}
-                </label>
+                <div key={c.id} className="flex items-center justify-between gap-2">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.invitedContractorIds.includes(c.id)}
+                      onChange={() => toggleContractor(c.id)}
+                      className="border-gray-900"
+                    />
+                    {c.name} · {c.city}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCheckContractor(c)}
+                    className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900 hover:underline shrink-0"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    Инфо и проверка
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -464,6 +490,83 @@ export function RequestWizard({ initialFormat, onPublished }: RequestWizardProps
           )}
         </div>
       </div>
+
+      <Modal
+        open={!!checkContractor}
+        onClose={() => setCheckContractor(null)}
+        title={checkContractor?.name ?? "Исполнитель"}
+        footer={
+          checkContractor ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => window.open(`/contractors/${checkContractor.id}`, "_blank")}
+              >
+                Открыть профиль
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!data.invitedContractorIds.includes(checkContractor.id)) {
+                    toggleContractor(checkContractor.id);
+                  }
+                  setCheckContractor(null);
+                }}
+              >
+                {data.invitedContractorIds.includes(checkContractor.id)
+                  ? "Уже приглашён"
+                  : "Пригласить"}
+              </Button>
+            </>
+          ) : null
+        }
+      >
+        {checkContractor &&
+          (() => {
+            const result = quickCheck(checkContractor);
+            return (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <span className="flex items-center gap-1 text-gray-700">
+                    <MapPin className="h-4 w-4" /> {checkContractor.city}
+                  </span>
+                  <span className="flex items-center gap-1 text-gray-700">
+                    <Star className="h-4 w-4" /> {checkContractor.rating} ({checkContractor.reviewCount})
+                  </span>
+                  {checkContractor.verified && <Badge>Верифицирован</Badge>}
+                </div>
+
+                <p className="text-sm text-gray-700">{checkContractor.description}</p>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {checkContractor.categories.map((cat) => (
+                    <Badge key={cat} variant="dashed">{cat}</Badge>
+                  ))}
+                </div>
+
+                <div className="border border-gray-900 p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium">Быстрая проверка</p>
+                    <Badge variant={result.ok ? "solid" : "outline"}>{result.verdict}</Badge>
+                  </div>
+                  <div className="divide-y divide-gray-200">
+                    {result.checks.map((chk) => (
+                      <div key={chk.label} className="flex justify-between items-center py-2 text-sm">
+                        <span className="text-gray-700">{chk.label}</span>
+                        <span className={chk.ok ? "text-gray-900 font-medium" : "text-gray-500"}>
+                          {chk.ok ? "✓ Да" : "✗ Нет"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-500 border border-dashed border-gray-300 p-2">
+                  Демо-проверка на основе данных платформы. Полный отчёт — на странице контрагента.
+                </p>
+              </div>
+            );
+          })()}
+      </Modal>
     </div>
   );
 }

@@ -6,7 +6,9 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { EstimateBuilder, calcEstimateTotal } from "@/components/forms/estimate-builder";
 import { AppShell } from "@/components/layout/app-shell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,13 +17,21 @@ import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { EstimateSection, Response } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
+import { formatPrice } from "@/lib/utils/formatters";
+
+const RESPONSE_STATUS_LABELS: Record<string, string> = {
+  pending: "На рассмотрении",
+  accepted: "Принят",
+  rejected: "Отклонён",
+  withdrawn: "Отозван",
+};
 
 export default function RespondPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
   const { user } = useAuthStore();
-  const { requests, responses, addResponse, updateRequest } = usePrototypeStore();
+  const { requests, responses, deals, addResponse, updateRequest } = usePrototypeStore();
   const { showToast } = useToast();
 
   const request = requests.find((r) => r.id === id);
@@ -67,20 +77,66 @@ export default function RespondPage() {
   );
 
   if (existing) {
+    const relatedDeal = deals.find(
+      (d) => d.requestId === id && d.contractorId === existing.contractorId
+    );
     return (
       <AppShell
-        title="Отклик отправлен"
+        title="Ваш отклик"
         breadcrumbs={[
           { label: "Заявки", href: "/requests" },
           { label: request.title, href: `/requests/${id}` },
         ]}
+        actions={
+          <>
+            <Link href={`/requests/${id}`}>
+              <Button size="sm" variant="outline">К заявке</Button>
+            </Link>
+            {relatedDeal && (
+              <Link href={`/deals/${relatedDeal.id}`}>
+                <Button size="sm">Открыть сделку</Button>
+              </Link>
+            )}
+          </>
+        }
       >
-        <EmptyState
-          title="Вы уже откликнулись"
-          description="Дождитесь решения заказчика"
-          actionLabel="К заявке"
-          onAction={() => router.push(`/requests/${id}`)}
-        />
+        <div className="space-y-4 max-w-2xl">
+          <Card>
+            <div className="flex justify-between items-start gap-3 flex-wrap mb-3">
+              <CardTitle>{formatPrice(existing.price)}</CardTitle>
+              <Badge variant="outline">
+                {RESPONSE_STATUS_LABELS[existing.status] ?? existing.status}
+              </Badge>
+            </div>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-gray-600">Срок</dt>
+                <dd>{existing.deadline}</dd>
+              </div>
+              {existing.terms && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-gray-600">Условия</dt>
+                  <dd className="text-right">{existing.terms}</dd>
+                </div>
+              )}
+            </dl>
+            {existing.approach && (
+              <div className="mt-4">
+                <p className="text-sm font-medium">Подход к работе</p>
+                <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{existing.approach}</p>
+              </div>
+            )}
+            {existing.comment && (
+              <div className="mt-4">
+                <p className="text-sm font-medium">Комментарий</p>
+                <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{existing.comment}</p>
+              </div>
+            )}
+          </Card>
+          {existing.status === "pending" && (
+            <p className="text-sm text-gray-600">Дождитесь решения заказчика.</p>
+          )}
+        </div>
       </AppShell>
     );
   }

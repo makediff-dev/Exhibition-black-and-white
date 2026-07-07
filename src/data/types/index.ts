@@ -214,6 +214,7 @@ export interface Document {
   date: string;
   parties: string;
   status: "draft" | "sent" | "signed" | "archived";
+  direction?: "incoming" | "outgoing";
 }
 
 export interface Payment {

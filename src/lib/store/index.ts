@@ -15,6 +15,7 @@ import type {
   Payment,
   Request,
   Response,
+  Service,
   UserRole,
 } from "@/data/types";
 import { DEMO_USERS, getSeedData } from "@/data/mocks/seed";
@@ -23,10 +24,13 @@ interface AuthState {
   isAuthenticated: boolean;
   user: CompanyProfile | null;
   showEdoPrompt: boolean;
+  pinLoginEnabled: boolean;
+  pinCode: string | null;
   login: (role: UserRole) => void;
   logout: () => void;
   updateUser: (updates: Partial<CompanyProfile>) => void;
   setShowEdoPrompt: (show: boolean) => void;
+  setPinLoginSettings: (enabled: boolean, pin?: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -35,6 +39,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       user: null,
       showEdoPrompt: false,
+      pinLoginEnabled: false,
+      pinCode: null,
       login: (role) => {
         if (!role) return;
         const user = DEMO_USERS[role];
@@ -44,12 +50,22 @@ export const useAuthStore = create<AuthState>()(
           showEdoPrompt: user.edoStatus === "not_connected",
         });
       },
-      logout: () => set({ isAuthenticated: false, user: null, showEdoPrompt: false }),
+      logout: () =>
+        set({
+          isAuthenticated: false,
+          user: null,
+          showEdoPrompt: false,
+        }),
       updateUser: (updates) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         })),
       setShowEdoPrompt: (show) => set({ showEdoPrompt: show }),
+      setPinLoginSettings: (enabled, pin) =>
+        set({
+          pinLoginEnabled: enabled,
+          pinCode: enabled && pin ? pin : null,
+        }),
     }),
     { name: "auth-storage" }
   )
@@ -96,6 +112,7 @@ export const useCartStore = create<CartState>()(
 );
 
 interface PrototypeState {
+  services: Service[];
   requests: Request[];
   responses: Response[];
   deals: Deal[];
@@ -111,6 +128,9 @@ interface PrototypeState {
   registrationDraft: Record<string, unknown>;
   requestWizardDraft: Record<string, unknown>;
 
+  addService: (service: Service) => void;
+  updateService: (id: string, updates: Partial<Service>) => void;
+  removeService: (id: string) => void;
   addRequest: (request: Request) => void;
   updateRequest: (id: string, updates: Partial<Request>) => void;
   addResponse: (response: Response) => void;
@@ -138,6 +158,7 @@ const seed = getSeedData();
 export const usePrototypeStore = create<PrototypeState>()(
   persist(
     (set, get) => ({
+      services: seed.services,
       requests: seed.requests,
       responses: seed.responses,
       deals: seed.deals,
@@ -153,6 +174,13 @@ export const usePrototypeStore = create<PrototypeState>()(
       registrationDraft: {},
       requestWizardDraft: {},
 
+      addService: (service) => set((s) => ({ services: [service, ...s.services] })),
+      updateService: (id, updates) =>
+        set((s) => ({
+          services: s.services.map((sv) => (sv.id === id ? { ...sv, ...updates } : sv)),
+        })),
+      removeService: (id) =>
+        set((s) => ({ services: s.services.filter((sv) => sv.id !== id) })),
       addRequest: (request) => set((s) => ({ requests: [...s.requests, request] })),
       updateRequest: (id, updates) =>
         set((s) => ({
@@ -235,6 +263,7 @@ export const usePrototypeStore = create<PrototypeState>()(
       resetToSeed: () => {
         const fresh = getSeedData();
         set({
+          services: fresh.services,
           requests: fresh.requests,
           responses: fresh.responses,
           deals: fresh.deals,

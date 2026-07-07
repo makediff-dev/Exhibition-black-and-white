@@ -8,9 +8,7 @@ export const CUSTOMER_NAV: NavItem[] = [
   { slug: "", href: "/account/customer", label: "Дашборд" },
   { slug: "profile", href: "/account/customer/profile", label: "Профиль компании" },
   { slug: "legal", href: "/account/customer/legal", label: "Юридические и платёжные данные" },
-  { slug: "edo", href: "/account/customer/edo", label: "ЭДО" },
-  { slug: "reminders", href: "/account/customer/reminders", label: "Напоминания о входящих" },
-  { slug: "closing-docs", href: "/account/customer/closing-docs", label: "Запрос закрывающих" },
+  { slug: "edo", href: "/account/customer/edo", label: "ЭДО и документооборот" },
   { slug: "requests", href: "/account/customer/requests", label: "Мои заявки" },
   { slug: "cart", href: "/account/customer/cart", label: "Корзина / заказы из каталога" },
   { slug: "responses", href: "/account/customer/responses", label: "Отклики и предложения" },
@@ -54,7 +52,6 @@ export const VENUE_NAV: NavItem[] = [
   { slug: "orders", href: "/account/venue/orders", label: "Заказы" },
   { slug: "payments", href: "/account/venue/payments", label: "Оплаты и начисления" },
   { slug: "documents", href: "/account/venue/documents", label: "Документы" },
-  { slug: "notifications", href: "/account/venue/notifications", label: "Уведомления" },
   { slug: "settings", href: "/account/venue/settings", label: "Настройки" },
 ];
 
@@ -71,7 +68,6 @@ export const ORGANIZER_NAV: NavItem[] = [
   { slug: "orders", href: "/account/organizer/orders", label: "Заказы" },
   { slug: "payments", href: "/account/organizer/payments", label: "Оплаты" },
   { slug: "documents", href: "/account/organizer/documents", label: "Документы" },
-  { slug: "notifications", href: "/account/organizer/notifications", label: "Уведомления" },
   { slug: "settings", href: "/account/organizer/settings", label: "Настройки" },
 ];
 

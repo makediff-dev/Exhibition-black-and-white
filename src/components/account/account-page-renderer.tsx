@@ -14,22 +14,79 @@ import { EmptyState } from "@/components/ui/states";
 import { Modal } from "@/components/ui/modal";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FloorPlanGrid } from "@/components/catalog/floor-plan-grid";
+import { PinLoginSettings } from "@/components/account/pin-login-settings";
+import { PaymentsPanel } from "@/components/finance/payments-panel";
+import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { getNavForRole } from "@/constants/nav-menus";
-import { SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
+import { SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
 import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { matchOkved, getOkvedRecommendationReason } from "@/lib/utils/okved";
 import { DEAL_STATUS_LABELS, REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { SERVICE_CATEGORIES, CITIES } from "@/constants/categories";
-import type { UserRole } from "@/data/types";
+import type { CompanyProfile, UserRole } from "@/data/types";
 import {
-  AlertCircle, CheckCircle, Clock, FileText, Plus, Star,
+  AlertCircle, Building2, CheckCircle, Clock, FileText, Hash, MapPin, Plus, ShieldCheck, Star, User,
 } from "lucide-react";
 
 interface Props {
   role: UserRole;
   slug: string;
+}
+
+function CompanyRequisites({ user }: { user: CompanyProfile }) {
+  const rows: { icon: typeof Building2; label: string; value: string }[] = [
+    { icon: Building2, label: "Полное наименование", value: user.name },
+    { icon: Hash, label: "ИНН", value: user.inn },
+    { icon: Hash, label: "ОГРН", value: user.ogrn },
+    { icon: MapPin, label: "Юридический адрес", value: user.address },
+    { icon: User, label: "Генеральный директор", value: user.director },
+    { icon: FileText, label: "Основной ОКВЭД", value: user.mainOkved },
+  ];
+
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+        <div>
+          <p className="text-lg font-semibold">{user.name}</p>
+          <p className="text-sm text-gray-600">{user.description}</p>
+        </div>
+        {user.verified && (
+          <Badge className="shrink-0"><ShieldCheck className="h-3.5 w-3.5" /> Верифицирована</Badge>
+        )}
+      </div>
+
+      <dl className="divide-y divide-gray-200 border-t border-gray-200">
+        {rows.map((r) => (
+          <div key={r.label} className="flex justify-between items-start gap-4 py-2.5 text-sm">
+            <dt className="flex items-center gap-2 text-gray-600 shrink-0">
+              <r.icon className="h-4 w-4" /> {r.label}
+            </dt>
+            <dd className="text-right font-medium">{r.value}</dd>
+          </div>
+        ))}
+        {user.additionalOkved.length > 0 && (
+          <div className="flex justify-between items-start gap-4 py-2.5 text-sm">
+            <dt className="flex items-center gap-2 text-gray-600 shrink-0">
+              <FileText className="h-4 w-4" /> Доп. ОКВЭД
+            </dt>
+            <dd className="text-right">
+              <div className="flex flex-wrap gap-1.5 justify-end">
+                {user.additionalOkved.map((okved) => (
+                  <Badge key={okved} variant="dashed">{okved}</Badge>
+                ))}
+              </div>
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <p className="text-xs text-gray-500 border border-dashed border-gray-300 p-2 mt-4">
+        Реквизиты загружены из ЕГРЮЛ по ИНН и подтверждены при регистрации.
+      </p>
+    </Card>
+  );
 }
 
 export function AccountPageRenderer({ role, slug }: Props) {
@@ -77,6 +134,7 @@ function CustomerPages({ slug }: { slug: string }) {
   const { showToast } = useToast();
   const router = useRouter();
   const [edoModal, setEdoModal] = useState(showEdoPrompt);
+  const [edoTab, setEdoTab] = useState("connection");
 
   const recommendedEvents = SEED_EVENTS.filter((e) => user && matchOkved(user.mainOkved, e.okvedTags));
 
@@ -151,48 +209,61 @@ function CustomerPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "edo") {
+  if (slug === "edo" || slug === "reminders" || slug === "closing-docs") {
+    const currentTab =
+      slug === "reminders" ? "reminders" : slug === "closing-docs" ? "closing" : edoTab;
+    const pendingDocs = documents.filter((d) => d.status === "sent");
     return (
-      <Card>
-        {user?.edoStatus === "connected" ? (
-          <div className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4" /> ЭДО подключено</div>
-        ) : (
-          <div className="space-y-4 max-w-lg">
-            <div className="flex items-center gap-2 text-sm border border-dashed border-gray-400 p-3">
-              <AlertCircle className="h-4 w-4" /> ЭДО не подключено. Документы можно скачать временно.
-            </div>
-            <Select label="Оператор ЭДО" options={[{ value: "sbis", label: "СБИС" }, { value: "kontur", label: "Контур" }, { value: "tensor", label: "Тензор" }]} />
-            <Input label="Идентификатор участника" placeholder="2BM-..." />
-            <Button onClick={() => { updateUser({ edoStatus: "connected" }); showToast("ЭДО подключено"); }}>Проверить и подключить</Button>
-          </div>
+      <div className="max-w-2xl space-y-4">
+        <Tabs
+          tabs={[
+            { id: "connection", label: "Подключение ЭДО" },
+            { id: "reminders", label: `Напоминания${pendingDocs.length ? ` (${pendingDocs.length})` : ""}` },
+            { id: "closing", label: "Запрос закрывающих" },
+          ]}
+          activeTab={currentTab}
+          onChange={setEdoTab}
+        />
+
+        {currentTab === "connection" && (
+          <Card>
+            {user?.edoStatus === "connected" ? (
+              <div className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4" /> ЭДО подключено</div>
+            ) : (
+              <div className="space-y-4 max-w-lg">
+                <div className="flex items-center gap-2 text-sm border border-dashed border-gray-400 p-3">
+                  <AlertCircle className="h-4 w-4" /> ЭДО не подключено. Документы можно скачать временно.
+                </div>
+                <Select label="Оператор ЭДО" options={[{ value: "sbis", label: "СБИС" }, { value: "kontur", label: "Контур" }, { value: "tensor", label: "Тензор" }]} />
+                <Input label="Идентификатор участника" placeholder="2BM-..." />
+                <Button onClick={() => { updateUser({ edoStatus: "connected" }); showToast("ЭДО подключено"); }}>Проверить и подключить</Button>
+              </div>
+            )}
+          </Card>
         )}
-      </Card>
-    );
-  }
 
-  if (slug === "reminders") {
-    return (
-      <Card>
-        <p className="text-sm text-gray-600 mb-4">Напоминания о входящих документах и сроках.</p>
-        {documents.filter((d) => d.status === "sent").map((d) => (
-          <div key={d.id} className="flex justify-between py-2 border-b text-sm">
-            <span>{d.type} {d.number}</span>
-            <Badge variant="dashed"><Clock className="h-3 w-3" /> Ожидает подписи</Badge>
-          </div>
-        ))}
-        {documents.filter((d) => d.status === "sent").length === 0 && <EmptyState title="Нет напоминаний" />}
-      </Card>
-    );
-  }
+        {currentTab === "reminders" && (
+          <Card>
+            <p className="text-sm text-gray-600 mb-4">Напоминания о входящих документах и сроках.</p>
+            {pendingDocs.map((d) => (
+              <div key={d.id} className="flex justify-between py-2 border-b text-sm">
+                <span>{d.type} {d.number}</span>
+                <Badge variant="dashed"><Clock className="h-3 w-3" /> Ожидает подписи</Badge>
+              </div>
+            ))}
+            {pendingDocs.length === 0 && <EmptyState title="Нет напоминаний" />}
+          </Card>
+        )}
 
-  if (slug === "closing-docs") {
-    return (
-      <Card>
-        <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
-        <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
-        <Textarea label="Комментарий" className="mt-3" />
-        <Button className="mt-3" onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
-      </Card>
+        {currentTab === "closing" && (
+          <Card>
+            <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
+            <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
+            <Textarea label="Комментарий" className="mt-3" />
+            <Button className="mt-3" onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
+          </Card>
+        )}
+      </div>
     );
   }
 
@@ -252,13 +323,21 @@ function CustomerPages({ slug }: { slug: string }) {
 
   if (slug === "completed-projects") {
     const completed = deals.filter((d) => d.customerId === user?.id && d.status === "completed");
+    if (completed.length === 0) {
+      return <EmptyState title="Нет завершённых проектов" description="Здесь появятся проекты после завершения сделок" />;
+    }
     return (
       <div className="space-y-3">
         {completed.map((d) => (
-          <Card key={d.id}>
-            <CardTitle>{d.title}</CardTitle>
-            <CardDescription>{d.contractorName} · {formatPrice(d.totalPrice)} · Завершена</CardDescription>
-          </Card>
+          <Link key={d.id} href={`/deals/${d.id}`}>
+            <Card className="hover:border-gray-900 transition-colors">
+              <div className="flex justify-between items-start gap-3 flex-wrap">
+                <CardTitle>{d.title}</CardTitle>
+                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
+              </div>
+              <CardDescription>{d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}</CardDescription>
+            </Card>
+          </Link>
         ))}
       </div>
     );
@@ -289,8 +368,8 @@ function CustomerPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "payments") return <Link href="/payments"><Button>Перейти к оплатам</Button></Link>;
-  if (slug === "documents") return <Link href="/documents"><Button>Перейти к документам</Button></Link>;
+  if (slug === "payments") return <PaymentsPanel />;
+  if (slug === "documents") return <DocumentsPanel />;
 
   if (slug === "reviews") {
     return (
@@ -310,6 +389,7 @@ function CustomerPages({ slug }: { slug: string }) {
         <Input label="Email уведомлений" defaultValue="demo@example.ru" />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Email-уведомления</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Push-уведомления</label>
+        <PinLoginSettings />
         <Button onClick={() => showToast("Настройки сохранены")}>Сохранить</Button>
       </Card>
     );
@@ -320,10 +400,64 @@ function CustomerPages({ slug }: { slug: string }) {
 
 function ContractorPages({ slug }: { slug: string }) {
   const user = useAuthStore((s) => s.user);
-  const { requests, deals, responses } = usePrototypeStore();
+  const { requests, deals, responses, services, addService, removeService } = usePrototypeStore();
   const { showToast } = useToast();
   const router = useRouter();
   const [ganttView, setGanttView] = useState("list");
+  const [reviewModal, setReviewModal] = useState<{ id: string; author: string; rating: number; text: string; date: string } | null>(null);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  const [serviceForm, setServiceForm] = useState({
+    title: "",
+    category: SERVICE_CATEGORIES[0],
+    city: CITIES[0],
+    price: "",
+    priceFormat: "фиксированная",
+    deadline: "",
+    description: "",
+    terms: "",
+  });
+  const [serviceErrors, setServiceErrors] = useState<Record<string, string>>({});
+
+  const resetServiceForm = () =>
+    setServiceForm({
+      title: "",
+      category: SERVICE_CATEGORIES[0],
+      city: CITIES[0],
+      price: "",
+      priceFormat: "фиксированная",
+      deadline: "",
+      description: "",
+      terms: "",
+    });
+
+  const handleAddService = () => {
+    const errs: Record<string, string> = {};
+    if (!serviceForm.title.trim()) errs.title = "Укажите название услуги";
+    if (!serviceForm.price || Number(serviceForm.price) <= 0) errs.price = "Укажите корректную цену";
+    if (!serviceForm.deadline.trim()) errs.deadline = "Укажите сроки";
+    setServiceErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    addService({
+      id: `svc-${Date.now()}`,
+      title: serviceForm.title.trim(),
+      city: serviceForm.city,
+      contractorId: user?.id || "user-contractor",
+      contractorName: user?.name || "Исполнитель",
+      category: serviceForm.category,
+      price: Number(serviceForm.price),
+      priceFormat: serviceForm.priceFormat,
+      description: serviceForm.description.trim(),
+      terms: serviceForm.terms.trim(),
+      deadline: serviceForm.deadline.trim(),
+      rating: 0,
+      reviewCount: 0,
+    });
+    showToast("Услуга добавлена");
+    resetServiceForm();
+    setServiceErrors({});
+    setServiceModalOpen(false);
+  };
 
   if (slug === "" || slug === "dashboard") {
     return (
@@ -352,11 +486,15 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "profile") {
     return (
-      <Card className="max-w-lg space-y-4">
-        <Input label="Название" defaultValue={user?.name} />
-        <Textarea label="Описание" defaultValue={user?.description} />
-        <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
+      <div className="max-w-2xl space-y-4">
+        {user && <CompanyRequisites user={user} />}
+        <Card className="space-y-4">
+          <p className="text-sm font-medium">Публичная информация</p>
+          <Input label="Отображаемое название" defaultValue={user?.name} />
+          <Textarea label="Описание компании" defaultValue={user?.description} />
+          <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
+        </Card>
+      </div>
     );
   }
 
@@ -386,15 +524,125 @@ function ContractorPages({ slug }: { slug: string }) {
   }
 
   if (slug === "services") {
-    const myServices = SEED_SERVICES.filter((s) => s.contractorName === user?.name);
+    const myServices = services.filter((s) => s.contractorId === user?.id || s.contractorName === user?.name);
     return (
       <div>
-        <Button size="sm" className="mb-4"><Plus className="h-4 w-4" /> Добавить услугу</Button>
-        <div className="space-y-3">
-          {myServices.map((s) => (
-            <Card key={s.id}><CardTitle>{s.title}</CardTitle><CardDescription>{formatPrice(s.price)} · {s.city}</CardDescription></Card>
-          ))}
-        </div>
+        <Button size="sm" className="mb-4" onClick={() => setServiceModalOpen(true)}>
+          <Plus className="h-4 w-4" /> Добавить услугу
+        </Button>
+        {myServices.length === 0 ? (
+          <EmptyState
+            title="Услуги не добавлены"
+            description="Добавьте первую услугу, чтобы получать заказы"
+            actionLabel="Добавить услугу"
+            onAction={() => setServiceModalOpen(true)}
+          />
+        ) : (
+          <div className="space-y-3">
+            {myServices.map((s) => (
+              <Card key={s.id}>
+                <div className="flex justify-between items-start gap-3">
+                  <div>
+                    <CardTitle>{s.title}</CardTitle>
+                    <CardDescription>
+                      {formatPrice(s.price)} · {s.city} · {s.category}
+                    </CardDescription>
+                    {s.deadline && <p className="text-xs text-gray-500 mt-1">Сроки: {s.deadline}</p>}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Link href={`/services/${s.id}`}>
+                      <Button size="sm" variant="ghost">Открыть</Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        removeService(s.id);
+                        showToast("Услуга удалена", "info");
+                      }}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <Modal
+          open={serviceModalOpen}
+          onClose={() => setServiceModalOpen(false)}
+          title="Добавить услугу"
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setServiceModalOpen(false)}>Отмена</Button>
+              <Button onClick={handleAddService}>Добавить</Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <Input
+              label="Название услуги"
+              value={serviceForm.title}
+              onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
+              error={serviceErrors.title}
+              placeholder="Например: Дизайн-проект стенда"
+            />
+            <Select
+              label="Категория"
+              options={SERVICE_CATEGORIES.map((c) => ({ value: c, label: c }))}
+              value={serviceForm.category}
+              onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
+            />
+            <Select
+              label="Город"
+              options={CITIES.map((c) => ({ value: c, label: c }))}
+              value={serviceForm.city}
+              onChange={(e) => setServiceForm({ ...serviceForm, city: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Цена, ₽"
+                type="number"
+                value={serviceForm.price}
+                onChange={(e) => setServiceForm({ ...serviceForm, price: e.target.value })}
+                error={serviceErrors.price}
+                placeholder="0"
+              />
+              <Select
+                label="Формат цены"
+                options={[
+                  { value: "фиксированная", label: "Фиксированная" },
+                  { value: "от", label: "От" },
+                  { value: "за день", label: "За день" },
+                  { value: "за комплект", label: "За комплект" },
+                ]}
+                value={serviceForm.priceFormat}
+                onChange={(e) => setServiceForm({ ...serviceForm, priceFormat: e.target.value })}
+              />
+            </div>
+            <Input
+              label="Сроки"
+              value={serviceForm.deadline}
+              onChange={(e) => setServiceForm({ ...serviceForm, deadline: e.target.value })}
+              error={serviceErrors.deadline}
+              placeholder="Например: 10 рабочих дней"
+            />
+            <Textarea
+              label="Описание"
+              value={serviceForm.description}
+              onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+              placeholder="Что входит в услугу"
+            />
+            <Textarea
+              label="Условия"
+              value={serviceForm.terms}
+              onChange={(e) => setServiceForm({ ...serviceForm, terms: e.target.value })}
+              placeholder="Например: предоплата 50%"
+            />
+          </div>
+        </Modal>
       </div>
     );
   }
@@ -438,25 +686,76 @@ function ContractorPages({ slug }: { slug: string }) {
   }
 
   if (slug === "my-responses") {
-    const myResponses = responses.filter((r) => r.contractorName === user?.name);
+    const myResponses = responses.filter(
+      (r) => r.contractorId === "ctr-1" || r.contractorName === user?.name
+    );
+    const responseStatusLabels: Record<string, string> = {
+      pending: "На рассмотрении",
+      accepted: "Принят",
+      rejected: "Отклонён",
+      withdrawn: "Отозван",
+    };
+    if (myResponses.length === 0) {
+      return (
+        <EmptyState
+          title="Откликов пока нет"
+          description="Откликнитесь на доступные заявки, чтобы получить заказы"
+          actionLabel="Доступные заявки"
+          onAction={() => router.push("/account/contractor/available-requests")}
+        />
+      );
+    }
     return (
       <div className="space-y-3">
-        {myResponses.map((r) => (
-          <Card key={r.id}>
-            <CardTitle>{formatPrice(r.price)}</CardTitle>
-            <CardDescription>Статус: {r.status} · {r.deadline}</CardDescription>
-          </Card>
-        ))}
+        {myResponses.map((r) => {
+          const req = requests.find((rq) => rq.id === r.requestId);
+          return (
+            <Link key={r.id} href={`/requests/${r.requestId}/respond`}>
+              <Card className="hover:border-gray-900 transition-colors">
+                <div className="flex justify-between items-start gap-3 flex-wrap">
+                  <div>
+                    <CardTitle>{req?.title ?? "Заявка"}</CardTitle>
+                    <CardDescription>
+                      {formatPrice(r.price)} · {r.deadline} · Статус: {responseStatusLabels[r.status] ?? r.status}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline">{responseStatusLabels[r.status] ?? r.status}</Badge>
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     );
   }
 
   if (slug === "active-projects" || slug === "completed-projects") {
-    const filtered = deals.filter((d) => d.contractorId === "ctr-1" && (slug === "completed-projects" ? d.status === "completed" : d.status !== "completed"));
+    const isCompleted = slug === "completed-projects";
+    const filtered = deals.filter((d) => d.contractorId === "ctr-1" && (isCompleted ? d.status === "completed" : d.status !== "completed"));
+    if (filtered.length === 0) {
+      return (
+        <EmptyState
+          title={isCompleted ? "Завершённых проектов пока нет" : "Активных проектов пока нет"}
+          description={isCompleted ? "Здесь появятся проекты после завершения сделок" : "Откликайтесь на заявки, чтобы начать проекты"}
+          actionLabel={isCompleted ? "Активные проекты" : "Доступные заявки"}
+          onAction={() => router.push(isCompleted ? "/account/contractor/active-projects" : "/account/contractor/available-requests")}
+        />
+      );
+    }
     return (
       <div className="space-y-3">
         {filtered.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`}><Card className="hover:border-gray-900"><CardTitle>{d.title}</CardTitle><Badge>{DEAL_STATUS_LABELS[d.status]}</Badge></Card></Link>
+          <Link key={d.id} href={`/deals/${d.id}`}>
+            <Card className="hover:border-gray-900 transition-colors">
+              <div className="flex justify-between items-start gap-3 flex-wrap">
+                <div>
+                  <CardTitle>{d.title}</CardTitle>
+                  <CardDescription>{d.number} · {formatPrice(d.totalPrice)}</CardDescription>
+                </div>
+                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
+              </div>
+            </Card>
+          </Link>
         ))}
       </div>
     );
@@ -509,19 +808,76 @@ function ContractorPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "payouts") return <Link href="/payments"><Button>Перейти к выплатам</Button></Link>;
-  if (slug === "documents") return <Link href="/documents"><Button>Документы</Button></Link>;
+  if (slug === "payouts") return <PaymentsPanel defaultTab="payouts" />;
+  if (slug === "documents") return <DocumentsPanel />;
 
   if (slug === "reviews") {
+    const contractor = SEED_CONTRACTORS.find((c) => c.id === "ctr-1" || c.name === user?.name);
+    const reviews = contractor?.reviews ?? [];
     return (
-      <Card>
-        <p className="text-2xl font-bold">{user?.rating}</p>
-        <p className="text-sm text-gray-600">{user?.reviewCount} отзывов</p>
-        <div className="mt-4 border-t pt-4">
-          <p className="text-sm font-medium">ООО «Вымышленная Мебель»</p>
-          <p className="text-sm text-gray-600">Отличная работа, всё в срок</p>
-        </div>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <div className="flex items-baseline gap-3">
+            <p className="text-3xl font-bold flex items-center gap-1">
+              <Star className="h-6 w-6" /> {user?.rating ?? contractor?.rating}
+            </p>
+            <p className="text-sm text-gray-600">{user?.reviewCount ?? contractor?.reviewCount} отзывов</p>
+          </div>
+        </Card>
+
+        {reviews.length === 0 ? (
+          <EmptyState title="Отзывов пока нет" description="Отзывы появятся после завершённых сделок" />
+        ) : (
+          <div className="space-y-3">
+            {reviews.map((rv) => (
+              <button
+                key={rv.id}
+                type="button"
+                onClick={() => setReviewModal(rv)}
+                className="w-full text-left"
+              >
+                <Card className="hover:border-gray-900 transition-colors">
+                  <div className="flex justify-between items-start gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{rv.author}</p>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{rv.text}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-sm shrink-0">
+                      <Star className="h-4 w-4" /> {rv.rating}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">{formatShortDate(rv.date)}</p>
+                </Card>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <Modal
+          open={!!reviewModal}
+          onClose={() => setReviewModal(null)}
+          title={reviewModal?.author ?? "Отзыв"}
+          footer={<Button variant="outline" onClick={() => setReviewModal(null)}>Закрыть</Button>}
+        >
+          {reviewModal && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-sm">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${i < reviewModal.rating ? "fill-gray-900 text-gray-900" : "text-gray-300"}`}
+                    />
+                  ))}
+                  <span className="ml-1 font-medium">{reviewModal.rating}.0</span>
+                </div>
+                <span className="text-xs text-gray-500">{formatShortDate(reviewModal.date)}</span>
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{reviewModal.text}</p>
+            </div>
+          )}
+        </Modal>
+      </div>
     );
   }
 
@@ -529,6 +885,7 @@ function ContractorPages({ slug }: { slug: string }) {
     return (
       <Card className="max-w-lg space-y-4">
         <Input label="Email" defaultValue="contractor@example.ru" />
+        <PinLoginSettings />
         <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
       </Card>
     );
@@ -582,13 +939,54 @@ function VenuePages({ slug }: { slug: string }) {
   }
 
   if (slug === "spaces") {
+    const total = floorCells.length;
+    const booked = floorCells.filter((c) => c.status === "booked").length;
+    const unavailable = floorCells.filter((c) => c.status === "unavailable").length;
+    const free = total - booked - unavailable;
+    const areaPerCell = 12;
+    const occupancy = total > 0 ? Math.round((booked / total) * 100) : 0;
+
+    const blocks = [
+      { name: "Павильон 1 — партер", area: 5000, price: 4500, status: "Открыто" },
+      { name: "Павильон 2 — второй этаж", area: 3000, price: 3800, status: "Открыто" },
+      { name: "Уличная экспозиция", area: 1500, price: 2200, status: "Закрыто" },
+    ];
+
     return (
-      <Card>
-        <p className="text-sm mb-4">Управление доступными площадями и периодами.</p>
-        <Input label="Период доступности" defaultValue="01.03.2026 — 18.03.2026" />
-        <label className="flex items-center gap-2 text-sm mt-3"><input type="checkbox" defaultChecked /> Открыто для бронирования</label>
-        <Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
+      <div className="space-y-4 max-w-3xl">
+        <p className="text-sm text-gray-600">
+          Управление продаваемой площадью: сколько кв.м доступно к бронированию, по какой цене и в какой период.
+          Это ваш «склад» площадей — в отличие от «Схемы размещения», где вы работаете с конкретными местами на плане.
+        </p>
+
+        <div className="grid sm:grid-cols-3 gap-3">
+          <Card><CardDescription>Всего мест</CardDescription><CardTitle className="mt-1">{total} · {total * areaPerCell} кв.м</CardTitle></Card>
+          <Card><CardDescription>Свободно</CardDescription><CardTitle className="mt-1">{free} · {free * areaPerCell} кв.м</CardTitle></Card>
+          <Card><CardDescription>Загрузка</CardDescription><CardTitle className="mt-1">{occupancy}%</CardTitle></Card>
+        </div>
+
+        <Card className="space-y-3">
+          <p className="text-sm font-medium">Блоки площадей</p>
+          <div className="divide-y divide-gray-200">
+            {blocks.map((b) => (
+              <div key={b.name} className="flex justify-between items-center gap-3 py-2.5 text-sm flex-wrap">
+                <div>
+                  <p className="font-medium">{b.name}</p>
+                  <p className="text-gray-600">{b.area} кв.м · {formatPrice(b.price)}/кв.м</p>
+                </div>
+                <Badge variant={b.status === "Открыто" ? "solid" : "outline"}>{b.status}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="space-y-3">
+          <p className="text-sm font-medium">Период доступности</p>
+          <Input label="Период бронирования" defaultValue="01.03.2026 — 18.03.2026" />
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Открыто для бронирования</label>
+          <Button size="sm" onClick={() => showToast("Настройки площадей сохранены")}>Сохранить</Button>
+        </Card>
+      </div>
     );
   }
 
@@ -660,12 +1058,18 @@ function VenuePages({ slug }: { slug: string }) {
     return <Link href="/deals/deal-1"><Button>Заказы площадки</Button></Link>;
   }
 
-  if (slug === "payments") return <Link href="/payments"><Button>Оплаты и начисления</Button></Link>;
-  if (slug === "documents") return <Link href="/documents"><Button>Документы</Button></Link>;
+  if (slug === "payments") return <PaymentsPanel />;
+  if (slug === "documents") return <DocumentsPanel />;
   if (slug === "notifications") return <Link href="/notifications"><Button>Уведомления</Button></Link>;
 
   if (slug === "settings") {
-    return <Card className="max-w-lg"><Input label="Email" defaultValue="venue@example.ru" /><Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button></Card>;
+    return (
+      <Card className="max-w-lg space-y-4">
+        <Input label="Email" defaultValue="venue@example.ru" />
+        <PinLoginSettings />
+        <Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button>
+      </Card>
+    );
   }
 
   return <EmptyState title="Раздел не найден" />;
@@ -804,12 +1208,18 @@ function OrganizerPages({ slug }: { slug: string }) {
   }
 
   if (slug === "orders") return <Link href="/deals/deal-1"><Button>Заказы</Button></Link>;
-  if (slug === "payments") return <Link href="/payments"><Button>Оплаты</Button></Link>;
-  if (slug === "documents") return <Link href="/documents"><Button>Документы</Button></Link>;
+  if (slug === "payments") return <PaymentsPanel />;
+  if (slug === "documents") return <DocumentsPanel />;
   if (slug === "notifications") return <Link href="/notifications"><Button>Уведомления</Button></Link>;
 
   if (slug === "settings") {
-    return <Card className="max-w-lg"><Input label="Email" defaultValue="organizer@example.ru" /><Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button></Card>;
+    return (
+      <Card className="max-w-lg space-y-4">
+        <Input label="Email" defaultValue="organizer@example.ru" />
+        <PinLoginSettings />
+        <Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button>
+      </Card>
+    );
   }
 
   return <EmptyState title="Раздел не найден" />;

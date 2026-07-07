@@ -7,7 +7,6 @@ import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs } from "@/components/ui/tabs";
 import { useAuthStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { validateEmail, validatePhone, validateRequired } from "@/lib/utils/validators";
@@ -21,10 +20,8 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login);
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState("password");
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
-  const [pin, setPin] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -42,25 +39,13 @@ export default function LoginPage() {
     return validatePhone(trimmed);
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const nextErrors: Record<string, string> = {};
     const loginError = validateLoginId(loginId);
     if (loginError) nextErrors.loginId = loginError;
     const passwordError = validateRequired(password, "Пароль");
     if (passwordError) nextErrors.password = passwordError;
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-
-    redirectToAccount("customer");
-  };
-
-  const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const nextErrors: Record<string, string> = {};
-    const loginError = validateLoginId(loginId);
-    if (loginError) nextErrors.loginId = loginError;
-    if (!/^\d{4,6}$/.test(pin)) nextErrors.pin = "PIN-код должен содержать 4–6 цифр";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -77,80 +62,48 @@ export default function LoginPage() {
       <main className="flex-1 mx-auto max-w-md w-full px-4 py-8">
         <h1 className="text-2xl font-bold mb-2">Вход</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Войдите в личный кабинет или используйте демо-роли для прототипа
+          Войдите в личный кабинет по email и паролю или используйте демо-роли для прототипа
         </p>
 
-        <Tabs
-          tabs={[
-            { id: "password", label: "Пароль" },
-            { id: "pin", label: "PIN-код" },
-          ]}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-          className="mb-6"
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Email или телефон"
+            type="text"
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
+            error={errors.loginId}
+            autoComplete="username"
+          />
+          <Input
+            label="Пароль"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            autoComplete="current-password"
+          />
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="border-gray-300"
+              />
+              Запомнить меня
+            </label>
+            <Link href="/forgot-password" className="underline hover:text-gray-700">
+              Забыли пароль?
+            </Link>
+          </div>
+          <Button type="submit" className="w-full">
+            Войти
+          </Button>
+        </form>
 
-        {activeTab === "password" ? (
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <Input
-              label="Email или телефон"
-              type="text"
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
-              error={errors.loginId}
-              autoComplete="username"
-            />
-            <Input
-              label="Пароль"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={errors.password}
-              autoComplete="current-password"
-            />
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="border-gray-300"
-                />
-                Запомнить меня
-              </label>
-              <Link href="/forgot-password" className="underline hover:text-gray-700">
-                Забыли пароль?
-              </Link>
-            </div>
-            <Button type="submit" className="w-full">
-              Войти
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={handlePinSubmit} className="space-y-4">
-            <Input
-              label="Email или телефон"
-              type="text"
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
-              error={errors.loginId}
-              autoComplete="username"
-            />
-            <Input
-              label="PIN-код"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              error={errors.pin}
-              placeholder="4–6 цифр"
-            />
-            <Button type="submit" className="w-full">
-              Войти по PIN
-            </Button>
-          </form>
-        )}
+        <p className="text-xs text-gray-500 mt-4 text-center">
+          Вход по PIN-коду можно включить опционально в настройках профиля после авторизации.
+        </p>
 
         <p className="text-sm text-center mt-4 text-gray-600">
           Нет аккаунта?{" "}

@@ -15,9 +15,8 @@ import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast-provider";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
-import { SEED_SERVICES } from "@/data/mocks/seed";
 import type { Service } from "@/data/types";
-import { useCartStore } from "@/lib/store";
+import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice } from "@/lib/utils/formatters";
 
 const SORT_OPTIONS = [
@@ -80,6 +79,7 @@ function ServicesPageContent() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const addItem = useCartStore((s) => s.addItem);
+  const services = usePrototypeStore((s) => s.services);
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -95,7 +95,7 @@ function ServicesPageContent() {
   }, []);
 
   const filtered = useMemo(() => {
-    let list = SEED_SERVICES.filter((s) => {
+    let list = services.filter((s) => {
       if (city && s.city !== city) return false;
       if (category && s.category !== category) return false;
       if (contractorId && s.contractorId !== contractorId) return false;
@@ -121,7 +121,7 @@ function ServicesPageContent() {
     });
 
     return list;
-  }, [search, city, category, contractorId, sort]);
+  }, [services, search, city, category, contractorId, sort]);
 
   const handleAdd = (service: Service) => {
     addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });

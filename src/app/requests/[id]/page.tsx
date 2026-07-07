@@ -71,12 +71,10 @@ function RequestDetailContent() {
 
   const isOwner = user?.id === request.customerId;
   const isContractor = user?.role === "contractor";
-  const canRespond =
-    isContractor &&
-    request.status === "published" &&
-    (request.format !== "closed_request" ||
-      request.invitedContractorIds.some((cid) => cid === "ctr-1"));
-  const hasResponded = requestResponses.some((r) => r.contractorId === "ctr-1");
+  const canRespond = isContractor && request.status === "published";
+  const hasResponded = requestResponses.some(
+    (r) => r.contractorId === "ctr-1" || r.contractorName === user?.name
+  );
 
   const publishDraft = () => {
     updateRequest(request.id, {
@@ -117,6 +115,14 @@ function RequestDetailContent() {
           <Button size="sm">
             <Send className="h-4 w-4" />
             Откликнуться
+          </Button>
+        </Link>
+      )}
+      {canRespond && hasResponded && (
+        <Link href={`/requests/${id}/respond`}>
+          <Button size="sm" variant="outline">
+            <Send className="h-4 w-4" />
+            Ваш отклик отправлен
           </Button>
         </Link>
       )}
