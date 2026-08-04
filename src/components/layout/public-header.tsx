@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/lib/store";
 import { Drawer } from "@/components/ui/drawer";
+import { AccountSwitcher } from "@/components/layout/account-switcher";
 
 const NAV_LINKS = [
   { href: "/events", label: "Выставки и мероприятия" },
@@ -69,9 +70,7 @@ export function PublicHeader() {
                 <Link href="/requests/new">
                   <Button size="sm">Разместить заявку</Button>
                 </Link>
-                <Link href={`/account/${user?.role}`}>
-                  <Button variant="outline" size="sm">Кабинет</Button>
-                </Link>
+                <AccountSwitcher />
               </>
             ) : (
               <>
@@ -102,6 +101,7 @@ export function PublicHeader() {
               <>
                 <Link href="/notifications" onClick={() => setMobileOpen(false)}>Уведомления</Link>
                 <Link href="/messages" onClick={() => setMobileOpen(false)}>Сообщения</Link>
+                <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
                 <Link href="/requests/new" onClick={() => setMobileOpen(false)}><Button className="w-full">Разместить заявку</Button></Link>
               </>
             ) : (

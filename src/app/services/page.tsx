@@ -4,11 +4,11 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Filter, ShoppingCart, Star } from "lucide-react";
+import { Filter, ShoppingCart } from "lucide-react";
+import { ServiceCard } from "@/components/catalog/service-card";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -16,8 +16,7 @@ import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast-provider";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
 import type { Service } from "@/data/types";
-import { useCartStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice } from "@/lib/utils/formatters";
+import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 
 const SORT_OPTIONS = [
   { value: "price-asc", label: "Цена: по возрастанию" },
@@ -25,35 +24,6 @@ const SORT_OPTIONS = [
   { value: "rating-desc", label: "По рейтингу" },
   { value: "title", label: "По названию" },
 ];
-
-function ServiceCard({ service, onAdd }: { service: Service; onAdd: () => void }) {
-  return (
-    <Card className="flex flex-col h-full">
-      <CardTitle>{service.title}</CardTitle>
-      <CardDescription>{service.contractorName} · {service.city}</CardDescription>
-      <p className="text-xs border border-gray-300 inline-block self-start px-1.5 py-0.5 mt-2">{service.category}</p>
-      <p className="text-sm text-gray-700 mt-2 line-clamp-2 flex-1">{service.description}</p>
-      <p className="text-base font-semibold mt-2">
-        {service.priceFormat === "от" ? "от " : ""}
-        {formatPrice(service.price)}
-        {service.priceFormat !== "фиксированная" && service.priceFormat !== "от" ? ` / ${service.priceFormat}` : ""}
-      </p>
-      <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
-        <Star className="h-3.5 w-3.5 fill-gray-900" />
-        {service.rating} · {service.reviewCount} отзывов
-      </p>
-      <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
-        <Link href={`/services/${service.id}`} className="flex-1">
-          <Button variant="outline" size="sm" className="w-full">Подробнее</Button>
-        </Link>
-        <Button size="sm" className="flex-1" onClick={onAdd}>
-          <ShoppingCart className="h-3.5 w-3.5" />
-          В корзину
-        </Button>
-      </div>
-    </Card>
-  );
-}
 
 export default function ServicesPage() {
   return (
@@ -79,6 +49,8 @@ function ServicesPageContent() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const addItem = useCartStore((s) => s.addItem);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite);
   const services = usePrototypeStore((s) => s.services);
 
   const [loading, setLoading] = useState(true);
@@ -126,6 +98,14 @@ function ServicesPageContent() {
   const handleAdd = (service: Service) => {
     addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
     showToast(`«${service.title}» добавлено в корзину`, "success");
+  };
+
+  const handleToggleFavorite = (service: Service) => {
+    const added = toggleFavorite(service.id);
+    showToast(
+      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
+      added ? "success" : "info"
+    );
   };
 
   const resetFilters = () => {
@@ -186,29 +166,6 @@ function ServicesPageContent() {
           </Link>
         </div>
 
-        <section className="mb-6">
-          <h2 className="text-sm font-semibold mb-2">Категории</h2>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setCategory("")}
-              className={`text-xs border px-2 py-1 ${!category ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 hover:border-gray-900"}`}
-            >
-              Все
-            </button>
-            {SERVICE_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategory(cat)}
-                className={`text-xs border px-2 py-1 ${category === cat ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 hover:border-gray-900"}`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </section>
-
         <Button variant="outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
@@ -240,23 +197,19 @@ function ServicesPageContent() {
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filtered.map((service) => (
-                    <ServiceCard key={service.id} service={service} onAdd={() => handleAdd(service)} />
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      onAdd={() => handleAdd(service)}
+                      isFavorite={isFavorite(service.id)}
+                      onToggleFavorite={() => handleToggleFavorite(service)}
+                    />
                   ))}
                 </div>
               </>
             )}
           </section>
         </div>
-
-        <Card className="mt-8 border-dashed">
-          <CardTitle className="text-base">Нужна комплексная услуга?</CardTitle>
-          <p className="text-sm text-gray-600 mt-2">
-            Если нужен единый подрядчик или комплекс работ «под ключ», создайте заявку с описанием задачи.
-          </p>
-          <Link href="/requests/new?format=open_request" className="inline-block mt-3">
-            <Button variant="outline" size="sm">Создать заявку</Button>
-          </Link>
-        </Card>
       </main>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { PublicHeader } from "@/components/layout/public-header";
@@ -92,7 +93,7 @@ export default function EventBookingPage() {
       <PublicHeader />
 
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
-        <Link href={`/events/${event.id}`} className="text-sm underline mb-4 inline-block">← {event.title}</Link>
+        <BackButton fallbackHref={`/events/${event.id}`} className="mb-4" />
 
         <h1 className="text-2xl font-bold mb-2">Бронирование площади</h1>
         <p className="text-sm text-gray-600 mb-6">

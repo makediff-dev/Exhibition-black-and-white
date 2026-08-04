@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, Paperclip, Send } from "lucide-react";
+import { Paperclip, Send } from "lucide-react";
 import { SharedPageShell } from "@/components/layout/shared-page-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,12 +11,6 @@ import { EmptyState } from "@/components/ui/states";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
-
-const RELATED_TYPE_LABELS: Record<string, string> = {
-  deal: "Сделка",
-  request: "Заявка",
-  support: "Поддержка",
-};
 
 export default function MessageThreadPage({
   params,
@@ -62,7 +54,7 @@ export default function MessageThreadPage({
 
   if (!thread) {
     return (
-      <SharedPageShell title="Переписка">
+      <SharedPageShell title="Переписка" showBack backFallbackHref="/messages">
         <EmptyState
           title="Переписка не найдена"
           description="Возможно, она была удалена или ссылка неверна"
@@ -76,36 +68,12 @@ export default function MessageThreadPage({
   return (
     <SharedPageShell
       title={thread.title}
-      breadcrumbs={[
-        { label: "Главная", href: "/" },
-        { label: "Сообщения", href: "/messages" },
-        { label: thread.title },
-      ]}
-      maxWidth="wide"
-      actions={
-        <Link href="/messages">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4" />
-            Назад
-          </Button>
-        </Link>
-      }
+      showBack
+      backFallbackHref="/messages"
+      maxWidth="full"
     >
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Badge variant="outline">
-          {RELATED_TYPE_LABELS[thread.relatedType] || thread.relatedType}
-        </Badge>
-        {thread.relatedLink && thread.relatedType !== "support" && (
-          <Link href={thread.relatedLink}>
-            <Button variant="ghost" size="sm">
-              <ExternalLink className="h-3.5 w-3.5" />
-              {thread.relatedType === "deal" ? "Сделка" : "Заявка"}
-            </Button>
-          </Link>
-        )}
-      </div>
-
-      <div className="border border-gray-300 flex flex-col" style={{ minHeight: "420px" }}>
+      <div className="w-full max-w-3xl mr-auto text-left">
+        <div className="border border-gray-300 flex flex-col" style={{ minHeight: "420px" }}>
         <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[50vh]">
           {thread.messages.map((msg) => {
             const isOwn = msg.sender === senderName;
@@ -178,6 +146,7 @@ export default function MessageThreadPage({
               Отправить
             </Button>
           </div>
+        </div>
         </div>
       </div>
     </SharedPageShell>

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { Check, Star } from "lucide-react";
-import { EstimateBuilder } from "@/components/forms/estimate-builder";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -141,7 +140,7 @@ function CompareContent() {
     return (
       <EmptyState
         title="Недостаточно откликов для сравнения"
-        description="Выберите минимум 2 отклика на странице откликов"
+        description="Выберите минимум 2 отклика"
         actionLabel="К откликам"
         onAction={() => router.push(`/requests/${id}/responses`)}
       />
@@ -190,9 +189,6 @@ function CompareContent() {
                 <p className="text-sm">{f.render(activeResponse)}</p>
               </div>
             ))}
-            {activeResponse.estimate.length > 0 && (
-              <EstimateBuilder sections={activeResponse.estimate} onChange={() => {}} readOnly />
-            )}
             <Button className="w-full" onClick={() => handleSelect(activeResponse.id)}>
               <Check className="h-4 w-4" />
               Выбрать исполнителя
@@ -216,9 +212,6 @@ function CompareContent() {
                   <div className="text-sm">{f.render(response)}</div>
                 </div>
               ))}
-              {response!.estimate.length > 0 && (
-                <EstimateBuilder sections={response!.estimate} onChange={() => {}} readOnly />
-              )}
             </div>
             <div className="p-4 border-t border-gray-300">
               <Button className="w-full" onClick={() => handleSelect(response!.id)}>
@@ -230,11 +223,6 @@ function CompareContent() {
         ))}
       </div>
 
-      <div className="mt-4">
-        <Link href={`/requests/${id}/responses`}>
-          <Button variant="outline" size="sm">← К списку откликов</Button>
-        </Link>
-      </div>
     </>
   );
 }
@@ -248,11 +236,8 @@ function ComparePageInner() {
   return (
     <AppShell
       title="Сравнение откликов"
-      breadcrumbs={[
-        { label: "Заявки", href: "/requests" },
-        { label: request?.title ?? "Заявка", href: `/requests/${id}` },
-        { label: "Сравнение" },
-      ]}
+      showBack
+      backFallbackHref={`/requests/${id}`}
     >
       <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>
         <CompareContent />

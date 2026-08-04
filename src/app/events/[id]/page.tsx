@@ -1,21 +1,30 @@
 "use client";
 
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Calendar, MapPin, Users } from "lucide-react";
+import { EventRemindersModal } from "@/components/events/event-reminders-modal";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import {
+  FEDERAL_DISTRICT_OPTIONS,
+  getCitiesByDistrict,
+  getDistrictByCity,
+  SERVICE_CATEGORIES,
+} from "@/constants/categories";
 import {
   SEED_CONTRACTORS,
   SEED_EVENTS,
   SEED_HALLS,
   SEED_SERVICES,
 } from "@/data/mocks/seed";
-import type { Event } from "@/data/types";
+import type { Contractor, Event } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 
@@ -24,6 +33,16 @@ const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
   forum: "Форум",
   conference: "Конференция",
 };
+
+const HALL_REMAINING_SPOTS: Record<string, string> = {
+  "hall-1": "Осталось 14 мест",
+  "hall-2": "Осталось 10 мест",
+};
+
+const ORGANIZER_VENUE_SERVICES = [
+  "Аренда площади, заказ электричества и т.д.",
+  "Заказ пропусков, и т.д.",
+];
 
 function FloorPlanPreview() {
   const { floorCells } = usePrototypeStore();
@@ -57,18 +76,114 @@ function FloorPlanPreview() {
   );
 }
 
+function ContractorsGrid({
+  contractors,
+  moreHref,
+  moreLabel,
+}: {
+  contractors: Contractor[];
+  moreHref: string;
+  moreLabel: string;
+}) {
+  return (
+    <div className="grid sm:grid-cols-2 gap-3">
+      {contractors.map((contractor) => (
+        <Link key={contractor.id} href={`/contractors/${contractor.id}`}>
+          <Card className="hover:border-gray-900 h-full">
+            <CardTitle>{contractor.name}</CardTitle>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {contractor.categories.map((category) => (
+                <span key={category} className="text-xs border border-gray-300 px-2 py-0.5">
+                  {category}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 mt-2">
+              ★ {contractor.rating} · {contractor.reviewCount} отзывов
+            </p>
+          </Card>
+        </Link>
+      ))}
+      <Link href={moreHref}>
+        <Card className="h-full border-dashed flex items-center justify-center min-h-[120px] hover:border-gray-900">
+          <CardTitle className="text-sm font-normal text-center px-4">{moreLabel}</CardTitle>
+        </Card>
+      </Link>
+    </div>
+  );
+}
+
 export default function EventDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const event = SEED_EVENTS.find((e) => e.id === id);
+  const [localCategory, setLocalCategory] = useState("");
+  const [regionCategory, setRegionCategory] = useState("");
+  const [contractorRegion, setContractorRegion] = useState(
+    () => getDistrictByCity(SEED_EVENTS.find((e) => e.id === id)?.city ?? "")
+  );
+  const [contractorCity, setContractorCity] = useState(
+    () => SEED_EVENTS.find((e) => e.id === id)?.city ?? ""
+  );
+  const [remindersModalOpen, setRemindersModalOpen] = useState(false);
+
+  const contractorCategoryOptions = useMemo(
+    () => [
+      { value: "", label: "Все категории" },
+      ...SERVICE_CATEGORIES.map((category) => ({ value: category, label: category })),
+    ],
+    []
+  );
+
+  const contractorCityOptions = useMemo(() => {
+    const cities = contractorRegion ? getCitiesByDistrict(contractorRegion) : [];
+    return [
+      { value: "", label: "Все города региона" },
+      ...cities.map((city) => ({ value: city, label: city })),
+    ];
+  }, [contractorRegion]);
+
+  const localFilteredContractors = useMemo(() => {
+    let list = SEED_CONTRACTORS.filter((contractor) => contractor.city === event?.city);
+
+    if (localCategory) {
+      list = list.filter((contractor) => contractor.categories.includes(localCategory));
+    }
+
+    return list;
+  }, [event?.city, localCategory]);
+
+  const regionFilteredContractors = useMemo(() => {
+    let list = SEED_CONTRACTORS;
+
+    if (contractorRegion) {
+      const regionCities = getCitiesByDistrict(contractorRegion);
+      list = list.filter((contractor) => regionCities.includes(contractor.city));
+    }
+
+    if (contractorCity) {
+      list = list.filter((contractor) => contractor.city === contractorCity);
+    }
+
+    if (regionCategory) {
+      list = list.filter((contractor) => contractor.categories.includes(regionCategory));
+    }
+
+    return list;
+  }, [contractorRegion, contractorCity, regionCategory]);
+
+  const handleContractorRegionChange = (region: string) => {
+    setContractorRegion(region);
+    if (!region) {
+      setContractorCity("");
+      return;
+    }
+    const cities = getCitiesByDistrict(region);
+    setContractorCity((currentCity) => (currentCity && cities.includes(currentCity) ? currentCity : ""));
+  };
 
   const services = useMemo(
     () => SEED_SERVICES.filter((s) => event?.relatedServiceIds.includes(s.id)),
-    [event]
-  );
-
-  const contractorsInCity = useMemo(
-    () => SEED_CONTRACTORS.filter((c) => c.city === event?.city),
     [event]
   );
 
@@ -84,36 +199,34 @@ export default function EventDetailPage() {
       <PublicHeader />
 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
-        <Link href="/events" className="text-sm underline mb-4 inline-block">← Все мероприятия</Link>
+        <BackButton fallbackHref="/events" className="mb-4" />
 
-        <div className="flex flex-wrap gap-2 mb-3">
-          <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-          <Badge variant="dashed">{event.industry}</Badge>
-          {event.bookingAvailable && <Badge variant="solid">Бронирование доступно</Badge>}
-        </div>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+          <div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
+              <Badge variant="dashed">{event.industry}</Badge>
+              {event.bookingAvailable && (
+                <Badge variant="solid">Бронирование в тестовом режиме</Badge>
+              )}
+            </div>
 
-        <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-        <p className="text-sm text-gray-600 flex items-center gap-1 mb-1">
-          <MapPin className="h-4 w-4" />
-          {event.city} · {event.venue}
-        </p>
-        <p className="text-sm text-gray-600 flex items-center gap-1 mb-6">
-          <Calendar className="h-4 w-4" />
-          {formatDate(event.startDate)} — {formatDate(event.endDate)}
-        </p>
+            <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
+            <p className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+              <MapPin className="h-4 w-4" />
+              {event.city} · {event.venue}
+            </p>
+            <p className="text-sm text-gray-600 flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              {formatDate(event.startDate)} — {formatDate(event.endDate)}
+            </p>
+          </div>
 
-        <div className="flex flex-wrap gap-2 mb-8">
-          <Link href={`/requests/new?eventId=${event.id}`}>
-            <Button>Разместить заявку</Button>
-          </Link>
-          <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
-            <Button variant="outline">Найти услуги</Button>
-          </Link>
-          {event.bookingAvailable && (
-            <Link href={`/events/${event.id}/booking`}>
-              <Button variant="secondary">Забронировать площадь</Button>
-            </Link>
-          )}
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button type="button" variant="outline" onClick={() => setRemindersModalOpen(true)}>
+              Подключить напоминания
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -121,11 +234,32 @@ export default function EventDetailPage() {
             <section>
               <h2 className="text-lg font-semibold mb-2">Описание</h2>
               <p className="text-sm text-gray-700">{event.description}</p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
+                  <Button variant="outline">Найти услуги</Button>
+                </Link>
+                {event.bookingAvailable && (
+                  <Link href={`/events/${event.id}/booking`}>
+                    <Button variant="outline">Забронировать площадь</Button>
+                  </Link>
+                )}
+              </div>
             </section>
 
             <section>
               <h2 className="text-lg font-semibold mb-2">Условия участия</h2>
               <p className="text-sm text-gray-700 border border-gray-300 p-4">{event.participationTerms}</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold mb-3">Услуги организаторов и площадки проведения</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {ORGANIZER_VENUE_SERVICES.map((service) => (
+                  <Card key={service} className="h-full">
+                    <CardTitle className="text-sm font-normal">{service}</CardTitle>
+                  </Card>
+                ))}
+              </div>
             </section>
 
             <section>
@@ -147,21 +281,75 @@ export default function EventDetailPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <h2 className="text-lg font-semibold flex items-center gap-2 mb-3">
                 <Users className="h-5 w-5" />
                 Исполнители в городе ({event.city})
+                {localCategory ? ` · ${localCategory}` : ""}
               </h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {contractorsInCity.map((contractor) => (
-                  <Link key={contractor.id} href={`/contractors/${contractor.id}`}>
-                    <Card className="hover:border-gray-900 h-full">
-                      <CardTitle>{contractor.name}</CardTitle>
-                      <CardDescription>{contractor.categories.slice(0, 2).join(", ")}</CardDescription>
-                      <p className="text-xs text-gray-600 mt-2">★ {contractor.rating} · {contractor.reviewCount} отзывов</p>
-                    </Card>
-                  </Link>
-                ))}
+              <div className="flex flex-wrap gap-2 mb-4 max-w-md">
+                <Select
+                  label="Категория"
+                  value={localCategory}
+                  onChange={(e) => setLocalCategory(e.target.value)}
+                  options={contractorCategoryOptions}
+                  className="min-w-[220px]"
+                />
               </div>
+              <ContractorsGrid
+                contractors={localFilteredContractors}
+                moreHref={
+                  localCategory
+                    ? `/contractors?city=${encodeURIComponent(event.city)}&category=${encodeURIComponent(localCategory)}`
+                    : `/contractors?city=${encodeURIComponent(event.city)}`
+                }
+                moreLabel="Больше исполнителей в городе"
+              />
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                <Users className="h-5 w-5" />
+                Исполнители по регионам
+                ({contractorCity || contractorRegion || "вся Россия"})
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4 max-w-3xl">
+                <Select
+                  label="Регион"
+                  value={contractorRegion}
+                  onChange={(e) => handleContractorRegionChange(e.target.value)}
+                  options={[
+                    { value: "", label: "Все регионы" },
+                    ...FEDERAL_DISTRICT_OPTIONS.map((region) => ({
+                      value: region,
+                      label: region,
+                    })),
+                  ]}
+                />
+                <Select
+                  label="Город"
+                  value={contractorCity}
+                  onChange={(e) => setContractorCity(e.target.value)}
+                  options={contractorCityOptions}
+                  disabled={!contractorRegion}
+                />
+                <Select
+                  label="Категория"
+                  value={regionCategory}
+                  onChange={(e) => setRegionCategory(e.target.value)}
+                  options={contractorCategoryOptions}
+                />
+              </div>
+              <ContractorsGrid
+                contractors={regionFilteredContractors}
+                moreHref={(() => {
+                  const params = new URLSearchParams();
+                  if (contractorCity) params.set("city", contractorCity);
+                  if (regionCategory) params.set("category", regionCategory);
+                  const query = params.toString();
+                  return query ? `/contractors?${query}` : "/contractors";
+                })()}
+                moreLabel="Больше исполнителей по регионам"
+              />
             </section>
           </div>
 
@@ -173,9 +361,14 @@ export default function EventDetailPage() {
                   <div key={hall.id} className="text-sm border-b border-gray-200 pb-2 last:border-0">
                     <p className="font-medium">{hall.name}</p>
                     <p className="text-gray-600">{hall.area} м² · до {hall.capacity} участников</p>
-                    <Badge variant={hall.available ? "outline" : "dashed"} className="mt-1">
-                      {hall.available ? "Доступен" : "Занят"}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <Badge variant={hall.available ? "outline" : "dashed"}>
+                        {hall.available ? "Доступен" : "Занят"}
+                      </Badge>
+                      {hall.available && HALL_REMAINING_SPOTS[hall.id] && (
+                        <span className="text-xs text-gray-600">{HALL_REMAINING_SPOTS[hall.id]}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -183,11 +376,10 @@ export default function EventDetailPage() {
 
             <section className="border border-gray-300 p-4">
               <h2 className="text-base font-semibold mb-3">План площадки</h2>
-              <p className="text-xs text-gray-600 mb-3">Предпросмотр схемы зала (демо)</p>
               <FloorPlanPreview />
               {event.bookingAvailable && (
                 <Link href={`/events/${event.id}/booking`} className="block mt-4">
-                  <Button className="w-full" size="sm">Открыть бронирование</Button>
+                  <Button className="w-full" size="sm">Бронирование в тестовом режиме</Button>
                 </Link>
               )}
             </section>
@@ -200,6 +392,12 @@ export default function EventDetailPage() {
           </aside>
         </div>
       </main>
+
+      <EventRemindersModal
+        open={remindersModalOpen}
+        onClose={() => setRemindersModalOpen(false)}
+        event={event}
+      />
 
       <Footer />
     </div>

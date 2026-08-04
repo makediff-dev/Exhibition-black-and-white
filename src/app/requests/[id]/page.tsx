@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
+import { BackButton } from "@/components/ui/back-button";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { REQUEST_FORMAT_LABELS, REQUEST_STATUS_LABELS } from "@/constants/statuses";
+import {
+  formatSectionContentForDisplay,
+  isDescriptionSectionFilled,
+} from "@/constants/request-description-sections";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatDate, formatShortDate } from "@/lib/utils/formatters";
+import { formatPrice, formatDate, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
 
 function formatBudget(budget: { type: string; min?: number; max?: number }) {
   if (budget.type === "hidden") return "Скрытый";
@@ -128,7 +133,7 @@ function RequestDetailContent() {
       )}
       {relatedDeal && (
         <Link href={`/deals/${relatedDeal.id}`}>
-          <Button size="sm" variant="secondary">
+          <Button size="sm">
             Открыть сделку
           </Button>
         </Link>
@@ -165,8 +170,8 @@ function RequestDetailContent() {
               <dd>{request.cities.join(", ")}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-gray-600">Дедлайн</dt>
-              <dd>{formatDate(request.deadline)}</dd>
+              <dt className="text-gray-600">Диапазон выполнения</dt>
+              <dd>{formatRequestDeadline(request.deadline)}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-gray-600">Бюджет</dt>
@@ -205,6 +210,22 @@ function RequestDetailContent() {
       <Card>
         <CardTitle className="text-sm mb-3">Описание</CardTitle>
         <p className="text-sm whitespace-pre-wrap">{request.description}</p>
+        {request.torSections.some((section) => isDescriptionSectionFilled(section.title, section.content)) && (
+          <div className="mt-4 space-y-4">
+            {request.torSections
+              .filter((section) => isDescriptionSectionFilled(section.title, section.content))
+              .map((section, index) => (
+                <div key={section.id} className="border-t border-gray-200 pt-4 first:border-0 first:pt-0">
+                  <p className="text-sm font-medium">
+                    {index + 1}. {section.title}
+                  </p>
+                  <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
+                    {formatSectionContentForDisplay(section.title, section.content)}
+                  </p>
+                </div>
+              ))}
+          </div>
+        )}
         {request.requirements && (
           <>
             <p className="text-sm font-medium mt-4">Требования</p>
@@ -218,23 +239,6 @@ function RequestDetailContent() {
           </>
         )}
       </Card>
-
-      {request.torSections.length > 0 && (
-        <Card>
-          <CardTitle className="text-sm mb-3">Техническое задание</CardTitle>
-          <div className="space-y-3">
-            {request.torSections.map((s, i) => (
-              <div key={s.id} className="border-b border-gray-200 pb-3 last:border-0">
-                <p className="text-sm font-medium">
-                  {i + 1}. {s.title}
-                  {s.required && " *"}
-                </p>
-                <p className="text-sm text-gray-700 mt-1">{s.content}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
 
       {request.files.length > 0 && (
         <Card>
@@ -309,10 +313,8 @@ function RequestDetailContent() {
     return (
       <AppShell
         title={request.title}
-        breadcrumbs={[
-          { label: "Заявки", href: "/requests" },
-          { label: request.title },
-        ]}
+        showBack
+        backFallbackHref="/requests"
         actions={actions}
       >
         {detail}
@@ -324,6 +326,7 @@ function RequestDetailContent() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
+        <BackButton fallbackHref="/requests" className="mb-4" />
         <div className="flex flex-wrap justify-between gap-3 mb-6">
           <h1 className="text-2xl font-bold">{request.title}</h1>
           <div className="flex gap-2 flex-wrap">{actions}</div>

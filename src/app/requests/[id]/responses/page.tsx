@@ -1,126 +1,69 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { GitCompare, Star } from "lucide-react";
+import { GitCompare } from "lucide-react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
+import { ResponseCard } from "@/components/responses/response-card";
+import { SEED_EVENTS } from "@/data/mocks/seed";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 
 export default function RequestResponsesPage() {
   const params = useParams();
   const id = params.id as string;
   const { user } = useAuthStore();
-  const { requests, responses, toggleCompareResponse, compareResponseIds } = usePrototypeStore();
+  const { requests, responses } = usePrototypeStore();
 
-  const request = requests.find((r) => r.id === id);
-  const requestResponses = responses.filter((r) => r.requestId === id);
+  const request = requests.find((item) => item.id === id);
+  const requestResponses = responses.filter((item) => item.requestId === id);
 
   if (!request) {
     return (
-      <AppShell title="Отклики" breadcrumbs={[{ label: "Заявки", href: "/requests" }, { label: "Не найдено" }]}>
-        <EmptyState title="Заявка не найдена" actionLabel="К заявкам" onAction={() => (window.location.href = "/requests")} />
+      <AppShell showBack backFallbackHref="/requests">
+        <EmptyState
+          title="Заявка не найдена"
+          actionLabel="К заявкам"
+          onAction={() => (window.location.href = "/requests")}
+        />
       </AppShell>
     );
   }
 
   const isOwner = user?.id === request.customerId;
+  const eventTitle = request.eventId
+    ? SEED_EVENTS.find((event) => event.id === request.eventId)?.title
+    : undefined;
 
   return (
-    <AppShell
-      title={`Отклики: ${request.title}`}
-      breadcrumbs={[
-        { label: "Заявки", href: "/requests" },
-        { label: request.title, href: `/requests/${id}` },
-        { label: "Отклики" },
-      ]}
-      actions={
-        isOwner && requestResponses.length >= 2 ? (
+    <AppShell showBack backFallbackHref={`/requests/${id}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <h1 className="text-xl font-bold text-gray-900">Отклики: {request.title}</h1>
+        {isOwner && requestResponses.length >= 2 && (
           <Link href={`/requests/${id}/compare`}>
-            <Button size="sm">
+            <Button size="sm" variant="outline">
               <GitCompare className="h-4 w-4" />
-              Сравнить ({compareResponseIds.length || requestResponses.length})
+              Сравнить ({requestResponses.length})
             </Button>
           </Link>
-        ) : undefined
-      }
-    >
+        )}
+      </div>
+
       {requestResponses.length === 0 ? (
-        <EmptyState
-          title="Откликов пока нет"
-          description="Исполнители смогут откликнуться после публикации заявки"
-        />
+        <EmptyState title="Откликов пока нет" description="Исполнители ещё не откликнулись на заявку" />
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {requestResponses.map((response) => (
-            <Card key={response.id}>
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div>
-                  <CardTitle className="text-base">{response.contractorName}</CardTitle>
-                  <CardDescription className="flex items-center gap-1 mt-1">
-                    <Star className="h-3.5 w-3.5" />
-                    {response.rating} · Срок: {response.deadline}
-                  </CardDescription>
-                  <p className="text-sm text-gray-700 mt-2">{response.approach}</p>
-                  {response.comment && (
-                    <p className="text-sm text-gray-600 mt-1 italic">{response.comment}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-2">
-                    Действует до {formatShortDate(response.validUntil)}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xl font-bold">{formatPrice(response.price)}</p>
-                  <Badge variant="outline" className="mt-2">
-                    {response.status === "pending"
-                      ? "На рассмотрении"
-                      : response.status === "accepted"
-                        ? "Выбран"
-                        : "Отклонён"}
-                  </Badge>
-                  <div className="flex flex-col gap-2 mt-3">
-                    {isOwner && (
-                      <>
-                        <label className="flex items-center gap-2 text-xs cursor-pointer justify-end">
-                          <input
-                            type="checkbox"
-                            checked={compareResponseIds.includes(response.id)}
-                            onChange={() => toggleCompareResponse(response.id)}
-                            className="border-gray-900"
-                          />
-                          В сравнение
-                        </label>
-                        <Link href={`/requests/${id}/compare?ids=${response.id}`}>
-                          <Button variant="outline" size="sm" className="w-full">
-                            Подробнее
-                          </Button>
-                        </Link>
-                      </>
-                    )}
-                    <Link href={`/contractors/${response.contractorId}`}>
-                      <Button variant="ghost" size="sm" className="w-full">
-                        Профиль
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              {response.estimate.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Смета</p>
-                  {response.estimate.map((section) => (
-                    <div key={section.id} className="text-xs text-gray-700">
-                      <span className="font-medium">{section.title}:</span>{" "}
-                      {section.items.map((i) => i.name).join(", ")}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+            <ResponseCard
+              key={response.id}
+              response={response}
+              requestId={id}
+              isOwner={isOwner}
+              category={request.category}
+              city={request.city}
+              eventTitle={eventTitle}
+            />
           ))}
         </div>
       )}

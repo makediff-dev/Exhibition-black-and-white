@@ -60,10 +60,6 @@ export default function NotificationsPage() {
   return (
     <SharedPageShell
       title="Уведомления"
-      breadcrumbs={[
-        { label: "Главная", href: "/" },
-        { label: "Уведомления" },
-      ]}
       actions={
         unreadCount > 0 ? (
           <Button variant="outline" size="sm" onClick={markAllNotificationsRead}>

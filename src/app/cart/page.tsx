@@ -11,13 +11,14 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/states";
-import { SEED_SERVICES } from "@/data/mocks/seed";
-import { useCartStore } from "@/lib/store";
+import { useCartStore, usePrototypeStore } from "@/lib/store";
+import { resolveCartLine } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function CartPage() {
   const router = useRouter();
   const { items, updateItem, removeItem } = useCartStore();
+  const services = usePrototypeStore((state) => state.services);
 
   const grouped = useMemo(() => {
     const map = new Map<string, {
@@ -36,14 +37,15 @@ export default function CartPage() {
     }>();
 
     for (const item of items) {
-      const service = SEED_SERVICES.find((s) => s.id === item.serviceId);
-      if (!service) continue;
+      const resolved = resolveCartLine(item, services);
+      if (!resolved) continue;
 
+      const { service, unitPrice, lineTitle } = resolved;
       const existing = map.get(service.contractorId);
       const line = {
         serviceId: item.serviceId,
-        title: service.title,
-        price: service.price,
+        title: lineTitle,
+        price: unitPrice,
         priceFormat: service.priceFormat,
         quantity: item.quantity,
         comment: item.comment,
@@ -52,19 +54,19 @@ export default function CartPage() {
 
       if (existing) {
         existing.lines.push(line);
-        existing.subtotal += service.price * item.quantity;
+        existing.subtotal += unitPrice * item.quantity;
       } else {
         map.set(service.contractorId, {
           contractorId: service.contractorId,
           contractorName: service.contractorName,
           lines: [line],
-          subtotal: service.price * item.quantity,
+          subtotal: unitPrice * item.quantity,
         });
       }
     }
 
     return Array.from(map.values());
-  }, [items]);
+  }, [items, services]);
 
   const total = grouped.reduce((sum, g) => sum + g.subtotal, 0);
 

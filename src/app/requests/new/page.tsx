@@ -21,10 +21,14 @@ function NewRequestContent() {
   const { addRequest } = usePrototypeStore();
   const { showToast } = useToast();
   const [published, setPublished] = useState<Request | null>(null);
+  const [phoneNotifications, setPhoneNotifications] = useState(false);
 
   const formatParam = searchParams.get("format") as RequestFormat | null;
   const initialFormat =
     formatParam && VALID_FORMATS.includes(formatParam) ? formatParam : undefined;
+  const initialEventId = searchParams.get("eventId") ?? undefined;
+  const initialContractorId = searchParams.get("contractorId") ?? undefined;
+  const initialCategory = searchParams.get("category") ?? undefined;
 
   const handlePublished = (request: Request) => {
     addRequest(request);
@@ -34,27 +38,57 @@ function NewRequestContent() {
 
   if (published) {
     return (
-      <Card className="max-w-lg mx-auto text-center py-8">
-        <CheckCircle className="h-12 w-12 mx-auto mb-4" />
-        <CardTitle>Заявка опубликована</CardTitle>
-        <CardDescription className="mt-2">
-          Заявка «{published.title}» доступна исполнителям
-        </CardDescription>
-        <div className="flex flex-wrap gap-2 justify-center mt-6">
-          <Link href={`/requests/${published.id}`}>
-            <Button>Открыть заявку</Button>
-          </Link>
-          <Link href="/requests">
-            <Button variant="outline">К списку заявок</Button>
-          </Link>
-        </div>
-      </Card>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Card className="text-center py-8">
+          <CheckCircle className="h-12 w-12 mx-auto mb-4" />
+          <CardTitle>Заявка опубликована</CardTitle>
+          <CardDescription className="mt-2">
+            Заявка «{published.title}» доступна исполнителям
+          </CardDescription>
+          <div className="flex flex-wrap gap-2 justify-center mt-6">
+            <Link href={`/requests/${published.id}`}>
+              <Button>Открыть заявку</Button>
+            </Link>
+            <Link href="/requests">
+              <Button variant="outline">К списку заявок</Button>
+            </Link>
+          </div>
+        </Card>
+
+        <label className="inline-flex items-center gap-2 border border-gray-900 px-3 py-2 text-sm w-fit cursor-pointer">
+          <input
+            type="checkbox"
+            checked={phoneNotifications}
+            onChange={(e) => {
+              setPhoneNotifications(e.target.checked);
+              if (e.target.checked) {
+                showToast("Уведомления на телефон включены", "success");
+              }
+            }}
+            className="border-gray-900"
+          />
+          Настроить уведомления на телефон
+        </label>
+
+        <p className="text-sm text-gray-700">
+          Вы получите информацию об откликах исполнителей в личный кабинет и на почту.
+          Вы также можете настроить уведомление об откликах на телефон, указанный при регистрации.
+        </p>
+
+        <p className="text-sm text-gray-700">
+          После этого вы сможете заказать расширенную проверку исполнителей, выбрать конкретного
+          и договориться с ним о цене.
+        </p>
+      </div>
     );
   }
 
   return (
     <RequestWizard
       initialFormat={initialFormat}
+      initialEventId={initialEventId}
+      initialContractorId={initialContractorId}
+      initialCategory={initialCategory}
       onPublished={handlePublished}
     />
   );
@@ -73,11 +107,8 @@ function NewRequestPageInner() {
     return (
       <AppShell
         title="Новая заявка"
-        breadcrumbs={[
-          { label: "Главная", href: "/" },
-          { label: "Заявки", href: "/requests" },
-          { label: "Создание" },
-        ]}
+        showBack
+        backFallbackHref="/requests"
       >
         {content}
       </AppShell>

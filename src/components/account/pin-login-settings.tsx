@@ -15,15 +15,6 @@ export function PinLoginSettings() {
   const [error, setError] = useState("");
 
   const handleSave = () => {
-    if (!enabled) {
-      setPinLoginSettings(false);
-      setPin("");
-      setConfirmPin("");
-      setError("");
-      showToast("Вход по PIN отключён");
-      return;
-    }
-
     if (!/^\d{4,6}$/.test(pin)) {
       setError("PIN-код должен содержать 4–6 цифр");
       return;
@@ -41,7 +32,7 @@ export function PinLoginSettings() {
   };
 
   return (
-    <div className="border border-gray-300 p-4 space-y-4">
+    <div className="space-y-4">
       <div>
         <p className="text-sm font-medium">Вход по PIN-коду</p>
         <p className="text-xs text-gray-600 mt-1">
@@ -54,8 +45,15 @@ export function PinLoginSettings() {
           type="checkbox"
           checked={enabled}
           onChange={(e) => {
-            setEnabled(e.target.checked);
+            const checked = e.target.checked;
+            setEnabled(checked);
             setError("");
+            if (!checked) {
+              setPinLoginSettings(false);
+              setPin("");
+              setConfirmPin("");
+              showToast("Вход по PIN отключён");
+            }
           }}
         />
         Включить вход по PIN-коду
@@ -91,9 +89,11 @@ export function PinLoginSettings() {
 
       {error && <p className="text-xs text-gray-700">{error}</p>}
 
-      <Button size="sm" onClick={handleSave}>
-        {enabled ? "Сохранить PIN" : "Отключить PIN"}
-      </Button>
+      {enabled && (
+        <Button size="sm" onClick={handleSave}>
+          Сохранить PIN
+        </Button>
+      )}
     </div>
   );
 }

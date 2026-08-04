@@ -2,27 +2,19 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  MapPin,
-  Sparkles,
-} from "lucide-react";
+import { EventsDateFilter, isEventInSelectedPeriod } from "@/components/catalog/events-calendar";
+import { Calendar, Filter, MapPin, Sparkles } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { CITIES, EVENT_INDUSTRIES } from "@/constants/categories";
+import { CITIES, EVENT_INDUSTRIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict, getDistrictByCity } from "@/constants/categories";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Event } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
@@ -44,21 +36,15 @@ const SORT_OPTIONS = [
 
 const VENUES = [...new Set(SEED_EVENTS.map((e) => e.venue))];
 
-function monthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatMonthLabel(date: Date) {
-  return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(date);
-}
-
 function EventCard({ event, recommended }: { event: Event; recommended?: boolean }) {
   return (
     <Link href={`/events/${event.id}`}>
       <Card className="h-full hover:border-gray-900">
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
           <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-          {event.bookingAvailable && <Badge variant="solid">Бронирование</Badge>}
+          {event.bookingAvailable && (
+            <Badge variant="solid">Бронирование в тестовом режиме</Badge>
+          )}
           {recommended && (
             <Badge variant="dashed" icon={Sparkles}>
               Рекомендуем
@@ -101,6 +87,12 @@ function FilterFields({
   sort,
   setSort,
   showRecommendedFilter,
+  viewYear,
+  viewMonth,
+  onShiftViewMonth,
+  selectedDays,
+  onToggleDay,
+  onClearPeriod,
 }: {
   city: string;
   setCity: (v: string) => void;
@@ -117,9 +109,24 @@ function FilterFields({
   sort: string;
   setSort: (v: string) => void;
   showRecommendedFilter: boolean;
+  viewYear: number;
+  viewMonth: number;
+  onShiftViewMonth: (delta: number) => void;
+  selectedDays: string[];
+  onToggleDay: (dateKey: string) => void;
+  onClearPeriod: () => void;
 }) {
   return (
     <div className="space-y-4">
+      <EventsDateFilter
+        events={SEED_EVENTS}
+        viewYear={viewYear}
+        viewMonth={viewMonth}
+        onShiftViewMonth={onShiftViewMonth}
+        selectedDays={selectedDays}
+        onToggleDay={onToggleDay}
+        onClearPeriod={onClearPeriod}
+      />
       <Select
         label="Город"
         value={city}
@@ -156,14 +163,19 @@ function FilterFields({
         onChange={(e) => setSort(e.target.value)}
         options={SORT_OPTIONS}
       />
-      <label className="flex items-center gap-2 text-sm cursor-pointer">
+      <label className="flex items-start gap-2 text-sm cursor-pointer">
         <input
           type="checkbox"
           checked={bookingOnly}
           onChange={(e) => setBookingOnly(e.target.checked)}
-          className="border-gray-900"
+          className="border-gray-900 mt-0.5"
         />
-        Только с бронированием площадей
+        <span>
+          Только с бронированием площадей
+          <span className="block text-xs text-gray-500 mt-1">
+            Будет работать в тестовом режиме какое-то время
+          </span>
+        </span>
       </label>
       {showRecommendedFilter && (
         <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -176,7 +188,85 @@ function FilterFields({
           Только рекомендованные по ОКВЭД
         </label>
       )}
+      <div className="grid grid-cols-1 gap-2 pt-2 border-t border-gray-200">
+        <Link
+          href="/contractors"
+          className="block border border-gray-300 bg-white px-3 py-2 text-sm text-center hover:border-gray-900"
+        >
+          Найти исполнителя
+        </Link>
+        <Link
+          href="/services"
+          className="block border border-gray-300 bg-white px-3 py-2 text-sm text-center hover:border-gray-900"
+        >
+          Найти услугу
+        </Link>
+      </div>
     </div>
+  );
+}
+
+function CityPickerModal({
+  open,
+  onClose,
+  detectedCity,
+  cityDraft,
+  setCityDraft,
+  districtDraft,
+  setDistrictDraft,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  detectedCity: string;
+  cityDraft: string;
+  setCityDraft: (value: string) => void;
+  districtDraft: string;
+  setDistrictDraft: (value: string) => void;
+  onConfirm: () => void;
+}) {
+  const availableCities = useMemo(() => getCitiesByDistrict(districtDraft), [districtDraft]);
+
+  useEffect(() => {
+    if (availableCities.length > 0 && !availableCities.includes(cityDraft)) {
+      setCityDraft(availableCities[0]);
+    }
+  }, [availableCities, cityDraft, setCityDraft]);
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Определение города"
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>Пропустить</Button>
+          <Button onClick={onConfirm}>Подтвердить</Button>
+        </>
+      }
+    >
+      <p className="text-sm text-gray-700 mb-4">
+        Мы определили ваш город автоматически по геопозиции как <strong>{detectedCity}</strong>.
+        Выберите федеральный округ и город для показа актуальных мероприятий.
+      </p>
+      <div className="space-y-4">
+        <Select
+          label="Федеральный округ"
+          value={districtDraft}
+          onChange={(e) => setDistrictDraft(e.target.value)}
+          options={[
+            { value: "", label: "Все федеральные округа" },
+            ...FEDERAL_DISTRICT_OPTIONS.map((district) => ({ value: district, label: district })),
+          ]}
+        />
+        <Select
+          label="Город"
+          value={cityDraft}
+          onChange={(e) => setCityDraft(e.target.value)}
+          options={availableCities.map((city) => ({ value: city, label: city }))}
+        />
+      </div>
+    </Modal>
   );
 }
 
@@ -201,16 +291,18 @@ function EventsPageFallback() {
 }
 
 function EventsPageContent() {
-  const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
   const { selectedCity, setSelectedCity } = usePrototypeStore();
 
   const [loading, setLoading] = useState(true);
+  const detectedCity = "Санкт-Петербург";
   const [cityModalOpen, setCityModalOpen] = useState(true);
-  const [cityDraft, setCityDraft] = useState(selectedCity);
+  const [cityDraft, setCityDraft] = useState(detectedCity);
+  const [districtDraft, setDistrictDraft] = useState(getDistrictByCity(detectedCity));
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(() => new Date(2026, 2, 1));
-  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  const [viewYear, setViewYear] = useState(2026);
+  const [viewMonth, setViewMonth] = useState(2);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [industry, setIndustry] = useState("");
   const [category, setCategory] = useState("");
@@ -232,22 +324,17 @@ function EventsPageContent() {
     [user]
   );
 
+  const activeMonthKey = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}`;
+
   const filteredEvents = useMemo(() => {
-    const month = monthKey(currentMonth);
     let list = SEED_EVENTS.filter((event) => {
-      const eventMonth = event.startDate.slice(0, 7);
-      if (eventMonth !== month) return false;
+      if (!isEventInSelectedPeriod(event, activeMonthKey, selectedDays)) return false;
       if (city && event.city !== city) return false;
       if (industry && event.industry !== industry) return false;
       if (category && event.category !== category) return false;
       if (venue && event.venue !== venue) return false;
       if (bookingOnly && !event.bookingAvailable) return false;
       if (recommendedOnly && !isRecommended(event)) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const haystack = `${event.title} ${event.city} ${event.venue} ${event.industry} ${event.description}`.toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
       return true;
     });
 
@@ -266,14 +353,14 @@ function EventsPageContent() {
 
     return list;
   }, [
-    currentMonth,
+    activeMonthKey,
+    selectedDays,
     city,
     industry,
     category,
     venue,
     bookingOnly,
     recommendedOnly,
-    search,
     sort,
     isRecommended,
   ]);
@@ -283,8 +370,29 @@ function EventsPageContent() {
     return SEED_EVENTS.filter((e) => isRecommended(e)).slice(0, 3);
   }, [isAuthenticated, user, isRecommended]);
 
-  const shiftMonth = (delta: number) => {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  const shiftViewMonth = (delta: number) => {
+    setViewMonth((prev) => {
+      const next = prev + delta;
+      if (next < 0) {
+        setViewYear((year) => year - 1);
+        return 11;
+      }
+      if (next > 11) {
+        setViewYear((year) => year + 1);
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const toggleDay = (dateKey: string) => {
+    setSelectedDays((prev) =>
+      prev.includes(dateKey) ? prev.filter((day) => day !== dateKey) : [...prev, dateKey]
+    );
+  };
+
+  const clearPeriod = () => {
+    setSelectedDays([]);
   };
 
   const resetFilters = () => {
@@ -295,11 +403,12 @@ function EventsPageContent() {
     setRecommendedOnly(false);
     setBookingOnly(false);
     setSort("date-asc");
-    setSearch("");
+    clearPeriod();
   };
 
   const confirmCity = () => {
     setSelectedCity(cityDraft);
+    setCity(cityDraft);
     setCityModalOpen(false);
   };
 
@@ -307,63 +416,29 @@ function EventsPageContent() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <Modal
+      <CityPickerModal
         open={cityModalOpen}
         onClose={() => setCityModalOpen(false)}
-        title="Определение города"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setCityModalOpen(false)}>Пропустить</Button>
-            <Button onClick={confirmCity}>Подтвердить</Button>
-          </>
-        }
-      >
-        <p className="text-sm text-gray-700 mb-4">
-          Мы определили ваш город как <strong>{selectedCity}</strong>. Выберите город для показа актуальных мероприятий.
-        </p>
-        <Select
-          label="Город"
-          value={cityDraft}
-          onChange={(e) => setCityDraft(e.target.value)}
-          options={CITIES.map((c) => ({ value: c, label: c }))}
-        />
-      </Modal>
+        detectedCity={detectedCity}
+        cityDraft={cityDraft}
+        setCityDraft={setCityDraft}
+        districtDraft={districtDraft}
+        setDistrictDraft={setDistrictDraft}
+        onConfirm={confirmCity}
+      />
 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Выставки и мероприятия</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Город: {selectedCity} · Каталог мероприятий для участия
-            </p>
-          </div>
-          <Link href="/requests/new">
-            <Button>Разместить заявку</Button>
-          </Link>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Выставки и мероприятия</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Город: {selectedCity} · Каталог мероприятий для участия
+          </p>
         </div>
 
-        <div className="flex items-center justify-between border border-gray-300 bg-gray-50 px-4 py-3 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => shiftMonth(-1)} aria-label="Предыдущий месяц">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium capitalize">{formatMonthLabel(currentMonth)}</span>
-          <Button variant="ghost" size="sm" onClick={() => shiftMonth(1)} aria-label="Следующий месяц">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder="Поиск по названию, городу, площадке..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1"
-          />
-          <Button variant="outline" className="md:hidden" onClick={() => setFilterDrawerOpen(true)}>
-            <Filter className="h-4 w-4" />
-            Фильтры
-          </Button>
-        </div>
+        <Button variant="outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
+          <Filter className="h-4 w-4" />
+          Фильтры
+        </Button>
 
         {isAuthenticated && user && recommendedEvents.length > 0 && (
           <section className="mb-8 border border-gray-900 bg-gray-50 p-4">
@@ -385,7 +460,7 @@ function EventsPageContent() {
           </section>
         )}
 
-        <div className="grid lg:grid-cols-[240px_1fr] gap-6">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
           <aside className="hidden md:block">
             <div className="border border-gray-300 p-4 sticky top-20">
               <div className="flex items-center justify-between mb-4">
@@ -408,6 +483,12 @@ function EventsPageContent() {
                 sort={sort}
                 setSort={setSort}
                 showRecommendedFilter={isAuthenticated}
+                viewYear={viewYear}
+                viewMonth={viewMonth}
+                onShiftViewMonth={shiftViewMonth}
+                selectedDays={selectedDays}
+                onToggleDay={toggleDay}
+                onClearPeriod={clearPeriod}
               />
             </div>
           </aside>
@@ -418,7 +499,7 @@ function EventsPageContent() {
             ) : filteredEvents.length === 0 ? (
               <EmptyState
                 title="Мероприятия не найдены"
-                description="Измените фильтры или выберите другой месяц"
+                description="Измените фильтры или выберите другой период"
                 actionLabel="Сбросить фильтры"
                 onAction={resetFilters}
               />
@@ -453,6 +534,12 @@ function EventsPageContent() {
           sort={sort}
           setSort={setSort}
           showRecommendedFilter={isAuthenticated}
+          viewYear={viewYear}
+          viewMonth={viewMonth}
+          onShiftViewMonth={shiftViewMonth}
+          selectedDays={selectedDays}
+          onToggleDay={toggleDay}
+          onClearPeriod={clearPeriod}
         />
         <Button className="w-full mt-4" onClick={() => setFilterDrawerOpen(false)}>Применить</Button>
       </Drawer>

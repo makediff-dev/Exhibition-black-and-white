@@ -13,11 +13,11 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/states";
-import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { EstimateSection, Response } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { formatPrice } from "@/lib/utils/formatters";
+import { findContractorForUser, isResponseForUser } from "@/lib/utils/user-entity-map";
 
 const RESPONSE_STATUS_LABELS: Record<string, string> = {
   pending: "На рассмотрении",
@@ -35,7 +35,7 @@ export default function RespondPage() {
   const { showToast } = useToast();
 
   const request = requests.find((r) => r.id === id);
-  const contractor = SEED_CONTRACTORS.find((c) => c.id === "ctr-1");
+  const contractor = findContractorForUser(user);
 
   const [price, setPrice] = useState("");
   const [deadline, setDeadline] = useState("14 дней");
@@ -47,7 +47,7 @@ export default function RespondPage() {
 
   if (!request) {
     return (
-      <AppShell title="Отклик" breadcrumbs={[{ label: "Заявки", href: "/requests" }]}>
+      <AppShell title="Отклик" showBack backFallbackHref="/requests">
         <EmptyState title="Заявка не найдена" actionLabel="К заявкам" onAction={() => router.push("/requests")} />
       </AppShell>
     );
@@ -57,10 +57,8 @@ export default function RespondPage() {
     return (
       <AppShell
         title="Отклик недоступен"
-        breadcrumbs={[
-          { label: "Заявки", href: "/requests" },
-          { label: request.title, href: `/requests/${id}` },
-        ]}
+        showBack
+        backFallbackHref={`/requests/${id}`}
       >
         <EmptyState
           title="Заявка не принимает отклики"
@@ -72,8 +70,21 @@ export default function RespondPage() {
     );
   }
 
+  if (user?.role === "contractor" && !contractor) {
+    return (
+      <AppShell title="Отклик" showBack backFallbackHref="/requests">
+        <EmptyState
+          title="Профиль исполнителя не найден"
+          description="Не удалось сопоставить аккаунт с карточкой исполнителя"
+          actionLabel="К заявкам"
+          onAction={() => router.push("/requests")}
+        />
+      </AppShell>
+    );
+  }
+
   const existing = responses.find(
-    (r) => r.requestId === id && r.contractorId === (contractor?.id ?? "ctr-1")
+    (r) => r.requestId === id && isResponseForUser(r, user)
   );
 
   if (existing) {
@@ -83,10 +94,8 @@ export default function RespondPage() {
     return (
       <AppShell
         title="Ваш отклик"
-        breadcrumbs={[
-          { label: "Заявки", href: "/requests" },
-          { label: request.title, href: `/requests/${id}` },
-        ]}
+        showBack
+        backFallbackHref={`/requests/${id}`}
         actions={
           <>
             <Link href={`/requests/${id}`}>
@@ -153,8 +162,8 @@ export default function RespondPage() {
     const response: Response = {
       id: `res-${Date.now()}`,
       requestId: id,
-      contractorId: contractor?.id ?? "ctr-1",
-      contractorName: contractor?.name ?? user?.name ?? "ООО «СтендПро»",
+      contractorId: contractor!.id,
+      contractorName: contractor!.name,
       price: finalPrice,
       deadline,
       terms,
@@ -176,11 +185,8 @@ export default function RespondPage() {
   return (
     <AppShell
       title="Отклик на заявку"
-      breadcrumbs={[
-        { label: "Заявки", href: "/requests" },
-        { label: request.title, href: `/requests/${id}` },
-        { label: "Отклик" },
-      ]}
+      showBack
+      backFallbackHref={`/requests/${id}`}
       actions={
         <Link href={`/requests/${id}`}>
           <Button variant="outline" size="sm">Отмена</Button>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Eye, GitCompare, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { GitCompare, MessageSquare, Plus, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
-import { REQUEST_FORMAT_LABELS, REQUEST_STATUS_LABELS } from "@/constants/statuses";
+import { REQUEST_FORMAT_LABELS, REQUEST_RESULT_LABELS, REQUEST_STATUS_LABELS } from "@/constants/statuses";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import type { Request, RequestStatus } from "@/data/types";
+import type { Deal, Request, RequestStatus, Response } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { formatPrice, formatRequestDeadlineShort } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
 
 const TAB_STATUSES: { id: RequestStatus; label: string }[] = [
@@ -33,9 +33,84 @@ function formatBudget(budget: Request["budget"]) {
   return "—";
 }
 
+function TableRowAction({
+  href,
+  onClick,
+  icon: Icon,
+  children,
+}: {
+  href?: string;
+  onClick?: () => void;
+  icon?: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  const className =
+    "inline-flex items-center gap-1.5 text-xs text-gray-900 hover:underline py-0.5 whitespace-nowrap";
+
+  const content = (
+    <>
+      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+      {children}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
+  );
+}
+
+function getRequestOutcome(request: Request, deals: Deal[], responses: Response[]) {
+  const hasDeal = deals.some((deal) => deal.requestId === request.id);
+  const hasAcceptedResponse = responses.some(
+    (response) => response.requestId === request.id && response.status === "accepted"
+  );
+  const contractorSelected =
+    hasDeal ||
+    hasAcceptedResponse ||
+    request.status === "in_progress" ||
+    request.status === "completed";
+
+  return { contractorSelected };
+}
+
+function RequestResult({ request }: { request: Request }) {
+  const { deals, responses } = usePrototypeStore();
+  const { contractorSelected } = getRequestOutcome(request, deals, responses);
+
+  if (contractorSelected) {
+    const label =
+      request.status === "completed"
+        ? REQUEST_RESULT_LABELS.deal_completed
+        : REQUEST_RESULT_LABELS.contractor_selected;
+
+    return <span className="text-xs text-gray-900 whitespace-nowrap">{label}</span>;
+  }
+
+  if (request.status === "published" && request.responseCount === 0) {
+    return (
+      <span className="text-xs text-gray-500 whitespace-nowrap">
+        {REQUEST_RESULT_LABELS.awaiting_responses}
+      </span>
+    );
+  }
+
+  return <span className="text-xs text-gray-400">—</span>;
+}
+
 function RequestActions({ request }: { request: Request }) {
-  const { updateRequest } = usePrototypeStore();
+  const { updateRequest, deals, responses } = usePrototypeStore();
   const { showToast } = useToast();
+  const { contractorSelected } = getRequestOutcome(request, deals, responses);
 
   const deleteDraft = () => {
     updateRequest(request.id, { status: "completed" });
@@ -43,35 +118,21 @@ function RequestActions({ request }: { request: Request }) {
   };
 
   return (
-    <div className="flex flex-wrap gap-1">
-      <Link href={`/requests/${request.id}`}>
-        <Button variant="ghost" size="sm">
-          <Eye className="h-3.5 w-3.5" />
-          Открыть
-        </Button>
-      </Link>
-      {request.status === "published" && request.responseCount > 0 && (
-        <>
-          <Link href={`/requests/${request.id}/responses`}>
-            <Button variant="ghost" size="sm">
-              <MessageSquare className="h-3.5 w-3.5" />
-              Отклики ({request.responseCount})
-            </Button>
-          </Link>
-          {request.responseCount >= 2 && (
-            <Link href={`/requests/${request.id}/compare`}>
-              <Button variant="ghost" size="sm">
-                <GitCompare className="h-3.5 w-3.5" />
-                Сравнить
-              </Button>
-            </Link>
-          )}
-        </>
+    <div className="flex flex-col items-center gap-0.5">
+      {request.responseCount > 0 && request.status !== "draft" && (
+        <TableRowAction href={`/requests/${request.id}/responses`} icon={MessageSquare}>
+          Отклики ({request.responseCount})
+        </TableRowAction>
+      )}
+      {request.status === "published" && request.responseCount >= 2 && !contractorSelected && (
+        <TableRowAction href={`/requests/${request.id}/compare`} icon={GitCompare}>
+          Сравнить
+        </TableRowAction>
       )}
       {request.status === "draft" && (
-        <Button variant="ghost" size="sm" onClick={deleteDraft}>
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        <TableRowAction icon={Trash2} onClick={deleteDraft}>
+          Удалить
+        </TableRowAction>
       )}
     </div>
   );
@@ -91,16 +152,18 @@ function RequestRow({ request }: { request: Request }) {
       <td className="px-3 py-3 text-sm">{REQUEST_FORMAT_LABELS[request.format]}</td>
       <td className="px-3 py-3 text-sm">{request.city}</td>
       <td className="px-3 py-3 text-sm">{formatBudget(request.budget)}</td>
-      <td className="px-3 py-3 text-sm">{formatShortDate(request.deadline)}</td>
-      <td className="px-3 py-3 text-sm">{request.responseCount}</td>
+      <td className="px-3 py-3 text-sm">{formatRequestDeadlineShort(request.deadline)}</td>
       <td className="px-3 py-3">
         <Badge variant={request.status === "published" ? "solid" : "outline"}>
           {REQUEST_STATUS_LABELS[request.status]}
         </Badge>
       </td>
       <td className="px-3 py-3 text-xs text-gray-600">{event?.title ?? "—"}</td>
-      <td className="px-3 py-3">
+      <td className="px-3 py-3 align-middle whitespace-nowrap text-center">
         <RequestActions request={request} />
+      </td>
+      <td className="px-3 py-3 align-top whitespace-nowrap min-w-[9rem]">
+        <RequestResult request={request} />
       </td>
     </tr>
   );
@@ -121,9 +184,12 @@ function RequestCard({ request }: { request: Request }) {
       <CardDescription>{request.category} · {request.city}</CardDescription>
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600">
         <p>Бюджет: {formatBudget(request.budget)}</p>
-        <p>Дедлайн: {formatShortDate(request.deadline)}</p>
-        <p>Откликов: {request.responseCount}</p>
+        <p>Диапазон: {formatRequestDeadlineShort(request.deadline)}</p>
         <p>Мероприятие: {event?.title ?? "—"}</p>
+      </div>
+      <div className="text-xs text-gray-600">
+        <span className="font-medium">Результат: </span>
+        <RequestResult request={request} />
       </div>
       <div className="mt-3 pt-3 border-t border-gray-200">
         <RequestActions request={request} />
@@ -197,11 +263,11 @@ function RequestsContent() {
                   <th className="px-3 py-2 font-medium">Формат</th>
                   <th className="px-3 py-2 font-medium">Город</th>
                   <th className="px-3 py-2 font-medium">Бюджет</th>
-                  <th className="px-3 py-2 font-medium">Дедлайн</th>
-                  <th className="px-3 py-2 font-medium">Отклики</th>
+                  <th className="px-3 py-2 font-medium">Сроки</th>
                   <th className="px-3 py-2 font-medium">Статус</th>
                   <th className="px-3 py-2 font-medium">Мероприятие</th>
-                  <th className="px-3 py-2 font-medium">Действия</th>
+                  <th className="px-3 py-2 font-medium whitespace-nowrap text-center">Действия</th>
+                  <th className="px-3 py-2 font-medium whitespace-nowrap min-w-[9rem]">Результат</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,19 +290,22 @@ function RequestsContent() {
 
 export default function RequestsPage() {
   const { isAuthenticated, user } = useAuthStore();
+  const isContractor = user?.role === "contractor";
+  const pageTitle = isContractor ? "Доступные заявки" : "Мои заявки";
 
   if (isAuthenticated && user) {
     return (
       <AppShell
-        title="Заявки"
-        breadcrumbs={[{ label: "Главная", href: "/" }, { label: "Заявки" }]}
+        title={pageTitle}
         actions={
-          <Link href="/requests/new">
-            <Button size="sm">
-              <Plus className="h-4 w-4" />
-              Новая заявка
-            </Button>
-          </Link>
+          isContractor ? undefined : (
+            <Link href="/requests/new">
+              <Button size="sm">
+                <Plus className="h-4 w-4" />
+                Новая заявка
+              </Button>
+            </Link>
+          )
         }
       >
         <RequestsContent />

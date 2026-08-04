@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -12,15 +12,19 @@ import {
   Play,
   Send,
   Shield,
+  Upload,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { ConfirmModal } from "@/components/ui/modal";
+import { DealReviewTab } from "@/components/deals/deal-review-tab";
+import { EventOrdersPanel } from "@/components/deals/event-orders-panel";
 import { Tabs } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/states";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   DEAL_STATUS_LABELS,
   REQUEST_FORMAT_LABELS,
@@ -49,7 +53,7 @@ const SAFE_DEAL_STEPS = [
   { key: "completed", label: "Завершено" },
 ];
 
-type DealTab = "overview" | "stages" | "documents" | "payments" | "files" | "history";
+type DealTab = "overview" | "stages" | "documents" | "payments" | "files" | "history" | "review" | "recommend";
 
 interface DealAction {
   id: string;
@@ -227,21 +231,30 @@ export default function DealPage() {
   const params = useParams();
   const id = params.id as string;
   const { user } = useAuthStore();
-  const { deals, documents, payments, messages, updateDeal, updateDealStatus } =
+  const { deals, documents, payments, messages, requests, updateDeal, updateDealStatus } =
     usePrototypeStore();
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState<DealTab>("overview");
   const [confirmAction, setConfirmAction] = useState<DealAction | null>(null);
   const [remark, setRemark] = useState("");
+  const [recommendInn, setRecommendInn] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [reviewUploadOpen, setReviewUploadOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const deal = deals.find((d) => d.id === id);
+  const linkedRequest = deal?.requestId
+    ? requests.find((request) => request.id === deal.requestId)
+    : undefined;
+  const eventId = deal?.eventId ?? linkedRequest?.eventId;
   const dealDocuments = documents.filter((d) => d.dealId === id);
   const dealPayments = payments.filter((p) => p.dealId === id);
   const messageThread = messages.find((m) => m.relatedId === id);
 
   const isCustomer = user?.id === deal?.customerId || user?.role === "customer";
   const isContractor = user?.role === "contractor";
+  const isVenue = user?.role === "venue";
 
   const actions = useMemo(() => {
     if (!deal) return [];
@@ -249,6 +262,40 @@ export default function DealPage() {
     if (isContractor) return getContractorActions(deal);
     return [];
   }, [deal, isCustomer, isContractor]);
+
+  const isStageReview = deal?.status === "stage_review";
+  const stageReviewActions = useMemo(
+    () => (deal && isStageReview ? getCustomerActions(deal) : []),
+    [deal, isStageReview]
+  );
+  const remarksAction =
+    stageReviewActions.find((action) => action.id === "remarks") ??
+    actions.find((action) => action.id === "remarks");
+
+  const handleActionClick = (action: DealAction) => {
+    if (action.confirm) {
+      setConfirmAction(action);
+      return;
+    }
+    executeAction(action);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
+
+    setUploadedFiles((prev) => [...prev, ...files.map((file) => file.name)]);
+    showToast(`Загружено файлов: ${files.length}`, "success");
+    event.target.value = "";
+  };
+
+  const handleSendActToEdo = (docNumber: string) => {
+    if (user?.edoStatus !== "connected") {
+      showToast("Подключите ЭДО в личном кабинете для отправки на подпись", "error");
+      return;
+    }
+    showToast(`Акт ${docNumber} отправлен в ЭДО на подпись`, "success");
+  };
 
   const executeAction = (action: DealAction) => {
     if (!deal) return;
@@ -304,11 +351,44 @@ export default function DealPage() {
     { id: "payments", label: "Оплаты" },
     { id: "files", label: "Файлы" },
     { id: "history", label: "История" },
+    ...(deal?.status === "completed" ? [{ id: "review" as const, label: "Отзыв" }] : []),
+    ...(deal?.status === "completed" && isCustomer
+      ? [{ id: "recommend" as const, label: "Рекомендация" }]
+      : []),
   ];
+
+  const handleDealUpdate = (updates: Partial<Deal>) => {
+    updateDeal(deal!.id, updates);
+  };
+
+  const handleRecommendByInn = () => {
+    if (!recommendInn.trim()) {
+      showToast("Укажите ИНН организации", "error");
+      return;
+    }
+    showToast(`Рекомендация отправлена организации с ИНН ${recommendInn}`, "success");
+    setRecommendInn("");
+  };
+
+  const handleShareProfile = (channel: "telegram" | "whatsapp" | "copy") => {
+    if (!deal) return;
+    const profileUrl = `${window.location.origin}/contractors/${deal.contractorId}`;
+    const text = `Рекомендую исполнителя ${deal.contractorName}: ${profileUrl}`;
+    if (channel === "copy") {
+      void navigator.clipboard.writeText(text);
+      showToast("Ссылка на профиль скопирована", "success");
+      return;
+    }
+    const url =
+      channel === "telegram"
+        ? `https://t.me/share/url?url=${encodeURIComponent(profileUrl)}&text=${encodeURIComponent(`Рекомендую исполнителя ${deal.contractorName}`)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   if (!deal) {
     return (
-      <AppShell title="Сделка" breadcrumbs={[{ label: "Сделки", href: "/requests" }]}>
+      <AppShell title="Сделка" showBack backFallbackHref="/requests">
         <EmptyState
           title="Сделка не найдена"
           actionLabel="К заявкам"
@@ -321,15 +401,10 @@ export default function DealPage() {
   return (
     <AppShell
       title={`${deal.number} — ${deal.title}`}
-      breadcrumbs={[
-        { label: "Заявки", href: "/requests" },
-        ...(deal.requestId
-          ? [{ label: "Заявка", href: `/requests/${deal.requestId}` }]
-          : []),
-        { label: deal.number },
-      ]}
+      showBack
+      backFallbackHref={deal.requestId ? `/requests/${deal.requestId}` : "/requests"}
       actions={
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {messageThread && (
             <Link href={messageThread.relatedLink}>
               <Button variant="outline" size="sm">
@@ -343,21 +418,70 @@ export default function DealPage() {
               key={action.id}
               size="sm"
               variant={action.variant ?? "primary"}
-              onClick={() =>
-                action.confirm ? setConfirmAction(action) : executeAction(action)
-              }
+              onClick={() => handleActionClick(action)}
             >
               {action.icon}
               {action.label}
             </Button>
           ))}
+          {deal.status === "completed" && isContractor && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setActiveTab("review");
+                  setReviewUploadOpen(true);
+                }}
+              >
+                <Upload className="h-4 w-4" />
+                Загрузить фото проекта
+              </Button>
+              {!deal.reviewRequested && !deal.review && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setActiveTab("review");
+                    handleDealUpdate({
+                      reviewRequested: true,
+                      reviewRequestedAt: new Date().toISOString().slice(0, 10),
+                      history: [
+                        ...deal.history,
+                        {
+                          date: new Date().toISOString().slice(0, 10),
+                          action: "Исполнитель запросил отзыв у заказчика",
+                          actor: deal.contractorName,
+                        },
+                      ],
+                    });
+                    showToast(
+                      "Заказчику отправлено сообщение с просьбой оценить исполнителя",
+                      "success"
+                    );
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Запросить отзыв у заказчика
+                </Button>
+              )}
+            </>
+          )}
+          {deal.status === "completed" && isCustomer && !deal.review && (
+            <Button size="sm" onClick={() => setActiveTab("review")}>
+              Оценить исполнителя
+            </Button>
+          )}
         </div>
       }
     >
       <ConfirmModal
         open={!!confirmAction}
         onClose={() => setConfirmAction(null)}
-        onConfirm={() => confirmAction && executeAction(confirmAction)}
+        onConfirm={() => {
+          if (confirmAction) executeAction(confirmAction);
+          setConfirmAction(null);
+        }}
         title={confirmAction?.label ?? "Подтверждение"}
         message={confirmAction?.confirm ?? "Выполнить действие?"}
       />
@@ -365,7 +489,7 @@ export default function DealPage() {
       <div className="flex flex-wrap gap-2 mb-4">
         <Badge>{DEAL_STATUS_LABELS[deal.status]}</Badge>
         <Badge variant="outline">{REQUEST_FORMAT_LABELS[deal.format]}</Badge>
-        <Badge variant="dashed">{formatPrice(deal.totalPrice)}</Badge>
+        <Badge variant="outline">{formatPrice(deal.totalPrice)}</Badge>
       </div>
 
       {deal.format === "safe_deal" && <SafeDealFlow status={deal.status} />}
@@ -429,11 +553,18 @@ export default function DealPage() {
             <Card className="md:col-span-2">
               <CardTitle className="text-sm mb-2">Связанная заявка</CardTitle>
               <Link href={`/requests/${deal.requestId}`} className="text-sm hover:underline">
-                Перейти к заявке →
+                Перейти к заявке
               </Link>
             </Card>
           )}
-          {deal.status === "stage_review" && isCustomer && (
+          {eventId && (
+            <EventOrdersPanel
+              eventId={eventId}
+              currentDealId={deal.id}
+              showVenueNote={isVenue}
+            />
+          )}
+          {isStageReview && (
             <Card className="md:col-span-2">
               <CardTitle className="text-sm mb-2">Замечания к этапу</CardTitle>
               <Textarea
@@ -441,6 +572,41 @@ export default function DealPage() {
                 onChange={(e) => setRemark(e.target.value)}
                 placeholder="Опишите замечания (используется при отправке на доработку)"
               />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {remarksAction && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleActionClick(remarksAction)}
+                  >
+                    <Send className="h-4 w-4" />
+                    Отправить замечания
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  Загрузить файлы
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="sr-only"
+                  onChange={handleFileUpload}
+                />
+              </div>
+              {uploadedFiles.length > 0 && (
+                <ul className="mt-3 space-y-1 text-xs text-gray-600">
+                  {uploadedFiles.map((file) => (
+                    <li key={file}>📄 {file}</li>
+                  ))}
+                </ul>
+              )}
             </Card>
           )}
         </div>
@@ -491,17 +657,29 @@ export default function DealPage() {
             <EmptyState title="Документов пока нет" description="Документы появятся после согласования" />
           ) : (
             dealDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                className="flex flex-wrap justify-between items-center border border-gray-300 p-3 text-sm"
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="font-medium">{doc.type} {doc.number}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <span>{formatShortDate(doc.date)}</span>
-                  <Badge variant="outline">{doc.status}</Badge>
+              <div key={doc.id} className="border border-gray-300 p-3 text-sm">
+                <div className="flex flex-wrap justify-between items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span className="font-medium">
+                      {doc.type} {doc.number}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <span>{formatShortDate(doc.date)}</span>
+                    {doc.type === "Акт" ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        type="button"
+                        onClick={() => handleSendActToEdo(doc.number)}
+                      >
+                        Отправить в ЭДО на подпись
+                      </Button>
+                    ) : (
+                      <Badge variant="outline">{doc.status}</Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -546,6 +724,67 @@ export default function DealPage() {
               ))
             )
           )}
+        </div>
+      )}
+
+      {activeTab === "review" && deal.status === "completed" && (
+        <DealReviewTab
+          deal={deal}
+          isContractor={isContractor}
+          isCustomer={isCustomer}
+          onUpdate={handleDealUpdate}
+          uploadModalOpen={reviewUploadOpen}
+          onUploadModalOpenChange={setReviewUploadOpen}
+        />
+      )}
+
+      {activeTab === "recommend" && deal.status === "completed" && isCustomer && (
+        <div className="max-w-lg space-y-6">
+          <p className="text-sm text-gray-600">
+            Порекомендуйте исполнителя{" "}
+            <span className="font-medium text-gray-900">{deal.contractorName}</span> другой
+            организации или отправьте профиль коллеге.
+          </p>
+
+          <Card>
+            <CardTitle className="text-sm mb-3">Рекомендация по ИНН</CardTitle>
+            <CardDescription className="mb-4">
+              Укажите ИНН организации, которой хотите порекомендовать исполнителя
+            </CardDescription>
+            <Input
+              label="ИНН организации"
+              value={recommendInn}
+              onChange={(e) => setRecommendInn(e.target.value)}
+              placeholder="10 или 12 цифр"
+            />
+            <Button className="mt-4" onClick={handleRecommendByInn}>
+              Отправить рекомендацию
+            </Button>
+          </Card>
+
+          <Card>
+            <CardTitle className="text-sm mb-3">Отправить коллеге</CardTitle>
+            <CardDescription className="mb-4">
+              Поделитесь профилем исполнителя в мессенджере
+            </CardDescription>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleShareProfile("telegram")}>
+                Telegram
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleShareProfile("whatsapp")}>
+                WhatsApp
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleShareProfile("copy")}>
+                Скопировать ссылку
+              </Button>
+            </div>
+            <Link
+              href={`/contractors/${deal.contractorId}`}
+              className="inline-block mt-4 text-sm hover:underline"
+            >
+              Открыть профиль исполнителя
+            </Link>
+          </Card>
         </div>
       )}
 

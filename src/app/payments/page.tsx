@@ -5,14 +5,7 @@ import { PaymentsPanel } from "@/components/finance/payments-panel";
 
 export default function PaymentsPage() {
   return (
-    <SharedPageShell
-      title="Оплаты и финансы"
-      breadcrumbs={[
-        { label: "Главная", href: "/" },
-        { label: "Оплаты" },
-      ]}
-      maxWidth="wide"
-    >
+    <SharedPageShell title="Оплаты и финансы" maxWidth="wide">
       <PaymentsPanel />
     </SharedPageShell>
   );

@@ -1,13 +1,15 @@
 "use client";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
 import { useAuthStore } from "@/lib/store";
 
 interface SharedPageShellProps {
   title: string;
-  breadcrumbs?: { label: string; href?: string }[];
+  showBack?: boolean;
+  backFallbackHref?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;
   maxWidth?: "default" | "wide" | "full";
@@ -15,7 +17,8 @@ interface SharedPageShellProps {
 
 export function SharedPageShell({
   title,
-  breadcrumbs,
+  showBack = false,
+  backFallbackHref,
   actions,
   children,
   maxWidth = "default",
@@ -31,7 +34,12 @@ export function SharedPageShell({
 
   if (isAuthenticated) {
     return (
-      <AppShell title={title} breadcrumbs={breadcrumbs} actions={actions}>
+      <AppShell
+        title={title}
+        showBack={showBack}
+        backFallbackHref={backFallbackHref}
+        actions={actions}
+      >
         <div className={widthClass}>{children}</div>
       </AppShell>
     );
@@ -42,6 +50,9 @@ export function SharedPageShell({
       <PublicHeader />
       <main className="flex-1 px-4 py-6 md:px-6">
         <div className={widthClass}>
+          {showBack && (
+            <BackButton fallbackHref={backFallbackHref} className="mb-4" />
+          )}
           {(title || actions) && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               {title && <h1 className="text-2xl font-bold text-gray-900">{title}</h1>}

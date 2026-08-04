@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PublicHeader } from "@/components/layout/public-header";
@@ -9,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast-provider";
-import { SEED_SERVICES } from "@/data/mocks/seed";
 import type { Deal } from "@/data/types";
 import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
+import { resolveCartLine } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export default function CheckoutPage() {
@@ -19,7 +20,7 @@ export default function CheckoutPage() {
   const { showToast } = useToast();
   const { items, clearCart } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
-  const { addDeal, addNotification } = usePrototypeStore();
+  const { addDeal, addNotification, services } = usePrototypeStore();
   const [submitting, setSubmitting] = useState(false);
 
   const grouped = useMemo(() => {
@@ -31,32 +32,33 @@ export default function CheckoutPage() {
     }>();
 
     for (const item of items) {
-      const service = SEED_SERVICES.find((s) => s.id === item.serviceId);
-      if (!service) continue;
+      const resolved = resolveCartLine(item, services);
+      if (!resolved) continue;
 
+      const { service, unitPrice, lineTitle } = resolved;
       const line = {
-        title: service.title,
+        title: lineTitle,
         quantity: item.quantity,
-        price: service.price,
+        price: unitPrice,
         comment: item.comment,
       };
 
       const existing = map.get(service.contractorId);
       if (existing) {
         existing.lines.push(line);
-        existing.subtotal += service.price * item.quantity;
+        existing.subtotal += unitPrice * item.quantity;
       } else {
         map.set(service.contractorId, {
           contractorId: service.contractorId,
           contractorName: service.contractorName,
           lines: [line],
-          subtotal: service.price * item.quantity,
+          subtotal: unitPrice * item.quantity,
         });
       }
     }
 
     return Array.from(map.values());
-  }, [items]);
+  }, [items, services]);
 
   const total = grouped.reduce((sum, g) => sum + g.subtotal, 0);
 
@@ -128,7 +130,11 @@ export default function CheckoutPage() {
     clearCart();
     setSubmitting(false);
     showToast(`Создано сделок: ${createdDealIds.length}`, "success");
-    router.push("/deals");
+    if (createdDealIds.length === 1) {
+      router.push(`/deals/${createdDealIds[0]}`);
+      return;
+    }
+    router.push("/account/customer/active-projects");
   };
 
   if (items.length === 0) {
@@ -153,7 +159,7 @@ export default function CheckoutPage() {
       <PublicHeader />
 
       <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
-        <Link href="/cart" className="text-sm underline mb-4 inline-block">← Корзина</Link>
+        <BackButton fallbackHref="/cart" className="mb-4" />
 
         <h1 className="text-2xl font-bold mb-2">Оформление заказа</h1>
         <p className="text-sm text-gray-600 mb-6">

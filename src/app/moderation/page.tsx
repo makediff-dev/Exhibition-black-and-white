@@ -8,13 +8,11 @@ import {
   CheckCircle,
   Clock,
   HelpCircle,
-  RefreshCw,
   XCircle,
 } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { usePrototypeStore } from "@/lib/store";
@@ -54,6 +52,12 @@ const STATUS_OPTIONS: {
   },
 ];
 
+function getClarificationStep(status: ModerationStatus): number {
+  if (status === "needs_clarification") return 4;
+  if (status === "rejected") return 1;
+  return 0;
+}
+
 interface RegistrationDraft {
   role?: UserRole;
   companyName?: string;
@@ -73,11 +77,25 @@ export default function ModerationPage() {
   const [status, setStatus] = useState<ModerationStatus>(
     draft.moderationStatus ?? "pending"
   );
-  const [resubmitComment, setResubmitComment] = useState("");
-  const [showResubmit, setShowResubmit] = useState(false);
 
   const current = STATUS_OPTIONS.find((s) => s.value === status) ?? STATUS_OPTIONS[3];
   const StatusIcon = current.icon;
+
+  const handleClarifyData = () => {
+    setRegistrationDraft({
+      ...registrationDraft,
+      step: getClarificationStep(status),
+    });
+    router.push("/register");
+  };
+
+  const handleEditApplication = () => {
+    setRegistrationDraft({
+      ...registrationDraft,
+      step: 0,
+    });
+    router.push("/register");
+  };
 
   const handleDemoStatus = (next: ModerationStatus) => {
     setStatus(next);
@@ -86,23 +104,6 @@ export default function ModerationPage() {
       moderationStatus: next,
     });
     showToast(`Статус изменён: ${STATUS_OPTIONS.find((s) => s.value === next)?.label}`, "info");
-  };
-
-  const handleResubmit = () => {
-    if (!resubmitComment.trim()) {
-      showToast("Добавьте комментарий для модератора", "error");
-      return;
-    }
-    setStatus("pending");
-    setRegistrationDraft({
-      ...registrationDraft,
-      moderationStatus: "pending",
-      moderationComment: resubmitComment,
-      resubmittedAt: new Date().toISOString(),
-    });
-    setShowResubmit(false);
-    setResubmitComment("");
-    showToast("Заявка отправлена повторно на модерацию");
   };
 
   return (
@@ -188,33 +189,11 @@ export default function ModerationPage() {
         )}
 
         {(status === "needs_clarification" || status === "rejected") && (
-          <div className="mb-6">
-            {!showResubmit ? (
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => setShowResubmit(true)}>
-                  <RefreshCw className="h-4 w-4" />
-                  Отправить повторно
-                </Button>
-                <Link href="/register">
-                  <Button variant="outline">Редактировать заявку</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3 border border-gray-300 p-4">
-                <Textarea
-                  label="Комментарий для модератора"
-                  value={resubmitComment}
-                  onChange={(e) => setResubmitComment(e.target.value)}
-                  placeholder="Опишите внесённые изменения..."
-                />
-                <div className="flex gap-2">
-                  <Button onClick={handleResubmit}>Отправить</Button>
-                  <Button variant="outline" onClick={() => setShowResubmit(false)}>
-                    Отмена
-                  </Button>
-                </div>
-              </div>
-            )}
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Button onClick={handleClarifyData}>Уточнить данные</Button>
+            <Button variant="outline" onClick={handleEditApplication}>
+              Редактировать заявку
+            </Button>
           </div>
         )}
 

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { HelpCircle } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,19 +15,53 @@ import { Tabs } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/states";
 import { Modal } from "@/components/ui/modal";
 import { FileUpload } from "@/components/ui/file-upload";
-import { FloorPlanGrid } from "@/components/catalog/floor-plan-grid";
+import { VenueDashboardSection } from "@/components/venue/venue-dashboard-section";
+import { VenueCabinetHeader } from "@/components/venue/venue-cabinet-header";
+import { AccountCabinetHeader } from "@/components/account/account-cabinet-header";
+import { OrganizerDashboardSection } from "@/components/organizer/organizer-dashboard-section";
+import { OrganizerSettingsSection } from "@/components/organizer/organizer-settings-section";
+import { OrganizerEventsSection } from "@/components/organizer/organizer-events-section";
+import { OrganizerEventFormSection } from "@/components/organizer/organizer-event-form-section";
+import { OrganizerVenuesSection } from "@/components/organizer/organizer-venues-section";
+import { OrganizerParticipantDetailSection } from "@/components/organizer/organizer-participant-detail-section";
+import { VenueFloorPlanSection } from "@/components/venue/venue-floor-plan-section";
+import { VenueHallsSection } from "@/components/venue/venue-halls-section";
+import { ServiceCard } from "@/components/catalog/service-card";
+import { ResponseCard } from "@/components/responses/response-card";
+import { ChecksPanel } from "@/components/account/checks-panel";
+import { PortfolioCard } from "@/components/contractors/portfolio-card";
+import { PortfolioDetail } from "@/components/contractors/portfolio-detail";
+import { ProjectGanttSection } from "@/components/contractor/project-gantt-section";
+import { ReviewCard } from "@/components/contractors/review-card";
+import { AvailableRequestCard } from "@/components/requests/available-request-card";
+import { VenueServicesSection } from "@/components/venue/venue-services-section";
+import { VenueSettingsSection } from "@/components/venue/venue-settings-section";
+import { VenueEventsSection } from "@/components/venue/venue-events-section";
+import { VenueBookingsSection } from "@/components/venue/venue-bookings-section";
+import { VenueProfileSection } from "@/components/venue/venue-profile-section";
+import { VenueSpacesSection } from "@/components/venue/venue-spaces-section";
+import { VenueEventDetailSection } from "@/components/venue/venue-event-detail-section";
 import { PinLoginSettings } from "@/components/account/pin-login-settings";
 import { PaymentsPanel } from "@/components/finance/payments-panel";
+import { VenuePaymentsPanel } from "@/components/finance/venue-payments-panel";
+import { OrganizerPaymentsPanel } from "@/components/finance/organizer-payments-panel";
+import { EventOrdersPanel } from "@/components/deals/event-orders-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
-import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
+import { useAuthStore, useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import {
+  findContractorForUser,
+  getContractorIdForUser,
+  isDealForUser,
+  isResponseForUser,
+} from "@/lib/utils/user-entity-map";
 import { useToast } from "@/components/ui/toast-provider";
 import { getNavForRole } from "@/constants/nav-menus";
-import { SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
-import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { DEMO_USERS, SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
+import { formatDate, formatDateTime, formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { matchOkved, getOkvedRecommendationReason } from "@/lib/utils/okved";
-import { DEAL_STATUS_LABELS, REQUEST_FORMAT_LABELS } from "@/constants/statuses";
-import { SERVICE_CATEGORIES, CITIES } from "@/constants/categories";
-import type { CompanyProfile, UserRole } from "@/data/types";
+import { DEAL_STATUS_LABELS, REQUEST_FORMAT_LABELS, STAGE_STATUS_LABELS } from "@/constants/statuses";
+import { SERVICE_CATEGORIES, CITIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict } from "@/constants/categories";
+import type { CompanyProfile, ContractorReview, Request, Service, UserRole } from "@/data/types";
 import {
   AlertCircle, Building2, CheckCircle, Clock, FileText, Hash, MapPin, Plus, ShieldCheck, Star, User,
 } from "lucide-react";
@@ -33,6 +69,11 @@ import {
 interface Props {
   role: UserRole;
   slug: string;
+}
+
+function getRequestEventTitle(request: Request) {
+  if (!request.eventId) return undefined;
+  return SEED_EVENTS.find((event) => event.id === request.eventId)?.title;
 }
 
 function CompanyRequisites({ user }: { user: CompanyProfile }) {
@@ -92,6 +133,30 @@ function CompanyRequisites({ user }: { user: CompanyProfile }) {
 export function AccountPageRenderer({ role, slug }: Props) {
   const nav = getNavForRole(role || "");
   const current = nav.find((n) => n.slug === slug) || nav[0];
+  const user = useAuthStore((s) => s.user);
+  const isDashboard = slug === "" || slug === "dashboard";
+  const portfolioItemId = slug.startsWith("portfolio/") ? slug.split("/")[1] : null;
+  const venueEventId = slug.startsWith("events/") ? slug.split("/")[1] : null;
+  const venueEvent = venueEventId
+    ? SEED_EVENTS.find((event) => event.id === venueEventId)
+    : undefined;
+  const contractorForTitle =
+    role === "contractor"
+      ? findContractorForUser(user) ?? undefined
+      : undefined;
+  const portfolioItem = portfolioItemId
+    ? contractorForTitle?.portfolio.find((item) => item.id === portfolioItemId)
+    : undefined;
+  const pageTitle =
+    portfolioItem || (slug === "portfolio" && role === "contractor") || (venueEvent && role === "venue") || slug === "floor-plan" || slug === "halls"
+      ? null
+      : slug === "create-event" || slug === "edit-event" || slug.startsWith("events/")
+        ? null
+        : isDashboard && role === "venue" && user?.name
+            ? user.name
+            : isDashboard && role === "organizer"
+              ? null
+              : current?.label || "Кабинет";
 
   const renderContent = () => {
     if (role === "customer") return <CustomerPages slug={slug} />;
@@ -103,8 +168,188 @@ export function AccountPageRenderer({ role, slug }: Props) {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">{current?.label || "Кабинет"}</h1>
+      {pageTitle && <h1 className="text-xl font-bold mb-4">{pageTitle}</h1>}
+      {role === "venue" && user && !slug.startsWith("events/") && slug !== "halls" && slug !== "floor-plan" ? (
+        <VenueCabinetHeader user={user} />
+      ) : null}
+      {role === "organizer" &&
+      user &&
+      slug !== "create-event" &&
+      slug !== "edit-event" &&
+      !slug.startsWith("events/") ? (
+        <AccountCabinetHeader
+          user={user}
+          asPageTitle={isDashboard}
+          actions={
+            slug === "events" ? (
+              <Link href="/account/organizer/create-event">
+                <Button size="sm">Создать мероприятие</Button>
+              </Link>
+            ) : undefined
+          }
+        />
+      ) : null}
       {renderContent()}
+    </div>
+  );
+}
+
+function PaymentInvoicesLabel({
+  direction,
+  tooltip,
+}: {
+  direction: string;
+  tooltip?: string;
+}) {
+  return (
+    <div className="mt-1">
+      <p className="text-sm text-gray-600">Неоплаченные счета</p>
+      <div className="flex items-center gap-1">
+        <p className="text-sm font-semibold text-gray-900">{direction}</p>
+        {tooltip && (
+          <Tooltip content={tooltip}>
+            <button
+              type="button"
+              className="shrink-0 text-gray-500 hover:text-gray-900"
+              aria-label="Подробнее о неоплаченных исходящих счетах"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
+          </Tooltip>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PhotoUploadSection({
+  title,
+  photos,
+  onUpload,
+}: {
+  title: string;
+  photos: string[];
+  onUpload: (fileName: string) => void;
+}) {
+  return (
+    <div>
+      <p className="text-sm font-medium mb-3">{title}</p>
+      {photos.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          {photos.map((photo, index) => (
+            <div
+              key={`${title}-${photo}-${index}`}
+              className="aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-2 text-center text-xs text-gray-500"
+            >
+              {photo}
+            </div>
+          ))}
+        </div>
+      )}
+      <FileUpload
+        label="Загрузить фотографии"
+        accept="image/*"
+        onUpload={onUpload}
+      />
+    </div>
+  );
+}
+
+function ProductionSection({
+  user,
+  showToast,
+}: {
+  user: CompanyProfile | null;
+  showToast: ReturnType<typeof useToast>["showToast"];
+}) {
+  const [productionPhotos, setProductionPhotos] = useState(["Цех", "Склад"]);
+  const [equipmentPhotos, setEquipmentPhotos] = useState(["Фрезерный станок", "Лазерная резка"]);
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" defaultChecked={user?.hasProduction} /> Собственное производство
+      </label>
+      <Input label="Адрес производства" defaultValue="г. Москва, ул. Заводская, 15" />
+      <Input label="Площадь, кв.м" defaultValue="1200" />
+      <Textarea label="Оборудование" defaultValue="Фрезерный станок, лазерная резка" />
+      <PhotoUploadSection
+        title="Фотографии производства"
+        photos={productionPhotos}
+        onUpload={(fileName) => setProductionPhotos((prev) => [...prev, fileName])}
+      />
+      <PhotoUploadSection
+        title="Фотографии оборудования"
+        photos={equipmentPhotos}
+        onUpload={(fileName) => setEquipmentPhotos((prev) => [...prev, fileName])}
+      />
+      <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
+    </div>
+  );
+}
+
+function ContractorCitiesSection({
+  user,
+  showToast,
+}: {
+  user: CompanyProfile | null;
+  showToast: ReturnType<typeof useToast>["showToast"];
+}) {
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const [district, setDistrict] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  const availableCities = useMemo(
+    () => getCitiesByDistrict(district),
+    [district]
+  );
+
+  const handleAddCity = () => {
+    if (!selectedCity || !user) return;
+    if (user.cities.includes(selectedCity)) {
+      showToast("Город уже добавлен", "info");
+      return;
+    }
+    updateUser({ cities: [...user.cities, selectedCity] });
+    showToast("Город добавлен");
+    setSelectedCity("");
+  };
+
+  return (
+    <div className="max-w-lg space-y-4">
+      <p className="text-sm mb-1">Города оказания услуг:</p>
+      <div className="flex flex-wrap gap-2">
+        {user?.cities.map((city) => (
+          <Badge key={city}>{city}</Badge>
+        ))}
+      </div>
+
+      <Select
+        label="Федеральный округ"
+        value={district}
+        onChange={(e) => {
+          setDistrict(e.target.value);
+          setSelectedCity("");
+        }}
+        options={[
+          { value: "", label: "Все федеральные округа" },
+          ...FEDERAL_DISTRICT_OPTIONS.map((item) => ({ value: item, label: item })),
+        ]}
+      />
+
+      <Select
+        label="Добавить город"
+        value={selectedCity}
+        onChange={(e) => setSelectedCity(e.target.value)}
+        options={[
+          { value: "", label: availableCities.length ? "Выберите город" : "Города не найдены" },
+          ...availableCities.map((city) => ({ value: city, label: city })),
+        ]}
+      />
+
+      <Button size="sm" onClick={handleAddCity} disabled={!selectedCity}>
+        Добавить
+      </Button>
     </div>
   );
 }
@@ -112,16 +357,90 @@ export function AccountPageRenderer({ role, slug }: Props) {
 function DashboardWidgets({ role }: { role: string }) {
   const { requests, deals, notifications, payments } = usePrototypeStore();
   const user = useAuthStore((s) => s.user);
-  const activeDeals = deals.filter((d) => d.status !== "completed" && d.customerId === user?.id || d.contractorId === user?.id);
+  const activeDeals = deals.filter(
+    (d) => d.status !== "completed" && isDealForUser(d, user)
+  );
   const unreadNotif = notifications.filter((n) => !n.read).length;
-  const pendingPayments = payments.filter((p) => p.status === "pending").length;
+  const pendingIncoming = payments.filter(
+    (p) => p.status === "pending" && (p.direction === "incoming" || !p.direction)
+  ).length;
+  const pendingOutgoing = payments.filter(
+    (p) => p.status === "pending" && p.direction === "outgoing"
+  ).length;
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      <Card><CardTitle className="text-2xl">{requests.filter((r) => r.status === "published").length}</CardTitle><CardDescription>Активные заявки</CardDescription></Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <Card><CardTitle className="text-2xl">{requests.filter((r) => r.status === "published").length}</CardTitle><CardDescription>{role === "contractor" ? "Активные заказы" : "Активные заявки"}</CardDescription></Card>
       <Card><CardTitle className="text-2xl">{activeDeals.length}</CardTitle><CardDescription>Активные проекты</CardDescription></Card>
       <Card><CardTitle className="text-2xl">{unreadNotif}</CardTitle><CardDescription>Новые уведомления</CardDescription></Card>
-      <Card><CardTitle className="text-2xl">{pendingPayments}</CardTitle><CardDescription>Неоплаченные счета</CardDescription></Card>
+      <Card>
+        <CardTitle className="text-2xl">{pendingOutgoing}</CardTitle>
+        <PaymentInvoicesLabel
+          direction="исходящие"
+          tooltip="Например, если в качестве заказчика выступает агентство и оно выставляет счёт конечному заказчику"
+        />
+      </Card>
+      <Card>
+        <CardTitle className="text-2xl">{pendingIncoming}</CardTitle>
+        <PaymentInvoicesLabel direction="входящие" />
+      </Card>
+    </div>
+  );
+}
+
+function CustomerReviewsSection({
+  deals,
+  showToast,
+}: {
+  deals: ReturnType<typeof usePrototypeStore.getState>["deals"];
+  showToast: ReturnType<typeof useToast>["showToast"];
+}) {
+  const [submitted, setSubmitted] = useState(false);
+
+  return (
+    <div>
+      <p className="text-sm mb-4">Оставьте отзыв о завершённой сделке:</p>
+      <Select
+        label="Сделка"
+        options={deals
+          .filter((deal) => deal.status === "completed")
+          .map((deal) => ({ value: deal.id, label: deal.title }))}
+      />
+      <div className="flex gap-1 my-3">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" className="border border-gray-300 p-2 hover:border-gray-900">
+            <Star className="h-4 w-4" />
+          </button>
+        ))}
+      </div>
+      <Textarea label="Отзыв" />
+
+      <div className="mt-4 flex flex-col lg:flex-row lg:items-start gap-6">
+        <div className="flex flex-col items-start gap-3">
+          <FileUpload
+            label="Прикрепить фото и видео"
+            accept="image/*,video/*"
+            onUpload={() => showToast("Файл добавлен", "success")}
+          />
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => showToast("Рекомендация отправлена исполнителю", "success")}
+          >
+            Порекомендовать исполнителя
+          </Button>
+          <Button type="button" onClick={() => setSubmitted(true)}>
+            Отправить
+          </Button>
+        </div>
+
+        {submitted && (
+          <p className="text-sm text-gray-700 max-w-md">
+            Отзыв отправлен на модерацию, будет опубликован при успешной модерации. Срок
+            публикации может занимать до 7 дней.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -129,8 +448,12 @@ function DashboardWidgets({ role }: { role: string }) {
 function CustomerPages({ slug }: { slug: string }) {
   const user = useAuthStore((s) => s.user);
   const { updateUser, showEdoPrompt, setShowEdoPrompt } = useAuthStore();
-  const { requests, deals, responses, notifications, documents, payments } = usePrototypeStore();
+  const { requests, deals, responses, services, notifications, documents, payments } = usePrototypeStore();
   const cartItems = useCartStore((s) => s.items);
+  const addItem = useCartStore((s) => s.addItem);
+  const favoriteIds = useFavoritesStore((s) => s.serviceIds);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite);
   const { showToast } = useToast();
   const router = useRouter();
   const [edoModal, setEdoModal] = useState(showEdoPrompt);
@@ -181,31 +504,33 @@ function CustomerPages({ slug }: { slug: string }) {
 
   if (slug === "profile") {
     return (
-      <Card>
-        <form className="space-y-4 max-w-lg" onSubmit={(e) => { e.preventDefault(); showToast("Профиль сохранён"); }}>
-          <Input label="Название компании" defaultValue={user?.name} />
-          <Input label="ИНН" defaultValue={user?.inn} readOnly />
-          <Input label="ОГРН" defaultValue={user?.ogrn} readOnly />
-          <Textarea label="Описание" defaultValue={user?.description} />
-          <Input label="ОКВЭД" defaultValue={user?.mainOkved} readOnly />
-          <Button type="submit">Сохранить</Button>
-        </form>
-      </Card>
+      <form className="space-y-4 max-w-lg" onSubmit={(e) => { e.preventDefault(); showToast("Профиль сохранён"); }}>
+        <Input label="Название компании" defaultValue={user?.name} />
+        <Input label="ИНН" defaultValue={user?.inn} readOnly />
+        <Input label="ОГРН" defaultValue={user?.ogrn} readOnly />
+        <Textarea label="Описание" defaultValue={user?.description} />
+        <Input label="ОКВЭД" defaultValue={user?.mainOkved} readOnly />
+        <Button type="submit">Сохранить</Button>
+      </form>
     );
   }
 
   if (slug === "legal") {
     return (
-      <Card>
-        <div className="space-y-4 max-w-lg">
-          <Input label="Юридический адрес" defaultValue={user?.address} />
-          <Input label="Руководитель" defaultValue={user?.director} />
-          <Input label="Расчётный счёт" defaultValue="40702810XXXXXXXXXXXX" />
-          <Input label="БИК" defaultValue="044525225" />
-          <Input label="Банк" defaultValue="ПАО «Вымышленный Банк»" />
-          <Button onClick={() => showToast("Данные сохранены")}>Сохранить</Button>
-        </div>
-      </Card>
+      <div className="space-y-4 max-w-lg">
+        <Input label="ИНН" defaultValue={user?.inn} />
+        <Input label="КПП" defaultValue="770101001" />
+        <Input label="ОГРН (для ООО)" defaultValue={user?.ogrn} />
+        <Input label="ОГРНИП (для ИП)" defaultValue="" placeholder="Заполняется для индивидуальных предпринимателей" />
+        <Input label="Юридический адрес" defaultValue={user?.address} />
+        <Input label="Фактический адрес" defaultValue="г. Москва, ул. Производственная, д. 12" />
+        <Input label="Руководитель" defaultValue={user?.director} />
+        <Input label="Расчётный счёт" defaultValue="40702810XXXXXXXXXXXX" />
+        <Input label="БИК" defaultValue="044525225" />
+        <Input label="Банк" defaultValue="ПАО «Вымышленный Банк»" />
+        <Input label="Корреспондентский счёт банка" defaultValue="30101810XXXXXXXXXXXX" />
+        <Button onClick={() => showToast("Данные сохранены")}>Сохранить</Button>
+      </div>
     );
   }
 
@@ -226,20 +551,34 @@ function CustomerPages({ slug }: { slug: string }) {
         />
 
         {currentTab === "connection" && (
-          <Card>
+          <div className="space-y-4 max-w-lg">
             {user?.edoStatus === "connected" ? (
               <div className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4" /> ЭДО подключено</div>
             ) : (
-              <div className="space-y-4 max-w-lg">
+              <>
                 <div className="flex items-center gap-2 text-sm border border-dashed border-gray-400 p-3">
                   <AlertCircle className="h-4 w-4" /> ЭДО не подключено. Документы можно скачать временно.
                 </div>
-                <Select label="Оператор ЭДО" options={[{ value: "sbis", label: "СБИС" }, { value: "kontur", label: "Контур" }, { value: "tensor", label: "Тензор" }]} />
+                <Select label="Оператор ЭДО" options={[{ value: "sbis", label: "СБИС" }, { value: "kontur", label: "Контур" }, { value: "tensor", label: "Тензор" }, { value: "other", label: "Другой оператор" }]} />
                 <Input label="Идентификатор участника" placeholder="2BM-..." />
-                <Button onClick={() => { updateUser({ edoStatus: "connected" }); showToast("ЭДО подключено"); }}>Проверить и подключить</Button>
-              </div>
+              </>
             )}
-          </Card>
+            <div>
+              <p className="text-sm font-medium mb-3">
+                Загрузить документы для подписания в ЭДО руководителем вашей организации (Договор, акты и т.д.)
+              </p>
+              <FileUpload
+                label="Прикрепить документы"
+                accept=".pdf,.doc,.docx"
+                onUpload={() => showToast("Документ добавлен")}
+              />
+            </div>
+            {user?.edoStatus !== "connected" && (
+              <Button onClick={() => { updateUser({ edoStatus: "connected" }); showToast("ЭДО подключено"); }}>
+                Проверить и подключить
+              </Button>
+            )}
+          </div>
         )}
 
         {currentTab === "reminders" && (
@@ -256,19 +595,64 @@ function CustomerPages({ slug }: { slug: string }) {
         )}
 
         {currentTab === "closing" && (
-          <Card>
+          <div>
             <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
             <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
             <Textarea label="Комментарий" className="mt-3" />
             <Button className="mt-3" onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
-          </Card>
+          </div>
         )}
       </div>
     );
   }
 
-  if (slug === "requests") {
-    return <Link href="/requests"><Button>Перейти к заявкам</Button></Link>;
+  if (slug === "favorites") {
+    const favoriteServices = favoriteIds
+      .map((id) => services.find((service) => service.id === id))
+      .filter((service): service is Service => Boolean(service));
+
+    const handleToggleFavorite = (service: Service) => {
+      const added = toggleFavorite(service.id);
+      showToast(
+        added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
+        added ? "success" : "info"
+      );
+    };
+
+    const handleAddToCart = (service: Service) => {
+      addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
+      showToast(`«${service.title}» добавлено в корзину`, "success");
+    };
+
+    return (
+      <div className="space-y-4">
+        {favoriteServices.length === 0 ? (
+          <EmptyState
+            title="Избранное пусто"
+            description="Добавляйте услуги в избранное из каталога — нажмите на сердечко на карточке услуги"
+            actionLabel="Перейти к услугам"
+            onAction={() => router.push("/services")}
+          />
+        ) : (
+          <>
+            <p className="text-sm text-gray-600">
+              Сохранено услуг: {favoriteServices.length}
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {favoriteServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  isFavorite={isFavorite(service.id)}
+                  onToggleFavorite={() => handleToggleFavorite(service)}
+                  onAdd={() => handleAddToCart(service)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
   }
 
   if (slug === "cart") {
@@ -282,21 +666,88 @@ function CustomerPages({ slug }: { slug: string }) {
 
   if (slug === "responses") {
     const myRequests = requests.filter((r) => r.customerId === user?.id);
-    const myResponses = responses.filter((r) => myRequests.some((req) => req.id === r.requestId));
+    const requestsWithResponses = myRequests
+      .map((request) => ({
+        request,
+        requestResponses: responses.filter((response) => response.requestId === request.id),
+      }))
+      .filter((item) => item.requestResponses.length > 0);
+
+    const groupedResponses = requestsWithResponses.reduce<
+      Record<
+        string,
+        {
+          eventTitle: string;
+          city: string;
+          category: string;
+          items: typeof requestsWithResponses;
+        }
+      >
+    >((groups, item) => {
+      const eventTitle = getRequestEventTitle(item.request) ?? "Без мероприятия";
+      const key = `${eventTitle}|${item.request.city}|${item.request.category}`;
+      if (!groups[key]) {
+        groups[key] = {
+          eventTitle,
+          city: item.request.city,
+          category: item.request.category,
+          items: [],
+        };
+      }
+      groups[key].items.push(item);
+      return groups;
+    }, {});
+
+    const responseGroups = Object.values(groupedResponses);
+
+    if (responseGroups.length === 0) {
+      return (
+        <EmptyState
+          title="Нет откликов"
+          description="Здесь появятся отклики исполнителей на ваши заявки"
+          actionLabel="Создать заявку"
+          onAction={() => router.push("/requests/new")}
+        />
+      );
+    }
+
     return (
-      <div className="space-y-3">
-        {myResponses.map((r) => (
-          <Card key={r.id}>
-            <div className="flex justify-between">
-              <div>
-                <CardTitle>{r.contractorName}</CardTitle>
-                <CardDescription>{formatPrice(r.price)} · {r.deadline}</CardDescription>
-              </div>
-              <Link href={`/requests/${r.requestId}/responses`}><Button size="sm" variant="outline">Открыть</Button></Link>
+      <div className="space-y-8">
+        {responseGroups.map((group) => (
+          <section key={`${group.eventTitle}-${group.city}-${group.category}`}>
+            <div className="mb-4 space-y-1">
+              <h2 className="text-lg font-bold text-gray-900">
+                {group.eventTitle} · {group.city} · {group.category}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {group.items.length === 1
+                  ? "1 заявка с откликами"
+                  : `${group.items.length} заявки с откликами`}
+              </p>
             </div>
-          </Card>
+
+            {group.items.map(({ request, requestResponses }) => (
+              <div key={request.id} className="mb-6 last:mb-0">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  Отклики: {request.title}
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {requestResponses.map((response) => (
+                    <ResponseCard
+                      key={response.id}
+                      response={response}
+                      requestId={request.id}
+                      isOwner
+                      category={request.category}
+                      city={request.city}
+                      eventTitle={getRequestEventTitle(request)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
         ))}
-        {myResponses.length === 0 && <EmptyState title="Нет откликов" actionLabel="Создать заявку" onAction={() => router.push("/requests/new")} />}
       </div>
     );
   }
@@ -327,15 +778,17 @@ function CustomerPages({ slug }: { slug: string }) {
       return <EmptyState title="Нет завершённых проектов" description="Здесь появятся проекты после завершения сделок" />;
     }
     return (
-      <div className="space-y-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {completed.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`}>
-            <Card className="hover:border-gray-900 transition-colors">
-              <div className="flex justify-between items-start gap-3 flex-wrap">
-                <CardTitle>{d.title}</CardTitle>
-                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
-              </div>
-              <CardDescription>{d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}</CardDescription>
+          <Link key={d.id} href={`/deals/${d.id}`} className="block h-full">
+            <Card className="flex flex-col h-full hover:border-gray-900 transition-colors">
+              <CardTitle>{d.title}</CardTitle>
+              <CardDescription className="flex-1">
+                {d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}
+              </CardDescription>
+              <span className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium border border-gray-900 text-gray-900">
+                Повторить заказ
+              </span>
             </Card>
           </Link>
         ))}
@@ -359,39 +812,25 @@ function CustomerPages({ slug }: { slug: string }) {
   }
 
   if (slug === "checks") {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-gray-600">История проверок контрагентов</p>
-        <Card><CardTitle>ООО «СтендПро»</CardTitle><CardDescription>Проверено 10.01.2026 · Риски не выявлены</CardDescription></Card>
-        <Link href="/contractors/ctr-1/check"><Button variant="outline" size="sm">Новая проверка</Button></Link>
-      </div>
-    );
+    return <ChecksPanel />;
   }
 
   if (slug === "payments") return <PaymentsPanel />;
   if (slug === "documents") return <DocumentsPanel />;
 
   if (slug === "reviews") {
-    return (
-      <Card>
-        <p className="text-sm mb-4">Оставьте отзыв о завершённой сделке:</p>
-        <Select label="Сделка" options={deals.filter((d) => d.status === "completed").map((d) => ({ value: d.id, label: d.title }))} />
-        <div className="flex gap-1 my-3">{[1,2,3,4,5].map((n) => <button key={n} className="border border-gray-300 p-2 hover:border-gray-900"><Star className="h-4 w-4" /></button>)}</div>
-        <Textarea label="Отзыв" />
-        <Button className="mt-3" onClick={() => showToast("Отзыв опубликован")}>Отправить</Button>
-      </Card>
-    );
+    return <CustomerReviewsSection deals={deals} showToast={showToast} />;
   }
 
   if (slug === "settings") {
     return (
-      <Card className="max-w-lg space-y-4">
+      <div className="max-w-lg space-y-4">
         <Input label="Email уведомлений" defaultValue="demo@example.ru" />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Email-уведомления</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Push-уведомления</label>
         <PinLoginSettings />
         <Button onClick={() => showToast("Настройки сохранены")}>Сохранить</Button>
-      </Card>
+      </div>
     );
   }
 
@@ -403,8 +842,7 @@ function ContractorPages({ slug }: { slug: string }) {
   const { requests, deals, responses, services, addService, removeService } = usePrototypeStore();
   const { showToast } = useToast();
   const router = useRouter();
-  const [ganttView, setGanttView] = useState("list");
-  const [reviewModal, setReviewModal] = useState<{ id: string; author: string; rating: number; text: string; date: string } | null>(null);
+  const [reviewModal, setReviewModal] = useState<ContractorReview | null>(null);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceForm, setServiceForm] = useState({
     title: "",
@@ -442,7 +880,7 @@ function ContractorPages({ slug }: { slug: string }) {
       id: `svc-${Date.now()}`,
       title: serviceForm.title.trim(),
       city: serviceForm.city,
-      contractorId: user?.id || "user-contractor",
+      contractorId: getContractorIdForUser(user) ?? user?.id ?? "ctr-1",
       contractorName: user?.name || "Исполнитель",
       category: serviceForm.category,
       price: Number(serviceForm.price),
@@ -465,15 +903,40 @@ function ContractorPages({ slug }: { slug: string }) {
         <DashboardWidgets role="contractor" />
         <div className="grid md:grid-cols-2 gap-4">
           <Card>
-            <CardTitle>Новые заявки</CardTitle>
-            {requests.filter((r) => r.status === "published").slice(0, 3).map((r) => (
-              <Link key={r.id} href={`/requests/${r.id}`} className="block text-sm py-1 hover:underline">{r.title}</Link>
-            ))}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <CardTitle>Доступные заявки</CardTitle>
+              <Link href="/account/contractor/available-requests" className="text-xs underline">
+                Все
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {requests.filter((r) => r.status === "published").slice(0, 3).map((request) => {
+                const customerName = request.customerName ?? DEMO_USERS.customer.name;
+                const responseDeadline = request.responseDeadlineAt
+                  ? formatDateTime(request.responseDeadlineAt)
+                  : request.deadline
+                    ? `${formatDate(request.deadline)}, 23:59`
+                    : null;
+
+                return (
+                  <Link
+                    key={request.id}
+                    href={`/requests/${request.id}`}
+                    className="block py-2 border-b border-gray-200 last:border-0 hover:underline"
+                  >
+                    <p className="text-sm font-medium">{request.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {customerName}
+                      {responseDeadline ? ` · до ${responseDeadline}` : ""}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
           </Card>
           <Card>
             <CardTitle>Доступно к выплате</CardTitle>
             <p className="text-2xl font-bold mt-2">{formatPrice(185000)}</p>
-            <p className="text-sm text-gray-600">Рейтинг: {user?.rating} ({user?.reviewCount} отзывов)</p>
           </Card>
         </div>
         <div className="flex gap-2 mt-4">
@@ -499,32 +962,21 @@ function ContractorPages({ slug }: { slug: string }) {
   }
 
   if (slug === "cities") {
-    return (
-      <Card className="max-w-lg">
-        <p className="text-sm mb-3">Города оказания услуг:</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {user?.cities.map((c) => <Badge key={c}>{c}</Badge>)}
-        </div>
-        <Select label="Добавить город" options={CITIES.map((c) => ({ value: c, label: c }))} />
-        <Button className="mt-3" size="sm" onClick={() => showToast("Город добавлен")}>Добавить</Button>
-      </Card>
-    );
+    return <ContractorCitiesSection user={user} showToast={showToast} />;
   }
 
   if (slug === "production") {
-    return (
-      <Card className="max-w-lg space-y-4">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked={user?.hasProduction} /> Собственное производство</label>
-        <Input label="Адрес производства" defaultValue="г. Москва, ул. Заводская, 15" />
-        <Input label="Площадь, кв.м" defaultValue="1200" />
-        <Textarea label="Оборудование" defaultValue="Фрезерный станок, лазерная резка" />
-        <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
-    );
+    return <ProductionSection user={user} showToast={showToast} />;
   }
 
   if (slug === "services") {
-    const myServices = services.filter((s) => s.contractorId === user?.id || s.contractorName === user?.name);
+    const contractorId = getContractorIdForUser(user);
+    const myServices = services.filter(
+      (s) =>
+        (contractorId !== null && s.contractorId === contractorId) ||
+        s.contractorId === user?.id ||
+        s.contractorName === user?.name
+    );
     return (
       <div>
         <Button size="sm" className="mb-4" onClick={() => setServiceModalOpen(true)}>
@@ -647,48 +1099,85 @@ function ContractorPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "portfolio") {
+  if (slug.startsWith("portfolio/")) {
+    const itemId = slug.split("/")[1];
+    const contractor = findContractorForUser(user);
+    const item = contractor?.portfolio.find((entry) => entry.id === itemId);
+
+    if (!item) {
+      return (
+        <EmptyState
+          title="Проект не найден"
+          actionLabel="К портфолио"
+          onAction={() => router.push("/account/contractor/portfolio")}
+        />
+      );
+    }
+
     return (
-      <div className="grid sm:grid-cols-2 gap-4">
-        {["Стенд Мебель-2025", "IT Forum 2025", "ПромТех 2024"].map((p) => (
-          <Card key={p}>
-            <div className="h-24 border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 mb-2">Фото-заглушка</div>
-            <CardTitle>{p}</CardTitle>
-          </Card>
+      <PortfolioDetail
+        item={item}
+        backHref="/account/contractor/portfolio"
+        editable
+        onSave={() => showToast("Проект сохранён")}
+      />
+    );
+  }
+
+  if (slug === "portfolio") {
+    const contractor = findContractorForUser(user);
+    const portfolio = contractor?.portfolio ?? [];
+
+    return (
+      <>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h1 className="text-xl font-bold">Портфолио</h1>
+          <Button onClick={() => showToast("Добавление проекта в портфолио")}>
+            Добавить портфолио
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        {portfolio.map((item) => (
+          <PortfolioCard
+            key={item.id}
+            item={item}
+            href={`/account/contractor/portfolio/${item.id}`}
+          />
         ))}
-        <Card className="border-dashed flex items-center justify-center min-h-[120px] cursor-pointer hover:border-gray-900">
-          <Plus className="h-6 w-6 text-gray-400" />
-        </Card>
-      </div>
+        </div>
+      </>
     );
   }
 
   if (slug === "available-requests") {
     const available = requests.filter((r) => r.status === "published");
+
+    if (available.length === 0) {
+      return (
+        <EmptyState
+          title="Доступных заявок нет"
+          description="Новые заявки появятся после публикации заказчиками"
+        />
+      );
+    }
+
     return (
-      <div className="space-y-3">
-        {available.map((r) => (
-          <Card key={r.id}>
-            <div className="flex justify-between flex-wrap gap-2">
-              <div>
-                <CardTitle>{r.title}</CardTitle>
-                <CardDescription>{REQUEST_FORMAT_LABELS[r.format]} · {r.city} · {r.responseCount} откликов</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Link href={`/requests/${r.id}`}><Button size="sm" variant="outline">Открыть</Button></Link>
-                <Link href={`/requests/${r.id}/respond`}><Button size="sm">Откликнуться</Button></Link>
-              </div>
-            </div>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+        {available.map((request) => {
+          const event = request.eventId
+            ? SEED_EVENTS.find((item) => item.id === request.eventId)
+            : undefined;
+
+          return (
+            <AvailableRequestCard key={request.id} request={request} event={event} />
+          );
+        })}
       </div>
     );
   }
 
   if (slug === "my-responses") {
-    const myResponses = responses.filter(
-      (r) => r.contractorId === "ctr-1" || r.contractorName === user?.name
-    );
+    const myResponses = responses.filter((r) => isResponseForUser(r, user));
     const responseStatusLabels: Record<string, string> = {
       pending: "На рассмотрении",
       accepted: "Принят",
@@ -731,7 +1220,13 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "active-projects" || slug === "completed-projects") {
     const isCompleted = slug === "completed-projects";
-    const filtered = deals.filter((d) => d.contractorId === "ctr-1" && (isCompleted ? d.status === "completed" : d.status !== "completed"));
+    const contractorId = getContractorIdForUser(user);
+    const filtered = deals.filter(
+      (d) =>
+        ((contractorId !== null && d.contractorId === contractorId) ||
+          d.contractorName === user?.name) &&
+        (isCompleted ? d.status === "completed" : d.status !== "completed")
+    );
     if (filtered.length === 0) {
       return (
         <EmptyState
@@ -762,49 +1257,18 @@ function ContractorPages({ slug }: { slug: string }) {
   }
 
   if (slug === "gantt") {
-    const projectDeals = deals.filter((d) => d.contractorId === "ctr-1" && d.status !== "completed");
+    const contractorId = getContractorIdForUser(user);
+    const projectDeals = deals.filter(
+      (d) =>
+        ((contractorId !== null && d.contractorId === contractorId) ||
+          d.contractorName === user?.name) &&
+        d.status !== "completed"
+    );
     return (
-      <div>
-        <Tabs tabs={[{ id: "list", label: "Список" }, { id: "calendar", label: "Календарь" }, { id: "gantt", label: "Гант" }]} activeTab={ganttView} onChange={setGanttView} />
-        <div className="mt-4">
-          {ganttView === "list" && projectDeals.map((d) => (
-            <Card key={d.id} className="mb-3">
-              <CardTitle>{d.title}</CardTitle>
-              {d.stages.map((s) => (
-                <div key={s.id} className="flex justify-between text-sm py-1 border-b border-gray-100">
-                  <span>{s.title}</span>
-                  <span>{formatShortDate(s.deadline)} · {s.status}</span>
-                </div>
-              ))}
-            </Card>
-          ))}
-          {ganttView === "calendar" && (
-            <div className="grid grid-cols-7 gap-1 mt-2">
-              {Array.from({ length: 28 }, (_, i) => (
-                <div key={i} className="border border-gray-200 p-2 text-xs min-h-[60px]">
-                  {i + 1}
-                  {i === 14 && <div className="bg-gray-900 text-white text-[10px] p-0.5 mt-1">Монтаж</div>}
-                </div>
-              ))}
-            </div>
-          )}
-          {ganttView === "gantt" && (
-            <div className="mt-4 space-y-4">
-              {projectDeals.map((d) => (
-                <div key={d.id}>
-                  <p className="text-sm font-medium mb-1">{d.title}</p>
-                  <div className="relative h-8 bg-gray-100 border border-gray-300">
-                    {d.stages.map((s, i) => (
-                      <div key={s.id} className="absolute h-full border border-gray-900 bg-gray-200 text-[10px] flex items-center px-1"
-                        style={{ left: `${i * 30}%`, width: "25%" }}>{s.title}</div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <ProjectGanttSection
+        deals={projectDeals}
+        onBrowseRequests={() => router.push("/account/contractor/available-requests")}
+      />
     );
   }
 
@@ -812,7 +1276,7 @@ function ContractorPages({ slug }: { slug: string }) {
   if (slug === "documents") return <DocumentsPanel />;
 
   if (slug === "reviews") {
-    const contractor = SEED_CONTRACTORS.find((c) => c.id === "ctr-1" || c.name === user?.name);
+    const contractor = findContractorForUser(user);
     const reviews = contractor?.reviews ?? [];
     return (
       <div className="space-y-4">
@@ -828,27 +1292,9 @@ function ContractorPages({ slug }: { slug: string }) {
         {reviews.length === 0 ? (
           <EmptyState title="Отзывов пока нет" description="Отзывы появятся после завершённых сделок" />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {reviews.map((rv) => (
-              <button
-                key={rv.id}
-                type="button"
-                onClick={() => setReviewModal(rv)}
-                className="w-full text-left"
-              >
-                <Card className="hover:border-gray-900 transition-colors">
-                  <div className="flex justify-between items-start gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{rv.author}</p>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{rv.text}</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm shrink-0">
-                      <Star className="h-4 w-4" /> {rv.rating}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">{formatShortDate(rv.date)}</p>
-                </Card>
-              </button>
+              <ReviewCard key={rv.id} review={rv} onClick={() => setReviewModal(rv)} />
             ))}
           </div>
         )}
@@ -874,6 +1320,21 @@ function ContractorPages({ slug }: { slug: string }) {
                 <span className="text-xs text-gray-500">{formatShortDate(reviewModal.date)}</span>
               </div>
               <p className="text-sm text-gray-700 whitespace-pre-wrap">{reviewModal.text}</p>
+              {(reviewModal.photos?.length ?? 0) > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {reviewModal.photos?.map((photo, index) => (
+                    <div
+                      key={`${reviewModal.id}-modal-photo-${index}`}
+                      className="aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-2 text-center text-xs text-gray-500"
+                    >
+                      {photo}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(reviewModal.videos?.length ?? 0) > 0 && (
+                <p className="text-xs text-gray-600">Видео: {reviewModal.videos?.join(", ")}</p>
+              )}
             </div>
           )}
         </Modal>
@@ -883,11 +1344,11 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "settings") {
     return (
-      <Card className="max-w-lg space-y-4">
+      <div className="max-w-lg space-y-4">
         <Input label="Email" defaultValue="contractor@example.ru" />
         <PinLoginSettings />
         <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
+      </div>
     );
   }
 
@@ -895,331 +1356,177 @@ function ContractorPages({ slug }: { slug: string }) {
 }
 
 function VenuePages({ slug }: { slug: string }) {
-  const user = useAuthStore((s) => s.user);
-  const { bookings, floorCells, updateBooking, updateFloorCell } = usePrototypeStore();
   const { showToast } = useToast();
-  const [activeHall, setActiveHall] = useState("hall-1");
 
   if (slug === "" || slug === "dashboard") {
-    return (
-      <>
-        <DashboardWidgets role="venue" />
-        <div className="grid md:grid-cols-3 gap-3">
-          <Card><CardTitle>2</CardTitle><CardDescription>Площадки</CardDescription></Card>
-          <Card><CardTitle>{bookings.filter((b) => b.status === "pending").length}</CardTitle><CardDescription>Ожидают подтверждения</CardDescription></Card>
-          <Card><CardTitle>4</CardTitle><CardDescription>Зала</CardDescription></Card>
-        </div>
-      </>
-    );
+    return <VenueDashboardSection />;
   }
 
   if (slug === "profile") {
-    return (
-      <Card className="max-w-lg space-y-4">
-        <Input label="Название площадки" defaultValue={user?.name} />
-        <Textarea label="Описание" defaultValue={user?.description} />
-        <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
-    );
+    return <VenueProfileSection showToast={showToast} />;
   }
 
   if (slug === "halls") {
-    return (
-      <div className="space-y-4">
-        <Button size="sm"><Plus className="h-4 w-4" /> Создать зал</Button>
-        {[{ name: "Павильон 1", area: 5000, capacity: 200 }, { name: "Павильон 2", area: 3000, capacity: 120 }].map((h) => (
-          <Card key={h.name}>
-            <CardTitle>{h.name}</CardTitle>
-            <CardDescription>{h.area} кв.м · до {h.capacity} мест</CardDescription>
-            <div className="h-16 border border-dashed border-gray-300 mt-2 flex items-center justify-center text-xs text-gray-400">Фото-заглушка</div>
-          </Card>
-        ))}
-      </div>
-    );
+    return <VenueHallsSection showToast={showToast} />;
   }
 
   if (slug === "spaces") {
-    const total = floorCells.length;
-    const booked = floorCells.filter((c) => c.status === "booked").length;
-    const unavailable = floorCells.filter((c) => c.status === "unavailable").length;
-    const free = total - booked - unavailable;
-    const areaPerCell = 12;
-    const occupancy = total > 0 ? Math.round((booked / total) * 100) : 0;
-
-    const blocks = [
-      { name: "Павильон 1 — партер", area: 5000, price: 4500, status: "Открыто" },
-      { name: "Павильон 2 — второй этаж", area: 3000, price: 3800, status: "Открыто" },
-      { name: "Уличная экспозиция", area: 1500, price: 2200, status: "Закрыто" },
-    ];
-
-    return (
-      <div className="space-y-4 max-w-3xl">
-        <p className="text-sm text-gray-600">
-          Управление продаваемой площадью: сколько кв.м доступно к бронированию, по какой цене и в какой период.
-          Это ваш «склад» площадей — в отличие от «Схемы размещения», где вы работаете с конкретными местами на плане.
-        </p>
-
-        <div className="grid sm:grid-cols-3 gap-3">
-          <Card><CardDescription>Всего мест</CardDescription><CardTitle className="mt-1">{total} · {total * areaPerCell} кв.м</CardTitle></Card>
-          <Card><CardDescription>Свободно</CardDescription><CardTitle className="mt-1">{free} · {free * areaPerCell} кв.м</CardTitle></Card>
-          <Card><CardDescription>Загрузка</CardDescription><CardTitle className="mt-1">{occupancy}%</CardTitle></Card>
-        </div>
-
-        <Card className="space-y-3">
-          <p className="text-sm font-medium">Блоки площадей</p>
-          <div className="divide-y divide-gray-200">
-            {blocks.map((b) => (
-              <div key={b.name} className="flex justify-between items-center gap-3 py-2.5 text-sm flex-wrap">
-                <div>
-                  <p className="font-medium">{b.name}</p>
-                  <p className="text-gray-600">{b.area} кв.м · {formatPrice(b.price)}/кв.м</p>
-                </div>
-                <Badge variant={b.status === "Открыто" ? "solid" : "outline"}>{b.status}</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="space-y-3">
-          <p className="text-sm font-medium">Период доступности</p>
-          <Input label="Период бронирования" defaultValue="01.03.2026 — 18.03.2026" />
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" defaultChecked /> Открыто для бронирования</label>
-          <Button size="sm" onClick={() => showToast("Настройки площадей сохранены")}>Сохранить</Button>
-        </Card>
-      </div>
-    );
+    return <VenueSpacesSection showToast={showToast} />;
   }
 
   if (slug === "floor-plan") {
-    return (
-      <div>
-        <Select label="Зал" options={[{ value: "hall-1", label: "Павильон 1" }, { value: "hall-2", label: "Павильон 2" }]} />
-        <div className="mt-4">
-          <FloorPlanGrid
-            cells={floorCells.filter((c) => c.hallId === activeHall)}
-            onCellClick={(id, status) => {
-              if (status === "free") updateFloorCell(id, "selected");
-              else if (status === "selected") updateFloorCell(id, "free");
-            }}
-          />
-        </div>
-        <p className="text-xs text-gray-500 mt-2">Свободно · Выбрано · Забронировано · Недоступно</p>
-      </div>
-    );
+    return <VenueFloorPlanSection />;
+  }
+
+  if (slug.startsWith("events/")) {
+    const eventId = slug.split("/")[1];
+    return <VenueEventDetailSection eventId={eventId} showToast={showToast} />;
   }
 
   if (slug === "events") {
-    return (
-      <div className="space-y-3">
-        {SEED_EVENTS.filter((e) => e.venueId === "venue-1").map((e) => (
-          <Card key={e.id}><CardTitle>{e.title}</CardTitle><CardDescription>{formatShortDate(e.startDate)} — {formatShortDate(e.endDate)}</CardDescription></Card>
-        ))}
-      </div>
-    );
+    return <VenueEventsSection />;
   }
 
   if (slug === "venue-services") {
-    return (
-      <Card className="max-w-lg space-y-4">
-        <Input label="Услуга" placeholder="Wi-Fi, парковка, клининг..." />
-        <Input label="Цена" placeholder="от 5000 ₽" />
-        <Button onClick={() => showToast("Услуга добавлена")}>Добавить</Button>
-        <div className="border-t pt-3 space-y-2">
-          {["Wi-Fi", "Парковка", "Клининг"].map((s) => <div key={s} className="text-sm flex justify-between"><span>{s}</span><Badge>Активна</Badge></div>)}
-        </div>
-      </Card>
-    );
+    return <VenueServicesSection showToast={showToast} />;
   }
 
   if (slug === "bookings") {
-    return (
-      <div className="space-y-3">
-        {bookings.map((b) => (
-          <Card key={b.id}>
-            <div className="flex justify-between flex-wrap gap-2">
-              <div>
-                <CardTitle>Ячейка {b.cellId}</CardTitle>
-                <CardDescription>{b.status === "pending" ? "Ожидает подтверждения" : "Подтверждено"}</CardDescription>
-              </div>
-              {b.status === "pending" && (
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => { updateBooking(b.id, { status: "confirmed" }); showToast("Подтверждено"); }}>Подтвердить</Button>
-                  <Button size="sm" variant="outline" onClick={() => { updateBooking(b.id, { status: "rejected" }); showToast("Отклонено"); }}>Отклонить</Button>
-                </div>
-              )}
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
+    return <VenueBookingsSection />;
   }
 
   if (slug === "orders") {
-    return <Link href="/deals/deal-1"><Button>Заказы площадки</Button></Link>;
+    return (
+      <EventOrdersPanel
+        eventId="evt-1"
+        venueId="venue-1"
+        showVenueNote
+        title="Заказы площадки"
+        unboxed
+      />
+    );
   }
 
-  if (slug === "payments") return <PaymentsPanel />;
+  if (slug === "payments") return <VenuePaymentsPanel />;
   if (slug === "documents") return <DocumentsPanel />;
   if (slug === "notifications") return <Link href="/notifications"><Button>Уведомления</Button></Link>;
 
   if (slug === "settings") {
-    return (
-      <Card className="max-w-lg space-y-4">
-        <Input label="Email" defaultValue="venue@example.ru" />
-        <PinLoginSettings />
-        <Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
-    );
+    return <VenueSettingsSection showToast={showToast} />;
   }
 
   return <EmptyState title="Раздел не найден" />;
 }
 
-function OrganizerPages({ slug }: { slug: string }) {
-  const { participants, bookings } = usePrototypeStore();
-  const { showToast } = useToast();
+function OrganizerLegacyRedirect({ to }: { to: string }) {
   const router = useRouter();
-  const [eventForm, setEventForm] = useState({ title: "", city: "Москва", category: "exhibition" });
+
+  useEffect(() => {
+    router.replace(to);
+  }, [router, to]);
+
+  return null;
+}
+
+function OrganizerPages({ slug }: { slug: string }) {
+  const user = useAuthStore((s) => s.user);
+  const { showToast } = useToast();
+  const organizerId = user?.id ?? "user-organizer";
+
+  if (slug.startsWith("events/")) {
+    const [, eventId, section, participantId] = slug.split("/");
+
+    if (section === "participants" && !participantId) {
+      return (
+        <OrganizerEventFormSection
+          mode="edit"
+          forcedEventId={eventId}
+          initialTab="participants"
+        />
+      );
+    }
+
+    if (section === "participants" && participantId) {
+      return (
+        <OrganizerParticipantDetailSection
+          eventId={eventId}
+          participantId={participantId}
+          organizerId={organizerId}
+        />
+      );
+    }
+
+    if (section === "services") {
+      return (
+        <OrganizerEventFormSection
+          mode="edit"
+          forcedEventId={eventId}
+          initialTab="services"
+        />
+      );
+    }
+
+    if (section === "bookings") {
+      return (
+        <OrganizerEventFormSection
+          mode="edit"
+          forcedEventId={eventId}
+          initialTab="bookings"
+        />
+      );
+    }
+  }
 
   if (slug === "" || slug === "dashboard") {
-    return (
-      <>
-        <DashboardWidgets role="organizer" />
-        <div className="flex gap-2 mt-4">
-          <Link href="/account/organizer/create-event"><Button size="sm">Создать мероприятие</Button></Link>
-          <Link href="/account/organizer/participants"><Button size="sm" variant="outline">Участники</Button></Link>
-        </div>
-      </>
-    );
+    return <OrganizerDashboardSection organizerId={organizerId} />;
   }
 
   if (slug === "profile") {
     return (
-      <Card className="max-w-lg space-y-4">
+      <div className="max-w-lg space-y-4">
         <Input label="Название" defaultValue="ООО «МебельЭкспо Организатор»" />
         <Textarea label="Описание" />
         <Button onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
+      </div>
     );
   }
 
   if (slug === "events") {
-    return (
-      <div className="space-y-3">
-        {SEED_EVENTS.filter((e) => e.organizerId === "user-organizer").map((e) => (
-          <Card key={e.id}>
-            <div className="flex justify-between">
-              <div><CardTitle>{e.title}</CardTitle><CardDescription>{e.city} · {formatShortDate(e.startDate)}</CardDescription></div>
-              <Link href={`/account/organizer/edit-event?id=${e.id}`}><Button size="sm" variant="outline">Редактировать</Button></Link>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
+    return <OrganizerEventsSection organizerId={user?.id ?? "user-organizer"} />;
   }
 
-  if (slug === "create-event" || slug === "edit-event") {
-    return (
-      <Card className="max-w-2xl">
-        <div className="space-y-4">
-          <Input label="Название" value={eventForm.title} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} />
-          <Select label="Категория" options={[{ value: "exhibition", label: "Выставка" }, { value: "forum", label: "Форум" }, { value: "conference", label: "Конференция" }]} value={eventForm.category} onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })} />
-          <Select label="Отрасль" options={[{ value: "furniture", label: "Мебель и интерьер" }, { value: "it", label: "IT" }]} />
-          <Textarea label="Описание" />
-          <Select label="Город" options={CITIES.map((c) => ({ value: c, label: c }))} value={eventForm.city} onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })} />
-          <Select label="Площадка" options={[{ value: "venue-1", label: "ЭкспоЦентр" }, { value: "venue-2", label: "ЭкспоФорум" }]} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Дата начала" type="date" />
-            <Input label="Дата окончания" type="date" />
-          </div>
-          <Textarea label="Условия участия" />
-          <FileUpload label="Прикрепить файлы" />
-          <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={() => showToast("Черновик сохранён")}>Сохранить черновик</Button>
-            <Button variant="outline" onClick={() => showToast("Предпросмотр")}>Предпросмотр</Button>
-            <Button onClick={() => { showToast("Мероприятие отправлено на публикацию"); router.push("/account/organizer/events"); }}>Опубликовать</Button>
-          </div>
-        </div>
-      </Card>
-    );
+  if (slug === "create-event") {
+    return <OrganizerEventFormSection mode="create" />;
+  }
+
+  if (slug === "edit-event") {
+    return <OrganizerEventFormSection mode="edit" />;
   }
 
   if (slug === "venues") {
-    return (
-      <div className="space-y-3">
-        {[{ name: "ЭкспоЦентр", city: "Москва" }, { name: "ЭкспоФорум", city: "Санкт-Петербург" }].map((v) => (
-          <Card key={v.name}><CardTitle>{v.name}</CardTitle><CardDescription>{v.city}</CardDescription></Card>
-        ))}
-      </div>
-    );
+    return <OrganizerVenuesSection />;
   }
 
-  if (slug === "participants") {
-    return (
-      <div>
-        <Input placeholder="Поиск участника..." className="mb-4 max-w-sm" />
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse hidden md:table">
-            <thead><tr className="border-b border-gray-300">{["Компания", "Статус", "Площадь", "Оплата", "Документы", ""].map((h) => <th key={h} className="text-left py-2 px-2">{h}</th>)}</tr></thead>
-            <tbody>
-              {participants.map((p) => (
-                <tr key={p.id} className="border-b border-gray-200">
-                  <td className="py-2 px-2">{p.name}</td>
-                  <td className="py-2 px-2"><Badge variant="outline">{p.status}</Badge></td>
-                  <td className="py-2 px-2">{p.assignedSpace || "—"}</td>
-                  <td className="py-2 px-2">{p.paid ? "Оплачено" : "Не оплачено"}</td>
-                  <td className="py-2 px-2">{p.documents.length} док.</td>
-                  <td className="py-2 px-2"><Button size="sm" variant="ghost">Карточка</Button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="md:hidden space-y-3">
-            {participants.map((p) => (
-              <Card key={p.id}>
-                <CardTitle>{p.name}</CardTitle>
-                <CardDescription>{p.status} · {p.assignedSpace} · {p.paid ? "Оплачено" : "Не оплачено"}</CardDescription>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  if (slug === "participants" || slug === "services" || slug === "bookings") {
+    return <OrganizerLegacyRedirect to="/account/organizer/events" />;
   }
 
-  if (slug === "services") {
+  if (slug === "orders") {
     return (
-      <div className="space-y-3">
-        {SEED_SERVICES.slice(0, 6).map((s) => (
-          <Card key={s.id}><CardTitle>{s.title}</CardTitle><CardDescription>{s.contractorName} · {formatPrice(s.price)}</CardDescription></Card>
-        ))}
-      </div>
+      <EventOrdersPanel
+        organizerId={user?.id ?? "user-organizer"}
+        showDirectionFilter
+        title="Заказы организатора"
+        unboxed
+      />
     );
   }
-
-  if (slug === "bookings") {
-    return (
-      <div className="space-y-3">
-        {bookings.map((b) => (
-          <Card key={b.id}><CardTitle>Бронирование {b.cellId}</CardTitle><CardDescription>Статус: {b.status}</CardDescription></Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (slug === "orders") return <Link href="/deals/deal-1"><Button>Заказы</Button></Link>;
-  if (slug === "payments") return <PaymentsPanel />;
+  if (slug === "payments") return <OrganizerPaymentsPanel organizerId={user?.id ?? "user-organizer"} />;
   if (slug === "documents") return <DocumentsPanel />;
   if (slug === "notifications") return <Link href="/notifications"><Button>Уведомления</Button></Link>;
 
   if (slug === "settings") {
-    return (
-      <Card className="max-w-lg space-y-4">
-        <Input label="Email" defaultValue="organizer@example.ru" />
-        <PinLoginSettings />
-        <Button className="mt-3" onClick={() => showToast("Сохранено")}>Сохранить</Button>
-      </Card>
-    );
+    return <OrganizerSettingsSection organizerId={organizerId} showToast={showToast} />;
   }
 
   return <EmptyState title="Раздел не найден" />;

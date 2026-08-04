@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BackButton } from "@/components/ui/back-button";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -71,9 +72,10 @@ export default function ContractorCheckPage() {
       <PublicHeader />
 
       <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
-        <Link href={`/contractors/${contractor.id}`} className="text-sm underline mb-4 inline-block">
-          ← {contractor.name}
-        </Link>
+        <BackButton
+          fallbackHref={`/contractors/${contractor.id}`}
+          className="mb-4"
+        />
 
         <h1 className="text-2xl font-bold mb-2">Проверка контрагента</h1>
         <p className="text-sm text-gray-600 mb-8">

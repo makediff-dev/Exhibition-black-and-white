@@ -7,12 +7,22 @@ export const SERVICE_CATEGORIES = [
   "Логистика",
   "Флористика",
   "Клининг",
+  "Заказ вывески",
+  "Корпоративные музеи",
+  "Дизайн офиса",
+  "Уличные конструкции",
+  "Световые инсталляции",
   "Кейтеринг",
   "Доставка воды",
   "Хостес и персонал",
   "Разработка контента",
   "Монтаж",
   "Другие сопутствующие услуги",
+];
+
+export const POPULAR_SERVICE_CATEGORIES = [
+  ...SERVICE_CATEGORIES.slice(0, 14),
+  "Больше услуг",
 ];
 
 export const EVENT_INDUSTRIES = [
@@ -33,7 +43,29 @@ export const CITIES = [
   "Екатеринбург",
   "Новосибирск",
   "Краснодар",
+  "Нижний Новгород",
+  "Ростов-на-Дону",
 ];
+
+export const FEDERAL_DISTRICTS: Record<string, string[]> = {
+  "Центральный": ["Москва"],
+  "Северо-Западный": ["Санкт-Петербург"],
+  "Приволжский": ["Казань", "Нижний Новгород"],
+  "Уральский": ["Екатеринбург"],
+  "Сибирский": ["Новосибирск"],
+  "Южный": ["Краснодар", "Ростов-на-Дону"],
+};
+
+export const FEDERAL_DISTRICT_OPTIONS = Object.keys(FEDERAL_DISTRICTS);
+
+export function getDistrictByCity(city: string) {
+  return FEDERAL_DISTRICT_OPTIONS.find((district) => FEDERAL_DISTRICTS[district].includes(city)) ?? "";
+}
+
+export function getCitiesByDistrict(district: string) {
+  if (!district) return CITIES;
+  return FEDERAL_DISTRICTS[district] ?? [];
+}
 
 export const TEST_INN = "7701234567";
 

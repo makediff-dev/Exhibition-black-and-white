@@ -9,7 +9,8 @@ export const CUSTOMER_NAV: NavItem[] = [
   { slug: "profile", href: "/account/customer/profile", label: "Профиль компании" },
   { slug: "legal", href: "/account/customer/legal", label: "Юридические и платёжные данные" },
   { slug: "edo", href: "/account/customer/edo", label: "ЭДО и документооборот" },
-  { slug: "requests", href: "/account/customer/requests", label: "Мои заявки" },
+  { slug: "requests", href: "/requests", label: "Мои заявки" },
+  { slug: "favorites", href: "/account/customer/favorites", label: "Избранное" },
   { slug: "cart", href: "/account/customer/cart", label: "Корзина / заказы из каталога" },
   { slug: "responses", href: "/account/customer/responses", label: "Отклики и предложения" },
   { slug: "active-projects", href: "/account/customer/active-projects", label: "Активные проекты" },
@@ -59,12 +60,7 @@ export const ORGANIZER_NAV: NavItem[] = [
   { slug: "", href: "/account/organizer", label: "Дашборд" },
   { slug: "profile", href: "/account/organizer/profile", label: "Профиль компании" },
   { slug: "events", href: "/account/organizer/events", label: "Мероприятия" },
-  { slug: "create-event", href: "/account/organizer/create-event", label: "Создание мероприятия" },
-  { slug: "edit-event", href: "/account/organizer/edit-event", label: "Редактирование мероприятия" },
   { slug: "venues", href: "/account/organizer/venues", label: "Площадки проведения" },
-  { slug: "participants", href: "/account/organizer/participants", label: "Участники / экспоненты" },
-  { slug: "services", href: "/account/organizer/services", label: "Доступные услуги" },
-  { slug: "bookings", href: "/account/organizer/bookings", label: "Бронирования" },
   { slug: "orders", href: "/account/organizer/orders", label: "Заказы" },
   { slug: "payments", href: "/account/organizer/payments", label: "Оплаты" },
   { slug: "documents", href: "/account/organizer/documents", label: "Документы" },
@@ -84,4 +80,21 @@ export function getNavForRole(role: string): NavItem[] {
     default:
       return [];
   }
+}
+
+export function isNavItemActive(pathname: string, item: NavItem): boolean {
+  if (pathname === item.href) return true;
+  if (!item.slug) return false;
+  if (
+    item.slug === "events" &&
+    (pathname.includes("/create-event") ||
+      pathname.includes("/edit-event") ||
+      pathname.includes("/events/"))
+  ) {
+    return true;
+  }
+  if (item.href.startsWith("/account/")) {
+    return pathname.startsWith(item.href);
+  }
+  return pathname.includes(item.slug);
 }

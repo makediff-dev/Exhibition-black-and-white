@@ -2,31 +2,34 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle, Clock, RefreshCw } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StepIndicator } from "@/components/ui/file-upload";
+import { StepIndicator, FileUpload } from "@/components/ui/file-upload";
 import { usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import {
   validateEmail,
   validatePasswordMatch,
+  validatePasswordStrength,
   validatePhone,
   validateRequired,
 } from "@/lib/utils/validators";
 import {
   CITIES,
   EVENT_INDUSTRIES,
-  SERVICE_CATEGORIES,
+  FEDERAL_DISTRICT_OPTIONS,
   TEST_COMPANY_DATA,
   TEST_INN,
+  getCitiesByDistrict,
 } from "@/constants/categories";
 import { ROLE_LABELS } from "@/constants/statuses";
 import type { UserRole } from "@/data/types";
@@ -42,7 +45,7 @@ const REGISTRATION_STEPS = [
   "Модерация",
 ];
 
-const ROLES: { id: UserRole; title: string; description: string }[] = [
+const ROLES: { id: UserRole; title: string; description: string; extraNote?: string }[] = [
   {
     id: "customer",
     title: "Заказчик",
@@ -52,16 +55,22 @@ const ROLES: { id: UserRole; title: string; description: string }[] = [
     id: "contractor",
     title: "Исполнитель",
     description: "Предлагайте услуги, откликайтесь на заявки и получайте заказы",
+    extraNote:
+      "Вы также сможете искать и привлекать соисполнителей в рамках реализации комплексной услуги через личный кабинет",
   },
   {
     id: "venue",
     title: "Площадка",
     description: "Управляйте залами, бронированием и участниками мероприятий",
+    extraNote:
+      "Привлекайте организаторов, оказывайте услуги экспонентам, застройщикам и другим участникам процесса из своего личного кабинета",
   },
   {
     id: "organizer",
     title: "Организатор",
     description: "Создавайте выставки, форумы и конференции на платформе",
+    extraNote:
+      "Осуществляйте распределение площадей для аренды, оказывайте услуги экспонентам, застройщикам и другим участникам процесса из своего кабинета",
   },
 ];
 
@@ -70,6 +79,7 @@ const EDO_OPERATORS = [
   { value: "diadoc", label: "Диадок" },
   { value: "sbis", label: "СБИС" },
   { value: "kontur", label: "Контур" },
+  { value: "other", label: "Другой оператор" },
 ];
 
 const TEST_CODE = "123456";
@@ -99,12 +109,24 @@ interface RegistrationDraft {
   categories?: string[];
   hasProduction?: boolean;
   description?: string;
+  experienceYears?: string;
+  completedProjects?: string;
+  productionAddress?: string;
+  permanentStaff?: string;
+  temporaryStaff?: string;
+  freightVehicles?: string;
+  designerPartners?: string;
+  productionPhotos?: string[];
+  postPaymentAvailable?: boolean;
+  trademark?: string;
   venueName?: string;
   hallCapacity?: string;
   industries?: string[];
   termsAccepted?: boolean;
   privacyAccepted?: boolean;
+  serviceNotificationsAccepted?: boolean;
   marketingAccepted?: boolean;
+  messengerNotificationsAccepted?: boolean;
 }
 
 export default function RegisterPage() {
@@ -120,6 +142,8 @@ export default function RegisterPage() {
   const [codeError, setCodeError] = useState("");
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [canResend, setCanResend] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const [cityDistrict, setCityDistrict] = useState("");
 
   const [form, setForm] = useState<RegistrationDraft>({
     role: draft.role ?? null,
@@ -144,13 +168,32 @@ export default function RegisterPage() {
     categories: draft.categories ?? [],
     hasProduction: draft.hasProduction ?? false,
     description: draft.description ?? "",
+    experienceYears: draft.experienceYears ?? "",
+    completedProjects: draft.completedProjects ?? "",
+    productionAddress: draft.productionAddress ?? "",
+    permanentStaff: draft.permanentStaff ?? "",
+    temporaryStaff: draft.temporaryStaff ?? "",
+    freightVehicles: draft.freightVehicles ?? "",
+    designerPartners: draft.designerPartners ?? "",
+    productionPhotos: draft.productionPhotos ?? [],
+    postPaymentAvailable: draft.postPaymentAvailable ?? false,
+    trademark: draft.trademark ?? "",
     venueName: draft.venueName ?? "",
     hallCapacity: draft.hallCapacity ?? "",
     industries: draft.industries ?? [],
     termsAccepted: draft.termsAccepted ?? false,
     privacyAccepted: draft.privacyAccepted ?? false,
+    serviceNotificationsAccepted: draft.serviceNotificationsAccepted ?? false,
     marketingAccepted: draft.marketingAccepted ?? false,
+    messengerNotificationsAccepted: draft.messengerNotificationsAccepted ?? false,
   });
+
+  useEffect(() => {
+    const targetStep = (registrationDraft as RegistrationDraft).step;
+    if (typeof targetStep === "number") {
+      setStep(targetStep);
+    }
+  }, [registrationDraft]);
 
   const saveDraft = useCallback(
     (updates: Partial<RegistrationDraft>, nextStep?: number) => {
@@ -185,6 +228,32 @@ export default function RegisterPage() {
       const list = prev[key] ?? [];
       const next = list.includes(item) ? list.filter((x) => x !== item) : [...list, item];
       return { ...prev, [key]: next };
+    });
+  };
+
+  const filteredCities = useMemo(() => {
+    let list = cityDistrict ? getCitiesByDistrict(cityDistrict) : CITIES;
+    const query = citySearch.trim().toLowerCase();
+    if (query) {
+      list = list.filter((city) => city.toLowerCase().includes(query));
+    }
+    return list;
+  }, [citySearch, cityDistrict]);
+
+  const allFilteredCitiesSelected =
+    filteredCities.length > 0 &&
+    filteredCities.every((city) => form.cities?.includes(city));
+
+  const toggleAllCities = () => {
+    setForm((prev) => {
+      const current = prev.cities ?? [];
+      if (allFilteredCitiesSelected) {
+        return {
+          ...prev,
+          cities: current.filter((city) => !filteredCities.includes(city)),
+        };
+      }
+      return { ...prev, cities: [...new Set([...current, ...filteredCities])] };
     });
   };
 
@@ -251,16 +320,13 @@ export default function RegisterPage() {
         if (phoneError) nextErrors.phone = phoneError;
         const emailError = validateEmail(form.email ?? "");
         if (emailError) nextErrors.email = emailError;
-        const passwordError = validateRequired(form.password ?? "", "Пароль");
+        const passwordError = validatePasswordStrength(form.password ?? "");
         if (passwordError) nextErrors.password = passwordError;
         const matchError = validatePasswordMatch(form.password ?? "", form.confirmPassword ?? "");
         if (matchError) nextErrors.confirmPassword = matchError;
         break;
       }
       case 4:
-        if (form.role === "contractor" && !(form.categories?.length ?? 0)) {
-          nextErrors.categories = "Выберите хотя бы одну категорию";
-        }
         if (form.role === "venue" && !form.venueName?.trim()) {
           nextErrors.venueName = "Укажите название площадки";
         }
@@ -270,10 +336,39 @@ export default function RegisterPage() {
         if (!(form.cities?.length ?? 0)) {
           nextErrors.cities = "Выберите хотя бы один город";
         }
+        if (form.role === "contractor") {
+          if (!form.experienceYears?.trim()) {
+            nextErrors.experienceYears = "Укажите опыт работы";
+          }
+          if (!form.completedProjects?.trim()) {
+            nextErrors.completedProjects = "Укажите количество проектов";
+          }
+          if (!form.productionAddress?.trim()) {
+            nextErrors.productionAddress = "Укажите адрес производства";
+          }
+          if (!form.permanentStaff?.trim()) {
+            nextErrors.permanentStaff = "Укажите штат сотрудников";
+          }
+          if (!form.temporaryStaff?.trim()) {
+            nextErrors.temporaryStaff = "Укажите временный персонал";
+          }
+          if (!form.freightVehicles?.trim()) {
+            nextErrors.freightVehicles = "Укажите количество автотранспорта";
+          }
+          if (!form.designerPartners?.trim()) {
+            nextErrors.designerPartners = "Укажите количество дизайнеров";
+          }
+        }
         break;
       case 5:
         if (!form.termsAccepted) nextErrors.terms = "Примите условия использования";
         if (!form.privacyAccepted) nextErrors.privacy = "Примите политику конфиденциальности";
+        if (!form.serviceNotificationsAccepted) {
+          nextErrors.serviceNotifications = "Подключите важные уведомления";
+        }
+        if (!form.messengerNotificationsAccepted) {
+          nextErrors.messengerNotifications = "Подключите дублирование в мессенджер";
+        }
         break;
     }
 
@@ -322,7 +417,7 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-2xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
         <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
         <p className="text-sm text-gray-600 mb-6">
           Создайте аккаунт компании на маркетплейсе
@@ -341,10 +436,15 @@ export default function RegisterPage() {
                 <Card
                   key={role.id}
                   onClick={() => updateField("role", role.id)}
-                  className={form.role === role.id ? "border-gray-900 ring-1 ring-gray-900" : ""}
+                  className={`h-full cursor-pointer ${
+                    form.role === role.id ? "border-gray-900 ring-1 ring-gray-900" : ""
+                  }`}
                 >
                   <CardTitle>{role.title}</CardTitle>
-                  <CardDescription>{role.description}</CardDescription>
+                  <CardDescription className="leading-relaxed">
+                    {role.description}
+                    {role.extraNote && ` ${role.extraNote}`}
+                  </CardDescription>
                 </Card>
               ))}
             </div>
@@ -463,17 +563,16 @@ export default function RegisterPage() {
               onChange={(e) => updateField("email", e.target.value)}
               error={errors.email}
             />
-            <Input
+            <PasswordInput
               label="Пароль"
-              type="password"
               value={form.password}
               onChange={(e) => updateField("password", e.target.value)}
               error={errors.password}
+              hint="Латинские буквы, не менее 6 символов, специальный символ"
               autoComplete="new-password"
             />
-            <Input
+            <PasswordInput
               label="Подтверждение пароля"
-              type="password"
               value={form.confirmPassword}
               onChange={(e) => updateField("confirmPassword", e.target.value)}
               error={errors.confirmPassword}
@@ -490,10 +589,27 @@ export default function RegisterPage() {
             </p>
 
             <div>
-              <p className="text-sm font-medium mb-2">Города работы</p>
+              <p className="text-sm font-medium mb-2">Города проведения</p>
               {errors.cities && <p className="text-xs text-gray-700 mb-1">{errors.cities}</p>}
-              <div className="flex flex-wrap gap-2">
-                {CITIES.map((city) => (
+              <Input
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                placeholder="Поиск города"
+                className="mb-3"
+              />
+              <div className="flex flex-wrap gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={toggleAllCities}
+                  className={`text-xs border px-2 py-1 ${
+                    allFilteredCitiesSelected
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 hover:border-gray-900"
+                  }`}
+                >
+                  Все города
+                </button>
+                {filteredCities.map((city) => (
                   <button
                     key={city}
                     type="button"
@@ -508,52 +624,134 @@ export default function RegisterPage() {
                   </button>
                 ))}
               </div>
+              <Select
+                label="Федеральный округ"
+                value={cityDistrict}
+                onChange={(e) => setCityDistrict(e.target.value)}
+                options={[
+                  { value: "", label: "Все федеральные округа" },
+                  ...FEDERAL_DISTRICT_OPTIONS.map((district) => ({
+                    value: district,
+                    label: district,
+                  })),
+                ]}
+              />
             </div>
 
-            {form.role === "customer" && (
-              <div>
-                <p className="text-sm font-medium mb-2">Интересующие отрасли</p>
-                <div className="flex flex-wrap gap-2">
-                  {EVENT_INDUSTRIES.map((ind) => (
-                    <button
-                      key={ind}
-                      type="button"
-                      onClick={() => toggleArrayItem("industries", ind)}
-                      className={`text-xs border px-2 py-1 ${
-                        form.industries?.includes(ind)
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-300 hover:border-gray-900"
-                      }`}
-                    >
-                      {ind}
-                    </button>
-                  ))}
-                </div>
+            <div>
+              <p className="text-sm font-medium mb-2">
+                Интересующие отраслевые мероприятия по тематикам
+              </p>
+              {errors.industries && <p className="text-xs text-gray-700 mb-1">{errors.industries}</p>}
+              <div className="flex flex-wrap gap-2">
+                {EVENT_INDUSTRIES.map((ind) => (
+                  <button
+                    key={ind}
+                    type="button"
+                    onClick={() => toggleArrayItem("industries", ind)}
+                    className={`text-xs border px-2 py-1 ${
+                      form.industries?.includes(ind)
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-300 hover:border-gray-900"
+                    }`}
+                  >
+                    {ind}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             {form.role === "contractor" && (
-              <>
+              <div className="space-y-4 border border-gray-300 p-4">
+                <p className="text-sm font-medium">Данные исполнителя</p>
+                <Input
+                  label="Укажите опыт работы в сфере, полных лет"
+                  type="number"
+                  min={0}
+                  value={form.experienceYears}
+                  onChange={(e) => updateField("experienceYears", e.target.value.replace(/\D/g, ""))}
+                  error={errors.experienceYears}
+                />
+                <Input
+                  label="Укажите количество реализованных проектов"
+                  type="number"
+                  min={0}
+                  value={form.completedProjects}
+                  onChange={(e) => updateField("completedProjects", e.target.value.replace(/\D/g, ""))}
+                  error={errors.completedProjects}
+                />
+                <Input
+                  label="Укажите фактический адрес производства"
+                  value={form.productionAddress}
+                  onChange={(e) => updateField("productionAddress", e.target.value)}
+                  error={errors.productionAddress}
+                />
+                <Input
+                  label="Укажите количество постоянного штата сотрудников"
+                  type="number"
+                  min={0}
+                  value={form.permanentStaff}
+                  onChange={(e) => updateField("permanentStaff", e.target.value.replace(/\D/g, ""))}
+                  error={errors.permanentStaff}
+                />
+                <Input
+                  label="Укажите количество возможных для привлечения временного персонала"
+                  type="number"
+                  min={0}
+                  value={form.temporaryStaff}
+                  onChange={(e) => updateField("temporaryStaff", e.target.value.replace(/\D/g, ""))}
+                  error={errors.temporaryStaff}
+                />
+                <Input
+                  label="Укажите наличие собственного грузового автотранспорта в единицах"
+                  type="number"
+                  min={0}
+                  value={form.freightVehicles}
+                  onChange={(e) => updateField("freightVehicles", e.target.value.replace(/\D/g, ""))}
+                  error={errors.freightVehicles}
+                />
+                <Input
+                  label="Количество дизайнеров, с которыми вы сотрудничаете"
+                  type="number"
+                  min={0}
+                  value={form.designerPartners}
+                  onChange={(e) => updateField("designerPartners", e.target.value.replace(/\D/g, ""))}
+                  error={errors.designerPartners}
+                />
+                <Input
+                  label="Укажите товарный знак, если он отличается от официального наименования"
+                  value={form.trademark}
+                  onChange={(e) => updateField("trademark", e.target.value)}
+                />
                 <div>
-                  <p className="text-sm font-medium mb-2">Категории услуг</p>
-                  {errors.categories && <p className="text-xs text-gray-700 mb-1">{errors.categories}</p>}
-                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                    {SERVICE_CATEGORIES.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => toggleArrayItem("categories", cat)}
-                        className={`text-xs border px-2 py-1 ${
-                          form.categories?.includes(cat)
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 hover:border-gray-900"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
+                  <FileUpload
+                    label="Загрузите фотографии с производства"
+                    accept="image/*"
+                    onUpload={(name) =>
+                      updateField("productionPhotos", [...(form.productionPhotos ?? []), name])
+                    }
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Это повысит доверие заказчиков
+                  </p>
+                  {(form.productionPhotos?.length ?? 0) > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {form.productionPhotos?.map((file) => (
+                        <li key={file} className="text-xs text-gray-600 flex items-center gap-1">
+                          <span className="border border-gray-300 px-1">📷</span> {file}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.postPaymentAvailable}
+                    onChange={(e) => updateField("postPaymentAvailable", e.target.checked)}
+                  />
+                  Возможна работа по постоплате.
+                </label>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
                     type="checkbox"
@@ -567,7 +765,7 @@ export default function RegisterPage() {
                   value={form.description}
                   onChange={(e) => updateField("description", e.target.value)}
                 />
-              </>
+              </div>
             )}
 
             {form.role === "venue" && (
@@ -593,33 +791,11 @@ export default function RegisterPage() {
             )}
 
             {form.role === "organizer" && (
-              <>
-                <div>
-                  <p className="text-sm font-medium mb-2">Отрасли мероприятий</p>
-                  {errors.industries && <p className="text-xs text-gray-700 mb-1">{errors.industries}</p>}
-                  <div className="flex flex-wrap gap-2">
-                    {EVENT_INDUSTRIES.map((ind) => (
-                      <button
-                        key={ind}
-                        type="button"
-                        onClick={() => toggleArrayItem("industries", ind)}
-                        className={`text-xs border px-2 py-1 ${
-                          form.industries?.includes(ind)
-                            ? "border-gray-900 bg-gray-900 text-white"
-                            : "border-gray-300 hover:border-gray-900"
-                        }`}
-                      >
-                        {ind}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <Textarea
-                  label="Описание организатора"
-                  value={form.description}
-                  onChange={(e) => updateField("description", e.target.value)}
-                />
-              </>
+              <Textarea
+                label="Описание организатора"
+                value={form.description}
+                onChange={(e) => updateField("description", e.target.value)}
+              />
             )}
           </div>
         )}
@@ -662,19 +838,49 @@ export default function RegisterPage() {
             <label className="flex items-start gap-2 text-sm cursor-pointer">
               <input
                 type="checkbox"
+                checked={form.serviceNotificationsAccepted}
+                onChange={(e) => updateField("serviceNotificationsAccepted", e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                Получать важные уведомления от организаторов, площадки проведения, исполнителей
+                и сервиса
+              </span>
+            </label>
+            {errors.serviceNotifications && (
+              <p className="text-xs text-gray-700">{errors.serviceNotifications}</p>
+            )}
+
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
                 checked={form.marketingAccepted}
                 onChange={(e) => updateField("marketingAccepted", e.target.checked)}
                 className="mt-1"
               />
               <span>Получать новости и предложения сервиса (необязательно)</span>
             </label>
+
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.messengerNotificationsAccepted}
+                onChange={(e) => updateField("messengerNotificationsAccepted", e.target.checked)}
+                className="mt-1"
+              />
+              <span>Дублировать важные и срочные уведомления в мессенджер</span>
+            </label>
+            {errors.messengerNotifications && (
+              <p className="text-xs text-gray-700">{errors.messengerNotifications}</p>
+            )}
           </div>
         )}
 
         {step === 6 && (
           <div className="space-y-4">
             <div className="border border-gray-300 bg-gray-50 p-4 text-sm">
-              Код подтверждения отправлен на <strong>{form.email}</strong>
+              Код подтверждения отправлен на <strong>{form.email}</strong>. Можете ещё
+              проверить папку «Спам».
             </div>
             <Input
               label="Код из письма"
@@ -722,7 +928,8 @@ export default function RegisterPage() {
               <strong>{form.companyName || "вашей организации"}</strong> и уведомим вас о результате.
             </p>
             <p className="text-xs text-gray-500 mb-6">
-              Обычно модерация занимает 1–2 рабочих дня
+              Обычно модерация занимает до 24 часов. Вы получите уведомление на e-mail,
+              указанный при регистрации.
             </p>
             <Button onClick={handleComplete}>Перейти к статусу модерации</Button>
           </div>
@@ -740,7 +947,7 @@ export default function RegisterPage() {
             </Button>
             {step < 6 && (
               <Button type="button" onClick={goNext}>
-                {step === 5 ? "Отправить код" : "Далее"}
+                {step === 5 ? "Отправить код на почту" : "Далее"}
               </Button>
             )}
           </div>

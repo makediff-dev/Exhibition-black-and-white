@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Heart } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
-import { useCartStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice } from "@/lib/utils/formatters";
+import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -23,6 +24,8 @@ export default function ServiceDetailPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const addItem = useCartStore((s) => s.addItem);
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFavorite = useFavoritesStore((s) => s.isFavorite);
 
   const id = params.id as string;
   const services = usePrototypeStore((s) => s.services);
@@ -36,12 +39,23 @@ export default function ServiceDetailPage() {
   const selectedVariant = service.variants?.find((v) => v.id === selectedVariantId);
   const unitPrice = selectedVariant?.price ?? service.price;
 
+  const handleToggleFavorite = () => {
+    const added = toggleFavorite(service.id);
+    showToast(
+      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
+      added ? "success" : "info"
+    );
+  };
+
   const handleAddToCart = () => {
     addItem({
       serviceId: service.id,
       quantity,
       comment: selectedVariant ? `Вариант: ${selectedVariant.name}` : "",
       files: [],
+      variantId: selectedVariant?.id,
+      variantName: selectedVariant?.name,
+      unitPrice,
     });
     showToast(`«${service.title}» добавлено в корзину`, "success");
   };
@@ -56,23 +70,33 @@ export default function ServiceDetailPage() {
       <PublicHeader />
 
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
-        <Link href="/services" className="text-sm underline mb-4 inline-block">← Все услуги</Link>
+        <BackButton fallbackHref="/services" className="mb-4" />
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div>
-              <Badge variant="outline" className="mb-2">{service.category}</Badge>
-              <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
-              <p className="text-sm text-gray-600">
-                <Link href={`/contractors/${service.contractorId}`} className="underline">
-                  {service.contractorName}
-                </Link>
-                {" · "}{service.city}
-              </p>
-              <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                <Star className="h-4 w-4 fill-gray-900" />
-                {service.rating} · {service.reviewCount} отзывов
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Badge variant="outline" className="mb-2">{service.category}</Badge>
+                <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
+                <p className="text-sm text-gray-600">
+                  <Link href={`/contractors/${service.contractorId}`} className="underline">
+                    {service.contractorName}
+                  </Link>
+                  {" · "}{service.city}
+                </p>
+                <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                  <Star className="h-4 w-4 fill-gray-900" />
+                  {service.rating} · {service.reviewCount} отзывов
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                className="shrink-0 text-gray-900 hover:text-gray-600"
+                aria-label={isFavorite(service.id) ? "Убрать из избранного" : "В избранное"}
+              >
+                <Heart className={`h-5 w-5 ${isFavorite(service.id) ? "fill-gray-900" : ""}`} />
+              </button>
             </div>
 
             <section>
@@ -111,11 +135,10 @@ export default function ServiceDetailPage() {
           <aside>
             <div className="border border-gray-900 p-4 sticky top-20 space-y-4">
               <p className="text-2xl font-bold">
-                {service.priceFormat === "от" && !selectedVariant ? "от " : ""}
-                {formatPrice(unitPrice)}
-                {!selectedVariant && service.priceFormat !== "фиксированная" && service.priceFormat !== "от"
-                  ? ` / ${service.priceFormat}`
-                  : ""}
+                {formatServicePrice({
+                  price: unitPrice,
+                  priceFormat: selectedVariant ? "фиксированная" : service.priceFormat,
+                })}
               </p>
 
               {service.variants && service.variants.length > 0 && (

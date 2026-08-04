@@ -5,7 +5,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { AccountPageRenderer } from "@/components/account/account-page-renderer";
-import { ROLE_LABELS } from "@/constants/statuses";
 import type { UserRole } from "@/data/types";
 
 const VALID_ROLES: UserRole[] = ["customer", "contractor", "venue", "organizer"];
@@ -37,19 +36,25 @@ export default function AccountPage({
     }
   }, [isAuthenticated, router]);
 
+  useEffect(() => {
+    if (resolved?.role === "customer" && resolved.slug === "requests") {
+      router.replace("/requests");
+    }
+  }, [resolved, router]);
+
+  useEffect(() => {
+    if (user && resolved && user.role !== resolved.role) {
+      const slugPath = resolved.slug ? `/${resolved.slug}` : "";
+      router.replace(`/account/${user.role}${slugPath}`);
+    }
+  }, [user, resolved, router]);
+
   if (!resolved || !user) {
     return <div className="p-8 text-center text-sm text-gray-500">Загрузка...</div>;
   }
 
-  const roleLabel = ROLE_LABELS[resolved.role as keyof typeof ROLE_LABELS];
-
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: "Главная", href: "/" },
-        { label: `Кабинет: ${roleLabel}` },
-      ]}
-    >
+    <AppShell>
       <AccountPageRenderer role={resolved.role as UserRole} slug={resolved.slug} />
     </AppShell>
   );

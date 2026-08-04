@@ -15,8 +15,15 @@ export function validateRequired(value: string, label: string): string | null {
   return null;
 }
 
+export function validatePasswordStrength(password: string): string | null {
+  if (!password) return "Пароль обязателен";
+  if (password.length < 6) return "Пароль должен быть не менее 6 символов";
+  if (!/[a-zA-Z]/.test(password)) return "Пароль должен содержать латинские буквы";
+  if (!/[^a-zA-Z0-9]/.test(password)) return "Пароль должен содержать специальный символ";
+  return null;
+}
+
 export function validatePasswordMatch(password: string, confirm: string): string | null {
   if (password !== confirm) return "Пароли не совпадают";
-  if (password.length < 6) return "Пароль должен быть не менее 6 символов";
   return null;
 }

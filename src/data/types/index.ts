@@ -72,6 +72,7 @@ export interface Event {
   okvedTags: string[];
   organizerId: string;
   relatedServiceIds: string[];
+  searchAliases?: string[];
 }
 
 export interface Contractor {
@@ -86,8 +87,31 @@ export interface Contractor {
   rating: number;
   reviewCount: number;
   verified: boolean;
-  portfolio: { id: string; title: string; year: string }[];
-  reviews: { id: string; author: string; rating: number; text: string; date: string }[];
+  inRsvya?: boolean;
+  inSroVz?: boolean;
+  portfolio: PortfolioItem[];
+  reviews: ContractorReview[];
+}
+
+export interface ContractorReview {
+  id: string;
+  author: string;
+  rating: number;
+  text: string;
+  date: string;
+  photos?: string[];
+  videos?: string[];
+}
+
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  year: string;
+  description: string;
+  photos: string[];
+  videos?: string[];
+  links?: string[];
+  eventId?: string;
 }
 
 export interface Service {
@@ -112,6 +136,9 @@ export interface CartItem {
   quantity: number;
   comment: string;
   files: string[];
+  variantId?: string;
+  variantName?: string;
+  unitPrice?: number;
 }
 
 export interface TorSection {
@@ -146,6 +173,7 @@ export interface Request {
   status: RequestStatus;
   budget: { type: string; min?: number; max?: number; hidden?: boolean };
   deadline: string;
+  responseDeadlineAt?: string;
   description: string;
   requirements: string;
   expectedResult: string;
@@ -154,8 +182,10 @@ export interface Request {
   responseCount: number;
   publishedAt?: string;
   customerId: string;
+  customerName?: string;
   torSections: TorSection[];
   files: string[];
+  cloudLinks?: string;
   history: { date: string; action: string }[];
 }
 
@@ -174,6 +204,17 @@ export interface Response {
   validUntil: string;
   estimate: EstimateSection[];
   files: string[];
+}
+
+export interface DealReview {
+  id: string;
+  author: string;
+  rating: number;
+  text: string;
+  date: string;
+  photos?: string[];
+  videos?: string[];
+  status: "pending_moderation" | "published";
 }
 
 export interface DealStage {
@@ -204,6 +245,44 @@ export interface Deal {
   history: { date: string; action: string; actor: string }[];
   documents: string[];
   commission: number;
+  review?: DealReview;
+  projectPhotos?: string[];
+  reviewRequested?: boolean;
+  reviewRequestedAt?: string;
+  eventId?: string;
+}
+
+export type EventOrderType =
+  | "space_booking"
+  | "passes"
+  | "accreditation"
+  | "stand_build"
+  | "venue_service"
+  | "other";
+
+export type EventOrderPriority = "high" | "medium" | "normal";
+
+export type EventOrderCustomerRole =
+  | "organizer"
+  | "exhibitor"
+  | "contractor"
+  | "venue"
+  | "general_contractor";
+
+export interface EventOrder {
+  id: string;
+  eventId: string;
+  venueId: string;
+  title: string;
+  type: EventOrderType;
+  priority: EventOrderPriority;
+  customerRole: EventOrderCustomerRole;
+  customerName: string;
+  status: DealStatus | "pending" | "completed";
+  amount?: number;
+  dealId?: string;
+  requestId?: string;
+  direction?: "incoming" | "outgoing";
 }
 
 export interface Document {
@@ -215,16 +294,27 @@ export interface Document {
   parties: string;
   status: "draft" | "sent" | "signed" | "archived";
   direction?: "incoming" | "outgoing";
+  eventId?: string;
+  organizerId?: string;
+  organizerName?: string;
+  venueId?: string;
 }
 
 export interface Payment {
   id: string;
-  dealId: string;
+  dealId?: string;
   type: string;
   amount: number;
   status: "pending" | "paid" | "reserved" | "refunded";
   date: string;
   description: string;
+  direction?: "incoming" | "outgoing";
+  venueId?: string;
+  eventId?: string;
+  organizerId?: string;
+  organizerName?: string;
+  participantRole?: "organizer" | "exhibitor" | "contractor" | "venue";
+  counterpartyName?: string;
 }
 
 export interface Notification {
@@ -236,11 +326,16 @@ export interface Notification {
   date: string;
   link: string;
   category: string;
+  eventId?: string;
+  audience?: UserRole;
 }
+
+export type MessageCategory = "system" | "customer" | "venue" | "organizer";
 
 export interface MessageThread {
   id: string;
   title: string;
+  category: MessageCategory;
   relatedType: string;
   relatedId: string;
   relatedLink: string;
@@ -250,9 +345,17 @@ export interface MessageThread {
   messages: { id: string; sender: string; text: string; date: string; files: string[] }[];
 }
 
+export interface VenuePavilion {
+  id: string;
+  venueId: string;
+  name: string;
+  description?: string;
+}
+
 export interface VenueHall {
   id: string;
   venueId: string;
+  pavilionId: string;
   name: string;
   area: number;
   capacity: number;
@@ -270,10 +373,16 @@ export interface Booking {
   id: string;
   eventId: string;
   venueId: string;
-  cellId: string;
-  customerId: string;
+  cellId?: string;
+  hallId?: string;
+  customerId?: string;
+  organizerId?: string;
+  organizerName?: string;
   status: "pending" | "confirmed" | "rejected";
   date: string;
+  periodType?: "setup" | "event" | "teardown";
+  periodStart?: string;
+  periodEnd?: string;
 }
 
 export interface Participant {
@@ -281,7 +390,157 @@ export interface Participant {
   eventId: string;
   name: string;
   status: string;
+  applicationDate?: string;
   assignedSpace?: string;
   paid: boolean;
   documents: string[];
+}
+
+export type OrganizerServiceAudience = "exhibitor" | "contractor";
+
+export interface OrganizerEventService {
+  id: string;
+  eventId: string;
+  title: string;
+  price: string;
+  active: boolean;
+  audiences: OrganizerServiceAudience[];
+}
+
+export type VenueServiceAudience = "organizer" | "contractor" | "exhibitor" | "individual";
+
+export interface VenueService {
+  id: string;
+  venueId: string;
+  title: string;
+  price: string;
+  active: boolean;
+  audiences: VenueServiceAudience[];
+}
+
+export type VenueEmployeeStatus = "active" | "invited" | "pending_edo";
+
+export type VenuePermissionSection =
+  | "dashboard"
+  | "profile"
+  | "halls"
+  | "spaces"
+  | "floor-plan"
+  | "events"
+  | "venue-services"
+  | "bookings"
+  | "orders"
+  | "payments"
+  | "documents";
+
+export interface VenueEmployee {
+  id: string;
+  venueId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
+  status: VenueEmployeeStatus;
+  edoVerified: boolean;
+  permissions: VenuePermissionSection[];
+  pinLoginEnabled: boolean;
+  invitedAt?: string;
+  joinedAt?: string;
+}
+
+export type OrganizerPermissionSection =
+  | "dashboard"
+  | "profile"
+  | "events"
+  | "venues"
+  | "orders"
+  | "payments"
+  | "documents";
+
+export interface OrganizerEmployee {
+  id: string;
+  organizerId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
+  status: VenueEmployeeStatus;
+  edoVerified: boolean;
+  permissions: OrganizerPermissionSection[];
+  pinLoginEnabled: boolean;
+  invitedAt?: string;
+  joinedAt?: string;
+}
+
+export interface VenueEventMeta {
+  id: string;
+  eventId: string;
+  venueId: string;
+  hallIds: string[];
+  rentedAreaSqm: number;
+  freeAreaSqm: number;
+  availabilityNotes: string[];
+  activeServiceIds: string[];
+}
+
+export interface VenueProfileMedia {
+  id: string;
+  venueId: string;
+  type: "photo" | "video";
+  category: "venue" | "infrastructure";
+  title: string;
+  fileName?: string;
+}
+
+export interface VenueSpaceBlock {
+  id: string;
+  venueId: string;
+  hallId?: string;
+  name: string;
+  area: number;
+  pricePerSqm: number;
+  open: boolean;
+}
+
+export interface VenueDailyOccupancy {
+  date: string;
+  venueId: string;
+  percent: number;
+}
+
+export type FloorPlanPlotStatus = "available" | "reserved" | "paid" | "unavailable";
+
+export type HallGridFeatureType = "column" | "entrance" | "exit" | "zone";
+
+export interface HallGridConfig {
+  hallId: string;
+  widthMeters: number;
+  heightMeters: number;
+  gridStepMeters: number;
+}
+
+export interface HallGridFeature {
+  id: string;
+  hallId: string;
+  type: HallGridFeatureType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+}
+
+export interface FloorPlanPlot {
+  id: string;
+  label: string;
+  hallId: string;
+  eventId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  area: number;
+  pricePerSqm: number;
+  status: FloorPlanPlotStatus;
+  companyName?: string;
 }

@@ -39,7 +39,7 @@ export default function HowItWorksPage() {
           </section>
         </div>
         <Link href="/register" className="inline-block mt-6 border border-gray-900 px-4 py-2 text-sm font-medium hover:bg-gray-100">
-          Начать работу →
+          Начать работу
         </Link>
       </main>
       <Footer />

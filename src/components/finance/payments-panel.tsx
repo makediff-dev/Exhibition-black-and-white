@@ -10,8 +10,18 @@ import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast-provider";
 import type { Payment } from "@/data/types";
+import { SEED_PAYMENTS } from "@/data/mocks/seed";
 import { usePrototypeStore } from "@/lib/store";
+import { DisputesTab } from "@/components/finance/disputes-tab";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+
+const PENDING_PAYMENT_ORDER = ["pay-4", "pay-8", "pay-9"];
+
+function mergePayments(storedPayments: Payment[]): Payment[] {
+  const ids = new Set(storedPayments.map((payment) => payment.id));
+  const missing = SEED_PAYMENTS.filter((payment) => !ids.has(payment.id));
+  return missing.length ? [...storedPayments, ...missing] : storedPayments;
+}
 
 const PAYMENT_TABS = [
   { id: "pending", label: "Счета к оплате" },
@@ -19,6 +29,7 @@ const PAYMENT_TABS = [
   { id: "safe", label: "Безопасные сделки" },
   { id: "payouts", label: "Выплаты" },
   { id: "refunds", label: "Возвраты" },
+  { id: "disputes", label: "Споры" },
 ];
 
 const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
@@ -29,7 +40,9 @@ const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
 };
 
 export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string }) {
-  const { payments, deals } = usePrototypeStore();
+  const storePayments = usePrototypeStore((state) => state.payments);
+  const deals = usePrototypeStore((state) => state.deals);
+  const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -42,8 +55,9 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
     [deals]
   );
 
+
   const filteredPayments = useMemo(() => {
-    return payments.filter((p) => {
+    const filtered = payments.filter((p) => {
       const status = statusOverrides[p.id] ?? p.status;
       switch (activeTab) {
         case "pending":
@@ -60,6 +74,17 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
           return true;
       }
     });
+
+    if (activeTab !== "pending") return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const aIndex = PENDING_PAYMENT_ORDER.indexOf(a.id);
+      const bIndex = PENDING_PAYMENT_ORDER.indexOf(b.id);
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+      }
+      return a.date.localeCompare(b.date);
+    });
   }, [payments, activeTab, statusOverrides]);
 
   const breakdown = useMemo(() => {
@@ -71,13 +96,12 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
     const paid = payments
       .filter((p) => getS(p) === "paid")
       .reduce((sum, p) => sum + p.amount, 0);
-    const commission = deals.reduce((sum, d) => sum + d.commission, 0);
     const refunded = payments
       .filter((p) => getS(p) === "refunded")
       .reduce((sum, p) => sum + p.amount, 0);
-    const available = reserve - paid - commission;
+    const available = reserve - paid;
 
-    return { orderAmount, reserve, paid, commission, available: Math.max(0, available), refunded };
+    return { orderAmount, reserve, paid, available: Math.max(0, available), refunded };
   }, [deals, payments, statusOverrides]);
 
   const handlePay = (payment: Payment) => {
@@ -88,39 +112,37 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
   return (
     <>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        <Card>
-          <CardDescription>Сумма заказов</CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.orderAmount)}</CardTitle>
-        </Card>
-        <Card>
-          <CardDescription className="flex items-center gap-1">
-            <Shield className="h-3.5 w-3.5" /> Резерв
-          </CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.reserve)}</CardTitle>
-        </Card>
-        <Card>
-          <CardDescription>Оплачено</CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.paid)}</CardTitle>
-        </Card>
-        <Card>
-          <CardDescription>Комиссия платформы</CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.commission)}</CardTitle>
-        </Card>
-        <Card>
-          <CardDescription className="flex items-center gap-1">
-            <Wallet className="h-3.5 w-3.5" /> Доступно
-          </CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.available)}</CardTitle>
-        </Card>
-        <Card>
-          <CardDescription>Возвращено</CardDescription>
-          <CardTitle className="mt-1">{formatPrice(breakdown.refunded)}</CardTitle>
+          <Card>
+            <CardDescription>Сумма заказов</CardDescription>
+            <CardTitle className="mt-1">{formatPrice(breakdown.orderAmount)}</CardTitle>
+          </Card>
+          <Card>
+            <CardDescription className="flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5" /> Резерв
+            </CardDescription>
+            <CardTitle className="mt-1">{formatPrice(breakdown.reserve)}</CardTitle>
+          </Card>
+          <Card>
+            <CardDescription>Оплачено</CardDescription>
+            <CardTitle className="mt-1">{formatPrice(breakdown.paid)}</CardTitle>
+          </Card>
+          <Card>
+            <CardDescription className="flex items-center gap-1">
+              <Wallet className="h-3.5 w-3.5" /> Доступно
+            </CardDescription>
+            <CardTitle className="mt-1">{formatPrice(breakdown.available)}</CardTitle>
+          </Card>
+          <Card>
+            <CardDescription>Возвращено</CardDescription>
+            <CardTitle className="mt-1">{formatPrice(breakdown.refunded)}</CardTitle>
         </Card>
       </div>
 
       <Tabs tabs={PAYMENT_TABS} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
-      {filteredPayments.length === 0 ? (
+      {activeTab === "disputes" ? (
+        <DisputesTab deals={deals} />
+      ) : filteredPayments.length === 0 ? (
         <EmptyState
           title="Записи не найдены"
           description="В этой вкладке пока нет финансовых операций"
@@ -129,7 +151,7 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
         <div className="space-y-3">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
-            const deal = dealMap[payment.dealId];
+            const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 
             return (
               <Card key={payment.id}>
@@ -144,7 +166,7 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
                     <p className="text-lg font-semibold">{formatPrice(payment.amount)}</p>
                     <p className="text-sm text-gray-600 mt-1">{payment.description}</p>
                     <p className="text-xs text-gray-500 mt-1">{formatDate(payment.date)}</p>
-                    {deal && (
+                    {deal && payment.dealId && (
                       <p className="text-sm mt-2">
                         <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
                           {deal.number} — {deal.title}
