@@ -8,6 +8,7 @@ import { ServiceCard } from "@/components/catalog/service-card";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { CompanyProfile } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 
 function RecommendedContractorCard({
   contractor,
@@ -15,7 +16,7 @@ function RecommendedContractorCard({
   contractor: (typeof SEED_CONTRACTORS)[number];
 }) {
   return (
-    <Link href={`/contractors/${contractor.id}`}>
+    <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
       <Card className="h-full hover:border-gray-900">
         <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
         <CardDescription>

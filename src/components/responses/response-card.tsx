@@ -15,6 +15,7 @@ import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { Response } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { createDealFromResponse } from "@/lib/utils/create-deal-from-response";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 
 export function ResponseCard({
@@ -45,9 +46,12 @@ export function ResponseCard({
 
   const contractor = SEED_CONTRACTORS.find((item) => item.id === response.contractorId);
 
-  const contractorProfileHref = isOwner
-    ? `/contractors/${response.contractorId}?from=responses&requestId=${requestId}&responseId=${response.id}`
-    : `/contractors/${response.contractorId}`;
+  const contractorProfileHref = getContractorProfileHref(response.contractorId, {
+    role: user?.role,
+    from: isOwner ? "responses" : undefined,
+    requestId: isOwner ? requestId : undefined,
+    responseId: isOwner ? response.id : undefined,
+  });
 
   const handleDismiss = () => {
     setHidden(true);

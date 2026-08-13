@@ -13,6 +13,7 @@ import { CITIES, EVENT_INDUSTRIES } from "@/constants/categories";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Deal, Request, TorSection } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import {
   formatEventMonthLabel,
@@ -215,7 +216,10 @@ export function RepeatOrderForm({
         <CardTitle className="text-sm mb-3">Исполнитель</CardTitle>
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <div>
-            <Link href={`/contractors/${deal.contractorId}`} className="font-medium hover:underline">
+            <Link
+              href={getContractorProfileHref(deal.contractorId, { role: "customer" })}
+              className="font-medium hover:underline"
+            >
               {deal.contractorName}
             </Link>
             <CardDescription className="mt-1">

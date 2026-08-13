@@ -19,6 +19,8 @@ import { EXTENDED_CHECK_CART_PREFIX } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
+import type { UserRole } from "@/data/types";
+import { getContractorCheckHref } from "@/lib/utils/contractor-profile-links";
 
 interface ExpressCheckRecord {
   id: string;
@@ -100,7 +102,11 @@ function downloadReportFile(record: ExtendedCheckRecord) {
   URL.revokeObjectURL(url);
 }
 
-export function ChecksPanel() {
+interface ChecksPanelProps {
+  role?: UserRole;
+}
+
+export function ChecksPanel({ role = "customer" }: ChecksPanelProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const addItem = useCartStore((state) => state.addItem);
@@ -210,7 +216,7 @@ export function ChecksPanel() {
           ))}
 
           <div className="flex flex-wrap gap-2">
-            <Link href="/contractors/ctr-1/check">
+            <Link href={getContractorCheckHref("ctr-1", { role })}>
               <Button size="sm">Новая проверка</Button>
             </Link>
             <Button size="sm" variant="outline" onClick={() => setActiveTab("tariffs")}>

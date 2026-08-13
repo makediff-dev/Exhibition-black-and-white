@@ -31,6 +31,7 @@ import {
 } from "@/constants/statuses";
 import type { Deal, DealStage, DealStatus } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
 
@@ -775,7 +776,7 @@ export default function DealPage() {
               </Button>
             </div>
             <Link
-              href={`/contractors/${deal.contractorId}`}
+              href={getContractorProfileHref(deal.contractorId, { role: user?.role })}
               className="inline-block mt-4 text-sm hover:underline"
             >
               Открыть профиль исполнителя

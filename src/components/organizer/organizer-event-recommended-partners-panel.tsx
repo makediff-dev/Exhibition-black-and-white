@@ -11,7 +11,8 @@ import { OrganizerEventRecommendedPartnerModal } from "@/components/organizer/or
 import { EVENT_PARTNER_CATEGORIES } from "@/constants/event-partner-categories";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { EventPartnerCategoryId, EventRecommendedPartner } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 
 interface Props {
   eventId: string | null;
@@ -41,6 +42,7 @@ export function OrganizerEventRecommendedPartnersPanel({
   onEnsureDraftId,
   showToast,
 }: Props) {
+  const user = useAuthStore((state) => state.user);
   const {
     eventRecommendedPartners,
     addEventRecommendedPartner,
@@ -201,7 +203,9 @@ export function OrganizerEventRecommendedPartnersPanel({
 
                           {partner.contractorId && (
                             <Link
-                              href={`/contractors/${partner.contractorId}`}
+                              href={getContractorProfileHref(partner.contractorId, {
+                                role: user?.role,
+                              })}
                               className="inline-block text-xs underline mt-auto pt-3 hover:text-gray-900"
                             >
                               Карточка партнёра

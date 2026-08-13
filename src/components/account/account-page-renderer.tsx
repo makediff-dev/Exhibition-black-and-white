@@ -55,6 +55,7 @@ import {
 import { ContractorMyResponsesSection } from "@/components/contractor/contractor-my-responses-section";
 import { ProjectGanttSection } from "@/components/contractor/project-gantt-section";
 import { ContractorSettingsSection } from "@/components/contractor/contractor-settings-section";
+import { AccountContractorSection } from "@/components/contractors/account-contractor-section";
 import { ReviewCard } from "@/components/contractors/review-card";
 import { AvailableRequestCard } from "@/components/requests/available-request-card";
 import { VenueServicesSection } from "@/components/venue/venue-services-section";
@@ -126,7 +127,7 @@ export function AccountPageRenderer({ role, slug }: Props) {
       ? "Повторить заказ"
       : isPortfolioFormPage || slug === "portfolio" || isCatalogFormPage || contractorServiceId || (venueEvent && role === "venue") || slug === "floor-plan" || slug === "halls"
       ? null
-      : slug === "create-event" || slug === "edit-event" || slug.startsWith("events/") || slug.startsWith("orders/") || slug.startsWith("bookings/")
+      : slug === "create-event" || slug === "edit-event" || slug.startsWith("events/") || slug.startsWith("orders/") || slug.startsWith("bookings/") || slug.startsWith("contractors/")
         ? null
         : isDashboard && role === "venue"
           ? matchedNav?.label || "Дашборд"
@@ -135,6 +136,9 @@ export function AccountPageRenderer({ role, slug }: Props) {
             : matchedNav?.label ?? (slug.includes("/") ? null : "Кабинет");
 
   const renderContent = () => {
+    if (slug.startsWith("contractors/")) {
+      return <AccountContractorSection slug={slug} role={role} />;
+    }
     if (role === "customer") return <CustomerPages slug={slug} />;
     if (role === "contractor") return <ContractorPages slug={slug} />;
     if (role === "venue") return <VenuePages slug={slug} />;
@@ -741,7 +745,7 @@ function CustomerPages({ slug }: { slug: string }) {
   }
 
   if (slug === "checks") {
-    return <ChecksPanel />;
+    return <ChecksPanel role="customer" />;
   }
 
   if (slug === "payments") return <PaymentsPanel />;

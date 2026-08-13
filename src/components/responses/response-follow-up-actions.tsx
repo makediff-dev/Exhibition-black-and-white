@@ -4,26 +4,31 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { RESPONSE_FOLLOW_UP_ACTIONS } from "@/constants/statuses";
 import { useToast } from "@/components/ui/toast-provider";
+import type { UserRole } from "@/data/types";
+import { getContractorCheckSubscribeHref } from "@/lib/utils/contractor-profile-links";
 
 interface ResponseFollowUpActionsProps {
   contractorId: string;
   requestId?: string | null;
   responseId?: string | null;
+  accountRole?: UserRole | null;
 }
 
 export function ResponseFollowUpActions({
   contractorId,
   requestId,
   responseId,
+  accountRole = null,
 }: ResponseFollowUpActionsProps) {
   const { showToast } = useToast();
 
-  const buildSubscribeHref = () => {
-    const params = new URLSearchParams({ from: "responses" });
-    if (requestId) params.set("requestId", requestId);
-    if (responseId) params.set("responseId", responseId);
-    return `/contractors/${contractorId}/check/subscribe?${params.toString()}`;
-  };
+  const buildSubscribeHref = () =>
+    getContractorCheckSubscribeHref(contractorId, {
+      role: accountRole,
+      from: "responses",
+      requestId: requestId ?? undefined,
+      responseId: responseId ?? undefined,
+    });
 
   const handleAction = (label: string) => {
     showToast(`${label} — действие доступно в полной версии`, "info");

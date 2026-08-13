@@ -11,6 +11,7 @@ import { VENUE_CATALOG } from "@/constants/venues";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Contractor, Event, Service } from "@/data/types";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
 
@@ -78,7 +79,7 @@ function FavoriteEventCard({ event }: { event: Event }) {
 
 function FavoriteContractorCard({ contractor }: { contractor: Contractor }) {
   return (
-    <Link href={`/contractors/${contractor.id}`}>
+    <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
       <Card className="h-full hover:border-gray-900">
         <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
         <CardDescription>

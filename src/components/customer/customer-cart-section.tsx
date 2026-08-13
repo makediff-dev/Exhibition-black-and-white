@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/states";
 import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { resolveCartLine, isExtendedCheckCartItem } from "@/lib/utils/cart-utils";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice } from "@/lib/utils/formatters";
 
 export function CustomerCartSection() {
@@ -100,7 +101,10 @@ export function CustomerCartSection() {
           <div className="flex justify-between items-start mb-4 pb-3 border-b border-gray-200">
             <div>
               <CardTitle>{group.contractorName}</CardTitle>
-              <Link href={`/contractors/${group.contractorId}`} className="text-xs underline text-gray-600">
+              <Link
+                href={getContractorProfileHref(group.contractorId, { role: "customer" })}
+                className="text-xs underline text-gray-600"
+              >
                 Профиль исполнителя
               </Link>
             </div>
