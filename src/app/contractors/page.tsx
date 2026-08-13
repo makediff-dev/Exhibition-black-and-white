@@ -7,8 +7,7 @@ import { Filter, Star } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ContractorRegistryBadges } from "@/components/contractors/contractor-registry-badges";
+import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
 import { InviteContractorModal } from "@/components/contractors/invite-contractor-modal";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
@@ -34,20 +33,17 @@ function ContractorCard({
   onInvite: (contractor: Contractor) => void;
 }) {
   return (
-    <Card className="relative flex flex-col h-full hover:border-gray-900 transition-colors">
+    <Card className="relative flex flex-col h-full overflow-hidden p-0 hover:border-gray-900 transition-colors">
       <Link
         href={`/contractors/${contractor.id}`}
         className="absolute inset-0 z-0"
         aria-label={`Открыть профиль ${contractor.name}`}
       />
 
-      <div className="relative z-10 flex flex-col flex-1 pointer-events-none">
-        <div className="flex flex-wrap gap-2 mb-2">
-          {contractor.verified && <Badge variant="solid">Проверен</Badge>}
-          {contractor.hasProduction && <Badge variant="outline">Своё производство</Badge>}
-          <ContractorRegistryBadges inRsvya={contractor.inRsvya} inSroVz={contractor.inSroVz} />
-        </div>
-        <CardTitle>{contractor.name}</CardTitle>
+      <CatalogCardImageSlider />
+
+      <div className="relative z-10 flex flex-col flex-1 p-4 pointer-events-none">
+        <CardTitle className="text-base">{contractor.name}</CardTitle>
         <CardDescription>{contractor.city} · {contractor.geography}</CardDescription>
         <p className="text-sm text-gray-700 mt-2 line-clamp-2 flex-1">{contractor.description}</p>
         <div className="flex flex-wrap gap-1 mt-2">
@@ -61,24 +57,26 @@ function ContractorCard({
         </p>
       </div>
 
-      <div className="relative z-10 grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-200 pointer-events-auto">
-        <Link href={`/contractors/${contractor.id}/check`} className="min-w-0">
-          <Button size="sm" variant="ghost" className="w-full">
-            Проверка
+      <div className="relative z-10 flex flex-col gap-2 px-4 pb-4 pt-0 pointer-events-auto">
+        <div className="flex w-full flex-col gap-2 border-t border-gray-200 pt-4">
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onInvite(contractor);
+            }}
+          >
+            Пригласить в заявку
           </Button>
-        </Link>
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onInvite(contractor);
-          }}
-        >
-          Пригласить в заявку
-        </Button>
+          <Link href={`/contractors/${contractor.id}/check`} className="min-w-0">
+            <Button size="sm" variant="ghost" className="w-full">
+              Проверка
+            </Button>
+          </Link>
+        </div>
       </div>
     </Card>
   );
@@ -99,8 +97,11 @@ function FilterPanel({
   setVerifiedHuOnly,
   verifiedRegistryOnly,
   setVerifiedRegistryOnly,
+  urgentOnly,
+  setUrgentOnly,
   sort,
   setSort,
+  onApply,
 }: {
   search: string;
   setSearch: (v: string) => void;
@@ -116,8 +117,11 @@ function FilterPanel({
   setVerifiedHuOnly: (v: boolean) => void;
   verifiedRegistryOnly: boolean;
   setVerifiedRegistryOnly: (v: boolean) => void;
+  urgentOnly: boolean;
+  setUrgentOnly: (v: boolean) => void;
   sort: string;
   setSort: (v: string) => void;
+  onApply?: () => void;
 }) {
   return (
     <div className="space-y-4">
@@ -164,12 +168,13 @@ function FilterPanel({
         <input type="checkbox" checked={verifiedRegistryOnly} onChange={(e) => setVerifiedRegistryOnly(e.target.checked)} />
         Проверен по открытым реестрам
       </label>
-      <Link
-        href="/requests/new?format=urgent"
-        className="block border border-gray-300 bg-white px-3 py-2 text-sm text-center hover:border-gray-900"
-      >
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <input type="checkbox" checked={urgentOnly} onChange={(e) => setUrgentOnly(e.target.checked)} />
         Срочный заказ
-      </Link>
+      </label>
+      <Button type="button" className="w-full" onClick={onApply}>
+        Применить
+      </Button>
     </div>
   );
 }
@@ -186,7 +191,7 @@ function ContractorsPageFallback() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-6">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
         <LoadingState message="Загрузка исполнителей..." />
       </main>
       <Footer />
@@ -202,6 +207,7 @@ function ContractorsPageContent() {
   const [productionOnly, setProductionOnly] = useState(false);
   const [verifiedHuOnly, setVerifiedHuOnly] = useState(false);
   const [verifiedRegistryOnly, setVerifiedRegistryOnly] = useState(false);
+  const [urgentOnly, setUrgentOnly] = useState(false);
   const [sort, setSort] = useState("rating-desc");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [inviteContractor, setInviteContractor] = useState<Contractor | null>(null);
@@ -214,6 +220,7 @@ function ContractorsPageContent() {
       if (productionOnly && !c.hasProduction) return false;
       if (verifiedHuOnly && !c.verified) return false;
       if (verifiedRegistryOnly && !c.verified) return false;
+      if (urgentOnly && !c.verified) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const haystack = `${c.name} ${c.description} ${c.categories.join(" ")} ${c.city}`.toLowerCase();
@@ -236,7 +243,7 @@ function ContractorsPageContent() {
     });
 
     return list;
-  }, [search, city, category, verifiedOnly, productionOnly, verifiedHuOnly, verifiedRegistryOnly, sort]);
+  }, [search, city, category, verifiedOnly, productionOnly, verifiedHuOnly, verifiedRegistryOnly, urgentOnly, sort]);
 
   const resetFilters = () => {
     setSearch("");
@@ -246,6 +253,7 @@ function ContractorsPageContent() {
     setProductionOnly(false);
     setVerifiedHuOnly(false);
     setVerifiedRegistryOnly(false);
+    setUrgentOnly(false);
     setSort("rating-desc");
   };
 
@@ -253,7 +261,7 @@ function ContractorsPageContent() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Исполнители</h1>
           <p className="text-sm text-gray-600 mt-1">Каталог подрядчиков выставочной индустрии</p>
@@ -288,6 +296,8 @@ function ContractorsPageContent() {
                 setVerifiedHuOnly={setVerifiedHuOnly}
                 verifiedRegistryOnly={verifiedRegistryOnly}
                 setVerifiedRegistryOnly={setVerifiedRegistryOnly}
+                urgentOnly={urgentOnly}
+                setUrgentOnly={setUrgentOnly}
                 sort={sort}
                 setSort={setSort}
               />
@@ -305,7 +315,7 @@ function ContractorsPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
                   {filtered.map((contractor) => (
                     <ContractorCard
                       key={contractor.id}
@@ -336,10 +346,12 @@ function ContractorsPageContent() {
           setVerifiedHuOnly={setVerifiedHuOnly}
           verifiedRegistryOnly={verifiedRegistryOnly}
           setVerifiedRegistryOnly={setVerifiedRegistryOnly}
+          urgentOnly={urgentOnly}
+          setUrgentOnly={setUrgentOnly}
           sort={sort}
           setSort={setSort}
+          onApply={() => setDrawerOpen(false)}
         />
-        <Button className="w-full mt-4" onClick={() => setDrawerOpen(false)}>Применить</Button>
       </Drawer>
 
       <InviteContractorModal

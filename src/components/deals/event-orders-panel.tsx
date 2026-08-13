@@ -41,9 +41,10 @@ interface EventOrderCardProps {
   order: EventOrder;
   highlighted?: boolean;
   eventTitle?: string;
+  eventOrdersHref?: string;
 }
 
-function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps) {
+function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: EventOrderCardProps) {
   const href = getOrderHref(order);
   const content = (
     <Card
@@ -56,7 +57,16 @@ function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps)
       <CardTitle className="text-sm">{order.title}</CardTitle>
       <CardDescription className="mt-2 space-y-1">
         {eventTitle && (
-          <span className="block text-xs text-gray-500">Мероприятие: {eventTitle}</span>
+          <span className="block text-xs text-gray-500">
+            Мероприятие:{" "}
+            {eventOrdersHref ? (
+              <Link href={eventOrdersHref} className="underline hover:text-gray-900">
+                {eventTitle}
+              </Link>
+            ) : (
+              eventTitle
+            )}
+          </span>
         )}
         <span className="block">
           {EVENT_ORDER_CUSTOMER_ROLE_LABELS[order.customerRole]}:{" "}
@@ -213,12 +223,18 @@ export function EventOrdersPanel({
               <div className="grid md:grid-cols-2 gap-3">
                 {group.items.map((order) => {
                   const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
+                  const showEventTitle = Boolean(organizerId || (venueId && !eventId));
                   return (
                     <EventOrderCard
                       key={order.id}
                       order={order}
                       highlighted={Boolean(currentDealId && order.dealId === currentDealId)}
-                      eventTitle={organizerId ? orderEvent?.title : undefined}
+                      eventTitle={showEventTitle ? orderEvent?.title : undefined}
+                      eventOrdersHref={
+                        venueId && !eventId && order.eventId
+                          ? `/account/venue/orders/${order.eventId}`
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -240,7 +256,7 @@ export function EventOrdersPanel({
   );
 
   if (unboxed) {
-    return <div className="max-w-6xl">{panelContent}</div>;
+    return <div className="w-full">{panelContent}</div>;
   }
 
   return <Card className="md:col-span-2">{panelContent}</Card>;

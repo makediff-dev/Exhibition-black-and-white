@@ -34,6 +34,7 @@ export const EVENT_INDUSTRIES = [
   "Строительство",
   "Медицина",
   "Автомобили",
+  "Товары для дома и сада",
 ];
 
 export const CITIES = [

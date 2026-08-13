@@ -70,7 +70,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-md w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+        <div className="max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-2">Восстановление пароля</h1>
         <p className="text-sm text-gray-600 mb-6">
           Следуйте шагам для сброса пароля
@@ -169,6 +170,7 @@ export default function ForgotPasswordPage() {
             </Link>
           </div>
         )}
+        </div>
       </main>
       <Footer />
     </div>

@@ -13,3 +13,19 @@ export function getOkvedRecommendationReason(userOkved: string): string {
   }
   return `Подходит по ОКВЭД: ${userOkved.split("—")[0]?.trim()}`;
 }
+
+export function matchInterests(userIndustries: string[] | undefined, eventIndustry: string): boolean {
+  if (!userIndustries?.length) return false;
+  const normalizedIndustry = eventIndustry.toLowerCase();
+  return userIndustries.some((industry) => {
+    const normalizedUserIndustry = industry.toLowerCase();
+    return (
+      normalizedIndustry.includes(normalizedUserIndustry) ||
+      normalizedUserIndustry.includes(normalizedIndustry)
+    );
+  });
+}
+
+export function getInterestRecommendationReason(): string {
+  return "Подходит по вашим интересам";
+}

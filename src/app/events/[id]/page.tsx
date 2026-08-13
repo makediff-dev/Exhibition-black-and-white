@@ -198,7 +198,7 @@ export default function EventDetailPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton fallbackHref="/events" className="mb-4" />
 
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">

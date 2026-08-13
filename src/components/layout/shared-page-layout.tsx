@@ -39,7 +39,7 @@ export function SharedPageLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <PublicHeader />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-site flex-1 px-4 py-6">
         {showBack && (
           <BackButton fallbackHref={backFallbackHref} className="mb-4" />
         )}

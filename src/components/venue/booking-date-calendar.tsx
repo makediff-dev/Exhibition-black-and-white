@@ -2,13 +2,18 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import type { VenueBookingDateStatus } from "@/data/types";
+import {
+  VENUE_BOOKING_DATE_STATUS_META,
+} from "@/lib/utils/venue-date-statuses";
 import { cn } from "@/lib/utils/cn";
 import { formatShortDate } from "@/lib/utils/formatters";
 
 const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 interface CalendarProps {
-  markedDates: string[];
+  markedDates?: string[];
+  dateStatuses?: Record<string, VenueBookingDateStatus[]>;
   rangeStart: string;
   rangeEnd: string;
   onRangeChange: (start: string, end: string) => void;
@@ -33,14 +38,30 @@ function isWithinRange(date: string, start: string, end: string) {
   return date >= start && date <= endDate;
 }
 
-function BookingDateCalendarGrid({
-  markedDates,
+export function BookingDateStatusLegend() {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-600">
+      {(Object.keys(VENUE_BOOKING_DATE_STATUS_META) as VenueBookingDateStatus[]).map((status) => (
+        <span key={status} className="inline-flex items-center gap-1.5">
+          <span
+            className={cn("h-2 w-2 rounded-full", VENUE_BOOKING_DATE_STATUS_META[status].dotClassName)}
+          />
+          {VENUE_BOOKING_DATE_STATUS_META[status].label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function BookingDateCalendarGrid({
+  markedDates = [],
+  dateStatuses = {},
   rangeStart,
   rangeEnd,
   onRangeChange,
   onComplete,
 }: CalendarProps) {
-  const initialMonth = rangeStart ? parseIsoDate(rangeStart) : new Date(2026, 2, 1);
+  const initialMonth = rangeStart ? parseIsoDate(rangeStart) : new Date(2026, 3, 1);
   const [viewMonth, setViewMonth] = useState(
     new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1)
   );
@@ -134,7 +155,8 @@ function BookingDateCalendarGrid({
         {calendarDays.map(({ iso, day, currentMonth }) => {
           const selected = isWithinRange(iso, rangeStart, rangeEnd);
           const isEdge = iso === rangeStart || iso === (rangeEnd || rangeStart);
-          const hasBooking = markedSet.has(iso);
+          const statuses = dateStatuses[iso] ?? [];
+          const hasLegacyMark = markedSet.has(iso) && statuses.length === 0;
 
           return (
             <button
@@ -142,15 +164,29 @@ function BookingDateCalendarGrid({
               type="button"
               onClick={() => handleDayClick(iso)}
               className={cn(
-                "relative h-8 text-sm border border-transparent hover:border-gray-900",
+                "relative h-9 text-sm border border-transparent hover:border-gray-900",
                 !currentMonth && "text-gray-300",
                 selected && "bg-gray-100",
                 isEdge && "bg-gray-900 text-white hover:border-gray-900"
               )}
             >
               {day}
-              {hasBooking && !isEdge && (
-                <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-gray-900" />
+              {(statuses.length > 0 || hasLegacyMark) && !isEdge && (
+                <span className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-0.5">
+                  {statuses.length > 0
+                    ? statuses.map((status) => (
+                        <span
+                          key={`${iso}-${status}`}
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            VENUE_BOOKING_DATE_STATUS_META[status].dotClassName
+                          )}
+                        />
+                      ))
+                    : (
+                        <span className="h-1.5 w-1.5 rounded-full bg-gray-900" />
+                      )}
+                </span>
               )}
             </button>
           );
@@ -177,14 +213,19 @@ function BookingDateCalendarGrid({
 
 interface PickerProps extends CalendarProps {
   label?: string;
+  inline?: boolean;
+  showLegend?: boolean;
 }
 
 export function BookingDateRangePicker({
   label = "Календарь",
   markedDates,
+  dateStatuses,
   rangeStart,
   rangeEnd,
   onRangeChange,
+  inline = false,
+  showLegend = false,
 }: PickerProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -196,7 +237,7 @@ export function BookingDateRangePicker({
     : "";
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -206,7 +247,28 @@ export function BookingDateRangePicker({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+  }, [open, inline]);
+
+  if (inline) {
+    return (
+      <div className="space-y-3">
+        {label ? <p className="text-sm font-medium text-gray-900">{label}</p> : null}
+        {displayValue ? (
+          <p className="text-sm text-gray-600">Выбрано: {displayValue}</p>
+        ) : null}
+        <div className="border border-gray-300">
+          <BookingDateCalendarGrid
+            markedDates={markedDates}
+            dateStatuses={dateStatuses}
+            rangeStart={rangeStart}
+            rangeEnd={rangeEnd}
+            onRangeChange={onRangeChange}
+          />
+        </div>
+        {showLegend ? <BookingDateStatusLegend /> : null}
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1">
@@ -226,11 +288,17 @@ export function BookingDateRangePicker({
         <div className="absolute left-0 right-0 top-full z-30 mt-1 border border-gray-300 bg-white shadow-sm">
           <BookingDateCalendarGrid
             markedDates={markedDates}
+            dateStatuses={dateStatuses}
             rangeStart={rangeStart}
             rangeEnd={rangeEnd}
             onRangeChange={onRangeChange}
             onComplete={() => setOpen(false)}
           />
+          {showLegend ? (
+            <div className="border-t border-gray-200 px-3 py-2">
+              <BookingDateStatusLegend />
+            </div>
+          ) : null}
         </div>
       )}
     </div>

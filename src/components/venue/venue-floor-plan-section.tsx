@@ -126,7 +126,7 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
 
   if (!selectedHallId) {
     return (
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 w-full">
         <FloorPlanPageHeader
           description="Выберите зал, чтобы открыть схему размещения. Организатор нарезает площадь на участки — нажмите на участок, чтобы увидеть детальную миллиметровку и заполнение."
           user={user}
@@ -168,7 +168,7 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
     const detailConfig = getPlotDetailConfig(selectedPlot);
 
     return (
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 w-full">
         <FloorPlanPageHeader
           onBack={() => setSelectedPlotId(null)}
           subtitle={`Участок ${selectedPlot.label}`}
@@ -234,7 +234,7 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       <FloorPlanPageHeader
         onBack={() => {
           setSelectedHallId(null);

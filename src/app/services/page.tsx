@@ -37,7 +37,7 @@ function ServicesPageFallback() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-6">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
         <LoadingState message="Загрузка услуг..." />
       </main>
       <Footer />
@@ -152,7 +152,7 @@ function ServicesPageContent() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold">Услуги</h1>
@@ -195,7 +195,7 @@ function ServicesPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
                   {filtered.map((service) => (
                     <ServiceCard
                       key={service.id}

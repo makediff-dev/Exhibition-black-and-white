@@ -80,7 +80,7 @@ export function ResponseCard({
 
   return (
     <>
-      <Card className="relative max-w-sm flex flex-col gap-4">
+      <Card className="relative w-full max-w-sm flex flex-col gap-4">
         {isOwner && (
           <button
             type="button"

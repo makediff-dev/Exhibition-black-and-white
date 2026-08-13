@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast-provider";
 import type { Document, Deal, Event, Request } from "@/data/types";
@@ -380,17 +381,19 @@ export function DocumentsPanel({
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Select
+          <SearchableSelect
             label="Контрагент"
             value={counterpartyFilter}
-            onChange={(event) => setCounterpartyFilter(event.target.value)}
+            onChange={setCounterpartyFilter}
             options={filterOptions.counterparties}
+            searchPlaceholder="Найти контрагента..."
           />
-          <Select
+          <SearchableSelect
             label="Проект"
             value={projectFilter}
-            onChange={(event) => setProjectFilter(event.target.value)}
+            onChange={setProjectFilter}
             options={filterOptions.projects}
+            searchPlaceholder="Найти проект..."
           />
           <Input
             label="Дата с"

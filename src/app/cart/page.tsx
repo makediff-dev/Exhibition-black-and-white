@@ -80,7 +80,7 @@ export default function CartPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <h1 className="text-2xl font-bold mb-2">Корзина</h1>
         <p className="text-sm text-gray-600 mb-6">
           Позиции сгруппированы по исполнителям — для каждого будет создан отдельный заказ

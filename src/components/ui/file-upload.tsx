@@ -43,15 +43,34 @@ export function FileUpload({
   );
 }
 
-export function StepIndicator({ steps, currentStep }: { steps: string[]; currentStep: number }) {
+export function StepIndicator({
+  steps,
+  currentStep,
+  centered = false,
+  wide = false,
+}: {
+  steps: string[];
+  currentStep: number;
+  centered?: boolean;
+  wide?: boolean;
+}) {
   return (
-    <div className="pb-2">
+    <div className={cn("pb-2", centered && "text-center")}>
       <p className="text-xs text-gray-600 mb-2 sm:hidden">
         Шаг {currentStep + 1} из {steps.length}: {steps[currentStep]}
       </p>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <div
+        className={cn(
+          "flex items-center gap-x-2 gap-y-2",
+          wide ? "w-full" : "flex-wrap",
+          centered && !wide && "justify-center",
+        )}
+      >
         {steps.map((step, i) => (
-          <div key={step} className="flex items-center gap-2 shrink-0">
+          <div
+            key={step}
+            className={cn("flex items-center gap-2 shrink-0", wide && "flex-1 min-w-0 last:flex-none")}
+          >
             <div
               className={cn(
                 "flex h-7 w-7 items-center justify-center text-xs font-medium border shrink-0",
@@ -62,10 +81,12 @@ export function StepIndicator({ steps, currentStep }: { steps: string[]; current
             >
               {i + 1}
             </div>
-            <span className={cn("text-xs hidden sm:inline", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
+            <span className={cn("text-xs hidden sm:inline truncate", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
               {step}
             </span>
-            {i < steps.length - 1 && <div className="hidden sm:block w-4 h-px bg-gray-300" />}
+            {i < steps.length - 1 && (
+              <div className={cn("hidden sm:block h-px bg-gray-300", wide ? "flex-1 min-w-4" : "w-4 shrink-0")} />
+            )}
           </div>
         ))}
       </div>

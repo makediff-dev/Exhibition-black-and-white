@@ -130,8 +130,8 @@ export default function MessagesPage() {
   }, [activeCategory, sortedThreads]);
 
   return (
-    <SharedPageShell title="Сообщения" maxWidth="full">
-      <div className="w-full max-w-6xl mr-auto text-left">
+    <SharedPageShell title="Сообщения">
+      <div className="w-full mr-auto text-left">
         <Tabs
           tabs={MESSAGE_TABS}
           activeTab={activeCategory}

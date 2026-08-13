@@ -34,7 +34,7 @@ export function OrganizerEventParticipantsSection({
   );
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="space-y-4 w-full">
       <div className="space-y-2">
         <BackButton fallbackHref={`/account/organizer/edit-event?id=${event.id}`} />
         <h1 className="text-xl font-bold text-gray-900">Участники / экспоненты</h1>

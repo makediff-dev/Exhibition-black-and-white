@@ -70,9 +70,8 @@ export default function MessageThreadPage({
       title={thread.title}
       showBack
       backFallbackHref="/messages"
-      maxWidth="full"
     >
-      <div className="w-full max-w-3xl mr-auto text-left">
+      <div className="w-full mr-auto text-left">
         <div className="border border-gray-300 flex flex-col" style={{ minHeight: "420px" }}>
         <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[50vh]">
           {thread.messages.map((msg) => {

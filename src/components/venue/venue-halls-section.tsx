@@ -141,7 +141,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
 
   if (selectedHall && selectedPavilion) {
     return (
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 w-full">
         <HallsPageHeader
           onBack={() => setSelectedHallId(null)}
           subtitle={selectedHall.name}
@@ -199,7 +199,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
     const totalArea = getPavilionArea(selectedPavilion.id);
 
     return (
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 w-full">
         <HallsPageHeader
           onBack={() => {
             setSelectedPavilionId(null);
@@ -303,7 +303,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       <HallsPageHeader
         description="Павильоны площадки и залы внутри них. Добавьте павильон, затем залы и нарисуйте конфигурацию на миллиметровке с шагом 1 м."
         user={user}

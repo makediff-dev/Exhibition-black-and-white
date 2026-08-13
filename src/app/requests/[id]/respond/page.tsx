@@ -48,12 +48,16 @@ export default function RespondPage() {
   if (!request) {
     return (
       <AppShell title="Отклик" showBack backFallbackHref="/requests">
-        <EmptyState title="Заявка не найдена" actionLabel="К заявкам" onAction={() => router.push("/requests")} />
+        <EmptyState title="Заявка не найдена" actionLabel="К заявкам" actionHref="/requests" />
       </AppShell>
     );
   }
 
-  if (request.status !== "published") {
+  const existing = responses.find(
+    (r) => r.requestId === id && isResponseForUser(r, user)
+  );
+
+  if (request.status !== "published" && !existing) {
     return (
       <AppShell
         title="Отклик недоступен"
@@ -64,7 +68,7 @@ export default function RespondPage() {
           title="Заявка не принимает отклики"
           description="Откликнуться можно только на опубликованные заявки"
           actionLabel="К заявке"
-          onAction={() => router.push(`/requests/${id}`)}
+          actionHref={`/requests/${id}`}
         />
       </AppShell>
     );
@@ -77,15 +81,11 @@ export default function RespondPage() {
           title="Профиль исполнителя не найден"
           description="Не удалось сопоставить аккаунт с карточкой исполнителя"
           actionLabel="К заявкам"
-          onAction={() => router.push("/requests")}
+          actionHref="/requests"
         />
       </AppShell>
     );
   }
-
-  const existing = responses.find(
-    (r) => r.requestId === id && isResponseForUser(r, user)
-  );
 
   if (existing) {
     const relatedDeal = deals.find(

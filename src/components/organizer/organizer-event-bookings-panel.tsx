@@ -97,7 +97,7 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       <Card className="space-y-2">
         <CardTitle className="text-sm">Бронирования площадки</CardTitle>
         <CardDescription>

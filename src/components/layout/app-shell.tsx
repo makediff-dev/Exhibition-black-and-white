@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
 import { getNavForRole, isNavItemActive } from "@/constants/nav-menus";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { PublicHeader } from "./public-header";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -17,19 +17,34 @@ export function AppShell({
   actions,
   showBack = false,
   backFallbackHref,
+  activeNavSlug,
 }: {
   children: React.ReactNode;
   title?: string;
   actions?: React.ReactNode;
   showBack?: boolean;
   backFallbackHref?: string;
+  activeNavSlug?: string;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const showCompanyRegistrationPrompt = useAuthStore((s) => s.showCompanyRegistrationPrompt);
+  const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
+  const deals = usePrototypeStore((s) => s.deals);
   const nav = getNavForRole(user?.role || "");
+
+  const dealNavSlug = useMemo(() => {
+    const match = pathname.match(/^\/deals\/([^/?#]+)/);
+    if (!match) return undefined;
+    const deal = deals.find((item) => item.id === match[1]);
+    if (!deal) return undefined;
+    return deal.status === "completed" ? "completed-projects" : "active-projects";
+  }, [pathname, deals]);
+
+  const resolvedActiveNavSlug = activeNavSlug ?? dealNavSlug;
 
   const handleLogout = () => {
     logout();
@@ -37,7 +52,9 @@ export function AppShell({
   };
 
   const renderNavLink = (item: (typeof nav)[number], onNavigate?: () => void) => {
-    const isActive = isNavItemActive(pathname, item);
+    const isActive = resolvedActiveNavSlug
+      ? item.slug === resolvedActiveNavSlug
+      : isNavItemActive(pathname, item);
     return (
       <Link
         key={item.href}
@@ -106,16 +123,40 @@ export function AppShell({
           <button className="lg:hidden mb-3 flex items-center gap-2 text-sm" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-4 w-4" /> Меню кабинета
           </button>
-          {showBack && (
-            <BackButton fallbackHref={backFallbackHref} className="mb-2" />
-          )}
-          {(title || actions) && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              {title && <h1 className="text-xl font-bold text-gray-900">{title}</h1>}
-              {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
-            </div>
-          )}
-          {children}
+          <div className="w-full">
+            {showCompanyRegistrationPrompt && (
+              <div className="mb-4 border border-gray-900 bg-gray-50 p-4 text-sm">
+                <p className="font-semibold mb-1">Зарегистрируйте компанию</p>
+                <p className="text-gray-600 mb-3">
+                  Вы подтвердили личный аккаунт. Теперь можно зарегистрировать компанию и выбрать
+                  роль на платформе. Без регистрации юридического лица многие функции сервиса
+                  будут недоступны.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/register">
+                    <Button size="sm">Зарегистрировать компанию</Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCompanyRegistrationPrompt(false)}
+                  >
+                    Закрыть
+                  </Button>
+                </div>
+              </div>
+            )}
+            {showBack && (
+              <BackButton fallbackHref={backFallbackHref} className="mb-2" />
+            )}
+            {(title || actions) && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                {title && <h1 className="text-xl font-bold text-gray-900">{title}</h1>}
+                {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
+              </div>
+            )}
+            {children}
+          </div>
         </main>
       </div>
     </div>

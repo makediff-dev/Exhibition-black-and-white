@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { validateEmail, validatePhone, validateRequired } from "@/lib/utils/validators";
 import { ROLE_LABELS } from "@/constants/statuses";
@@ -15,9 +15,14 @@ import type { UserRole } from "@/data/types";
 
 const DEMO_ROLES: UserRole[] = ["customer", "contractor", "venue", "organizer"];
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
+  const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
+  const registrationDraft = usePrototypeStore((s) => s.registrationDraft) as {
+    individualEmailConfirmed?: boolean;
+  };
   const { showToast } = useToast();
 
   const [loginId, setLoginId] = useState("");
@@ -25,10 +30,22 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (searchParams.get("registered") === "1") {
+      setShowCompanyRegistrationPrompt(true);
+    }
+  }, [searchParams, setShowCompanyRegistrationPrompt]);
+
   const redirectToAccount = (role: UserRole) => {
     if (!role) return;
     showToast("Вход выполнен успешно");
     login(role);
+    if (
+      searchParams.get("registered") === "1" ||
+      registrationDraft.individualEmailConfirmed
+    ) {
+      setShowCompanyRegistrationPrompt(true);
+    }
     router.push(`/account/${role}`);
   };
 
@@ -59,7 +76,8 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-md w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+        <div className="max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-2">Вход</h1>
         <p className="text-sm text-gray-600 mb-6">
           Войдите в личный кабинет по email и паролю или используйте демо-роли для прототипа
@@ -130,8 +148,17 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
+        </div>
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

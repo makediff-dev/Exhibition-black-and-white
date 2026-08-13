@@ -23,6 +23,19 @@ export function validatePasswordStrength(password: string): string | null {
   return null;
 }
 
+export function validateWebsite(website: string): string | null {
+  const trimmed = website.trim();
+  if (!trimmed) return "Укажите сайт компании";
+  const normalized = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(normalized);
+    if (!url.hostname.includes(".")) return "Укажите корректный адрес сайта";
+    return null;
+  } catch {
+    return "Укажите корректный адрес сайта";
+  }
+}
+
 export function validatePasswordMatch(password: string, confirm: string): string | null {
   if (password !== confirm) return "Пароли не совпадают";
   return null;

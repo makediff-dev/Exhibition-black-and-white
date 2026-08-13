@@ -3,12 +3,59 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import {
+  VenueDashboardBookingQueue,
+  VenueDashboardNegotiationQueue,
+  VenueDashboardServiceAlerts,
+} from "@/components/venue/venue-dashboard-blocks";
 import { VenueEventsCarousel } from "@/components/venue/venue-events-carousel";
 import {
+  PAYMENT_STATUS_LABELS,
+  VENUE_PAYMENT_ROLE_LABELS,
+} from "@/constants/statuses";
+import {
+  SEED_BOOKINGS,
   SEED_HALLS,
   SEED_PAVILIONS,
 } from "@/data/mocks/seed";
+import type { Booking, Payment } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
+
+function mergeBookings(storedBookings: Booking[]): Booking[] {
+  const ids = new Set(storedBookings.map((booking) => booking.id));
+  const missing = SEED_BOOKINGS.filter((booking) => !ids.has(booking.id));
+  return missing.length ? [...storedBookings, ...missing] : storedBookings;
+}
+
+function summarizePendingPayments(
+  payments: Payment[],
+  venueId: string,
+  direction: "incoming" | "outgoing"
+) {
+  const pending = payments.filter(
+    (item) =>
+      item.venueId === venueId &&
+      item.status === "pending" &&
+      (item.direction === direction || (!item.direction && direction === "incoming"))
+  );
+
+  const roleCounts = pending.reduce<Record<string, number>>((acc, item) => {
+    const role = item.participantRole ?? "organizer";
+    const label =
+      VENUE_PAYMENT_ROLE_LABELS[role as keyof typeof VENUE_PAYMENT_ROLE_LABELS] ?? role;
+    acc[label] = (acc[label] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const breakdown = Object.entries(roleCounts)
+    .map(([label, count]) => `${label} · ${count}`)
+    .join(", ");
+
+  return {
+    count: pending.length,
+    breakdown: breakdown || PAYMENT_STATUS_LABELS.pending,
+  };
+}
 
 interface Props {
   venueId?: string;
@@ -19,7 +66,11 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
 
   const pavilionCount = SEED_PAVILIONS.filter((item) => item.venueId === venueId).length;
   const hallCount = SEED_HALLS.filter((item) => item.venueId === venueId).length;
-  const pendingBookings = bookings.filter((item) => item.status === "pending").length;
+
+  const mergedBookings = useMemo(() => mergeBookings(bookings), [bookings]);
+  const pendingBookings = mergedBookings.filter(
+    (item) => item.venueId === venueId && item.status === "pending"
+  ).length;
 
   const venueNotifications = useMemo(
     () =>
@@ -30,27 +81,17 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
   );
 
   const incomingPending = useMemo(
-    () =>
-      payments.filter(
-        (item) =>
-          item.venueId === venueId &&
-          item.status === "pending" &&
-          (item.direction === "incoming" || !item.direction)
-      ).length,
+    () => summarizePendingPayments(payments, venueId, "incoming"),
     [payments, venueId]
   );
 
   const outgoingPending = useMemo(
-    () =>
-      payments.filter(
-        (item) =>
-          item.venueId === venueId && item.status === "pending" && item.direction === "outgoing"
-      ).length,
+    () => summarizePendingPayments(payments, venueId, "outgoing"),
     [payments, venueId]
   );
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
           <Card className="hover:border-gray-900 transition-colors h-full">
@@ -60,19 +101,26 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
         </Link>
         <Link href="/account/venue/payments">
           <Card className="hover:border-gray-900 transition-colors h-full">
-            <CardTitle>{incomingPending}</CardTitle>
+            <CardTitle>{incomingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · входящие</CardDescription>
+            {incomingPending.breakdown ? (
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                {incomingPending.breakdown}
+              </p>
+            ) : null}
           </Card>
         </Link>
         <Link href="/account/venue/payments">
           <Card className="hover:border-gray-900 transition-colors h-full">
-            <CardTitle>{outgoingPending}</CardTitle>
+            <CardTitle>{outgoingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · исходящие</CardDescription>
+            {outgoingPending.breakdown ? (
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                {outgoingPending.breakdown}
+              </p>
+            ) : null}
           </Card>
         </Link>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-3">
         <Link href="/account/venue/halls">
           <Card className="hover:border-gray-900 transition-colors h-full">
             <CardTitle>{pavilionCount}</CardTitle>
@@ -93,7 +141,13 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
         </Link>
       </div>
 
+      <VenueDashboardServiceAlerts venueId={venueId} />
+
       <VenueEventsCarousel venueId={venueId} />
+
+      <VenueDashboardBookingQueue venueId={venueId} />
+
+      <VenueDashboardNegotiationQueue venueId={venueId} />
 
       <Card className="space-y-2">
         <p className="text-sm font-medium">Роли на платформе</p>

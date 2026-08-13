@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="border-t border-gray-300 bg-gray-50 mt-auto">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-site px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <p className="font-bold text-sm border border-gray-900 inline-block px-2 py-1 mb-2">ЭКСПО</p>

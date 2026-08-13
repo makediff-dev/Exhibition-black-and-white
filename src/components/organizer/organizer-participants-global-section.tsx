@@ -45,7 +45,7 @@ export function OrganizerParticipantsGlobalSection({ organizerId = "user-organiz
   }, [participants, organizerEventIds, organizerEvents, eventFilter, query]);
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="space-y-4 w-full">
       <p className="text-sm text-gray-600">
         Поиск экспонентов по всем мероприятиям. Это компании со своим стендом — не подрядчики и не
         застройщики. Управление заявками — на вкладке «Участники / экспоненты» внутри события.

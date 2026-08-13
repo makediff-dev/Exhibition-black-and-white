@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bell, LogIn, Menu, MessageSquare, Search, UserPlus, X } from "lucide-react";
+import { Bell, LogIn, Menu, MessageSquare, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/lib/store";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
+import { HeaderSearch } from "@/components/layout/header-search";
 
 const NAV_LINKS = [
   { href: "/events", label: "Выставки и мероприятия" },
@@ -18,21 +17,12 @@ const NAV_LINKS = [
 ];
 
 export function PublicHeader() {
-  const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/events?q=${encodeURIComponent(search)}`);
-    }
-  };
 
   return (
     <header className="border-b border-gray-300 bg-white sticky top-0 z-40">
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="mx-auto max-w-site px-4">
         <div className="flex h-14 items-center gap-4">
           <Link href="/" className="font-bold text-sm shrink-0 border border-gray-900 px-2 py-1">
             ЭКСПО
@@ -46,17 +36,7 @@ export function PublicHeader() {
             ))}
           </nav>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xs ml-auto">
-            <div className="relative w-full">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Поиск..."
-                className="w-full border border-gray-300 pl-8 pr-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none"
-              />
-            </div>
-          </form>
+          <HeaderSearch className="hidden md:flex flex-1 max-w-xs ml-auto" />
 
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
@@ -93,9 +73,10 @@ export function PublicHeader() {
               {link.label}
             </Link>
           ))}
-          <form onSubmit={(e) => { handleSearch(e); setMobileOpen(false); }} className="mt-2">
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Поиск..." />
-          </form>
+          <HeaderSearch
+            className="mt-2"
+            onNavigate={() => setMobileOpen(false)}
+          />
           <div className="flex flex-col gap-2 mt-4">
             {isAuthenticated ? (
               <>

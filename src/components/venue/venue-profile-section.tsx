@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { Image, Play, Trash2, Upload, Video } from "lucide-react";
+import { Image, MessageSquare, Play, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CompanyAvatarUpload } from "@/components/account/company-avatar-upload";
 import type { VenueProfileMedia } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 
@@ -82,11 +85,22 @@ function UploadButton({
 
 export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
   const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const setCompanyLogo = usePrototypeStore((state) => state.setCompanyLogo);
+  const logoUrl = usePrototypeStore((state) =>
+    user?.id ? state.companyLogos[user.id] : undefined
+  );
+  const unreadCount = usePrototypeStore((state) =>
+    state.messages.reduce((sum, thread) => sum + (thread.unread ?? 0), 0)
+  );
   const { venueProfileMedia, addVenueProfileMedia, removeVenueProfileMedia } =
     usePrototypeStore();
 
-  const [name, setName] = useState(user?.name ?? "");
+  const [name, setName] = useState(user?.displayName ?? user?.name ?? "");
   const [description, setDescription] = useState(user?.description ?? "");
+  const [actualAddress, setActualAddress] = useState(user?.actualAddress ?? "");
+  const [website, setWebsite] = useState(user?.website ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
 
   const media = useMemo(
     () => venueProfileMedia.filter((item) => item.venueId === venueId),
@@ -121,6 +135,19 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
 
   return (
     <div className="max-w-3xl space-y-8">
+      <Card>
+        <CompanyAvatarUpload
+          logoUrl={logoUrl}
+          companyName={name || "Площадка"}
+          onUpload={(nextLogoUrl) => {
+            if (!user?.id) return;
+            setCompanyLogo(user.id, nextLogoUrl);
+            showToast("Логотип обновлён", "success");
+          }}
+          onError={(message) => showToast(message, "error")}
+        />
+      </Card>
+
       <section className="space-y-4">
         <div>
           <h2 className="text-sm font-semibold">Основная информация</h2>
@@ -133,6 +160,31 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
           label="Описание"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold">Данные для верификации</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Используются модерацией для проверки площадки
+          </p>
+        </div>
+        <Input
+          label="Фактический адрес"
+          value={actualAddress}
+          onChange={(e) => setActualAddress(e.target.value)}
+        />
+        <Input
+          label="Сайт"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+        <Input
+          label="Телефон"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
         />
       </section>
 
@@ -208,7 +260,38 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
         />
       </section>
 
-      <Button onClick={() => showToast("Профиль площадки сохранён", "success")}>
+      <Card className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <MessageSquare className="h-5 w-5 shrink-0 text-gray-600 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium">Переписка с участниками</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Общайтесь с организаторами, заказчиками и исполнителями внутри платформы
+            </p>
+            {unreadCount > 0 && (
+              <p className="text-xs text-gray-700 mt-2">
+                Непрочитанных сообщений: {unreadCount}
+              </p>
+            )}
+          </div>
+        </div>
+        <Link href="/messages">
+          <Button type="button" variant="outline">Открыть сообщения</Button>
+        </Link>
+      </Card>
+
+      <Button
+        onClick={() => {
+          updateUser({
+            displayName: name.trim() || user?.name,
+            description: description.trim(),
+            actualAddress: actualAddress.trim(),
+            website: website.trim(),
+            phone: phone.trim(),
+          });
+          showToast("Профиль площадки сохранён", "success");
+        }}
+      >
         Сохранить
       </Button>
     </div>

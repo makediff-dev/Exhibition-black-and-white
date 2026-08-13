@@ -1,0 +1,341 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { AlertCircle, Building2, CalendarDays, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import {
+  BOOKING_PERIOD_LABELS,
+  BOOKING_STATUS_LABELS,
+  EVENT_ORDER_CUSTOMER_ROLE_LABELS,
+  EVENT_ORDER_PRIORITY_LABELS,
+  EVENT_ORDER_TYPE_LABELS,
+  VENUE_INQUIRY_STATUS_LABELS,
+} from "@/constants/statuses";
+import {
+  SEED_BOOKINGS,
+  SEED_EVENT_ORDERS,
+  SEED_EVENTS,
+  SEED_HALLS,
+  SEED_VENUE_INQUIRIES,
+} from "@/data/mocks/seed";
+import type { Booking, EventOrder, VenueInquiry } from "@/data/types";
+import { usePrototypeStore } from "@/lib/store";
+import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+
+const ACTION_ORDER_STATUSES = new Set([
+  "pending",
+  "in_progress",
+  "negotiation",
+  "awaiting_payment",
+]);
+
+const SERVICE_ORDER_TYPES = new Set<EventOrder["type"]>([
+  "venue_service",
+  "passes",
+  "accreditation",
+]);
+
+function mergeBookings(storedBookings: Booking[]): Booking[] {
+  const ids = new Set(storedBookings.map((booking) => booking.id));
+  const missing = SEED_BOOKINGS.filter((booking) => !ids.has(booking.id));
+  return missing.length ? [...storedBookings, ...missing] : storedBookings;
+}
+
+function mergeInquiries(storedInquiries: VenueInquiry[]): VenueInquiry[] {
+  const ids = new Set(storedInquiries.map((item) => item.id));
+  const missing = SEED_VENUE_INQUIRIES.filter((item) => !ids.has(item.id));
+  return missing.length ? [...storedInquiries, ...missing] : storedInquiries;
+}
+
+function getEventTitle(eventId: string) {
+  return SEED_EVENTS.find((event) => event.id === eventId)?.title ?? eventId;
+}
+
+function getHallName(hallId?: string) {
+  if (!hallId) return null;
+  return SEED_HALLS.find((hall) => hall.id === hallId)?.name;
+}
+
+interface VenueDashboardServiceAlertsProps {
+  venueId: string;
+}
+
+export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAlertsProps) {
+  const notifications = usePrototypeStore((state) => state.notifications);
+
+  const serviceOrders = useMemo(
+    () =>
+      SEED_EVENT_ORDERS.filter(
+        (order) =>
+          order.venueId === venueId &&
+          SERVICE_ORDER_TYPES.has(order.type) &&
+          ACTION_ORDER_STATUSES.has(order.status)
+      ).sort((a, b) => {
+        const priorityWeight = { high: 0, medium: 1, normal: 2 };
+        return priorityWeight[a.priority] - priorityWeight[b.priority];
+      }),
+    [venueId]
+  );
+
+  const actionNotifications = useMemo(
+    () =>
+      notifications.filter(
+        (item) =>
+          item.audience === "venue" &&
+          !item.read &&
+          item.priority === "action_required" &&
+          item.category === "orders"
+      ),
+    [notifications]
+  );
+
+  if (!serviceOrders.length) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Услуги · требуют действия</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Заказы на услуги площадки: лебёдка, пропуска, аккредитация и смежные позиции
+          </p>
+        </div>
+        <Link href="/account/venue/orders" className="text-sm underline hover:text-gray-900">
+          Все заказы
+        </Link>
+      </div>
+
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {serviceOrders.map((order) => {
+          const highlighted = actionNotifications.some((item) => item.eventId === order.eventId);
+          const eventTitle = getEventTitle(order.eventId);
+
+          return (
+            <Link key={order.id} href={`/account/venue/orders/${order.eventId}`} className="block h-full">
+              <Card
+                className={`h-full transition-colors hover:border-gray-900 ${
+                  highlighted ? "border-2 border-gray-900 bg-gray-50" : ""
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                  <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+                  {highlighted ? (
+                    <Badge variant="solid" className="inline-flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Действие
+                    </Badge>
+                  ) : (
+                    <Badge>{EVENT_ORDER_PRIORITY_LABELS[order.priority]}</Badge>
+                  )}
+                </div>
+                <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
+                <CardDescription className="mt-2 space-y-1">
+                  <span className="block text-xs text-gray-500">{eventTitle}</span>
+                  <span className="block">
+                    {EVENT_ORDER_CUSTOMER_ROLE_LABELS[order.customerRole]}:{" "}
+                    <span className="text-gray-900">{order.customerName}</span>
+                  </span>
+                  {order.amount != null ? (
+                    <span className="block font-medium text-gray-900">
+                      {formatPrice(order.amount)}
+                    </span>
+                  ) : null}
+                </CardDescription>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+type BookingSort = "date" | "event" | "period";
+
+interface VenueDashboardBookingQueueProps {
+  venueId: string;
+}
+
+export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQueueProps) {
+  const storeBookings = usePrototypeStore((state) => state.bookings);
+  const [sortBy, setSortBy] = useState<BookingSort>("date");
+
+  const bookings = useMemo(() => {
+    const merged = mergeBookings(storeBookings).filter(
+      (booking) => booking.venueId === venueId && booking.status === "pending"
+    );
+
+    return [...merged].sort((a, b) => {
+      if (sortBy === "event") {
+        return getEventTitle(a.eventId).localeCompare(getEventTitle(b.eventId), "ru");
+      }
+      if (sortBy === "period") {
+        return (a.periodType ?? "").localeCompare(b.periodType ?? "", "ru");
+      }
+      const aStart = a.periodStart ?? a.date;
+      const bStart = b.periodStart ?? b.date;
+      return aStart.localeCompare(bStart);
+    });
+  }, [storeBookings, venueId, sortBy]);
+
+  if (!bookings.length) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Бронирования · ожидают подтверждения</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Заявки организаторов на периоды монтажа, проведения и демонтажа мероприятий
+          </p>
+        </div>
+        <Link href="/account/venue/bookings" className="text-sm underline hover:text-gray-900 shrink-0">
+          Все бронирования
+        </Link>
+      </div>
+
+      <Select
+        label="Сортировка"
+        value={sortBy}
+        onChange={(event) => setSortBy(event.target.value as BookingSort)}
+        options={[
+          { value: "date", label: "По дате периода" },
+          { value: "event", label: "По мероприятию" },
+          { value: "period", label: "По типу периода" },
+        ]}
+        className="max-w-xs"
+      />
+
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {bookings.map((booking) => {
+          const eventTitle = getEventTitle(booking.eventId);
+          const hallName = getHallName(booking.hallId);
+          const periodStart = booking.periodStart ?? booking.date;
+          const periodEnd = booking.periodEnd ?? periodStart;
+
+          return (
+            <Link key={booking.id} href={`/account/venue/bookings/${booking.id}`} className="block h-full">
+              <Card className="h-full hover:border-gray-900 transition-colors">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <Badge variant="outline">
+                    {booking.periodType
+                      ? BOOKING_PERIOD_LABELS[booking.periodType]
+                      : "Период"}
+                  </Badge>
+                  <Badge>{BOOKING_STATUS_LABELS[booking.status]}</Badge>
+                </div>
+                <CardTitle className="text-sm leading-snug">{eventTitle}</CardTitle>
+                <CardDescription className="mt-2 space-y-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                    {formatShortDate(periodStart)} — {formatShortDate(periodEnd)}
+                  </span>
+                  {booking.organizerName ? (
+                    <span className="flex items-start gap-1.5">
+                      <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {booking.organizerName}
+                    </span>
+                  ) : null}
+                  {hallName ? (
+                    <span className="flex items-start gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {hallName}
+                    </span>
+                  ) : null}
+                </CardDescription>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+type InquirySort = "sent" | "start" | "status";
+
+interface VenueDashboardNegotiationQueueProps {
+  venueId: string;
+}
+
+export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegotiationQueueProps) {
+  const storeInquiries = usePrototypeStore((state) => state.venueInquiries);
+  const [sortBy, setSortBy] = useState<InquirySort>("sent");
+
+  const inquiries = useMemo(() => {
+    const merged = mergeInquiries(storeInquiries).filter(
+      (item) =>
+        item.venueId === venueId &&
+        (item.status === "pending" || item.status === "proposal_received")
+    );
+
+    return [...merged].sort((a, b) => {
+      if (sortBy === "start") return a.dateFrom.localeCompare(b.dateFrom);
+      if (sortBy === "status") return a.status.localeCompare(b.status, "ru");
+      return b.sentAt.localeCompare(a.sentAt);
+    });
+  }, [storeInquiries, venueId, sortBy]);
+
+  if (!inquiries.length) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Переговорный процесс</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Запросы организаторов на свободные даты: от первого обращения до выбора площадки
+          </p>
+        </div>
+        <Link href="/account/venue/bookings" className="text-sm underline hover:text-gray-900 shrink-0">
+          К бронированиям
+        </Link>
+      </div>
+
+      <Select
+        label="Сортировка"
+        value={sortBy}
+        onChange={(event) => setSortBy(event.target.value as InquirySort)}
+        options={[
+          { value: "sent", label: "По дате запроса" },
+          { value: "start", label: "По дате начала" },
+          { value: "status", label: "По статусу" },
+        ]}
+        className="max-w-xs"
+      />
+
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {inquiries.map((inquiry) => (
+          <Card key={inquiry.id} className="h-full">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge variant="outline">Запрос площадки</Badge>
+              <Badge>{VENUE_INQUIRY_STATUS_LABELS[inquiry.status]}</Badge>
+            </div>
+            <CardTitle className="text-sm leading-snug">{inquiry.venueName}</CardTitle>
+            <CardDescription className="mt-2 space-y-1.5">
+              <span className="flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                {formatShortDate(inquiry.dateFrom)} — {formatShortDate(inquiry.dateTo)}
+              </span>
+              {inquiry.minArea ? (
+                <span className="block">Мин. площадь: {inquiry.minArea} кв.м</span>
+              ) : null}
+              {inquiry.proposalSummary ? (
+                <span className="block text-gray-900">{inquiry.proposalSummary}</span>
+              ) : null}
+              {inquiry.proposalPrice ? (
+                <span className="block font-medium text-gray-900">{inquiry.proposalPrice}</span>
+              ) : null}
+              <span className="block text-xs text-gray-500">
+                Запрос от {formatShortDate(inquiry.sentAt)}
+              </span>
+            </CardDescription>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}

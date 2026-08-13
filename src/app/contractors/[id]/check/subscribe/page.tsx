@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams, useSearchParams } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { BackButton } from "@/components/ui/back-button";
 import { PublicHeader } from "@/components/layout/public-header";
@@ -13,15 +13,18 @@ import {
   EXTENDED_CHECK_PLANS,
 } from "@/constants/statuses";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useCartStore } from "@/lib/store";
+import { EXTENDED_CHECK_CART_PREFIX } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
 
 function ExtendedCheckSubscribeContent() {
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const addItem = useCartStore((state) => state.addItem);
   const id = params.id as string;
 
   const requestId = searchParams.get("requestId");
@@ -37,6 +40,7 @@ function ExtendedCheckSubscribeContent() {
   const [paymentMethod, setPaymentMethod] = useState<
     (typeof EXTENDED_CHECK_PAYMENT_METHODS)[number]["id"]
   >(EXTENDED_CHECK_PAYMENT_METHODS[0].id);
+  const [cartAdded, setCartAdded] = useState(false);
 
   const backHref =
     fromResponses && requestId
@@ -48,10 +52,19 @@ function ExtendedCheckSubscribeContent() {
   const handleSubmit = () => {
     const plan = EXTENDED_CHECK_PLANS.find((item) => item.id === selectedPlanId);
     const payment = EXTENDED_CHECK_PAYMENT_METHODS.find((item) => item.id === paymentMethod);
-    showToast(
-      `Заказ оформлен: ${plan?.label}, оплата — ${payment?.label.toLowerCase()}`,
-      "success"
-    );
+    if (!plan || !payment) return;
+
+    addItem({
+      serviceId: `${EXTENDED_CHECK_CART_PREFIX}${Date.now()}`,
+      quantity: 1,
+      comment: `Контрагент: ${contractor.name}. Способ оплаты: ${payment.label}.`,
+      files: [],
+      variantName: `${plan.label} — ${contractor.name}`,
+      unitPrice: plan.price,
+    });
+
+    setCartAdded(true);
+    showToast("Тариф добавлен в корзину", "success");
   };
 
   return (
@@ -112,7 +125,20 @@ function ExtendedCheckSubscribeContent() {
         </ul>
       </Card>
 
-      <Button onClick={handleSubmit}>Оформить заказ</Button>
+      <Button onClick={handleSubmit}>Добавить в корзину</Button>
+      <p className="text-sm text-gray-600 mt-3">
+        Заказ попадёт в корзину. Оплатите его в разделе «Корзина / заказы из каталога».
+      </p>
+      {cartAdded && (
+        <Card className="mt-4 bg-gray-50 space-y-3">
+          <p className="text-sm text-gray-900">
+            Тариф добавлен в корзину. Перейдите в корзину, чтобы оформить оплату.
+          </p>
+          <Button size="sm" onClick={() => router.push("/account/customer/cart")}>
+            Перейти в корзину
+          </Button>
+        </Card>
+      )}
     </>
   );
 }
@@ -123,7 +149,7 @@ function ExtendedCheckSubscribePageInner() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         {!isAuthenticated || !user ? (
           <>
             <p className="text-sm text-gray-600">Войдите в систему для заказа проверки.</p>

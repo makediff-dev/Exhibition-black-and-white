@@ -19,7 +19,7 @@ export default function ContractorPortfolioItemPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-6">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
         <PortfolioDetail
           item={item}
           backHref={`/contractors/${contractorId}`}

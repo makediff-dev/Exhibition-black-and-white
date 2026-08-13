@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Building2, CalendarDays, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -62,14 +63,21 @@ function bookingOverlapsRange(booking: Booking, rangeStart: string, rangeEnd: st
 
 interface Props {
   venueId?: string;
+  initialEventId?: string;
+  lockEventFilter?: boolean;
 }
 
-export function VenueBookingsSection({ venueId = "venue-1" }: Props) {
+export function VenueBookingsSection({
+  venueId = "venue-1",
+  initialEventId,
+  lockEventFilter = false,
+}: Props) {
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
   const { showToast } = useToast();
+  const router = useRouter();
 
-  const [eventFilter, setEventFilter] = useState("all");
+  const [eventFilter, setEventFilter] = useState(initialEventId ?? "all");
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
 
@@ -149,13 +157,15 @@ export function VenueBookingsSection({ venueId = "venue-1" }: Props) {
         мероприятия и демонтажа.
       </p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Select
-          label="Мероприятие"
-          value={eventFilter}
-          onChange={(event) => setEventFilter(event.target.value)}
-          options={eventOptions}
-        />
+      <div className={lockEventFilter ? "grid gap-4" : "grid gap-4 sm:grid-cols-2"}>
+        {!lockEventFilter ? (
+          <Select
+            label="Мероприятие"
+            value={eventFilter}
+            onChange={(event) => setEventFilter(event.target.value)}
+            options={eventOptions}
+          />
+        ) : null}
         <BookingDateRangePicker
           markedDates={markedDates}
           rangeStart={rangeStart}
@@ -186,61 +196,87 @@ export function VenueBookingsSection({ venueId = "venue-1" }: Props) {
               : "Период";
 
             return (
-              <Card key={booking.id} className="h-full flex flex-col gap-[10px]">
-                <div className="flex flex-wrap items-center gap-[10px]">
-                  <Badge variant="outline">{periodLabel}</Badge>
-                  <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
-                    {BOOKING_STATUS_LABELS[booking.status]}
-                  </Badge>
-                </div>
-
-                <CardTitle className="text-sm">
-                  {event ? (
-                    <Link
-                      href={`/account/venue/events/${event.id}`}
-                      className="hover:underline"
-                    >
-                      {event.title}
-                    </Link>
-                  ) : (
-                    "Мероприятие"
-                  )}
-                </CardTitle>
-
-                <CardDescription className="space-y-[10px] flex-1">
-                  <p className="flex items-start gap-1.5">
-                    <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    {booking.organizerName ?? "Организатор"}
-                  </p>
-                  {hall && (
-                    <p className="flex items-start gap-1.5">
-                      <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {hall.name}
-                      <span className="text-gray-500">
-                        · {hall.area.toLocaleString("ru-RU")} кв.м
-                      </span>
-                    </p>
-                  )}
-                  <p className="flex items-start gap-1.5">
-                    <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    {formatShortDate(booking.periodStart ?? booking.date)}
-                    {booking.periodEnd && booking.periodEnd !== booking.periodStart
-                      ? ` — ${formatShortDate(booking.periodEnd)}`
-                      : ""}
-                  </p>
-                </CardDescription>
-
-                {booking.status === "pending" && (
-                  <div className="flex flex-wrap gap-[10px]">
-                    <Button size="sm" onClick={() => handleConfirm(booking)}>
-                      Подтвердить
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleReject(booking)}>
-                      Отклонить
-                    </Button>
+              <Link
+                key={booking.id}
+                href={`/account/venue/bookings/${booking.id}`}
+                className="block h-full"
+              >
+                <Card className="h-full flex flex-col gap-[10px] hover:border-gray-900 transition-colors">
+                  <div className="flex flex-wrap items-center gap-[10px]">
+                    <Badge variant="outline">{periodLabel}</Badge>
+                    <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
+                      {BOOKING_STATUS_LABELS[booking.status]}
+                    </Badge>
                   </div>
-                )}
-              </Card>
+
+                  <CardTitle className="text-sm">
+                    {event && !lockEventFilter ? (
+                      <button
+                        type="button"
+                        className="underline hover:text-gray-700 text-left"
+                        onClick={(clickEvent) => {
+                          clickEvent.preventDefault();
+                          clickEvent.stopPropagation();
+                          router.push(`/account/venue/bookings/event/${booking.eventId}`);
+                        }}
+                      >
+                        {event.title}
+                      </button>
+                    ) : (
+                      event?.title ?? "Мероприятие"
+                    )}
+                  </CardTitle>
+
+                  <CardDescription className="space-y-[10px] flex-1">
+                    <p className="flex items-start gap-1.5">
+                      <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {booking.organizerName ?? "Организатор"}
+                    </p>
+                    {hall && (
+                      <p className="flex items-start gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                        {hall.name}
+                        <span className="text-gray-500">
+                          · {hall.area.toLocaleString("ru-RU")} кв.м
+                        </span>
+                      </p>
+                    )}
+                    <p className="flex items-start gap-1.5">
+                      <CalendarDays className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      {formatShortDate(booking.periodStart ?? booking.date)}
+                      {booking.periodEnd && booking.periodEnd !== booking.periodStart
+                        ? ` — ${formatShortDate(booking.periodEnd)}`
+                        : ""}
+                    </p>
+                  </CardDescription>
+
+                  {booking.status === "pending" && (
+                    <div className="flex flex-wrap gap-[10px]">
+                      <Button
+                        size="sm"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          handleConfirm(booking);
+                        }}
+                      >
+                        Подтвердить
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          handleReject(booking);
+                        }}
+                      >
+                        Отклонить
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              </Link>
             );
           })}
         </div>

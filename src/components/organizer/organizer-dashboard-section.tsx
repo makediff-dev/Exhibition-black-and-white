@@ -49,7 +49,7 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
   ).length;
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
           <Card className="hover:border-gray-900 transition-colors h-full">

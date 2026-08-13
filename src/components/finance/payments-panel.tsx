@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CreditCard, Shield, Wallet } from "lucide-react";
+import { CreditCard, HelpCircle, Shield, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/toast-provider";
 import type { Payment } from "@/data/types";
 import { SEED_PAYMENTS } from "@/data/mocks/seed";
@@ -118,7 +119,21 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
           </Card>
           <Card>
             <CardDescription className="flex items-center gap-1">
-              <Shield className="h-3.5 w-3.5" /> Резерв
+              <Shield className="h-3.5 w-3.5 shrink-0" />
+              <span>В резерве</span>
+              <Tooltip
+                persistent
+                placement="bottom"
+                content="Замороженные на платформе средства по безопасным сделкам. Оплата зарезервирована до приёмки работ и переводится исполнителям после подтверждения этапов."
+              >
+                <button
+                  type="button"
+                  className="shrink-0 text-gray-500 hover:text-gray-900"
+                  aria-label="Что такое резерв"
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
             </CardDescription>
             <CardTitle className="mt-1">{formatPrice(breakdown.reserve)}</CardTitle>
           </Card>
@@ -148,40 +163,37 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
           description="В этой вкладке пока нет финансовых операций"
         />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 
             return (
-              <Card key={payment.id}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <Badge variant="outline">{payment.type}</Badge>
-                      <Badge variant={status === "pending" ? "solid" : "outline"}>
-                        {PAYMENT_STATUS_LABELS[status]}
-                      </Badge>
-                    </div>
-                    <p className="text-lg font-semibold">{formatPrice(payment.amount)}</p>
-                    <p className="text-sm text-gray-600 mt-1">{payment.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">{formatDate(payment.date)}</p>
-                    {deal && payment.dealId && (
-                      <p className="text-sm mt-2">
-                        <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
-                          {deal.number} — {deal.title}
-                        </Link>
-                      </p>
-                    )}
-                  </div>
-
-                  {status === "pending" && (
-                    <Button onClick={() => handlePay(payment)}>
-                      <CreditCard className="h-4 w-4" />
-                      Оплатить
-                    </Button>
+              <Card key={payment.id} className="flex flex-col h-full">
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  {activeTab !== "history" && activeTab !== "payouts" && (
+                    <Badge variant="outline">{payment.type}</Badge>
                   )}
+                  <Badge variant={status === "pending" ? "solid" : "outline"}>
+                    {PAYMENT_STATUS_LABELS[status]}
+                  </Badge>
                 </div>
+                <p className="text-lg font-semibold">{formatPrice(payment.amount)}</p>
+                <p className="text-sm text-gray-600 mt-2 flex-1">{payment.description}</p>
+                <p className="text-xs text-gray-500 mt-2">{formatDate(payment.date)}</p>
+                {deal && payment.dealId && (
+                  <p className="text-sm mt-3">
+                    <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
+                      {deal.number} — {deal.title}
+                    </Link>
+                  </p>
+                )}
+                {status === "pending" && (
+                  <Button className="w-full mt-4" onClick={() => handlePay(payment)}>
+                    <CreditCard className="h-4 w-4" />
+                    Оплатить
+                  </Button>
+                )}
               </Card>
             );
           })}

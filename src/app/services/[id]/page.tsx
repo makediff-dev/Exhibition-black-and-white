@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShoppingCart, Star, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingCart, Star, Heart } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,12 @@ export default function ServiceDetailPage() {
 
   const [selectedVariantId, setSelectedVariantId] = useState(service?.variants?.[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   if (!service) notFound();
+
+  const photoCards = service.photoCards?.filter((card) => card.imageUrl || card.title || card.caption) ?? [];
+  const currentPhotoCard = photoCards[photoIndex];
 
   const selectedVariant = service.variants?.find((v) => v.id === selectedVariantId);
   const unitPrice = selectedVariant?.price ?? service.price;
@@ -69,7 +73,7 @@ export default function ServiceDetailPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton fallbackHref="/services" className="mb-4" />
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -99,6 +103,71 @@ export default function ServiceDetailPage() {
               </button>
             </div>
 
+            {photoCards.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
+                <div className="border border-gray-300 overflow-hidden">
+                  <div className="aspect-[16/10] bg-gray-50 relative">
+                    {currentPhotoCard?.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={currentPhotoCard.imageUrl}
+                        alt={currentPhotoCard.title || service.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-sm text-gray-400">
+                        Фото карточки
+                      </div>
+                    )}
+                    {photoCards.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoIndex((prev) => (prev === 0 ? photoCards.length - 1 : prev - 1))}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
+                          aria-label="Предыдущая карточка"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoIndex((prev) => (prev === photoCards.length - 1 ? 0 : prev + 1))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
+                          aria-label="Следующая карточка"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <div className="p-4 border-t border-gray-200">
+                    {currentPhotoCard?.title && (
+                      <p className="text-sm font-semibold">{currentPhotoCard.title}</p>
+                    )}
+                    {currentPhotoCard?.caption && (
+                      <p className="text-sm text-gray-700 mt-1">{currentPhotoCard.caption}</p>
+                    )}
+                  </div>
+                </div>
+                {photoCards.length > 1 && (
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    {photoCards.map((card, index) => (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => setPhotoIndex(index)}
+                        className={`border p-3 text-left text-sm ${index === photoIndex ? "border-gray-900" : "border-gray-300"}`}
+                      >
+                        <p className="font-medium">{card.title || `Карточка ${index + 1}`}</p>
+                        {card.caption && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{card.caption}</p>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             <section>
               <h2 className="text-lg font-semibold mb-2">Описание</h2>
               <p className="text-sm text-gray-700">{service.description}</p>
@@ -108,11 +177,24 @@ export default function ServiceDetailPage() {
               <div className="border border-gray-300 p-4">
                 <p className="font-medium mb-1">Условия</p>
                 <p className="text-gray-700">{service.terms}</p>
+                {service.guaranteeRefund && (
+                  <p className="text-gray-900 mt-2 text-xs border border-dashed border-gray-400 px-2 py-1 inline-block">
+                    Гарантия результата или возврат денежных средств
+                  </p>
+                )}
               </div>
               <div className="border border-gray-300 p-4">
                 <p className="font-medium mb-1">Срок выполнения</p>
                 <p className="text-gray-700">{service.deadline}</p>
               </div>
+              {service.prepaymentPercent !== undefined && (
+                <div className="border border-gray-300 p-4 sm:col-span-2">
+                  <p className="font-medium mb-1">Условия оплаты</p>
+                  <p className="text-gray-700">
+                    Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
+                  </p>
+                </div>
+              )}
             </section>
 
             <section>

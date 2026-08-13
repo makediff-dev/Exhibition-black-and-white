@@ -7,15 +7,16 @@ export interface NavItem {
 export const CUSTOMER_NAV: NavItem[] = [
   { slug: "", href: "/account/customer", label: "Дашборд" },
   { slug: "profile", href: "/account/customer/profile", label: "Профиль компании" },
+  { slug: "messages", href: "/messages", label: "Сообщения" },
   { slug: "legal", href: "/account/customer/legal", label: "Юридические и платёжные данные" },
   { slug: "edo", href: "/account/customer/edo", label: "ЭДО и документооборот" },
   { slug: "requests", href: "/requests", label: "Мои заявки" },
+  { slug: "my-events", href: "/account/customer/my-events", label: "Мои мероприятия" },
   { slug: "favorites", href: "/account/customer/favorites", label: "Избранное" },
   { slug: "cart", href: "/account/customer/cart", label: "Корзина / заказы из каталога" },
   { slug: "responses", href: "/account/customer/responses", label: "Отклики и предложения" },
   { slug: "active-projects", href: "/account/customer/active-projects", label: "Активные проекты" },
   { slug: "completed-projects", href: "/account/customer/completed-projects", label: "Завершённые проекты" },
-  { slug: "repeat-order", href: "/account/customer/repeat-order", label: "Повторить заказ" },
   { slug: "checks", href: "/account/customer/checks", label: "Проверки исполнителей" },
   { slug: "payments", href: "/account/customer/payments", label: "Оплаты" },
   { slug: "documents", href: "/account/customer/documents", label: "Документы" },
@@ -26,6 +27,7 @@ export const CUSTOMER_NAV: NavItem[] = [
 export const CONTRACTOR_NAV: NavItem[] = [
   { slug: "", href: "/account/contractor", label: "Дашборд" },
   { slug: "profile", href: "/account/contractor/profile", label: "Профиль компании" },
+  { slug: "messages", href: "/messages", label: "Сообщения" },
   { slug: "cities", href: "/account/contractor/cities", label: "Города оказания услуг" },
   { slug: "production", href: "/account/contractor/production", label: "Производственные мощности" },
   { slug: "services", href: "/account/contractor/services", label: "Услуги" },
@@ -44,6 +46,7 @@ export const CONTRACTOR_NAV: NavItem[] = [
 export const VENUE_NAV: NavItem[] = [
   { slug: "", href: "/account/venue", label: "Дашборд" },
   { slug: "profile", href: "/account/venue/profile", label: "Профиль площадки" },
+  { slug: "messages", href: "/messages", label: "Сообщения" },
   { slug: "halls", href: "/account/venue/halls", label: "Площадки и залы" },
   { slug: "spaces", href: "/account/venue/spaces", label: "Доступные площади" },
   { slug: "floor-plan", href: "/account/venue/floor-plan", label: "Схема размещения" },
@@ -59,6 +62,7 @@ export const VENUE_NAV: NavItem[] = [
 export const ORGANIZER_NAV: NavItem[] = [
   { slug: "", href: "/account/organizer", label: "Дашборд" },
   { slug: "profile", href: "/account/organizer/profile", label: "Профиль компании" },
+  { slug: "messages", href: "/messages", label: "Сообщения" },
   { slug: "events", href: "/account/organizer/events", label: "Мероприятия" },
   { slug: "venues", href: "/account/organizer/venues", label: "Площадки проведения" },
   { slug: "orders", href: "/account/organizer/orders", label: "Заказы" },
@@ -84,12 +88,19 @@ export function getNavForRole(role: string): NavItem[] {
 
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
   if (pathname === item.href) return true;
+  if (item.href === "/messages") return pathname.startsWith("/messages");
   if (!item.slug) return false;
   if (
     item.slug === "events" &&
     (pathname.includes("/create-event") ||
       pathname.includes("/edit-event") ||
       pathname.includes("/events/"))
+  ) {
+    return true;
+  }
+  if (
+    item.slug === "completed-projects" &&
+    pathname.includes("/repeat-order")
   ) {
     return true;
   }

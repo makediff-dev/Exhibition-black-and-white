@@ -42,9 +42,6 @@ function EventCard({ event, recommended }: { event: Event; recommended?: boolean
       <Card className="h-full hover:border-gray-900">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-          {event.bookingAvailable && (
-            <Badge variant="solid">Бронирование в тестовом режиме</Badge>
-          )}
           {recommended && (
             <Badge variant="dashed" icon={Sparkles}>
               Рекомендуем
@@ -282,7 +279,7 @@ function EventsPageFallback() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-6">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
         <LoadingState message="Загрузка мероприятий..." />
       </main>
       <Footer />
@@ -427,7 +424,7 @@ function EventsPageContent() {
         onConfirm={confirmCity}
       />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Выставки и мероприятия</h1>
           <p className="text-sm text-gray-600 mt-1">
@@ -506,7 +503,7 @@ function EventsPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filteredEvents.length}</p>
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
                   {filteredEvents.map((event) => (
                     <EventCard key={event.id} event={event} recommended={isRecommended(event)} />
                   ))}

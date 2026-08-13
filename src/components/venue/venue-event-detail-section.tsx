@@ -8,14 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-import { VENUE_SERVICE_AUDIENCES } from "@/constants/statuses";
+import { VENUE_SERVICE_AUDIENCES, BOOKING_PERIOD_LABELS, BOOKING_STATUS_LABELS } from "@/constants/statuses";
 import {
   DEMO_ACCESSIBLE_ACCOUNTS,
   DEMO_USERS,
+  SEED_BOOKINGS,
+  SEED_EVENT_ORDERS,
   SEED_EVENTS,
   SEED_HALLS,
 } from "@/data/mocks/seed";
-import type { Event, VenueServiceAudience } from "@/data/types";
+import type { Booking, Event, VenueServiceAudience } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { VenueCabinetHeader } from "@/components/venue/venue-cabinet-header";
@@ -33,6 +35,20 @@ function getAudienceLabel(id: VenueServiceAudience) {
   return VENUE_SERVICE_AUDIENCES.find((item) => item.id === id)?.label ?? id;
 }
 
+function mergeBookings(storedBookings: Booking[]): Booking[] {
+  const ids = new Set(storedBookings.map((booking) => booking.id));
+  const missing = SEED_BOOKINGS.filter((booking) => !ids.has(booking.id));
+  const upgraded = storedBookings.map((booking) => {
+    const seed = SEED_BOOKINGS.find((item) => item.id === booking.id);
+    if (seed && (!booking.hallId || !booking.periodType)) {
+      return { ...seed, status: booking.status };
+    }
+    return booking;
+  });
+
+  return missing.length ? [...upgraded, ...missing] : upgraded;
+}
+
 interface Props {
   eventId: string;
   venueId?: string;
@@ -44,7 +60,8 @@ export function VenueEventDetailSection({
   venueId = "venue-1",
   showToast,
 }: Props) {
-  const { venueEventMeta, venueServices, updateVenueEventMeta } = usePrototypeStore();
+  const { venueEventMeta, venueServices, updateVenueEventMeta, bookings: storeBookings } =
+    usePrototypeStore();
   const user = useAuthStore((state) => state.user);
 
   const event = SEED_EVENTS.find((item) => item.id === eventId && item.venueId === venueId);
@@ -61,6 +78,30 @@ export function VenueEventDetailSection({
   const services = useMemo(
     () => venueServices.filter((service) => service.venueId === venueId),
     [venueServices, venueId]
+  );
+
+  const eventOrdersCount = useMemo(
+    () =>
+      SEED_EVENT_ORDERS.filter(
+        (order) => order.eventId === eventId && order.venueId === venueId
+      ).length,
+    [eventId, venueId]
+  );
+
+  const eventBookings = useMemo(
+    () =>
+      mergeBookings(storeBookings)
+        .filter(
+          (booking) =>
+            booking.venueId === venueId &&
+            booking.eventId === eventId &&
+            booking.hallId &&
+            booking.periodType
+        )
+        .sort((a, b) =>
+          (a.periodStart ?? a.date).localeCompare(b.periodStart ?? b.date)
+        ),
+    [storeBookings, venueId, eventId]
   );
 
   if (!event || !meta) {
@@ -83,7 +124,7 @@ export function VenueEventDetailSection({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <BackButton fallbackHref="/account/venue/events" className="mb-0" />
 
       {user ? <VenueCabinetHeader user={user} venueId={venueId} /> : null}
@@ -108,11 +149,23 @@ export function VenueEventDetailSection({
               </p>
             </CardDescription>
           </div>
-          <Link href={`/events/${event.id}`}>
-            <Button size="sm" variant="outline">
-              Публичная страница
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Link href={`/account/venue/bookings/event/${event.id}`}>
+              <Button size="sm" variant="outline">
+                Бронирования · {eventBookings.length}
+              </Button>
+            </Link>
+            <Link href={`/account/venue/orders/${event.id}`}>
+              <Button size="sm" variant="outline">
+                Заказы · {eventOrdersCount}
+              </Button>
+            </Link>
+            <Link href={`/events/${event.id}`}>
+              <Button size="sm" variant="outline">
+                Публичная страница
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-3">
@@ -138,6 +191,72 @@ export function VenueEventDetailSection({
             </p>
           ))}
         </div>
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle>Бронирования</CardTitle>
+            <CardDescription>
+              Периоды монтажа, проведения и демонтажа по этому мероприятию
+            </CardDescription>
+          </div>
+          {eventBookings.length > 0 ? (
+            <Link href={`/account/venue/bookings/event/${event.id}`}>
+              <Button size="sm" variant="outline">
+                Все бронирования
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+
+        {eventBookings.length === 0 ? (
+          <p className="text-sm text-gray-600">Бронирований по этому мероприятию пока нет</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-3">
+            {eventBookings.map((booking) => {
+              const hall = booking.hallId
+                ? SEED_HALLS.find((item) => item.id === booking.hallId)
+                : undefined;
+              const periodLabel = booking.periodType
+                ? BOOKING_PERIOD_LABELS[booking.periodType]
+                : "Период";
+
+              return (
+                <Link
+                  key={booking.id}
+                  href={`/account/venue/bookings/${booking.id}`}
+                  className="block h-full"
+                >
+                  <Card className="h-full hover:border-gray-900 transition-colors">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <Badge variant="outline">{periodLabel}</Badge>
+                      <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
+                        {BOOKING_STATUS_LABELS[booking.status]}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-sm">{hall?.name ?? "Зал"}</CardTitle>
+                    <CardDescription className="mt-2 space-y-1">
+                      <span className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                        {formatShortDate(booking.periodStart ?? booking.date)}
+                        {booking.periodEnd && booking.periodEnd !== booking.periodStart
+                          ? ` — ${formatShortDate(booking.periodEnd)}`
+                          : ""}
+                      </span>
+                      {booking.organizerName ? (
+                        <span className="flex items-start gap-1.5">
+                          <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          {booking.organizerName}
+                        </span>
+                      ) : null}
+                    </CardDescription>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       <Card className="space-y-4">

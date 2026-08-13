@@ -50,10 +50,16 @@ export interface CompanyProfile {
   verified: boolean;
   cities: string[];
   categories: string[];
+  industries?: string[];
   hasProduction: boolean;
   rating: number;
   reviewCount: number;
   description: string;
+  displayName?: string;
+  actualAddress?: string;
+  website?: string;
+  phone?: string;
+  logoUrl?: string;
 }
 
 export interface Event {
@@ -103,6 +109,13 @@ export interface ContractorReview {
   videos?: string[];
 }
 
+export interface PortfolioThankYou {
+  id: string;
+  author: string;
+  text: string;
+  imageUrl?: string;
+}
+
 export interface PortfolioItem {
   id: string;
   title: string;
@@ -112,6 +125,38 @@ export interface PortfolioItem {
   videos?: string[];
   links?: string[];
   eventId?: string;
+  status?: "draft" | "published";
+  mediaUrls?: string[];
+  thanksLetters?: PortfolioThankYou[];
+}
+
+export interface ServicePhotoCard {
+  id: string;
+  title: string;
+  caption: string;
+  imageUrl?: string;
+}
+
+export interface ServiceCatalogItem {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  unit: string;
+  terms: string;
+  additionalTerms: string;
+  imageUrl?: string;
+}
+
+export interface ServiceCatalog {
+  id: string;
+  contractorId: string;
+  contractorName: string;
+  title: string;
+  category: string;
+  city: string;
+  description: string;
+  items: ServiceCatalogItem[];
 }
 
 export interface Service {
@@ -128,6 +173,9 @@ export interface Service {
   deadline: string;
   rating: number;
   reviewCount: number;
+  prepaymentPercent?: number;
+  guaranteeRefund?: boolean;
+  photoCards?: ServicePhotoCard[];
   variants?: { id: string; name: string; price: number }[];
 }
 
@@ -227,6 +275,15 @@ export interface DealStage {
   result?: string;
   files: string[];
   comments: string[];
+}
+
+export interface ProjectTimelineRow {
+  id: string;
+  dealId: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  status: DealStage["status"];
 }
 
 export interface Deal {
@@ -407,6 +464,18 @@ export interface OrganizerEventService {
   audiences: OrganizerServiceAudience[];
 }
 
+export type EventPartnerCategoryId = "build" | "logistics" | "hotel" | "design";
+
+export interface EventRecommendedPartner {
+  id: string;
+  eventId: string;
+  categoryId: EventPartnerCategoryId;
+  contractorId?: string;
+  customName?: string;
+  customDescription?: string;
+  isRecommended: boolean;
+}
+
 export type VenueServiceAudience = "organizer" | "contractor" | "exhibitor" | "individual";
 
 export interface VenueService {
@@ -467,6 +536,67 @@ export interface OrganizerEmployee {
   status: VenueEmployeeStatus;
   edoVerified: boolean;
   permissions: OrganizerPermissionSection[];
+  pinLoginEnabled: boolean;
+  invitedAt?: string;
+  joinedAt?: string;
+}
+
+export type CustomerPermissionSection =
+  | "dashboard"
+  | "profile"
+  | "legal"
+  | "edo"
+  | "favorites"
+  | "cart"
+  | "responses"
+  | "active-projects"
+  | "completed-projects"
+  | "checks"
+  | "payments"
+  | "documents"
+  | "reviews";
+
+export interface CustomerEmployee {
+  id: string;
+  customerId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
+  status: VenueEmployeeStatus;
+  edoVerified: boolean;
+  permissions: CustomerPermissionSection[];
+  pinLoginEnabled: boolean;
+  invitedAt?: string;
+  joinedAt?: string;
+}
+
+export type ContractorPermissionSection =
+  | "dashboard"
+  | "profile"
+  | "cities"
+  | "production"
+  | "services"
+  | "portfolio"
+  | "available-requests"
+  | "my-responses"
+  | "active-projects"
+  | "gantt"
+  | "completed-projects"
+  | "payouts"
+  | "documents"
+  | "reviews";
+
+export interface ContractorEmployee {
+  id: string;
+  contractorId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  isAdmin: boolean;
+  status: VenueEmployeeStatus;
+  edoVerified: boolean;
+  permissions: ContractorPermissionSection[];
   pinLoginEnabled: boolean;
   invitedAt?: string;
   joinedAt?: string;
@@ -544,3 +674,35 @@ export interface FloorPlanPlot {
   status: FloorPlanPlotStatus;
   companyName?: string;
 }
+
+export type VenueInquiryStatus = "pending" | "proposal_received" | "selected" | "declined";
+
+export interface OrganizerEventDraft {
+  id: string;
+  title: string;
+  category: Event["category"];
+  industry: string;
+  description: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  participationTerms?: string;
+  selectedVenueId?: string;
+  selectedVenueName?: string;
+}
+
+export interface VenueInquiry {
+  id: string;
+  eventDraftId: string;
+  venueId: string;
+  venueName: string;
+  dateFrom: string;
+  dateTo: string;
+  minArea?: string;
+  status: VenueInquiryStatus;
+  sentAt: string;
+  proposalSummary?: string;
+  proposalPrice?: string;
+}
+
+export type VenueBookingDateStatus = "rented" | "booked" | "negotiating";

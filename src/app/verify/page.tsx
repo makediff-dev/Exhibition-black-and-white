@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CheckCircle, Clock, Mail, Phone, RefreshCw } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast-provider";
+import { usePrototypeStore } from "@/lib/store";
 import { validateEmail, validatePhone } from "@/lib/utils/validators";
 
 const TEST_CODE = "123456";
@@ -19,10 +20,14 @@ type VerifyState = "input" | "success" | "error";
 
 function VerifyContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { showToast } = useToast();
+  const registrationDraft = usePrototypeStore((s) => s.registrationDraft);
+  const setRegistrationDraft = usePrototypeStore((s) => s.setRegistrationDraft);
 
   const initialType = searchParams.get("type") === "phone" ? "phone" : "email";
   const initialContact = searchParams.get("contact") ?? "";
+  const fromRegister = searchParams.get("from") === "register";
 
   const [activeTab, setActiveTab] = useState(initialType);
   const [contact, setContact] = useState(initialContact);
@@ -87,9 +92,22 @@ function VerifyContent() {
       return;
     }
 
-    setState("success");
+    if (fromRegister) {
+      setRegistrationDraft({
+        ...registrationDraft,
+        individualEmailSent: true,
+        individualEmailConfirmed: true,
+        registrationPhase: "company",
+        step: 0,
+      });
+      router.push("/register?confirmed=1");
+      showToast("Email подтверждён");
+      return;
+    }
+
     setCodeError("");
     showToast("Контакт успешно подтверждён");
+    setState("success");
   };
 
   const handleResend = () => {
@@ -103,7 +121,8 @@ function VerifyContent() {
   const ContactIcon = activeTab === "email" ? Mail : Phone;
 
   return (
-    <main className="flex-1 mx-auto max-w-md w-full px-4 py-8">
+    <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+      <div className="max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-2">Подтверждение контакта</h1>
       <p className="text-sm text-gray-600 mb-6">
         Подтвердите email или телефон для продолжения работы
@@ -117,7 +136,13 @@ function VerifyContent() {
             {activeTab === "email" ? "Email" : "Телефон"}{" "}
             <strong>{contact}</strong> успешно верифицирован
           </p>
-          <Link href="/login">
+          {fromRegister && (
+            <p className="text-sm text-gray-600 mb-6 max-w-sm">
+              Теперь вы можете войти в сервис и зарегистрировать компанию. Без регистрации
+              юридического лица многие функции будут недоступны.
+            </p>
+          )}
+          <Link href={fromRegister ? "/login?registered=1" : "/login"}>
             <Button>Перейти ко входу</Button>
           </Link>
         </div>
@@ -230,6 +255,7 @@ function VerifyContent() {
           </form>
         </>
       )}
+      </div>
     </main>
   );
 }

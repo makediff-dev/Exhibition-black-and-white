@@ -71,7 +71,7 @@ export default function ContractorCheckPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton
           fallbackHref={`/contractors/${contractor.id}`}
           className="mb-4"

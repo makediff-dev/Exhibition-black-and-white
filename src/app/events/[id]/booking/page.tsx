@@ -46,7 +46,7 @@ export default function EventBookingPage() {
     return (
       <div className="flex flex-col min-h-screen">
         <PublicHeader />
-        <main className="flex-1 mx-auto max-w-3xl px-4 py-12 text-center">
+        <main className="flex-1 mx-auto max-w-site w-full px-4 py-12 text-center">
           <h1 className="text-xl font-bold mb-2">Бронирование недоступно</h1>
           <p className="text-sm text-gray-600 mb-4">Для этого мероприятия бронирование площадей не предусмотрено.</p>
           <Link href={`/events/${event.id}`}><Button>К мероприятию</Button></Link>
@@ -92,7 +92,7 @@ export default function EventBookingPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton fallbackHref={`/events/${event.id}`} className="mb-4" />
 
         <h1 className="text-2xl font-bold mb-2">Бронирование площади</h1>

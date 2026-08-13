@@ -13,6 +13,9 @@ export function formatServicePrice(service: { price: number; priceFormat: string
   if (service.priceFormat === "от") {
     return `от ${formatPrice(service.price)}`;
   }
+  if (service.priceFormat === "от за кв.м.") {
+    return `от ${formatPrice(service.price)} за кв.м.`;
+  }
   if (service.priceFormat.startsWith("от / ")) {
     return `от ${formatPrice(service.price)}${service.priceFormat.slice(2)}`;
   }

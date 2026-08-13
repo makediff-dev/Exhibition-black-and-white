@@ -111,17 +111,22 @@ function ContractorDetailContent() {
     <>
       {backLink}
 
-      <h1 className="text-2xl font-bold mb-3">{contractor.name}</h1>
+      {(contractor.verified || contractor.hasProduction || contractor.inRsvya || contractor.inSroVz) && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {contractor.verified && <Badge variant="solid">Проверен</Badge>}
+          {contractor.hasProduction && <Badge variant="outline">Своё производство</Badge>}
+          <ContractorRegistryBadges
+            inRsvya={contractor.inRsvya}
+            inSroVz={contractor.inSroVz}
+          />
+        </div>
+      )}
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {contractor.verified && <Badge variant="solid">Проверен</Badge>}
-        {contractor.hasProduction && <Badge variant="outline">Своё производство</Badge>}
-        <ContractorRegistryBadges inRsvya={contractor.inRsvya} inSroVz={contractor.inSroVz} />
-      </div>
+      <h1 className="text-2xl font-bold mb-3">{contractor.name}</h1>
 
       <div className="grid lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2">
-          <p className="text-sm text-gray-600 mb-1">
+          <p className="text-sm text-gray-600 mb-2">
             {contractor.city} · {contractor.geography}
           </p>
           <p className="text-sm text-gray-600 flex items-center gap-1 mb-6">
@@ -165,7 +170,7 @@ function ContractorDetailContent() {
             {contractor.portfolio.length === 0 ? (
               <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {contractor.portfolio.map((item) => (
                   <PortfolioCard
                     key={item.id}
@@ -225,7 +230,7 @@ function ContractorDetailContent() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 py-8">{pageBody}</main>
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">{pageBody}</main>
       <Footer />
     </div>
   );

@@ -69,7 +69,7 @@ export default function NotificationsPage() {
         ) : undefined
       }
     >
-      <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
         <Select
           label="Категория"
           value={categoryFilter}
@@ -81,10 +81,10 @@ export default function NotificationsPage() {
               label: CATEGORY_LABELS[c] || c,
             })),
           ]}
-          className="sm:max-w-xs"
+          className="sm:max-w-xs w-full"
         />
-        <p className="text-sm text-gray-600 flex items-center gap-1">
-          <Bell className="h-4 w-4" />
+        <p className="text-sm text-gray-600 flex items-center gap-1 sm:mt-6 sm:h-9">
+          <Bell className="h-4 w-4 shrink-0" />
           Всего: {filtered.length}
           {unreadCount > 0 && ` · Непрочитанных: ${unreadCount}`}
         </p>

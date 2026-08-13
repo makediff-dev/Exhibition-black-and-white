@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { BackButton } from "@/components/ui/back-button";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -16,8 +15,10 @@ import { useToast } from "@/components/ui/toast-provider";
 import { OrganizerParticipantsList } from "@/components/organizer/organizer-participants-list";
 import { OrganizerEventServicesPanel } from "@/components/organizer/organizer-event-services-panel";
 import { OrganizerEventBookingsPanel } from "@/components/organizer/organizer-event-bookings-panel";
+import { OrganizerEventRecommendedPartnersPanel } from "@/components/organizer/organizer-event-recommended-partners-panel";
 import { CITIES } from "@/constants/categories";
-import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
+import { VENUE_CATALOG } from "@/constants/venues";
+import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Event } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 
@@ -35,40 +36,10 @@ const INDUSTRY_OPTIONS = [
   { value: "industry", label: "Промышленность" },
 ];
 
-const VENUE_OPTIONS = [
-  { value: "venue-1", label: "ЭкспоЦентр" },
-  { value: "venue-2", label: "ЭкспоФорум" },
-];
-
-const RECOMMENDED_PARTNER_SLOTS: Array<{
-  id: string;
-  label: string;
-  contractorId?: string;
-  contractorName?: string;
-  description?: string;
-}> = [
-  {
-    id: "build",
-    label: "Партнёр по эксклюзивному строительству",
-    contractorId: "ctr-1",
-  },
-  {
-    id: "logistics",
-    label: "Логистический партнёр",
-    contractorId: "ctr-5",
-  },
-  {
-    id: "hotel",
-    label: "Гостиничный партнёр",
-    contractorName: "Отель «Экспо Инн»",
-    description: "Партнёрский тариф для участников",
-  },
-  {
-    id: "design",
-    label: "Партнёр по дизайну",
-    contractorId: "ctr-2",
-  },
-];
+const VENUE_OPTIONS = VENUE_CATALOG.map((venue) => ({
+  value: venue.id,
+  label: venue.shortName,
+}));
 
 interface FormState {
   title: string;
@@ -94,7 +65,7 @@ const EMPTY_FORM: FormState = {
   industry: "furniture",
   description: "",
   city: "Москва",
-  venueId: "venue-1",
+  venueId: "",
   startDate: "",
   endDate: "",
   assemblyStart: "",
@@ -148,8 +119,9 @@ export function OrganizerEventFormSection({
   const participants = usePrototypeStore((state) => state.participants);
   const organizerEventServices = usePrototypeStore((state) => state.organizerEventServices);
   const bookings = usePrototypeStore((state) => state.bookings);
+  const organizerEventDraft = usePrototypeStore((state) => state.organizerEventDraft);
+  const setOrganizerEventDraft = usePrototypeStore((state) => state.setOrganizerEventDraft);
   const eventId = searchParams.get("id") ?? forcedEventId ?? null;
-  const venueIdFromQuery = searchParams.get("venueId");
   const tabFromQuery = searchParams.get("tab");
 
   const existingEvent = useMemo(
@@ -207,11 +179,30 @@ export function OrganizerEventFormSection({
   }, [eventParticipants, participantQuery]);
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [recommendedPartners, setRecommendedPartners] = useState<string[]>([
-    "build",
-    "logistics",
-    "design",
-  ]);
+
+  const ensureDraftEventId = (): string => {
+    if (eventId) return eventId;
+    if (organizerEventDraft?.id) return organizerEventDraft.id;
+
+    const industryLabel =
+      INDUSTRY_OPTIONS.find((option) => option.value === form.industry)?.label ?? form.industry;
+
+    const newId = `event-draft-${Date.now()}`;
+    setOrganizerEventDraft({
+      id: newId,
+      title: form.title.trim() || "Черновик",
+      category: form.category,
+      industry: industryLabel,
+      description: form.description,
+      city: form.city,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      participationTerms: form.participationTerms,
+      selectedVenueId: organizerEventDraft?.selectedVenueId,
+      selectedVenueName: organizerEventDraft?.selectedVenueName,
+    });
+    return newId;
+  };
 
   useEffect(() => {
     if (tabFromQuery === "participants") {
@@ -228,21 +219,60 @@ export function OrganizerEventFormSection({
       setForm(mapEventToForm(existingEvent));
       return;
     }
-    if (mode === "create" && venueIdFromQuery) {
-      setForm((prev) => ({ ...prev, venueId: venueIdFromQuery }));
+    if (mode === "create" && organizerEventDraft) {
+      const industryValue =
+        INDUSTRY_OPTIONS.find((option) => option.label === organizerEventDraft.industry)?.value ??
+        organizerEventDraft.industry;
+
+      setForm({
+        title: organizerEventDraft.title,
+        category: organizerEventDraft.category,
+        industry: industryValue,
+        description: organizerEventDraft.description,
+        city: organizerEventDraft.city,
+        venueId: organizerEventDraft.selectedVenueId ?? "",
+        startDate: organizerEventDraft.startDate,
+        endDate: organizerEventDraft.endDate,
+        assemblyStart: "",
+        assemblyEnd: "",
+        dismantlingStart: "",
+        dismantlingEnd: "",
+        participationTerms: organizerEventDraft.participationTerms ?? "",
+        participantInfo: "",
+        participantMemo: "",
+      });
     }
-  }, [mode, existingEvent, venueIdFromQuery]);
+  }, [mode, existingEvent, organizerEventDraft]);
 
   const updateForm = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const togglePartner = (partnerId: string) => {
-    setRecommendedPartners((prev) =>
-      prev.includes(partnerId)
-        ? prev.filter((item) => item !== partnerId)
-        : [...prev, partnerId]
-    );
+  const handleSaveDraft = () => {
+    if (!form.title.trim()) {
+      showToast("Укажите название мероприятия", "error");
+      return;
+    }
+
+    const industryLabel =
+      INDUSTRY_OPTIONS.find((option) => option.value === form.industry)?.label ?? form.industry;
+
+    setOrganizerEventDraft({
+      id: organizerEventDraft?.id ?? `event-draft-${Date.now()}`,
+      title: form.title.trim(),
+      category: form.category,
+      industry: industryLabel,
+      description: form.description,
+      city: form.city,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      participationTerms: form.participationTerms,
+      selectedVenueId: organizerEventDraft?.selectedVenueId,
+      selectedVenueName: organizerEventDraft?.selectedVenueName,
+    });
+
+    showToast("Черновик сохранён. Теперь можно отправить запрос площадкам", "success");
+    router.push("/account/organizer/venues");
   };
 
   const handlePublish = () => {
@@ -256,7 +286,7 @@ export function OrganizerEventFormSection({
   };
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 w-full">
       <div className="space-y-2">
         <BackButton fallbackHref="/account/organizer/events" />
         {mode === "edit" && (existingEvent?.title || form.title) ? (
@@ -283,7 +313,7 @@ export function OrganizerEventFormSection({
       </div>
 
       {mode === "edit" && eventId && activeTab === "participants" ? (
-        <div className="space-y-4 max-w-6xl">
+        <div className="space-y-4 w-full">
           <Card className="space-y-2">
             <CardTitle className="text-sm">Экспоненты мероприятия</CardTitle>
             <CardDescription>
@@ -347,12 +377,33 @@ export function OrganizerEventFormSection({
           onChange={(event) => updateForm("city", event.target.value)}
         />
 
-        <Select
-          label="Площадка"
-          options={VENUE_OPTIONS}
-          value={form.venueId}
-          onChange={(event) => updateForm("venueId", event.target.value)}
-        />
+        {mode === "create" ? (
+          <Card className="space-y-2 bg-gray-50">
+            <CardTitle className="text-sm">Площадка проведения</CardTitle>
+            <CardDescription className="leading-relaxed">
+              Площадка не выбирается сразу. Сначала сохраните черновик мероприятия, затем на
+              странице «Площадки проведения» отправьте запрос одной или нескольким площадкам на
+              нужные даты. После получения предложений вы выберете лучшие условия и официально
+              закрепите площадку.
+            </CardDescription>
+            {organizerEventDraft?.selectedVenueName ? (
+              <p className="text-sm text-gray-900">
+                Выбранная площадка: <strong>{organizerEventDraft.selectedVenueName}</strong>
+              </p>
+            ) : (
+              <Link href="/account/organizer/venues" className="inline-block text-sm underline">
+                Перейти к запросам площадкам
+              </Link>
+            )}
+          </Card>
+        ) : (
+          <Select
+            label="Площадка"
+            options={VENUE_OPTIONS}
+            value={form.venueId}
+            onChange={(event) => updateForm("venueId", event.target.value)}
+          />
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
@@ -422,7 +473,7 @@ export function OrganizerEventFormSection({
         <FileUpload label="Прикрепить файлы" />
 
         <div className="flex gap-2 flex-wrap pt-2">
-          <Button variant="outline" onClick={() => showToast("Черновик сохранён")}>
+          <Button variant="outline" onClick={handleSaveDraft}>
             Сохранить черновик
           </Button>
           <Button variant="outline" onClick={() => showToast("Предпросмотр")}>
@@ -455,60 +506,12 @@ export function OrganizerEventFormSection({
           </p>
         </Card>
 
-        <Card className="space-y-4">
-          <div>
-            <CardTitle className="text-sm">Рекомендованные застройщики</CardTitle>
-            <CardDescription className="mt-2">
-              Партнёры мероприятия: эксклюзивное строительство, логистика, проживание и
-              смежные услуги для экспонентов.
-            </CardDescription>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-3">
-            {RECOMMENDED_PARTNER_SLOTS.map((slot) => {
-              const contractor = slot.contractorId
-                ? SEED_CONTRACTORS.find((item) => item.id === slot.contractorId)
-                : undefined;
-              const isSelected = recommendedPartners.includes(slot.id);
-              const title = contractor?.name ?? slot.contractorName ?? "Партнёр";
-
-              return (
-                <button
-                  key={slot.id}
-                  type="button"
-                  onClick={() => togglePartner(slot.id)}
-                  className={`text-left h-full border p-4 transition-colors ${
-                    isSelected
-                      ? "border-gray-900 bg-gray-50"
-                      : "border-gray-300 hover:border-gray-900"
-                  }`}
-                >
-                  <Badge variant={isSelected ? "solid" : "outline"} className="mb-2">
-                    {isSelected ? "Рекомендован" : "Не выбран"}
-                  </Badge>
-                  <p className="text-xs text-gray-500 mb-1">{slot.label}</p>
-                  <p className="text-sm font-medium leading-snug">{title}</p>
-                  {contractor ? (
-                    <p className="text-xs text-gray-600 mt-2">
-                      ★ {contractor.rating} · {contractor.categories[0]}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-gray-600 mt-2">{slot.description}</p>
-                  )}
-                  {contractor && (
-                    <Link
-                      href={`/contractors/${contractor.id}`}
-                      className="inline-block text-xs underline mt-2 hover:text-gray-900"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      Карточка партнёра
-                    </Link>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </Card>
+        <OrganizerEventRecommendedPartnersPanel
+          eventId={eventId}
+          draftEventId={organizerEventDraft?.id}
+          onEnsureDraftId={ensureDraftEventId}
+          showToast={showToast}
+        />
       </div>
       </div>
       )}

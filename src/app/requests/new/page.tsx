@@ -118,7 +118,7 @@ function NewRequestPageInner() {
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Создание заявки</h1>
         {content}
       </main>

@@ -111,6 +111,20 @@ export const VENUE_PAYMENT_ROLE_LABELS = {
   contractor: "Застройщики",
 } as const;
 
+export const PAYMENT_STATUS_LABELS = {
+  pending: "Ожидает оплаты",
+  paid: "Оплачен",
+  reserved: "Зарезервирован",
+  refunded: "Возврат",
+} as const;
+
+export const VENUE_INQUIRY_STATUS_LABELS = {
+  pending: "Запрос отправлен",
+  proposal_received: "Получено предложение",
+  selected: "Площадка выбрана",
+  declined: "Отклонено",
+} as const;
+
 export const ORGANIZER_PAYMENT_ROLE_LABELS = {
   venue: "Площадки",
   exhibitor: "Экспоненты",

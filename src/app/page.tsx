@@ -8,7 +8,8 @@ import { SEED_EVENTS } from "@/data/mocks/seed";
 import { POPULAR_SERVICE_CATEGORIES, CITIES, EVENT_INDUSTRIES } from "@/constants/categories";
 import { REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { formatShortDate } from "@/lib/utils/formatters";
-import { Search, Users, Package, Calendar, FileText, ChevronDown } from "lucide-react";
+import { Search, Users, Package, Calendar, FileText, ChevronDown, Building2 } from "lucide-react";
+import { HomeNewOrdersSection } from "@/components/home/home-new-orders-section";
 
 interface FaqAccordionProps {
   title: string;
@@ -36,7 +37,7 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="border-b border-gray-300 bg-gray-50 py-12 md:py-16">
-        <div className="mx-auto max-w-7xl px-4 text-center">
+        <div className="mx-auto max-w-site px-4 text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
             Маркетплейс выставочной индустрии и не только
           </h1>
@@ -57,17 +58,22 @@ export default function HomePage() {
 
       {/* Quick actions */}
       <section className="py-8 border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="mx-auto max-w-site px-4 grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
             { href: "/contractors", label: "Найти исполнителя", icon: Users },
             { href: "/services", label: "Найти услугу", icon: Package },
             { href: "/events", label: "Найти выставку", icon: Calendar },
             { href: "/requests/new", label: "Разместить заявку", icon: FileText },
+            {
+              href: "/events",
+              label: "Найти площадку для проведения мероприятия",
+              icon: Building2,
+            },
           ].map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}>
+            <Link key={label} href={href}>
               <Card className="text-center hover:border-gray-900 h-full">
                 <Icon className="h-6 w-6 mx-auto mb-2 text-gray-700" />
-                <p className="text-sm font-medium">{label}</p>
+                <p className="text-sm font-medium leading-snug">{label}</p>
               </Card>
             </Link>
           ))}
@@ -76,7 +82,7 @@ export default function HomePage() {
 
       {/* Categories */}
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-site px-4">
           <h2 className="text-lg font-bold mb-4">Популярные категории услуг</h2>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SERVICE_CATEGORIES.map((cat) => (
@@ -93,9 +99,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      <HomeNewOrdersSection />
+
       {/* How it works */}
       <section className="py-8 bg-gray-50 border-y border-gray-200">
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-site px-4">
           <h2 className="text-lg font-bold mb-4">Как работает сервис</h2>
           <div className="grid md:grid-cols-4 gap-4">
             {["Регистрация компании", "Поиск или заявка", "Согласование условий", "Безопасная сделка"].map((step, i) => (
@@ -111,7 +119,7 @@ export default function HomePage() {
 
       {/* Work formats */}
       <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-site px-4">
           <h2 className="text-lg font-bold mb-4">Форматы работы</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
@@ -177,7 +185,7 @@ export default function HomePage() {
 
       {/* Customer / Contractor blocks */}
       <section className="py-8 border-t border-gray-200">
-        <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-2 gap-6">
+        <div className="mx-auto max-w-site px-4 grid md:grid-cols-2 gap-6">
           <Card>
             <CardTitle>Для заказчиков</CardTitle>
             <CardDescription>
@@ -208,12 +216,42 @@ export default function HomePage() {
               </Link>
             </div>
           </Card>
+          <Card>
+            <CardTitle>Для организаторов</CardTitle>
+            <CardDescription>
+              Создавайте выставки, форумы и конференции на платформе, распределяйте площади для аренды
+              и оказывайте услуги экспонентам, застройщикам и другим участникам процесса.
+            </CardDescription>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Link href="/register">
+                <Button size="sm" variant="outline">Стать организатором</Button>
+              </Link>
+              <Link href="/how-it-works" className="text-sm text-gray-900 hover:text-gray-600">
+                Узнать подробнее
+              </Link>
+            </div>
+          </Card>
+          <Card>
+            <CardTitle>Для площадок проведения</CardTitle>
+            <CardDescription>
+              Размещайте площадку, управляйте залами и бронированием стендов, привлекайте организаторов
+              и оказывайте услуги экспонентам, застройщикам и другим участникам мероприятий.
+            </CardDescription>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Link href="/register">
+                <Button size="sm" variant="outline">Разместить площадку</Button>
+              </Link>
+              <Link href="/how-it-works" className="text-sm text-gray-900 hover:text-gray-600">
+                Узнать подробнее
+              </Link>
+            </div>
+          </Card>
         </div>
       </section>
 
       {/* Upcoming events */}
       <section className="py-8 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-site px-4">
           <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
             <h2 className="text-lg font-bold">Ближайшие выставки и мероприятия</h2>
             <Link href="/events" className="text-sm underline">Все мероприятия</Link>
@@ -281,7 +319,7 @@ export default function HomePage() {
 
       {/* FAQ */}
       <section className="py-8 border-t border-gray-200">
-        <div className="mx-auto max-w-7xl px-4">
+        <div className="mx-auto max-w-site px-4">
           <h2 className="text-lg font-bold mb-4">FAQ</h2>
           <div className="space-y-3 max-w-2xl">
             {[

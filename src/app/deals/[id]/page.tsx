@@ -540,10 +540,6 @@ export default function DealPage() {
                 <dd className="font-bold">{formatPrice(deal.totalPrice)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Комиссия</dt>
-                <dd>{formatPrice(deal.commission)}</dd>
-              </div>
-              <div className="flex justify-between">
                 <dt className="text-gray-600">Этапов</dt>
                 <dd>{deal.stages.length}</dd>
               </div>

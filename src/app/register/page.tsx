@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { CheckCircle, Clock, RefreshCw } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StepIndicator, FileUpload } from "@/components/ui/file-upload";
-import { usePrototypeStore } from "@/lib/store";
+import { usePrototypeStore, useAuthStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import {
   validateEmail,
@@ -22,6 +22,7 @@ import {
   validatePasswordStrength,
   validatePhone,
   validateRequired,
+  validateWebsite,
 } from "@/lib/utils/validators";
 import {
   CITIES,
@@ -32,6 +33,7 @@ import {
   getCitiesByDistrict,
 } from "@/constants/categories";
 import { ROLE_LABELS } from "@/constants/statuses";
+import { CONTRACTOR_REGISTRATION_INTENT_KEY } from "@/constants/home-orders";
 import type { UserRole } from "@/data/types";
 
 const REGISTRATION_STEPS = [
@@ -87,11 +89,17 @@ const RESEND_SECONDS = 60;
 
 interface RegistrationDraft {
   step?: number;
+  registrationPhase?: "individual" | "individual-sent" | "company";
+  individualEmailSent?: boolean;
+  individualEmailConfirmed?: boolean;
   role?: UserRole;
   inn?: string;
   companyName?: string;
   ogrn?: string;
   address?: string;
+  actualAddress?: string;
+  website?: string;
+  companyPhone?: string;
   director?: string;
   mainOkved?: string;
   additionalOkved?: string[];
@@ -99,6 +107,8 @@ interface RegistrationDraft {
   edoId?: string;
   edoVerified?: boolean | null;
   edoSkipped?: boolean;
+  edoRequestStatus?: "idle" | "pending" | "confirmed" | "rejected";
+  edoAuthorityScan?: string;
   contactName?: string;
   position?: string;
   phone?: string;
@@ -129,14 +139,71 @@ interface RegistrationDraft {
   messengerNotificationsAccepted?: boolean;
 }
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { showToast } = useToast();
-  const registrationDraft = usePrototypeStore((s) => s.registrationDraft);
-  const setRegistrationDraft = usePrototypeStore((s) => s.setRegistrationDraft);
+function createEmptyRegistrationForm(): RegistrationDraft {
+  return {
+    role: undefined,
+    inn: "",
+    companyName: "",
+    ogrn: "",
+    address: "",
+    actualAddress: "",
+    website: "",
+    companyPhone: "",
+    director: "",
+    mainOkved: "",
+    additionalOkved: [],
+    edoOperator: "",
+    edoId: "",
+    edoVerified: null,
+    edoSkipped: false,
+    edoRequestStatus: "idle",
+    edoAuthorityScan: "",
+    contactName: "",
+    position: "",
+    phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    cities: [],
+    categories: [],
+    hasProduction: false,
+    description: "",
+    experienceYears: "",
+    completedProjects: "",
+    productionAddress: "",
+    permanentStaff: "",
+    temporaryStaff: "",
+    freightVehicles: "",
+    designerPartners: "",
+    productionPhotos: [],
+    postPaymentAvailable: false,
+    trademark: "",
+    venueName: "",
+    hallCapacity: "",
+    industries: [],
+    termsAccepted: false,
+    privacyAccepted: false,
+    serviceNotificationsAccepted: false,
+    marketingAccepted: false,
+    messengerNotificationsAccepted: false,
+  };
+}
 
-  const draft = registrationDraft as RegistrationDraft;
-  const [step, setStep] = useState(draft.step ?? 0);
+function RegisterPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRegistrationContinuation = searchParams.get("confirmed") === "1";
+  const { showToast } = useToast();
+  const storeDraft = usePrototypeStore((s) => s.registrationDraft) as RegistrationDraft;
+  const setRegistrationDraft = usePrototypeStore((s) => s.setRegistrationDraft);
+  const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
+
+  const draft = isRegistrationContinuation ? storeDraft : ({} as RegistrationDraft);
+  const individualEmailConfirmed = draft.individualEmailConfirmed ?? false;
+  const individualEmailSent = draft.individualEmailSent ?? false;
+  const showCompanyFlow = individualEmailConfirmed;
+  const awaitingEmailConfirmation = individualEmailSent && !individualEmailConfirmed;
+  const [step, setStep] = useState(showCompanyFlow ? (draft.step ?? 0) : 0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
@@ -145,55 +212,31 @@ export default function RegisterPage() {
   const [citySearch, setCitySearch] = useState("");
   const [cityDistrict, setCityDistrict] = useState("");
 
-  const [form, setForm] = useState<RegistrationDraft>({
-    role: draft.role ?? null,
-    inn: draft.inn ?? "",
-    companyName: draft.companyName ?? "",
-    ogrn: draft.ogrn ?? "",
-    address: draft.address ?? "",
-    director: draft.director ?? "",
-    mainOkved: draft.mainOkved ?? "",
-    additionalOkved: draft.additionalOkved ?? [],
-    edoOperator: draft.edoOperator ?? "",
-    edoId: draft.edoId ?? "",
-    edoVerified: draft.edoVerified ?? null,
-    edoSkipped: draft.edoSkipped ?? false,
-    contactName: draft.contactName ?? "",
-    position: draft.position ?? "",
-    phone: draft.phone ?? "",
-    email: draft.email ?? "",
-    password: draft.password ?? "",
-    confirmPassword: draft.confirmPassword ?? "",
-    cities: draft.cities ?? [],
-    categories: draft.categories ?? [],
-    hasProduction: draft.hasProduction ?? false,
-    description: draft.description ?? "",
-    experienceYears: draft.experienceYears ?? "",
-    completedProjects: draft.completedProjects ?? "",
-    productionAddress: draft.productionAddress ?? "",
-    permanentStaff: draft.permanentStaff ?? "",
-    temporaryStaff: draft.temporaryStaff ?? "",
-    freightVehicles: draft.freightVehicles ?? "",
-    designerPartners: draft.designerPartners ?? "",
-    productionPhotos: draft.productionPhotos ?? [],
-    postPaymentAvailable: draft.postPaymentAvailable ?? false,
-    trademark: draft.trademark ?? "",
-    venueName: draft.venueName ?? "",
-    hallCapacity: draft.hallCapacity ?? "",
-    industries: draft.industries ?? [],
-    termsAccepted: draft.termsAccepted ?? false,
-    privacyAccepted: draft.privacyAccepted ?? false,
-    serviceNotificationsAccepted: draft.serviceNotificationsAccepted ?? false,
-    marketingAccepted: draft.marketingAccepted ?? false,
-    messengerNotificationsAccepted: draft.messengerNotificationsAccepted ?? false,
+  const [form, setForm] = useState<RegistrationDraft>(() => {
+    const base = isRegistrationContinuation
+      ? { ...createEmptyRegistrationForm(), ...storeDraft }
+      : createEmptyRegistrationForm();
+
+    if (
+      typeof window !== "undefined" &&
+      isRegistrationContinuation &&
+      window.sessionStorage.getItem(CONTRACTOR_REGISTRATION_INTENT_KEY) === "1"
+    ) {
+      window.sessionStorage.removeItem(CONTRACTOR_REGISTRATION_INTENT_KEY);
+      return { ...base, role: "contractor" };
+    }
+
+    return base;
   });
 
-  useEffect(() => {
-    const targetStep = (registrationDraft as RegistrationDraft).step;
-    if (typeof targetStep === "number") {
-      setStep(targetStep);
-    }
-  }, [registrationDraft]);
+  useLayoutEffect(() => {
+    if (isRegistrationContinuation) return;
+    setRegistrationDraft({});
+    setShowCompanyRegistrationPrompt(false);
+    setStep(0);
+    setForm(createEmptyRegistrationForm());
+    setErrors({});
+  }, [isRegistrationContinuation, setRegistrationDraft, setShowCompanyRegistrationPrompt]);
 
   const saveDraft = useCallback(
     (updates: Partial<RegistrationDraft>, nextStep?: number) => {
@@ -276,7 +319,7 @@ export default function RegisterPage() {
     showToast("Данные компании загружены");
   };
 
-  const handleVerifyEdo = () => {
+  const handleSendEdoRequest = () => {
     if (!form.edoOperator || !form.edoId?.trim()) {
       setErrors({
         edoOperator: !form.edoOperator ? "Выберите оператора" : undefined,
@@ -284,13 +327,60 @@ export default function RegisterPage() {
       } as Record<string, string>);
       return;
     }
-    const success = form.edoId.endsWith("1");
-    updateField("edoVerified", success);
+
+    setErrors({});
+    setForm((prev) => ({
+      ...prev,
+      edoSkipped: false,
+      edoVerified: null,
+      edoRequestStatus: "pending",
+      edoAuthorityScan: "",
+    }));
+    showToast("Запрос отправлен в кабинет ЭДО компании");
+  };
+
+  const handleCheckEdoConfirmation = () => {
+    if (form.edoRequestStatus !== "pending") return;
+
+    const confirmed = form.edoId?.trim().endsWith("1");
+    setForm((prev) => ({
+      ...prev,
+      edoRequestStatus: confirmed ? "confirmed" : "pending",
+      edoVerified: confirmed ? true : null,
+    }));
+
     showToast(
-      success ? "ЭДО успешно подключено" : "Не удалось проверить ЭДО. ID должен заканчиваться на 1",
-      success ? "success" : "error"
+      confirmed
+        ? "Полномочия подтверждены уполномоченным лицом в ЭДО"
+        : "Подтверждение ещё не получено. Попросите подписанта принять запрос в кабинете оператора",
+      confirmed ? "success" : "info",
     );
   };
+
+  const handleEdoScanUpload = (fileName: string) => {
+    setForm((prev) => ({
+      ...prev,
+      edoAuthorityScan: fileName,
+      edoVerified: true,
+      edoSkipped: false,
+    }));
+    showToast("Скан документа о полномочиях приложен");
+  };
+
+  const resetEdoVerification = () => {
+    setForm((prev) => ({
+      ...prev,
+      edoVerified: null,
+      edoRequestStatus: "idle",
+      edoAuthorityScan: "",
+      edoSkipped: false,
+    }));
+  };
+
+  const isEdoStepComplete = () =>
+    Boolean(form.edoSkipped) ||
+    form.edoRequestStatus === "confirmed" ||
+    Boolean(form.edoAuthorityScan?.trim());
 
   const validateStep = (currentStep: number): boolean => {
     const nextErrors: Record<string, string> = {};
@@ -304,11 +394,20 @@ export default function RegisterPage() {
         if (innError) nextErrors.inn = innError;
         else if (!/^\d{10}$/.test(form.inn ?? "")) nextErrors.inn = "ИНН должен содержать 10 цифр";
         if (!form.companyName) nextErrors.companyName = "Найдите компанию по ИНН";
+        const actualAddressError = validateRequired(form.actualAddress ?? "", "Фактический адрес");
+        if (actualAddressError) nextErrors.actualAddress = actualAddressError;
+        const websiteError = validateWebsite(form.website ?? "");
+        if (websiteError) nextErrors.website = websiteError;
+        const companyPhoneError = validatePhone(form.companyPhone ?? "");
+        if (companyPhoneError) nextErrors.companyPhone = companyPhoneError;
         break;
       }
       case 2:
-        if (!form.edoSkipped && form.edoVerified !== true) {
-          nextErrors.edo = "Подключите ЭДО или пропустите шаг";
+        if (!isEdoStepComplete()) {
+          nextErrors.edo =
+            form.edoRequestStatus === "pending"
+              ? "Дождитесь подтверждения запроса уполномоченным лицом в ЭДО"
+              : "Подтвердите полномочия через ЭДО, приложите скан или пропустите шаг";
         }
         break;
       case 3: {
@@ -411,27 +510,146 @@ export default function RegisterPage() {
 
   const handleComplete = () => {
     saveDraft({ ...form, step: 7 }, 7);
+    setShowCompanyRegistrationPrompt(false);
     router.push("/moderation");
+  };
+
+  const handleIndividualSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const nextErrors: Record<string, string> = {};
+    const nameError = validateRequired(form.contactName ?? "", "ФИО");
+    if (nameError) nextErrors.contactName = nameError;
+    const emailError = validateEmail(form.email ?? "");
+    if (emailError) nextErrors.email = emailError;
+    const phoneError = validatePhone(form.phone ?? "");
+    if (phoneError) nextErrors.phone = phoneError;
+    if (!form.privacyAccepted) {
+      nextErrors.privacy = "Необходимо согласие на обработку персональных данных";
+    }
+    if (!form.serviceNotificationsAccepted) {
+      nextErrors.serviceNotifications = "Необходимо согласие на получение уведомлений";
+    }
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    const merged = {
+      ...form,
+      individualEmailSent: true,
+      registrationPhase: "individual-sent" as const,
+    };
+    setForm(merged);
+    setRegistrationDraft(merged as Record<string, unknown>);
+    showToast("Письмо для завершения регистрации отправлено");
+    router.push(
+      `/verify?from=register&type=email&contact=${encodeURIComponent(form.email ?? "")}`,
+    );
   };
 
   return (
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-4xl w-full px-4 py-8">
-        <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Создайте аккаунт компании на маркетплейсе
-        </p>
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+        <div className={`mx-auto w-full ${showCompanyFlow ? "max-w-site" : "max-w-3xl"}`}>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
+          <p className="text-sm text-gray-600">
+            {showCompanyFlow
+              ? "Создайте аккаунт компании на маркетплейсе"
+              : "Сначала создайте личный аккаунт физического лица"}
+          </p>
+        </div>
 
+        {!showCompanyFlow && !individualEmailSent && !awaitingEmailConfirmation && (
+          <div className="mx-auto max-w-lg space-y-4 text-left">
+            <div className="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
+              Регистрацию компании и выбор роли на платформе можно пройти только после
+              подтверждения email личного аккаунта.
+            </div>
+
+            <form onSubmit={handleIndividualSubmit} className="space-y-4">
+              <Input
+                label="ФИО"
+                value={form.contactName}
+                onChange={(e) => updateField("contactName", e.target.value)}
+                error={errors.contactName}
+                autoComplete="name"
+              />
+              <Input
+                label="Почта"
+                type="email"
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+                error={errors.email}
+                autoComplete="email"
+              />
+              <Input
+                label="Мобильный"
+                type="tel"
+                value={form.phone}
+                onChange={(e) => updateField("phone", e.target.value)}
+                error={errors.phone}
+                autoComplete="tel"
+              />
+
+              <label className="flex items-start gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.privacyAccepted}
+                  onChange={(e) => updateField("privacyAccepted", e.target.checked)}
+                  className="mt-1"
+                />
+                <span>Согласие на обработку персональных данных</span>
+              </label>
+              {errors.privacy && <p className="text-xs text-gray-700">{errors.privacy}</p>}
+
+              <label className="flex items-start gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.serviceNotificationsAccepted}
+                  onChange={(e) => updateField("serviceNotificationsAccepted", e.target.checked)}
+                  className="mt-1"
+                />
+                <span>Согласие на получение уведомлений от сервиса</span>
+              </label>
+              {errors.serviceNotifications && (
+                <p className="text-xs text-gray-700">{errors.serviceNotifications}</p>
+              )}
+
+              <Button type="submit" className="w-full">
+                Отправить
+              </Button>
+            </form>
+          </div>
+        )}
+
+        {awaitingEmailConfirmation && (
+          <div className="mx-auto max-w-lg border border-gray-300 bg-gray-50 p-6 text-sm text-center">
+            <h2 className="text-lg font-semibold mb-2">Подтвердите email</h2>
+            <p className="text-gray-700 mb-6">
+              Мы отправили письмо на <strong>{form.email}</strong>. Подтвердите адрес, чтобы
+              продолжить регистрацию. Если письма нет — проверьте папку «Спам».
+            </p>
+            <div className="flex justify-center">
+              <Link
+                href={`/verify?from=register&type=email&contact=${encodeURIComponent(form.email ?? "")}`}
+              >
+                <Button>Подтвердить email</Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {showCompanyFlow && (
+          <>
         <div className="mb-8">
-          <StepIndicator steps={REGISTRATION_STEPS} currentStep={step} />
+          <StepIndicator steps={REGISTRATION_STEPS} currentStep={step} centered wide />
         </div>
 
         {step === 0 && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-700">Выберите роль на платформе</p>
+          <div className="space-y-4 text-left">
+            <p className="text-sm text-gray-700 text-center">Выберите роль на платформе</p>
             {errors.role && <p className="text-xs text-gray-700">{errors.role}</p>}
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {ROLES.map((role) => (
                 <Card
                   key={role.id}
@@ -453,7 +671,7 @@ export default function RegisterPage() {
 
         {step === 1 && (
           <div className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end max-w-2xl">
               <Input
                 label="ИНН компании"
                 value={form.inn}
@@ -480,22 +698,61 @@ export default function RegisterPage() {
                 ))}
               </div>
             )}
+            {form.companyName && (
+              <div className="space-y-4 border border-gray-300 p-4">
+                <div>
+                  <p className="text-sm font-medium">Данные для верификации компании</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Обязательные поля для проверки компании модерацией
+                  </p>
+                </div>
+                <Input
+                  label="Фактический адрес"
+                  value={form.actualAddress ?? ""}
+                  onChange={(e) => updateField("actualAddress", e.target.value)}
+                  error={errors.actualAddress}
+                  placeholder="г. Москва, ул. Производственная, д. 12"
+                />
+                <Input
+                  label="Сайт"
+                  value={form.website ?? ""}
+                  onChange={(e) => updateField("website", e.target.value)}
+                  error={errors.website}
+                  placeholder="https://company.ru"
+                />
+                <Input
+                  label="Телефон компании"
+                  type="tel"
+                  value={form.companyPhone ?? ""}
+                  onChange={(e) => updateField("companyPhone", e.target.value)}
+                  error={errors.companyPhone}
+                  placeholder="+7 900 000-00-00"
+                />
+              </div>
+            )}
             {errors.companyName && <p className="text-xs text-gray-700">{errors.companyName}</p>}
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+          <div className="space-y-4 text-left max-w-4xl">
+            <p className="text-sm text-gray-600 text-center">
               Подключите электронный документооборот для подписания договоров
             </p>
+
+            <div className="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
+              ID в ЭДО можно узнать у любой компании, поэтому одного номера недостаточно.
+              После отправки запроса уполномоченное лицо должно подтвердить его в кабинете
+              оператора ЭДО — так мы проверяем, что регистрируется представитель компании.
+            </div>
+
             <Select
               label="Оператор ЭДО"
               options={EDO_OPERATORS}
               value={form.edoOperator}
               onChange={(e) => {
                 updateField("edoOperator", e.target.value);
-                updateField("edoVerified", null);
+                resetEdoVerification();
               }}
               error={errors.edoOperator}
             />
@@ -504,39 +761,86 @@ export default function RegisterPage() {
               value={form.edoId}
               onChange={(e) => {
                 updateField("edoId", e.target.value);
-                updateField("edoVerified", null);
+                resetEdoVerification();
               }}
               error={errors.edoId}
-              placeholder="Для успеха заканчивается на 1"
+              placeholder="Идентификатор организации у оператора"
             />
-            {form.edoVerified === true && (
-              <Badge variant="solid">ЭДО подключено</Badge>
+
+            {form.edoRequestStatus === "pending" && (
+              <div className="border border-gray-900 bg-white p-4 text-sm space-y-2">
+                <p className="font-medium">Запрос отправлен в ЭДО компании</p>
+                <p className="text-gray-600">
+                  Подписант с правом подписи должен принять приглашение в кабинете{" "}
+                  {EDO_OPERATORS.find((item) => item.value === form.edoOperator)?.label ?? "оператора"}.
+                  Это подтверждает согласие на регистрацию и работу через сервис.
+                </p>
+                <p className="text-xs text-gray-500">
+                  Демо: подтверждение считается полученным, если ID заканчивается на «1».
+                </p>
+              </div>
             )}
-            {form.edoVerified === false && (
-              <Badge variant="dashed">Ошибка проверки</Badge>
+
+            {form.edoRequestStatus === "confirmed" && (
+              <Badge variant="solid">Полномочия подтверждены в ЭДО</Badge>
             )}
+            {form.edoAuthorityScan && (
+              <Badge variant="outline">Скан документа о полномочиях приложён</Badge>
+            )}
+
             <div className="flex flex-wrap gap-2">
-              <Button type="button" onClick={handleVerifyEdo}>
-                Проверить
-              </Button>
+              {form.edoRequestStatus !== "confirmed" && !form.edoAuthorityScan && (
+                <Button
+                  type="button"
+                  onClick={
+                    form.edoRequestStatus === "pending"
+                      ? handleCheckEdoConfirmation
+                      : handleSendEdoRequest
+                  }
+                >
+                  {form.edoRequestStatus === "pending"
+                    ? "Проверить подтверждение"
+                    : "Отправить запрос в ЭДО"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  updateField("edoSkipped", true);
-                  updateField("edoVerified", true);
+                  setForm((prev) => ({
+                    ...prev,
+                    edoSkipped: true,
+                    edoVerified: true,
+                    edoRequestStatus: "idle",
+                    edoAuthorityScan: "",
+                  }));
                   showToast("ЭДО пропущено — можно подключить позже", "info");
                 }}
               >
                 Пропустить
               </Button>
             </div>
+
+            {!form.edoSkipped && form.edoRequestStatus !== "confirmed" && (
+              <div className="border-t border-gray-200 pt-4 space-y-3">
+                <p className="text-sm text-gray-700">
+                  Если подтверждение в ЭДО сейчас недоступно, приложите скан доверенности
+                  или приказа о полномочиях представителя.
+                </p>
+                <FileUpload
+                  label="Прикрепить скан документа"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onUpload={handleEdoScanUpload}
+                />
+              </div>
+            )}
+
             {errors.edo && <p className="text-xs text-gray-700">{errors.edo}</p>}
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Input
               label="ФИО контактного лица"
               value={form.contactName}
@@ -935,7 +1239,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {step < 7 && (
+        {showCompanyFlow && step < 7 && (
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
             <Button
               type="button"
@@ -952,6 +1256,8 @@ export default function RegisterPage() {
             )}
           </div>
         )}
+          </>
+        )}
 
         <p className="text-sm text-center mt-6 text-gray-600">
           Уже есть аккаунт?{" "}
@@ -959,8 +1265,17 @@ export default function RegisterPage() {
             Войти
           </Link>
         </p>
+        </div>
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

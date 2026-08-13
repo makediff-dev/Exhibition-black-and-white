@@ -7,28 +7,20 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { BookingDateRangePicker } from "@/components/venue/booking-date-calendar";
 import { OccupancyCalendar } from "@/components/venue/occupancy-calendar";
 import {
+  SEED_BOOKINGS,
   SEED_VENUE_DAILY_OCCUPANCY,
+  SEED_VENUE_INQUIRIES,
   SEED_VENUE_SPACE_BLOCKS,
 } from "@/data/mocks/seed";
-import type { VenueSpaceBlock } from "@/data/types";
+import type { Booking, VenueSpaceBlock } from "@/data/types";
+import { usePrototypeStore } from "@/lib/store";
 import { formatPrice } from "@/lib/utils/formatters";
+import { buildVenueDateStatuses, expandIsoDateRange } from "@/lib/utils/venue-date-statuses";
 
-function expandDateRange(start: string, end: string) {
-  if (!start) return [] as string[];
-
-  const dates: string[] = [];
-  const cursor = new Date(start);
-  const last = new Date(end || start);
-
-  while (cursor <= last) {
-    const year = cursor.getFullYear();
-    const month = String(cursor.getMonth() + 1).padStart(2, "0");
-    const day = String(cursor.getDate()).padStart(2, "0");
-    dates.push(`${year}-${month}-${day}`);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return dates;
+function mergeBookings(storedBookings: Booking[]): Booking[] {
+  const ids = new Set(storedBookings.map((booking) => booking.id));
+  const missing = SEED_BOOKINGS.filter((booking) => !ids.has(booking.id));
+  return missing.length ? [...storedBookings, ...missing] : storedBookings;
 }
 
 interface Props {
@@ -37,12 +29,28 @@ interface Props {
 }
 
 export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
-  const [rangeStart, setRangeStart] = useState("");
-  const [rangeEnd, setRangeEnd] = useState("");
+  const storeBookings = usePrototypeStore((state) => state.bookings);
+  const storeInquiries = usePrototypeStore((state) => state.venueInquiries);
+
+  const [rangeStart, setRangeStart] = useState("2026-04-01");
+  const [rangeEnd, setRangeEnd] = useState("2026-04-01");
   const [blocks, setBlocks] = useState<VenueSpaceBlock[]>(() =>
     SEED_VENUE_SPACE_BLOCKS.filter((block) => block.venueId === venueId)
   );
   const [bookingOpen, setBookingOpen] = useState(true);
+
+  const bookings = useMemo(() => mergeBookings(storeBookings), [storeBookings]);
+
+  const inquiries = useMemo(() => {
+    const ids = new Set(storeInquiries.map((item) => item.id));
+    const missing = SEED_VENUE_INQUIRIES.filter((item) => !ids.has(item.id));
+    return missing.length ? [...storeInquiries, ...missing] : storeInquiries;
+  }, [storeInquiries]);
+
+  const dateStatuses = useMemo(
+    () => buildVenueDateStatuses(venueId, bookings, inquiries),
+    [venueId, bookings, inquiries]
+  );
 
   const occupancyByDate = useMemo(() => {
     return Object.fromEntries(
@@ -53,13 +61,8 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
     );
   }, [venueId]);
 
-  const markedDates = useMemo(
-    () => Object.keys(occupancyByDate).filter((date) => occupancyByDate[date] > 0),
-    [occupancyByDate]
-  );
-
   const selectedDates = useMemo(
-    () => expandDateRange(rangeStart, rangeEnd),
+    () => expandIsoDateRange(rangeStart, rangeEnd),
     [rangeStart, rangeEnd]
   );
 
@@ -96,7 +99,7 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       <p className="text-sm text-gray-600">
         Управление продаваемой площадью: сколько кв.м доступно к бронированию, по какой цене
         и в какой период. Это ваш «склад» площадей — в отличие от «Схемы размещения», где вы
@@ -104,17 +107,6 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
         бронировании отеля, организатор выбирает площадку и период, после чего видит
         доступность и цены.
       </p>
-
-      <BookingDateRangePicker
-        label="Период"
-        markedDates={markedDates}
-        rangeStart={rangeStart}
-        rangeEnd={rangeEnd}
-        onRangeChange={(start, end) => {
-          setRangeStart(start);
-          setRangeEnd(end);
-        }}
-      />
 
       <div className="grid sm:grid-cols-3 gap-3">
         <Card>
@@ -155,18 +147,6 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
         </div>
       </Card>
 
-      <Card>
-        <OccupancyCalendar
-          occupancyByDate={occupancyByDate}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          onDaySelect={(date) => {
-            setRangeStart(date);
-            setRangeEnd(date);
-          }}
-        />
-      </Card>
-
       <Card className="space-y-4">
         <div>
           <p className="text-sm font-medium">Период доступности</p>
@@ -176,7 +156,9 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
         </div>
         <BookingDateRangePicker
           label="Период бронирования"
-          markedDates={markedDates}
+          inline
+          showLegend
+          dateStatuses={dateStatuses}
           rangeStart={rangeStart}
           rangeEnd={rangeEnd}
           onRangeChange={(start, end) => {
@@ -198,6 +180,18 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
         >
           Сохранить
         </Button>
+      </Card>
+
+      <Card>
+        <OccupancyCalendar
+          occupancyByDate={occupancyByDate}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          onDaySelect={(date) => {
+            setRangeStart(date);
+            setRangeEnd(date);
+          }}
+        />
       </Card>
     </div>
   );

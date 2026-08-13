@@ -141,7 +141,7 @@ export default function CheckoutPage() {
     return (
       <div className="flex flex-col min-h-screen">
         <PublicHeader />
-        <main className="flex-1 mx-auto max-w-3xl px-4 py-12">
+        <main className="flex-1 mx-auto max-w-site w-full px-4 py-12">
           <EmptyState
             title="Нечего оформлять"
             description="Корзина пуста — добавьте услуги"
@@ -158,7 +158,7 @@ export default function CheckoutPage() {
     <div className="flex flex-col min-h-screen">
       <PublicHeader />
 
-      <main className="flex-1 mx-auto max-w-3xl w-full px-4 py-8">
+      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton fallbackHref="/cart" className="mb-4" />
 
         <h1 className="text-2xl font-bold mb-2">Оформление заказа</h1>
