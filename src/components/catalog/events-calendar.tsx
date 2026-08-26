@@ -102,7 +102,7 @@ export function EventsDateFilter({
   }, [events, viewMonth, viewYear]);
 
   return (
-    <div className="space-y-3 border-t border-gray-200 pt-4">
+    <div className="space-y-3">
       {selectedDays.length > 0 && (
         <div className="flex justify-end">
           <button type="button" onClick={onClearPeriod} className="text-xs underline">
@@ -111,7 +111,7 @@ export function EventsDateFilter({
         </div>
       )}
 
-      <div className="border border-gray-300 p-2">
+      <div className="rounded-[10px] border border-[#d4d4d4] p-2">
         <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
@@ -157,12 +157,12 @@ export function EventsDateFilter({
                 key={dateKey}
                 type="button"
                 onClick={() => onToggleDay(dateKey)}
-                className={`h-7 flex flex-col items-center justify-center text-[11px] border transition-colors ${
+                className={`flex h-7 flex-col items-center justify-center rounded-[6px] border text-[11px] transition-colors ${
                   isSelected
                     ? "border-gray-900 bg-gray-900 text-white"
                     : hasEvents
                       ? "border-gray-900 bg-gray-50 hover:bg-gray-100"
-                      : "border-transparent hover:border-gray-300"
+                      : "border-transparent hover:border-[#d4d4d4]"
                 }`}
               >
                 {day.getDate()}

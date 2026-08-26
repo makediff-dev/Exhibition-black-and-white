@@ -148,7 +148,7 @@ export function ContractorDetailSection({
 
           <div className="flex flex-wrap items-center gap-6 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button>Пригласить в заявку</Button>
+              <Button variant="purple">Пригласить в заявку</Button>
             </Link>
             <Link
               href={`/services?contractor=${contractor.id}`}
@@ -170,7 +170,7 @@ export function ContractorDetailSection({
               <p className="text-sm text-gray-700">{contractor.description}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {contractor.categories.map((category) => (
-                  <span key={category} className="text-xs border border-gray-300 px-2 py-1">
+                  <span key={category} className="text-xs border border-[#d4d4d4] rounded-[10px] px-2 py-1">
                     {category}
                   </span>
                 ))}
@@ -235,7 +235,7 @@ export function ContractorDetailSection({
             />
           )}
 
-          <section className="border border-gray-300 p-4">
+          <section className="rounded-[10px] border border-[#d4d4d4] bg-white p-4">
             <h2 className="text-base font-semibold mb-3">Реквизиты</h2>
             <dl className="text-sm space-y-2">
               <div>
@@ -261,9 +261,9 @@ export function ContractorDetailSection({
             </dl>
             <Link
               href={getContractorCheckHref(contractor.id, { role: linkRole })}
-              className="block mt-4"
+              className="block w-full mt-4"
             >
-              <Button variant="outline" className="w-full" size="sm">
+              <Button variant="soft-outline" className="w-full border border-[#d4d4d4]" size="sm">
                 Проверить контрагента
               </Button>
             </Link>

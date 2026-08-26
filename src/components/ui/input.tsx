@@ -21,7 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           type={type}
           className={cn(
-            "border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900",
+            "rounded-[10px] border border-[#d4d4d4] px-3 py-2 text-sm focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]",
             type === "number" &&
               "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             error && "border-gray-900",

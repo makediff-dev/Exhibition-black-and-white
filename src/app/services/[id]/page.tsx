@@ -106,7 +106,7 @@ export default function ServiceDetailPage() {
             {photoCards.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
-                <div className="border border-gray-300 overflow-hidden">
+                <div className="border border-[#d4d4d4] rounded-[14px] overflow-hidden">
                   <div className="aspect-[16/10] bg-gray-50 relative">
                     {currentPhotoCard?.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -125,7 +125,7 @@ export default function ServiceDetailPage() {
                         <button
                           type="button"
                           onClick={() => setPhotoIndex((prev) => (prev === 0 ? photoCards.length - 1 : prev - 1))}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#d4d4d4] bg-white/95"
                           aria-label="Предыдущая карточка"
                         >
                           <ChevronLeft className="h-4 w-4" />
@@ -133,7 +133,7 @@ export default function ServiceDetailPage() {
                         <button
                           type="button"
                           onClick={() => setPhotoIndex((prev) => (prev === photoCards.length - 1 ? 0 : prev + 1))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#d4d4d4] bg-white/95"
                           aria-label="Следующая карточка"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -157,7 +157,7 @@ export default function ServiceDetailPage() {
                         key={card.id}
                         type="button"
                         onClick={() => setPhotoIndex(index)}
-                        className={`border p-3 text-left text-sm ${index === photoIndex ? "border-gray-900" : "border-gray-300"}`}
+                        className={`rounded-[10px] border p-3 text-left text-sm ${index === photoIndex ? "border-[#171717]" : "border-[#d4d4d4]"}`}
                       >
                         <p className="font-medium">{card.title || `Карточка ${index + 1}`}</p>
                         {card.caption && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{card.caption}</p>}
@@ -174,7 +174,7 @@ export default function ServiceDetailPage() {
             </section>
 
             <section className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div className="border border-gray-300 p-4">
+              <div className="catalog-content-box p-4">
                 <p className="font-medium mb-1">Условия</p>
                 <p className="text-gray-700">{service.terms}</p>
                 {service.guaranteeRefund && (
@@ -183,12 +183,12 @@ export default function ServiceDetailPage() {
                   </p>
                 )}
               </div>
-              <div className="border border-gray-300 p-4">
+              <div className="catalog-content-box p-4">
                 <p className="font-medium mb-1">Срок выполнения</p>
                 <p className="text-gray-700">{service.deadline}</p>
               </div>
               {service.prepaymentPercent !== undefined && (
-                <div className="border border-gray-300 p-4 sm:col-span-2">
+                <div className="catalog-content-box p-4 sm:col-span-2">
                   <p className="font-medium mb-1">Условия оплаты</p>
                   <p className="text-gray-700">
                     Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
@@ -201,7 +201,7 @@ export default function ServiceDetailPage() {
               <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
               <div className="space-y-3">
                 {MOCK_REVIEWS.map((review) => (
-                  <div key={review.id} className="border border-gray-300 p-4">
+                  <div key={review.id} className="catalog-content-box p-4">
                     <div className="flex justify-between">
                       <p className="text-sm font-medium">{review.author}</p>
                       <span className="text-xs text-gray-600">{review.date}</span>
@@ -215,7 +215,7 @@ export default function ServiceDetailPage() {
           </div>
 
           <aside>
-            <div className="border border-gray-900 p-4 sticky top-20 space-y-4">
+            <div className="catalog-content-box p-4 sticky top-20 space-y-4">
               <p className="text-2xl font-bold">
                 {formatServicePrice({
                   price: unitPrice,
@@ -246,15 +246,15 @@ export default function ServiceDetailPage() {
                 Итого: <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
               </p>
 
-              <Button className="w-full" onClick={handleAddToCart}>
+              <Button className="w-full" variant="green" onClick={handleAddToCart}>
                 <ShoppingCart className="h-4 w-4" />
                 В корзину
               </Button>
-              <Button className="w-full" variant="outline" onClick={handleOrder}>
+              <Button className="w-full" variant="soft-outline" onClick={handleOrder}>
                 Оформить заказ
               </Button>
               <Link href={`/requests/new?serviceId=${service.id}`} className="block">
-                <Button className="w-full" variant="ghost" size="sm">
+                <Button className="w-full" variant="soft-outline" size="sm">
                   Создать заявку по услуге
                 </Button>
               </Link>

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Каталог исполнителей",
+    "path": "/contractors",
+    "role": null,
+    "captureId": "dfb427cb-6510-442e-b829-e97b09b3000e"
+  },
+  {
+    "name": "Профиль исполнителя",
+    "path": "/contractors/ctr-1",
+    "role": null,
+    "captureId": "9e1801fc-3ab6-4a82-ab56-55ac70ff25ad"
+  },
+  {
+    "name": "Проверка исполнителя",
+    "path": "/contractors/ctr-1/check",
+    "role": null,
+    "captureId": "237a517c-da87-4bbc-a9c9-b3cf9658ddda"
+  },
+  {
+    "name": "Подписка на проверки",
+    "path": "/contractors/ctr-1/check/subscribe",
+    "role": null,
+    "captureId": "c55a1392-2913-4370-a8c4-5e917a344f45"
+  },
+  {
+    "name": "Портфолио исполнителя",
+    "path": "/contractors/ctr-1/portfolio/p1",
+    "role": null,
+    "captureId": "5ac73e45-200b-43f5-a842-3d0850a286ab"
+  }
+]

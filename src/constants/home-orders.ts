@@ -1,3 +1,5 @@
+import { HOME_IMAGES, pickHomeImage } from "./home-images";
+
 export interface HomeOrderCard {
   id: string;
   requestId: string;
@@ -5,6 +7,7 @@ export interface HomeOrderCard {
   description: string;
   budget: string;
   deadlineLabel: string;
+  imageUrl: string;
 }
 
 export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
@@ -15,6 +18,7 @@ export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
     description: "Монтаж выставочного стенда за 2 дня. Работа возможна в ночное время на площадке.",
     budget: "80 000 ₽",
     deadlineLabel: "до 20 янв. 2026",
+    imageUrl: HOME_IMAGES.urgent[0],
   },
   {
     id: "urg-2",
@@ -23,6 +27,7 @@ export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
     description: "Комплексное строительство стенда с зоной переговоров и витринами к открытию выставки.",
     budget: "400 000 – 600 000 ₽",
     deadlineLabel: "до 15 февр. 2026",
+    imageUrl: HOME_IMAGES.urgent[1],
   },
   {
     id: "urg-3",
@@ -31,6 +36,7 @@ export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
     description: "Разработка дизайн-проекта стенда IT-компании в минималистичном технологичном стиле.",
     budget: "от 100 000 ₽",
     deadlineLabel: "до 1 апр. 2026",
+    imageUrl: HOME_IMAGES.urgent[2],
   },
   {
     id: "urg-4",
@@ -39,6 +45,7 @@ export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
     description: "Организация фуршета для 100 человек с вегетарианским меню на время выставки.",
     budget: "по запросу",
     deadlineLabel: "до 30 мая 2026",
+    imageUrl: HOME_IMAGES.urgent[3],
   },
   {
     id: "urg-5",
@@ -47,6 +54,7 @@ export const URGENT_HOME_ORDERS: HomeOrderCard[] = [
     description: "Срочная установка светового оборудования и подключение на стенде 24 кв.м.",
     budget: "45 000 ₽",
     deadlineLabel: "до 18 янв. 2026",
+    imageUrl: HOME_IMAGES.urgent[4],
   },
 ];
 
@@ -55,7 +63,9 @@ export interface HomeOrderCategory {
   orders: HomeOrderCard[];
 }
 
-export const HOME_ORDER_CATEGORIES: HomeOrderCategory[] = [
+const CATEGORY_IMAGE_POOLS = [HOME_IMAGES.construction, HOME_IMAGES.stand, HOME_IMAGES.urgent] as const;
+
+const RAW_HOME_ORDER_CATEGORIES: Array<{ title: string; orders: Omit<HomeOrderCard, "imageUrl">[] }> = [
   {
     title: "Комплексное строительство выставочных стендов",
     orders: [
@@ -192,5 +202,15 @@ export const HOME_ORDER_CATEGORIES: HomeOrderCategory[] = [
     ],
   },
 ];
+
+export const HOME_ORDER_CATEGORIES: HomeOrderCategory[] = RAW_HOME_ORDER_CATEGORIES.map(
+  (category, categoryIndex) => ({
+    title: category.title,
+    orders: category.orders.map((order, orderIndex) => ({
+      ...order,
+      imageUrl: pickHomeImage(CATEGORY_IMAGE_POOLS[categoryIndex], orderIndex),
+    })),
+  }),
+);
 
 export const CONTRACTOR_REGISTRATION_INTENT_KEY = "registration-intent-contractor";

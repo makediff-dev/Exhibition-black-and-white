@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Heart, ImageIcon } from "lucide-react";
 
 export interface CatalogCardSlide {
@@ -13,16 +13,29 @@ interface CatalogCardImageSliderProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   slides?: CatalogCardSlide[];
+  scrubRatio?: number | null;
+  hoverScrub?: boolean;
 }
 
 export function CatalogCardImageSlider({
   isFavorite = false,
   onToggleFavorite,
   slides = [],
+  scrubRatio = null,
+  hoverScrub = false,
 }: CatalogCardImageSliderProps) {
   const [index, setIndex] = useState(0);
   const hasSlides = slides.length > 0;
-  const currentSlide = hasSlides ? slides[index] : null;
+
+  const displayIndex = useMemo(() => {
+    if (scrubRatio !== null && slides.length > 1) {
+      return Math.min(slides.length - 1, Math.floor(scrubRatio * slides.length));
+    }
+    return index;
+  }, [scrubRatio, slides.length, index]);
+
+  const currentSlide = hasSlides ? slides[displayIndex] : null;
+  const showControls = hasSlides && slides.length > 1 && !hoverScrub;
 
   const goPrev = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -40,15 +53,15 @@ export function CatalogCardImageSlider({
 
   return (
     <div
-      className="relative aspect-[16/10] overflow-hidden border-b border-dashed border-gray-300 bg-gray-50"
+      className="relative aspect-[16/10] overflow-hidden rounded-t-[14px] bg-gray-50"
       aria-hidden={!hasSlides}
     >
       {currentSlide?.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={currentSlide.imageUrl}
-          alt={currentSlide.title || "Фото услуги"}
-          className="h-full w-full object-cover"
+          alt={currentSlide.title || "Фото карточки"}
+          className="h-full w-full object-cover transition-opacity duration-150"
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
@@ -74,7 +87,7 @@ export function CatalogCardImageSlider({
         </button>
       )}
 
-      {hasSlides && slides.length > 1 && (
+      {showControls && (
         <>
           <button
             type="button"
@@ -92,15 +105,20 @@ export function CatalogCardImageSlider({
           >
             <ChevronRight className="h-3.5 w-3.5 shrink-0 translate-x-px" />
           </button>
-          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {slides.map((slide, slideIndex) => (
-              <span
-                key={slide.id}
-                className={`h-1.5 w-1.5 rounded-full ${slideIndex === index ? "bg-gray-900" : "bg-gray-300"}`}
-              />
-            ))}
-          </div>
         </>
+      )}
+
+      {hasSlides && slides.length > 1 && (
+        <div className="pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+          {slides.map((slide, slideIndex) => (
+            <span
+              key={slide.id}
+              className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                slideIndex === displayIndex ? "bg-gray-900" : "bg-gray-300"
+              }`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

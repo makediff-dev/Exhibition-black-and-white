@@ -7,7 +7,7 @@ import { ServiceCard } from "@/components/catalog/service-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-import { VENUE_CATALOG } from "@/constants/venues";
+import { VENUE_CATALOG, getPublicVenueByCatalogId } from "@/constants/venues";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Contractor, Event, Service } from "@/data/types";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
@@ -99,8 +99,11 @@ function FavoriteVenueCard({ venueId }: { venueId: string }) {
   const venue = VENUE_CATALOG.find((item) => item.id === venueId);
   if (!venue) return null;
 
+  const publicVenue = getPublicVenueByCatalogId(venueId);
+  const href = publicVenue ? `/venues/${publicVenue.id}` : `/venues`;
+
   return (
-    <Link href={`/events?venue=${encodeURIComponent(venue.shortName)}`}>
+    <Link href={href}>
       <Card className="h-full hover:border-gray-900">
         <CardTitle className="text-base leading-snug">{venue.shortName}</CardTitle>
         <CardDescription className="flex items-center gap-1 mt-2">

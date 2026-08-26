@@ -104,7 +104,7 @@ export function DateRangePicker({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between border border-gray-300 px-3 py-2 text-sm text-left hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+        className="flex w-full items-center justify-between rounded-[10px] border border-[#d4d4d4] px-3 py-2 text-left text-sm hover:border-[#171717] focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]"
       >
         <span className={displayValue ? "text-gray-900" : "text-gray-500"}>
           {displayValue || placeholder}
@@ -113,7 +113,7 @@ export function DateRangePicker({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1 border border-gray-300 bg-white p-3 shadow-sm">
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-[10px] border border-[#d4d4d4] bg-white p-3 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <Button
               type="button"
@@ -161,7 +161,7 @@ export function DateRangePicker({
                   type="button"
                   onClick={() => handleDayClick(dateKey)}
                   className={cn(
-                    "h-8 text-xs border transition-colors",
+                    "h-8 rounded-[6px] text-xs border transition-colors",
                     isStart || isEnd
                       ? "border-gray-900 bg-gray-900 text-white"
                       : inRange

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Подтверждение",
+    "path": "/verify",
+    "role": null,
+    "captureId": "24cba01f-eb3b-4e47-b98a-22b6209e2d8f"
+  },
+  {
+    "name": "Модерация",
+    "path": "/moderation",
+    "role": null,
+    "captureId": "5ae04fdb-16bb-42ba-a199-e0334bef054e"
+  },
+  {
+    "name": "Каталог мероприятий",
+    "path": "/events",
+    "role": null,
+    "captureId": "aa6a9e25-69e8-4a4e-adad-5a773f5bbb67"
+  },
+  {
+    "name": "Карточка мероприятия",
+    "path": "/events/evt-1",
+    "role": null,
+    "captureId": "8b158f13-0b6f-4c47-b517-50363c4afbd9"
+  },
+  {
+    "name": "Бронирование мероприятия",
+    "path": "/events/evt-1/booking",
+    "role": null,
+    "captureId": "315f12e8-5feb-44c0-91ec-c5a6fab73850"
+  }
+]

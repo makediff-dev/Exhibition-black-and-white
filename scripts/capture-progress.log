@@ -1,0 +1,82 @@
+file:///Users/maxmarakhovskiy/Desktop/324234/Exhibition-black-and-white/scripts/run-all-captures.mjs:29
+  const pending = slice.filter((item) => !progress.completed.includes(item.captureId));
+                                                             ^
+
+TypeError: Cannot read properties of undefined (reading 'includes')
+    at file:///Users/maxmarakhovskiy/Desktop/324234/Exhibition-black-and-white/scripts/run-all-captures.mjs:29:62
+    at Array.filter (<anonymous>)
+    at file:///Users/maxmarakhovskiy/Desktop/324234/Exhibition-black-and-white/scripts/run-all-captures.mjs:29:25
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:636:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v26.1.0
+
+=== Batch 0 (4/5 pending) ===
+Capturing [1440]: Как это работает -> /how-it-works
+Submitted: Как это работает
+Capturing [1440]: Вход -> /login
+Submitted: Вход
+Capturing [1440]: Регистрация -> /register
+node:internal/process/promises:332
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+route.fetch: Timeout 30000ms exceeded.
+Call log:
+  - → GET https://exhibition-black-and-white.vercel.app/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2
+    - user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36
+    - accept: */*
+    - accept-encoding: gzip,deflate,br
+    - origin: https://exhibition-black-and-white.vercel.app
+    - referer: https://exhibition-black-and-white.vercel.app/register
+    - sec-ch-ua: "Not=A?Brand";v="99", "HeadlessChrome";v="151", "Chromium";v="151"
+    - sec-ch-ua-mobile: ?0
+    - sec-ch-ua-platform: "macOS"
+
+    at /Users/maxmarakhovskiy/Desktop/324234/Exhibition-black-and-white/scripts/capture-batch.mjs:23:34 {
+  log: [
+    '  - → GET https://exhibition-black-and-white.vercel.app/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2',
+    '    - user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.7922.34 Safari/537.36',
+    '    - accept: */*',
+    '    - accept-encoding: gzip,deflate,br',
+    '    - origin: https://exhibition-black-and-white.vercel.app',
+    '    - referer: https://exhibition-black-and-white.vercel.app/register',
+    '    - sec-ch-ua: "Not=A?Brand";v="99", "HeadlessChrome";v="151", "Chromium";v="151"',
+    '    - sec-ch-ua-mobile: ?0',
+    '    - sec-ch-ua-platform: "macOS"'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v26.1.0
+Batch 0 failed
+
+=== Batch 0 (1/5 pending) ===
+Capturing [1440]: Забыли пароль -> /forgot-password
+Submitted: Забыли пароль
+Captured 1 screens at 1440px from https://exhibition-black-and-white.vercel.app.
+
+=== Batch 1 (5/5 pending) ===
+Capturing [1440]: Подтверждение -> /verify
+Submitted: Подтверждение
+Capturing [1440]: Модерация -> /moderation
+Submitted: Модерация
+Capturing [1440]: Каталог мероприятий -> /events
+Submitted: Каталог мероприятий
+Capturing [1440]: Карточка мероприятия -> /events/evt-1
+Submitted: Карточка мероприятия
+Capturing [1440]: Бронирование мероприятия -> /events/evt-1/booking
+Submitted: Бронирование мероприятия
+Captured 5 screens at 1440px from https://exhibition-black-and-white.vercel.app.
+
+=== Batch 2 (5/5 pending) ===
+Capturing [1440]: Каталог исполнителей -> /contractors
+Submitted: Каталог исполнителей
+Capturing [1440]: Профиль исполнителя -> /contractors/ctr-1
+Submitted: Профиль исполнителя
+Capturing [1440]: Проверка исполнителя -> /contractors/ctr-1/check
+Submitted: Проверка исполнителя
+Capturing [1440]: Подписка на проверки -> /contractors/ctr-1/check/subscribe
+Submitted: Подписка на проверки
+Capturing [1440]: Портфолио исполнителя -> /contractors/ctr-1/portfolio/p1

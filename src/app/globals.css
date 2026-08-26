@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-primary: #28b5b3;
+  --color-primary-dark: #1f9696;
+  --color-blue: #2939eb;
+  --color-blue-dark: #2230c7;
+  --color-green: #00b23d;
+  --color-green-dark: #009a35;
+  --color-purple: #6f38dd;
+  --color-purple-dark: #5c2fc0;
+  --color-pink: #ff0096;
+  --color-pink-dark: #e00086;
+  --radius-card: 14px;
+  --radius-button: 10px;
 }
 
 @theme inline {
@@ -21,4 +33,34 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+@layer components {
+  .catalog-page-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .catalog-page-grid {
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+  }
+
+  .catalog-filters-panel {
+    width: 280px;
+    max-width: 100%;
+  }
+}
+
+.catalog-filters-box {
+  border: 1px solid #d4d4d4;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.catalog-content-box {
+  border: 1px solid #d4d4d4;
+  border-radius: 10px;
+  background: #fff;
 }

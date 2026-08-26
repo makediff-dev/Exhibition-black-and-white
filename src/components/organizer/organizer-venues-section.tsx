@@ -13,37 +13,10 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { CITIES } from "@/constants/categories";
 import { VENUE_CATALOG } from "@/constants/venues";
-import {
-  SEED_HALLS,
-  SEED_PAVILIONS,
-  SEED_VENUE_PROFILE_MEDIA,
-  SEED_VENUE_SPACE_BLOCKS,
-} from "@/data/mocks/seed";
 import type { VenueInquiry } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
-
-function getVenueStats(venueId: string) {
-  const halls = SEED_HALLS.filter((hall) => hall.venueId === venueId);
-  const pavilions = SEED_PAVILIONS.filter((pavilion) => pavilion.venueId === venueId);
-  const blocks = SEED_VENUE_SPACE_BLOCKS.filter((block) => block.venueId === venueId);
-  const photos = SEED_VENUE_PROFILE_MEDIA.filter(
-    (item) => item.venueId === venueId && item.type === "photo",
-  );
-  const prices = blocks.length
-    ? blocks.map((block) => block.pricePerSqm)
-    : halls.map((hall) => Math.round(1800 + hall.area / 10));
-
-  return {
-    halls,
-    pavilions,
-    photos,
-    totalArea: halls.reduce((sum, hall) => sum + hall.area, 0),
-    priceMin: Math.min(...prices),
-    priceMax: Math.max(...prices),
-    freeHalls: halls.filter((hall) => hall.available).length,
-  };
-}
+import { getVenueStats } from "@/lib/utils/venue-stats";
 
 function buildDemoProposal(venueName: string, minArea: string) {
   const areaHint = minArea ? ` от ${minArea} кв.м` : "";

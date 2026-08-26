@@ -2,17 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
 import { getSearchSuggestions } from "@/lib/utils/global-search";
 import { cn } from "@/lib/utils/cn";
+import styles from "./header-search.module.css";
 
 interface HeaderSearchProps {
   className?: string;
-  inputClassName?: string;
   onNavigate?: () => void;
 }
 
-export function HeaderSearch({ className, inputClassName, onNavigate }: HeaderSearchProps) {
+export function HeaderSearch({ className, onNavigate }: HeaderSearchProps) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -55,32 +54,32 @@ export function HeaderSearch({ className, inputClassName, onNavigate }: HeaderSe
   const showDropdown = open && search.trim().length >= 2;
 
   return (
-    <form onSubmit={handleSubmit} className={className}>
-      <div ref={rootRef} className="relative w-full">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
-        <input
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder="Поиск..."
-          autoComplete="off"
-          aria-expanded={showDropdown}
-          aria-autocomplete="list"
-          className={cn(
-            "w-full border border-gray-300 pl-8 pr-3 py-1.5 text-sm focus:border-gray-900 focus:outline-none",
-            inputClassName,
-          )}
-        />
+    <form onSubmit={handleSubmit} className={cn(styles.form, className)}>
+      <div ref={rootRef} className={styles.root}>
+        <div className={styles.searchBar}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/home/header-search-icon.svg" alt="" className={styles.icon} aria-hidden="true" />
+          <input
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            placeholder="Поиск..."
+            autoComplete="off"
+            aria-expanded={showDropdown}
+            aria-autocomplete="list"
+            className={styles.input}
+          />
+        </div>
 
         {showDropdown && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 border border-gray-300 bg-white shadow-sm">
+          <div className={styles.dropdown}>
             {suggestions.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-gray-600">Ничего не найдено</p>
+              <p className={styles.empty}>Ничего не найдено</p>
             ) : (
-              <ul role="listbox">
+              <ul className={styles.list} role="listbox">
                 {suggestions.map((item) => (
                   <li key={item.id}>
                     <button
@@ -88,10 +87,10 @@ export function HeaderSearch({ className, inputClassName, onNavigate }: HeaderSe
                       role="option"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => navigateTo(item.href)}
-                      className="flex w-full flex-col items-start px-3 py-2 text-left hover:bg-gray-50"
+                      className={styles.option}
                     >
-                      <span className="text-sm text-gray-900">{item.label}</span>
-                      <span className="text-xs text-gray-600">{item.subtitle}</span>
+                      <span className={styles.optionLabel}>{item.label}</span>
+                      <span className={styles.optionSubtitle}>{item.subtitle}</span>
                     </button>
                   </li>
                 ))}

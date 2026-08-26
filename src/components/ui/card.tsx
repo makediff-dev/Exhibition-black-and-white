@@ -1,17 +1,21 @@
 import { cn } from "@/lib/utils/cn";
+import type { ComponentPropsWithoutRef } from "react";
 
-interface CardProps {
+export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
 }
 
-export function Card({ children, className, onClick }: CardProps) {
+export function Card({ children, className, onClick, ...props }: CardProps) {
   return (
     <div
-      className={cn("border border-gray-300 bg-white p-4", onClick && "cursor-pointer hover:border-gray-900", className)}
+      className={cn(
+        "border border-gray-300 bg-white p-4 rounded-[10px]",
+        onClick && "cursor-pointer hover:border-gray-900",
+        className,
+      )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
+      {...props}
     >
       {children}
     </div>

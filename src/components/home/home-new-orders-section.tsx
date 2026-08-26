@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
 } from "@/constants/home-orders";
 import { useAuthStore } from "@/lib/store";
 import { HomeOrderCardItem } from "./home-order-card";
+import { HomeScrollSection } from "./home-scroll-section";
 
 export function HomeNewOrdersSection() {
   const router = useRouter();
@@ -43,28 +43,23 @@ export function HomeNewOrdersSection() {
 
   return (
     <>
-      <section className="py-8">
-        <div className="mx-auto max-w-site px-4">
-          <h2 className="text-lg font-bold mb-4">Срочные заказы</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {URGENT_HOME_ORDERS.map((order) => (
-              <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} />
-            ))}
-          </div>
-        </div>
-      </section>
+      <HomeScrollSection title="Срочные заказы" linkHref="/requests" linkLabel="Смотреть все заказы">
+        {URGENT_HOME_ORDERS.map((order) => (
+          <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} buttonVariant="blue" />
+        ))}
+      </HomeScrollSection>
 
       {HOME_ORDER_CATEGORIES.map((category) => (
-        <section key={category.title} className="py-8">
-          <div className="mx-auto max-w-site px-4">
-            <h2 className="text-lg font-bold mb-4">{category.title}</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {category.orders.map((order) => (
-                <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} />
-              ))}
-            </div>
-          </div>
-        </section>
+        <HomeScrollSection
+          key={category.title}
+          title={category.title}
+          linkHref="/services"
+          linkLabel="Все услуги"
+        >
+          {category.orders.map((order) => (
+            <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} />
+          ))}
+        </HomeScrollSection>
       ))}
 
       <Modal

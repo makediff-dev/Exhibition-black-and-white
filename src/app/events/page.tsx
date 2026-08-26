@@ -3,23 +3,25 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { EventsDateFilter, isEventInSelectedPeriod } from "@/components/catalog/events-calendar";
-import { Calendar, Filter, MapPin, Sparkles } from "lucide-react";
+import { EventCard } from "@/components/catalog/event-card";
+import { Filter } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
+import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, EVENT_INDUSTRIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict, getDistrictByCity } from "@/constants/categories";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Event } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { getOkvedRecommendationReason, matchOkved } from "@/lib/utils/okved";
+import { Sparkles } from "lucide-react";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
   exhibition: "Выставка",
@@ -35,38 +37,7 @@ const SORT_OPTIONS = [
 ];
 
 const VENUES = [...new Set(SEED_EVENTS.map((e) => e.venue))];
-
-function EventCard({ event, recommended }: { event: Event; recommended?: boolean }) {
-  return (
-    <Link href={`/events/${event.id}`}>
-      <Card className="h-full hover:border-gray-900">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-          {recommended && (
-            <Badge variant="dashed" icon={Sparkles}>
-              Рекомендуем
-            </Badge>
-          )}
-        </div>
-        <CardTitle>{event.title}</CardTitle>
-        <CardDescription className="flex items-center gap-1 mt-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          {event.city} · {event.venue}
-        </CardDescription>
-        <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
-          <Calendar className="h-3.5 w-3.5" />
-          {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-        </p>
-        <p className="text-sm text-gray-700 mt-2 line-clamp-2">{event.description}</p>
-        <div className="mt-3 pt-3 border-t border-gray-200 space-y-1 text-xs text-gray-600">
-          <p><span className="font-medium text-gray-900">Отрасль:</span> {event.industry}</p>
-          <p><span className="font-medium text-gray-900">Условия:</span> {event.participationTerms}</p>
-          <p><span className="font-medium text-gray-900">Услуг:</span> {event.relatedServiceIds.length}</p>
-        </div>
-      </Card>
-    </Link>
-  );
-}
+const EVENTS_ACCENT = CATALOG_SECTION_ACCENT.events;
 
 function FilterFields({
   city,
@@ -185,16 +156,16 @@ function FilterFields({
           Только рекомендованные по ОКВЭД
         </label>
       )}
-      <div className="grid grid-cols-1 gap-2 pt-2 border-t border-gray-200">
+      <div className="grid grid-cols-1 gap-2 pt-2">
         <Link
           href="/contractors"
-          className="block border border-gray-300 bg-white px-3 py-2 text-sm text-center hover:border-gray-900"
+          className="block rounded-[10px] border border-[#d4d4d4] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
         >
           Найти исполнителя
         </Link>
         <Link
           href="/services"
-          className="block border border-gray-300 bg-white px-3 py-2 text-sm text-center hover:border-gray-900"
+          className="block rounded-[10px] border border-[#d4d4d4] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
         >
           Найти услугу
         </Link>
@@ -237,8 +208,8 @@ function CityPickerModal({
       title="Определение города"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>Пропустить</Button>
-          <Button onClick={onConfirm}>Подтвердить</Button>
+          <Button variant="soft-outline" onClick={onClose}>Пропустить</Button>
+          <Button variant={EVENTS_ACCENT} onClick={onConfirm}>Подтвердить</Button>
         </>
       }
     >
@@ -288,6 +259,7 @@ function EventsPageFallback() {
 }
 
 function EventsPageContent() {
+  const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
   const { selectedCity, setSelectedCity } = usePrototypeStore();
 
@@ -303,7 +275,7 @@ function EventsPageContent() {
   const [city, setCity] = useState("");
   const [industry, setIndustry] = useState("");
   const [category, setCategory] = useState("");
-  const [venue, setVenue] = useState("");
+  const [venue, setVenue] = useState(searchParams.get("venue") ?? "");
   const [recommendedOnly, setRecommendedOnly] = useState(false);
   const [bookingOnly, setBookingOnly] = useState(false);
   const [sort, setSort] = useState("date-asc");
@@ -432,13 +404,13 @@ function EventsPageContent() {
           </p>
         </div>
 
-        <Button variant="outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
+        <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
         </Button>
 
         {isAuthenticated && user && recommendedEvents.length > 0 && (
-          <section className="mb-8 border border-gray-900 bg-gray-50 p-4">
+          <section className="mb-8 catalog-content-box p-4">
             <h2 className="text-base font-semibold mb-1 flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               Рекомендации по ОКВЭД
@@ -448,7 +420,7 @@ function EventsPageContent() {
             </p>
             <div className="grid sm:grid-cols-3 gap-3">
               {recommendedEvents.map((event) => (
-                <Link key={event.id} href={`/events/${event.id}`} className="border border-gray-300 bg-white p-3 hover:border-gray-900">
+                <Link key={event.id} href={`/events/${event.id}`} className="catalog-content-box p-3 transition-colors hover:border-[#171717]">
                   <p className="text-sm font-medium">{event.title}</p>
                   <p className="text-xs text-gray-600 mt-1">{event.city} · {formatShortDate(event.startDate)}</p>
                 </Link>
@@ -457,9 +429,9 @@ function EventsPageContent() {
           </section>
         )}
 
-        <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-          <aside className="hidden md:block">
-            <div className="border border-gray-300 p-4 sticky top-20">
+        <div className="catalog-page-grid">
+          <aside className="hidden md:block catalog-filters-panel shrink-0">
+            <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold">Фильтры</h2>
                 <button type="button" onClick={resetFilters} className="text-xs underline">Сбросить</button>
@@ -504,8 +476,8 @@ function EventsPageContent() {
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filteredEvents.length}</p>
                 <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                  {filteredEvents.map((event) => (
-                    <EventCard key={event.id} event={event} recommended={isRecommended(event)} />
+                  {filteredEvents.map((event, index) => (
+                    <EventCard key={event.id} event={event} recommended={isRecommended(event)} imageIndex={index} />
                   ))}
                 </div>
               </>
@@ -538,7 +510,7 @@ function EventsPageContent() {
           onToggleDay={toggleDay}
           onClearPeriod={clearPeriod}
         />
-        <Button className="w-full mt-4" onClick={() => setFilterDrawerOpen(false)}>Применить</Button>
+        <Button variant={EVENTS_ACCENT} className="w-full mt-4" onClick={() => setFilterDrawerOpen(false)}>Применить</Button>
       </Drawer>
 
       <Footer />

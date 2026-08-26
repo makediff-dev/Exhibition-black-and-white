@@ -83,14 +83,14 @@ export function SearchableSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-2 border border-gray-300 bg-white px-3 py-2 text-left text-sm hover:border-gray-900 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+        className="flex w-full items-center justify-between rounded-[10px] border border-[#d4d4d4] px-3 py-2 text-left text-sm hover:border-[#171717] focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]"
       >
         <span className="truncate">{selectedLabel}</span>
         <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
       </button>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 border border-gray-300 bg-white shadow-sm">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-[10px] border border-[#d4d4d4] bg-white shadow-sm">
           <div className="border-b border-gray-200 p-2">
             <input
               ref={searchInputRef}
@@ -98,7 +98,7 @@ export function SearchableSelect({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              className="w-full rounded-[10px] border border-[#d4d4d4] px-2 py-1.5 text-sm focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]"
             />
           </div>
 

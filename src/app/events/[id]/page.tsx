@@ -93,7 +93,7 @@ function ContractorsGrid({
             <CardTitle>{contractor.name}</CardTitle>
             <div className="flex flex-wrap gap-1 mt-2">
               {contractor.categories.map((category) => (
-                <span key={category} className="text-xs border border-gray-300 px-2 py-0.5">
+                <span key={category} className="text-xs border border-[#d4d4d4] rounded-[10px] px-2 py-0.5">
                   {category}
                 </span>
               ))}
@@ -223,7 +223,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">
-            <Button type="button" variant="outline" onClick={() => setRemindersModalOpen(true)}>
+            <Button type="button" variant="soft-outline" onClick={() => setRemindersModalOpen(true)}>
               Подключить напоминания
             </Button>
           </div>
@@ -236,11 +236,11 @@ export default function EventDetailPage() {
               <p className="text-sm text-gray-700">{event.description}</p>
               <div className="flex flex-wrap gap-2 mt-4">
                 <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
-                  <Button variant="outline">Найти услуги</Button>
+                  <Button variant="teal">Найти услуги</Button>
                 </Link>
                 {event.bookingAvailable && (
                   <Link href={`/events/${event.id}/booking`}>
-                    <Button variant="outline">Забронировать площадь</Button>
+                    <Button variant="soft-outline">Забронировать площадь</Button>
                   </Link>
                 )}
               </div>
@@ -248,7 +248,7 @@ export default function EventDetailPage() {
 
             <section>
               <h2 className="text-lg font-semibold mb-2">Условия участия</h2>
-              <p className="text-sm text-gray-700 border border-gray-300 p-4">{event.participationTerms}</p>
+              <p className="text-sm text-gray-700 catalog-content-box p-4">{event.participationTerms}</p>
             </section>
 
             <section>
@@ -354,7 +354,7 @@ export default function EventDetailPage() {
           </div>
 
           <aside className="space-y-6">
-            <section className="border border-gray-300 p-4">
+            <section className="catalog-content-box p-4">
               <h2 className="text-base font-semibold mb-3">Доступные площади</h2>
               <div className="space-y-2">
                 {halls.map((hall) => (
@@ -374,17 +374,17 @@ export default function EventDetailPage() {
               </div>
             </section>
 
-            <section className="border border-gray-300 p-4">
+            <section className="catalog-content-box p-4">
               <h2 className="text-base font-semibold mb-3">План площадки</h2>
               <FloorPlanPreview />
               {event.bookingAvailable && (
                 <Link href={`/events/${event.id}/booking`} className="block mt-4">
-                  <Button className="w-full" size="sm">Бронирование в тестовом режиме</Button>
+                  <Button className="w-full" variant="teal" size="sm">Бронирование в тестовом режиме</Button>
                 </Link>
               )}
             </section>
 
-            <section className="border border-gray-300 p-4 text-sm space-y-2">
+            <section className="catalog-content-box p-4 text-sm space-y-2">
               <p><span className="font-medium">Период:</span> {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}</p>
               <p><span className="font-medium">Организатор ID:</span> {event.organizerId}</p>
               <p><span className="font-medium">ОКВЭД-теги:</span> {event.okvedTags.join(", ")}</p>

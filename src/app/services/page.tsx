@@ -14,9 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast-provider";
+import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
 import type { Service } from "@/data/types";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+
+const SERVICES_ACCENT = CATALOG_SECTION_ACCENT.services;
 
 const SORT_OPTIONS = [
   { value: "price-asc", label: "Цена: по возрастанию" },
@@ -159,21 +162,21 @@ function ServicesPageContent() {
             <p className="text-sm text-gray-600 mt-1">Каталог услуг для выставок и мероприятий</p>
           </div>
           <Link href="/cart">
-            <Button variant="outline">
+            <Button variant="soft-outline">
               <ShoppingCart className="h-4 w-4" />
               Корзина
             </Button>
           </Link>
         </div>
 
-        <Button variant="outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
+        <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
         </Button>
 
-        <div className="grid lg:grid-cols-[240px_1fr] gap-6">
-          <aside className="hidden md:block">
-            <div className="border border-gray-300 p-4 sticky top-20">
+        <div className="catalog-page-grid">
+          <aside className="hidden md:block catalog-filters-panel shrink-0">
+            <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex justify-between mb-4">
                 <h2 className="text-sm font-semibold">Фильтры</h2>
                 <button type="button" onClick={resetFilters} className="text-xs underline">Сбросить</button>
@@ -196,10 +199,11 @@ function ServicesPageContent() {
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
                 <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                  {filtered.map((service) => (
+                  {filtered.map((service, index) => (
                     <ServiceCard
                       key={service.id}
                       service={service}
+                      cardIndex={index}
                       onAdd={() => handleAdd(service)}
                       isFavorite={isFavorite(service.id)}
                       onToggleFavorite={() => handleToggleFavorite(service)}
@@ -214,7 +218,7 @@ function ServicesPageContent() {
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
         {filterPanel}
-        <Button className="w-full mt-4" onClick={() => setDrawerOpen(false)}>Применить</Button>
+        <Button variant={SERVICES_ACCENT} className="w-full mt-4" onClick={() => setDrawerOpen(false)}>Применить</Button>
       </Drawer>
 
       <Footer />
