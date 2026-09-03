@@ -113,7 +113,7 @@ export function PortfolioCard({ item, href }: PortfolioCardProps) {
   if (href) {
     return (
       <Link href={href} className="block w-full h-full min-w-0">
-        <Card className="flex flex-col h-full hover:border-gray-900 transition-colors">
+        <Card hoverable className="flex flex-col h-full">
           {content}
         </Card>
       </Link>

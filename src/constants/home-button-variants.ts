@@ -1,4 +1,4 @@
-export type HomeTileButtonVariant = "primary" | "blue" | "green" | "purple" | "pink";
+export type HomeTileButtonVariant = "primary" | "blue" | "green" | "purple" | "violet" | "pink";
 
 export const HOME_TILE_BUTTON_VARIANTS = {
   primary: {
@@ -14,8 +14,12 @@ export const HOME_TILE_BUTTON_VARIANTS = {
     hover: "#009a35",
   },
   purple: {
-    background: "#6f38dd",
-    hover: "#5c2fc0",
+    background: "#0AAEE4",
+    hover: "#0893C2",
+  },
+  violet: {
+    background: "#683BD9",
+    hover: "#5730C0",
   },
   pink: {
     background: "#ff0096",

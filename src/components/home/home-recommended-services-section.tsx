@@ -23,7 +23,7 @@ export function HomeRecommendedServicesSection() {
           ]}
           buttonLabel="Подробнее"
           buttonHref={`/services/${service.id}`}
-          buttonVariant="green"
+          buttonVariant="primary"
         />
       ))}
     </HomeScrollSection>

@@ -12,8 +12,8 @@ export function HomeRecommendedContractorsSection() {
   return (
     <HomeScrollSection
       title="Рекомендованые исполнители услуг"
-      linkHref="/requests"
-      linkLabel="Смотреть все заказы"
+      linkHref="/contractors"
+      linkLabel="Все исполнители"
     >
       {contractors.map((contractor, index) => (
         <HomeTileCard
@@ -26,7 +26,7 @@ export function HomeRecommendedContractorsSection() {
           ]}
           buttonLabel="Подробнее"
           buttonHref={`/contractors/${contractor.id}`}
-          buttonVariant="purple"
+          buttonVariant="violet"
         />
       ))}
     </HomeScrollSection>

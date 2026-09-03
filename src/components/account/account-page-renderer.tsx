@@ -284,7 +284,7 @@ function DashboardWidgets({ role }: { role: string }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-      <Card><CardTitle className="text-2xl">{requests.filter((r) => r.status === "published").length}</CardTitle><CardDescription>{role === "contractor" ? "Активные заказы" : "Активные заявки"}</CardDescription></Card>
+      <Card><CardTitle className="text-2xl">{requests.filter((r) => r.status ==="published").length}</CardTitle><CardDescription>{role ==="contractor" ?"Активные заказы" :"Активные заявки"}</CardDescription></Card>
       <Card><CardTitle className="text-2xl">{activeDeals.length}</CardTitle><CardDescription>Активные проекты</CardDescription></Card>
       <Card><CardTitle className="text-2xl">{unreadNotif}</CardTitle><CardDescription>Новые уведомления</CardDescription></Card>
       <Card>
@@ -336,16 +336,18 @@ function CustomerReviewsSection({
             accept="image/*,video/*"
             onUpload={() => showToast("Файл добавлен", "success")}
           />
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => showToast("Рекомендация отправлена исполнителю", "success")}
-          >
-            Порекомендовать исполнителя
-          </Button>
-          <Button type="button" onClick={() => setSubmitted(true)}>
-            Отправить
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" onClick={() => setSubmitted(true)}>
+              Отправить
+            </Button>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => showToast("Рекомендация отправлена исполнителю", "success")}
+            >
+              Порекомендовать исполнителя
+            </Button>
+          </div>
         </div>
 
         {submitted && (
@@ -528,9 +530,11 @@ function CustomerPages({ slug }: { slug: string }) {
         {currentTab === "closing" && (
           <div>
             <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
-            <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
-            <Textarea label="Комментарий" className="mt-3" />
-            <Button className="mt-3" onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
+            <div className="flex flex-col gap-3">
+              <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
+              <Textarea label="Комментарий" />
+              <Button onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
+            </div>
           </div>
         )}
       </div>
@@ -636,10 +640,10 @@ function CustomerPages({ slug }: { slug: string }) {
   if (slug === "active-projects") {
     const active = deals.filter((d) => d.customerId === user?.id && d.status !== "completed");
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         {active.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`}>
-            <Card className="hover:border-gray-900">
+          <Link key={d.id} href={`/deals/${d.id}`} className="block">
+            <Card hoverable>
               <div className="flex justify-between">
                 <CardTitle>{d.title}</CardTitle>
                 <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
@@ -661,8 +665,8 @@ function CustomerPages({ slug }: { slug: string }) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {completed.map((d) => (
-          <Card key={d.id} className="flex flex-col h-full">
-            <Link href={`/deals/${d.id}`} className="flex-1 block hover:opacity-90">
+          <Card key={d.id} borderHover className="flex h-full flex-col">
+            <Link href={`/deals/${d.id}`} className="flex-1 block">
               <CardTitle>{d.title}</CardTitle>
               <CardDescription className="mt-2">
                 {d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}
@@ -723,10 +727,10 @@ function CustomerPages({ slug }: { slug: string }) {
     }
 
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-gray-600">Выберите завершённый заказ для повторения:</p>
         {completed.map((d) => (
-          <Card key={d.id}>
+          <Card key={d.id} borderHover>
             <CardTitle>{d.title}</CardTitle>
             <CardDescription className="mt-1">
               {d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}
@@ -1057,10 +1061,10 @@ function ContractorPages({ slug }: { slug: string }) {
       );
     }
     return (
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         {filtered.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`}>
-            <Card className="hover:border-gray-900 transition-colors">
+          <Link key={d.id} href={`/deals/${d.id}`} className="block">
+            <Card hoverable>
               <div className="flex justify-between items-start gap-3 flex-wrap">
                 <div>
                   <CardTitle>{d.title}</CardTitle>

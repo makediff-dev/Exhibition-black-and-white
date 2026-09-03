@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Референсы — выставочный маркетплейс</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f4f4f2;color:#171717;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    main{max-width:1000px;margin:0 auto;padding:56px 28px 80px}h1{font-size:40px;line-height:1.1;margin:0 0 24px}h2{margin:54px 0 18px;font-size:26px}
+    h3{margin:28px 0 10px}.lead{background:#e8f1ff;border:1px solid #c6daf7;padding:20px 24px;border-radius:14px;font-size:18px}
+    .card{background:#fff;border:1px solid #deded9;border-radius:18px;padding:22px;margin:20px 0 34px;box-shadow:0 10px 30px rgba(0,0,0,.05)}
+    img{display:block;width:100%;max-height:620px;object-fit:contain;background:#eee;border-radius:12px;border:1px solid #e2e2de}
+    .caption{color:#555;margin:14px 2px 0}.tag{display:inline-block;padding:3px 9px;border:1px solid #999;border-radius:99px;font-size:12px;margin-bottom:12px}
+    ul{padding-left:22px}li{margin:6px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .rule{border-left:4px solid #111;padding:4px 0 4px 18px;font-size:19px}
+    table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;padding:13px;border-bottom:1px solid #ddd}th{background:#eee}
+    @media(max-width:720px){main{padding:30px 16px}h1{font-size:30px}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Визуальные референсы для выставочного маркетплейса</h1>
+  <div class="lead"><strong>Главный вывод:</strong> проекту подходит комбинация строгого B2B-кабинета, самостоятельного рабочего пространства мероприятия и доверительного профиля подрядчика.</div>
+
+  <h2>Рекомендуемая архитектура</h2>
+  <p class="rule">Глобальные разделы остаются в сайдбаре. Участники, услуги, бронирования и аналитика конкретного события находятся внутри мероприятия во вкладках.</p>
+
+  <h2>1. Общий каркас кабинета</h2>
+  <div class="grid">
+    <article class="card"><span class="tag">Dashboard</span><img src="references/freshbooks-dashboard.jpg" alt="FreshBooks dashboard"><p class="caption"><strong>FreshBooks:</strong> спокойный сайдбар, метрики и список первоочередных задач. Подходит как база для всех четырёх ролей.</p></article>
+    <article class="card"><span class="tag">Vendor operations</span><img src="references/qualia-vendor-dashboard.png" alt="Qualia vendor dashboard"><p class="caption"><strong>Qualia:</strong> B2B-контроль поставщиков, заказов и выполнения. Полезен для операционных разделов.</p></article>
+  </div>
+
+  <h2>2. Мероприятия как рабочие пространства</h2>
+  <div class="grid">
+    <article class="card"><span class="tag">Events hub</span><img src="references/userlane-events-hub.png" alt="Userlane events hub"><p class="caption"><strong>Userlane:</strong> карточки будущих и прошедших событий, даты, статусы и заметная кнопка создания.</p></article>
+    <article class="card"><span class="tag">Event workspace</span><img src="references/eventbrite-reports.png" alt="Eventbrite reports"><p class="caption"><strong>Eventbrite:</strong> инструменты и отчёты организованы в контексте выбранного события.</p></article>
+  </div>
+
+  <h2>3. Участники и экспоненты</h2>
+  <div class="grid">
+    <article class="card"><span class="tag">Event context</span><img src="references/luma-event-management.png" alt="Luma event management"><p class="caption"><strong>Luma:</strong> гости, регистрации, организаторы и настройки находятся внутри события.</p></article>
+    <article class="card"><span class="tag">Participant table</span><img src="references/zkipster-guests.png" alt="zkipster guests"><p class="caption"><strong>zkipster:</strong> поиск, фильтры и статус каждого участника. Для проекта этапы: заявка → модерация → бронь → счёт → оплата.</p></article>
+  </div>
+
+  <h2>4. Исполнители и услуги</h2>
+  <article class="card"><span class="tag">Vendor profile</span><img src="references/fiverr-seller-profile.png" alt="Fiverr seller profile"><p class="caption"><strong>Fiverr:</strong> структура профиля — доверие, рейтинг, портфолио и услуги. В проекте следует сохранить структуру, но убрать яркий consumer-стиль.</p></article>
+
+  <h2>Как применять</h2>
+  <table>
+    <thead><tr><th>Зона</th><th>Ориентир</th><th>Паттерн</th></tr></thead>
+    <tbody>
+      <tr><td>Дашборды ролей</td><td>FreshBooks</td><td>Сайдбар + метрики + задачи</td></tr>
+      <tr><td>Список мероприятий</td><td>Userlane</td><td>Карточки, дата, статус</td></tr>
+      <tr><td>Внутри события</td><td>Eventbrite / Luma</td><td>Контекстные вкладки</td></tr>
+      <tr><td>Экспоненты</td><td>zkipster</td><td>Таблица и workflow-статусы</td></tr>
+      <tr><td>Исполнители</td><td>Fiverr / Qualia</td><td>Доверие, услуги, операции</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Визуальный вектор</h2>
+  <ul>
+    <li>Сохранять строгую чёрно-белую основу.</li>
+    <li>Использовать цвет только для ошибок, предупреждений и успеха.</li>
+    <li>Карточки применять для обзора, таблицы — для сравнения и операций.</li>
+    <li>Не дублировать контекстные разделы события в глобальном меню.</li>
+    <li>Показывать статус текстом, а не только цветом.</li>
+  </ul>
+</main>
+</body>
+</html>

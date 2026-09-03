@@ -44,7 +44,7 @@ export function RequestOrderCard({ request, deal }: Props) {
   };
 
   return (
-    <article className="flex h-full flex-col border border-gray-300 bg-white">
+    <article className="flex h-full flex-col overflow-hidden rounded-card border border-gray-300 bg-white">
       <div className="p-4 space-y-2 text-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-2">

@@ -1,3 +1,6 @@
+"use client";
+
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown } from "lucide-react";
 import { type SelectHTMLAttributes, forwardRef } from "react";
@@ -10,7 +13,9 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, error, options, id, ...props }, ref) => {
+    const accountTheme = useAccountTheme();
     const selectId = id || label?.toLowerCase().replace(/\s/g, "-");
+
     return (
       <div className={cn("flex flex-col gap-1", className)}>
         {label && (
@@ -22,7 +27,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             ref={ref}
             id={selectId}
-            className="w-full appearance-none rounded-[10px] border border-[#d4d4d4] bg-white py-2 pl-3 pr-8 text-sm focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]"
+            className={cn(
+              "w-full appearance-none rounded-button border bg-white py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1",
+              accountTheme
+                ? "border-[#d4d4d4] focus:border-[var(--account-accent)] focus:ring-[var(--account-accent)]"
+                : "border-[#d4d4d4] focus:border-[#171717] focus:ring-[#171717]",
+            )}
             {...props}
           >
             {options.map((opt) => (
@@ -36,6 +46,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {error && <span className="text-xs text-gray-700">{error}</span>}
       </div>
     );
-  }
+  },
 );
 Select.displayName = "Select";

@@ -248,7 +248,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
                   onClick={() => setSelectedHallId(hall.id)}
                   className="text-left h-full"
                 >
-                  <Card className="h-full hover:border-gray-900 transition-colors">
+                  <Card className="h-full">
                     <CardTitle>{hall.name}</CardTitle>
                     <CardDescription>
                       {hall.area.toLocaleString("ru-RU")} кв.м · до {hall.capacity} мест
@@ -326,7 +326,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
               onClick={() => setSelectedPavilionId(pavilion.id)}
               className="text-left h-full"
             >
-              <Card className="h-full hover:border-gray-900 transition-colors">
+              <Card className="h-full">
                 <CardTitle>{pavilion.name}</CardTitle>
                 <CardDescription>
                   {hallCount} {hallCount === 1 ? "зал" : hallCount < 5 ? "зала" : "залов"}

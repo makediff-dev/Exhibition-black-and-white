@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { Trash2 } from "lucide-react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -77,15 +76,10 @@ export default function CartPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <h1 className="text-2xl font-bold mb-2">Корзина</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Позиции сгруппированы по исполнителям — для каждого будет создан отдельный заказ
-        </p>
-
+    <CabinetAwareLayout
+      title="Корзина"
+      description="Позиции сгруппированы по исполнителям — для каждого будет создан отдельный заказ"
+    >
         {items.length === 0 ? (
           <EmptyState
             title="Корзина пуста"
@@ -109,7 +103,7 @@ export default function CartPage() {
 
                 <div className="space-y-4">
                   {group.lines.map((line) => (
-                    <div key={line.serviceId} className="border border-gray-200 p-3">
+                    <div key={line.serviceId} className="border border-gray-200 p-3 rounded-card">
                       <div className="flex justify-between gap-4">
                         <div className="flex-1">
                           <Link href={`/services/${line.serviceId}`} className="text-sm font-medium hover:underline">
@@ -124,7 +118,7 @@ export default function CartPage() {
                           <select
                             value={line.quantity}
                             onChange={(e) => updateItem(line.serviceId, { quantity: Number(e.target.value) })}
-                            className="border border-gray-300 px-2 py-1 text-sm"
+                            className="border border-gray-300 px-2 py-1 text-sm rounded-button"
                             aria-label="Количество"
                           >
                             {[1, 2, 3, 4, 5, 10].map((n) => (
@@ -172,7 +166,7 @@ export default function CartPage() {
               </Card>
             ))}
 
-            <div className="border border-gray-900 bg-gray-50 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <Card className="bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-600">Итого по корзине</p>
                 <p className="text-2xl font-bold">{formatPrice(total)}</p>
@@ -183,7 +177,7 @@ export default function CartPage() {
               <Link href="/checkout">
                 <Button size="lg">Перейти к оформлению</Button>
               </Link>
-            </div>
+            </Card>
           </div>
         )}
 
@@ -196,9 +190,6 @@ export default function CartPage() {
             <Button variant="outline" size="sm">Создать комплексную заявку</Button>
           </Link>
         </Card>
-      </main>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

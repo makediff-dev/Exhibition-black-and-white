@@ -371,7 +371,7 @@ function RequestDetailContent() {
             />
           ) : (
             requestDocuments.map((doc) => (
-              <div key={doc.id} className="border border-gray-300 p-3 text-sm">
+              <Card key={doc.id} className="text-sm">
                 <div className="flex flex-wrap justify-between items-center gap-3">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -384,7 +384,7 @@ function RequestDetailContent() {
                     <Badge variant="outline">{doc.status}</Badge>
                   </div>
                 </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
@@ -396,41 +396,43 @@ function RequestDetailContent() {
             <EmptyState title="Оплат пока нет" description="Оплаты появятся после создания сделки" />
           ) : (
             requestPayments.map((payment) => (
-              <div
+              <Card
                 key={payment.id}
-                className="flex flex-wrap justify-between items-center border border-gray-300 p-3 text-sm"
+                className="text-sm"
               >
-                <div>
-                  <p className="font-medium">{payment.type}</p>
-                  <p className="text-gray-600 text-xs">{payment.description}</p>
+                <div className="flex flex-wrap justify-between items-center gap-3">
+                  <div>
+                    <p className="font-medium">{payment.type}</p>
+                    <p className="text-gray-600 text-xs">{payment.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">{formatPrice(payment.amount)}</p>
+                    <Badge variant="outline" className="mt-1">{payment.status}</Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold">{formatPrice(payment.amount)}</p>
-                  <Badge variant="outline" className="mt-1">{payment.status}</Badge>
-                </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
       )}
 
       {activeTab === "files" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {request.files.length === 0 &&
           (!relatedDeal || relatedDeal.stages.flatMap((stage) => stage.files).length === 0) ? (
             <EmptyState title="Файлов пока нет" />
           ) : (
             <>
               {request.files.map((file) => (
-                <div key={file} className="border border-gray-300 p-3 text-sm">
+                <Card key={file} className="text-sm">
                   📄 {file} <span className="text-gray-500">— заявка</span>
-                </div>
+                </Card>
               ))}
               {relatedDeal?.stages.flatMap((stage) =>
                 stage.files.map((file) => (
-                  <div key={`${stage.id}-${file}`} className="border border-gray-300 p-3 text-sm">
+                  <Card key={`${stage.id}-${file}`} className="text-sm">
                     📄 {file} <span className="text-gray-500">— {stage.title}</span>
-                  </div>
+                  </Card>
                 ))
               )}
             </>

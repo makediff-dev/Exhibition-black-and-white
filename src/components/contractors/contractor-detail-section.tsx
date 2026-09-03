@@ -148,19 +148,13 @@ export function ContractorDetailSection({
 
           <div className="flex flex-wrap items-center gap-6 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="purple">Пригласить в заявку</Button>
+              <Button variant="blue">Пригласить в заявку</Button>
             </Link>
             <Link
               href={`/services?contractor=${contractor.id}`}
               className="text-sm text-gray-900 hover:underline"
             >
               Услуги исполнителя
-            </Link>
-            <Link
-              href={getContractorCheckHref(contractor.id, { role: linkRole })}
-              className="text-sm text-gray-900 hover:underline"
-            >
-              Проверка контрагента
             </Link>
           </div>
 
@@ -213,7 +207,7 @@ export function ContractorDetailSection({
                 <div className="grid sm:grid-cols-2 gap-3">
                   {services.map((service) => (
                     <Link key={service.id} href={`/services/${service.id}`}>
-                      <Card className="hover:border-gray-900 h-full">
+                      <Card hoverable className="h-full">
                         <CardTitle>{service.title}</CardTitle>
                         <p className="text-xs text-gray-600 mt-1">{service.category}</p>
                       </Card>

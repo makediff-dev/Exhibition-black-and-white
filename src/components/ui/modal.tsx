@@ -3,7 +3,9 @@
 import { cn } from "@/lib/utils/cn";
 import { X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./button";
+import styles from "./modal.module.css";
 
 interface ModalProps {
   open: boolean;
@@ -16,26 +18,37 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, footer, wide }: ModalProps) {
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gray-900/50" onClick={onClose} />
-      <div className={cn("relative z-10 w-full overflow-hidden rounded-[14px] border border-gray-900 bg-white shadow-lg", wide ? "max-w-2xl" : "max-w-lg")}>
-        <div className="flex items-center justify-between border-b border-gray-300 px-4 py-3">
-          <h2 className="text-base font-semibold">{title}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100" aria-label="Закрыть">
+  return createPortal(
+    <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
+      <div className={cn(styles.panel, wide ? styles.panelWide : styles.panelDefault)}>
+        <div className={styles.header}>
+          <h2 id="modal-title" className="text-base font-semibold">
+            {title}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className={styles.closeButton}
+            aria-label="Закрыть"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="px-4 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
-        {footer && <div className="border-t border-gray-300 px-4 py-3 flex gap-2 justify-end">{footer}</div>}
+        <div className={styles.body}>{children}</div>
+        {footer ? <div className={styles.footer}>{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -59,8 +72,17 @@ export function ConfirmModal({
       title={title}
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>Отмена</Button>
-          <Button onClick={() => { onConfirm(); onClose(); }}>Подтвердить</Button>
+          <Button variant="outline" onClick={onClose}>
+            Отмена
+          </Button>
+          <Button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+          >
+            Подтвердить
+          </Button>
         </>
       }
     >

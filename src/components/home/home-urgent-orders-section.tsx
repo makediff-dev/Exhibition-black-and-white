@@ -9,7 +9,7 @@ export function HomeUrgentOrdersSection() {
   const { handleRespond } = useHomeOrdersContext();
 
   return (
-    <HomeScrollSection title="Срочные заказы" linkHref="/requests" linkLabel="Смотреть все заказы">
+    <HomeScrollSection title="Срочные заказы" linkHref="/requests" linkLabel="Все заказы">
       {URGENT_HOME_ORDERS.map((order) => (
         <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} buttonVariant="blue" />
       ))}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
 import { Upload } from "lucide-react";
 import { useState } from "react";
@@ -13,6 +14,7 @@ export function FileUpload({
   onUpload?: (fileName: string) => void;
   accept?: string;
 }) {
+  const accountTheme = useAccountTheme();
   const [files, setFiles] = useState<string[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +27,14 @@ export function FileUpload({
 
   return (
     <div>
-      <label className="inline-flex items-center gap-2 border border-dashed border-gray-400 px-4 py-3 cursor-pointer hover:border-gray-900 text-sm">
+      <label
+        className={cn(
+          "inline-flex items-center gap-2 border border-dashed px-4 py-3 cursor-pointer text-sm rounded-button",
+          accountTheme
+            ? "border-gray-400 hover:border-[var(--account-accent)] text-gray-700"
+            : "border-gray-400 hover:border-gray-900",
+        )}
+      >
         <Upload className="h-4 w-4" />
         {label}
         <input type="file" className="hidden" onChange={handleChange} accept={accept} />
@@ -34,7 +43,7 @@ export function FileUpload({
         <ul className="mt-2 space-y-1">
           {files.map((f) => (
             <li key={f} className="text-xs text-gray-600 flex items-center gap-1">
-              <span className="border border-gray-300 px-1">📄</span> {f}
+              <span className="border border-gray-300 px-1 rounded-[4px]">📄</span> {f}
             </li>
           ))}
         </ul>
@@ -73,7 +82,7 @@ export function StepIndicator({
           >
             <div
               className={cn(
-                "flex h-7 w-7 items-center justify-center text-xs font-medium border shrink-0",
+                "flex h-7 w-7 items-center justify-center text-xs font-medium border shrink-0 rounded-button",
                 i < currentStep ? "bg-gray-900 text-white border-gray-900" :
                 i === currentStep ? "border-gray-900 text-gray-900" :
                 "border-gray-300 text-gray-400"

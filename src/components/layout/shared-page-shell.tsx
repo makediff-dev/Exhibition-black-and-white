@@ -4,13 +4,15 @@ import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
-import { useAuthStore } from "@/lib/store";
+import type { AccountRole } from "@/constants/account-role-themes";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 
 interface SharedPageShellProps {
   title: string;
   showBack?: boolean;
   backFallbackHref?: string;
   actions?: React.ReactNode;
+  activeNavSlug?: string;
   children: React.ReactNode;
 }
 
@@ -19,17 +21,20 @@ export function SharedPageShell({
   showBack = false,
   backFallbackHref,
   actions,
+  activeNavSlug,
   children,
 }: SharedPageShellProps) {
-  const { isAuthenticated } = useAuthStore();
+  const { inCabinet, accountRole } = useCabinetSession();
 
-  if (isAuthenticated) {
+  if (inCabinet && accountRole) {
     return (
       <AppShell
         title={title}
         showBack={showBack}
         backFallbackHref={backFallbackHref}
         actions={actions}
+        activeNavSlug={activeNavSlug}
+        accountRole={accountRole as AccountRole | undefined}
       >
         {children}
       </AppShell>

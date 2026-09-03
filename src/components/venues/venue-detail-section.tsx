@@ -123,7 +123,7 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {relatedEvents.slice(0, 6).map((event) => (
               <Link key={event.id} href={`/events/${event.id}`}>
-                <Card className="h-full hover:border-gray-900">
+                <Card hoverable className="h-full">
                   <CardTitle className="text-base">{event.title}</CardTitle>
                   <CardDescription className="mt-2 flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5 shrink-0" />

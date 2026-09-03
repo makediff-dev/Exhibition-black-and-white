@@ -14,6 +14,7 @@ export function HomeCategoriesSection() {
       linkLabel="Все услуги"
       showFilters={false}
       showActions={false}
+      variant="slider"
     >
       {categories.map((category, index) => (
         <Link

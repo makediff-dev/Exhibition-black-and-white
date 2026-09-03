@@ -38,8 +38,8 @@ export function BackButton({
       type="button"
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center gap-1 text-sm underline hover:text-gray-900",
-        className
+        "back-button inline-flex items-center gap-1 text-sm text-[#171717] underline hover:text-gray-700",
+        className,
       )}
     >
       <ArrowLeft className="h-3.5 w-3.5" />

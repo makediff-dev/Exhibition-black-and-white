@@ -137,6 +137,7 @@ export const useAuthStore = create<AuthState>()(
           ...persisted,
           user,
           accessibleAccounts,
+          isAuthenticated: persisted.isAuthenticated ?? Boolean(user),
         };
       },
     }

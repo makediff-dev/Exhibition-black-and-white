@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useRef } from "react";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
 import { useShowMore } from "@/hooks/use-show-more";
@@ -12,25 +11,10 @@ import { HomeCardsFilters } from "./home-cards-filters";
 import styles from "./home-page.module.css";
 
 export function HomeEventsSection() {
-  const gridRef = useRef<HTMLDivElement>(null);
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(SEED_EVENTS, {
     initialCount: 10,
     step: 5,
   });
-
-  const scrollToNewCards = useCallback(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-
-    requestAnimationFrame(() => {
-      grid.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }, []);
-
-  const handleShowMore = useCallback(() => {
-    showMore();
-    scrollToNewCards();
-  }, [scrollToNewCards, showMore]);
 
   return (
     <section className={styles.sectionCards}>
@@ -43,7 +27,7 @@ export function HomeEventsSection() {
 
           <HomeCardsFilters />
 
-          <div ref={gridRef} className={styles.eventsGrid}>
+          <div className={styles.cardsGrid}>
             {visibleItems.map(({ item: event, key, index }) => (
               <HomeTileCard
                 key={key}
@@ -58,12 +42,12 @@ export function HomeEventsSection() {
                 ]}
                 buttonLabel="Откликнуться"
                 buttonHref={`/events/${event.id}`}
-                buttonVariant="primary"
+                buttonVariant="purple"
               />
             ))}
           </div>
           <HomeShowMoreActions
-            onShowMore={handleShowMore}
+            onShowMore={showMore}
             canShowMore={canShowMore && !isAllVisible}
             allLinkHref="/events"
             allLinkLabel="Все мероприятия"

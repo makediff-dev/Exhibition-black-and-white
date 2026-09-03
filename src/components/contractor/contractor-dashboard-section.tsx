@@ -73,7 +73,7 @@ export function ContractorDashboardSection({ user }: Props) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {upcomingEvents.map((event) => (
             <Link key={event.id} href={`/events/${event.id}`}>
-              <Card className="h-full hover:border-gray-900 transition-colors">
+              <Card hoverable className="h-full">
                 <CardTitle className="text-base leading-snug">{event.title}</CardTitle>
                 <CardDescription className="mt-2">
                   {event.venue}, {event.city}

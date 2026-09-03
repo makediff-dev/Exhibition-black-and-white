@@ -15,6 +15,7 @@ import {
 import { SEED_EVENT_ORDERS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { DealStatus, EventOrder, EventOrderPriority } from "@/data/types";
 import { formatPrice } from "@/lib/utils/formatters";
+import { cn } from "@/lib/utils/cn";
 
 const PRIORITY_ORDER: EventOrderPriority[] = ["high", "medium", "normal"];
 
@@ -48,7 +49,8 @@ function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: Eve
   const href = getOrderHref(order);
   const content = (
     <Card
-      className={`h-full ${highlighted ? "border-2 border-gray-900" : ""}`}
+      hoverable={Boolean(href)}
+      className={cn("h-full", highlighted && "bg-gray-50")}
     >
       <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
         <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>

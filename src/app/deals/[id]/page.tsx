@@ -33,6 +33,7 @@ import type { Deal, DealStage, DealStatus } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
 
 const STAGE_STATUS_LABELS: Record<DealStage["status"], string> = {
@@ -199,8 +200,8 @@ function SafeDealFlow({ status }: { status: DealStatus }) {
   const currentIndex = SAFE_DEAL_STEPS.findIndex((s) => s.key === status);
 
   return (
-    <div className="border border-gray-300 p-4 mb-6">
-      <p className="text-sm font-medium flex items-center gap-2 mb-3">
+    <div className="safe-deal-flow mb-6 border border-gray-300 p-4">
+      <p className="mb-3 flex items-center gap-2 text-sm font-medium">
         <Shield className="h-4 w-4" />
         Безопасная сделка — этапы
       </p>
@@ -211,13 +212,14 @@ function SafeDealFlow({ status }: { status: DealStatus }) {
           return (
             <div
               key={step.key}
-              className={`px-2 py-1 text-xs border ${
+              className={cn(
+                "safe-deal-step border px-2 py-1 text-xs",
                 active
-                  ? "bg-gray-900 text-white border-gray-900"
+                  ? "border-gray-900 bg-gray-900 text-white"
                   : done
-                    ? "bg-gray-100 border-gray-400"
-                    : "border-gray-300 text-gray-400"
-              }`}
+                    ? "border-gray-400 bg-gray-100"
+                    : "border-gray-300 text-gray-400",
+              )}
             >
               {step.label}
             </div>
@@ -654,7 +656,7 @@ export default function DealPage() {
             <EmptyState title="Документов пока нет" description="Документы появятся после согласования" />
           ) : (
             dealDocuments.map((doc) => (
-              <div key={doc.id} className="border border-gray-300 p-3 text-sm">
+              <Card key={doc.id} className="text-sm">
                 <div className="flex flex-wrap justify-between items-center gap-3">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -678,7 +680,7 @@ export default function DealPage() {
                     )}
                   </div>
                 </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
@@ -690,34 +692,33 @@ export default function DealPage() {
             <EmptyState title="Оплат пока нет" />
           ) : (
             dealPayments.map((payment) => (
-              <div
-                key={payment.id}
-                className="flex flex-wrap justify-between items-center border border-gray-300 p-3 text-sm"
-              >
-                <div>
-                  <p className="font-medium">{payment.type}</p>
-                  <p className="text-gray-600 text-xs">{payment.description}</p>
+              <Card key={payment.id} className="text-sm">
+                <div className="flex flex-wrap justify-between items-center gap-3">
+                  <div>
+                    <p className="font-medium">{payment.type}</p>
+                    <p className="text-gray-600 text-xs">{payment.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">{formatPrice(payment.amount)}</p>
+                    <Badge variant="outline" className="mt-1">{payment.status}</Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold">{formatPrice(payment.amount)}</p>
-                  <Badge variant="outline" className="mt-1">{payment.status}</Badge>
-                </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
       )}
 
       {activeTab === "files" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {deal.stages.flatMap((s) => s.files).length === 0 ? (
             <EmptyState title="Файлов пока нет" />
           ) : (
             deal.stages.flatMap((s) =>
               s.files.map((f) => (
-                <div key={`${s.id}-${f}`} className="border border-gray-300 p-3 text-sm">
+                <Card key={`${s.id}-${f}`} className="text-sm">
                   📄 {f} <span className="text-gray-500">— {s.title}</span>
-                </div>
+                </Card>
               ))
             )
           )}

@@ -113,7 +113,7 @@ export function CustomerCartSection() {
 
           <div className="space-y-4">
             {group.lines.map((line) => (
-              <div key={line.serviceId} className="border border-gray-200 p-3">
+              <div key={line.serviceId} className="border border-gray-200 p-3 rounded-card">
                 <div className="flex justify-between gap-4">
                   <div className="flex-1">
                     {isExtendedCheckCartItem(line.serviceId) ? (
@@ -134,7 +134,7 @@ export function CustomerCartSection() {
                       onChange={(event) =>
                         updateItem(line.serviceId, { quantity: Number(event.target.value) })
                       }
-                      className="border border-gray-300 px-2 py-1 text-sm"
+                      className="border border-gray-300 px-2 py-1 text-sm rounded-button"
                       aria-label="Количество"
                     >
                       {[1, 2, 3, 4, 5, 10].map((value) => (
@@ -190,7 +190,7 @@ export function CustomerCartSection() {
         </Card>
       ))}
 
-      <div className="border border-gray-900 bg-gray-50 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <Card className="bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-sm text-gray-600">Итого по корзине</p>
           <p className="text-2xl font-bold">{formatPrice(total)}</p>
@@ -199,7 +199,7 @@ export function CustomerCartSection() {
         <Link href="/checkout">
           <Button size="lg">Перейти к оформлению</Button>
         </Link>
-      </div>
+      </Card>
 
       <Card className="border-dashed">
         <CardTitle className="text-base">Нужна комплексная услуга?</CardTitle>

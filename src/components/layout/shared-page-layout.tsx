@@ -4,7 +4,8 @@ import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
-import { useAuthStore } from "@/lib/store";
+import type { AccountRole } from "@/constants/account-role-themes";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 
 interface SharedPageLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface SharedPageLayoutProps {
   actions?: React.ReactNode;
   showBack?: boolean;
   backFallbackHref?: string;
+  activeNavSlug?: string;
 }
 
 export function SharedPageLayout({
@@ -20,16 +22,19 @@ export function SharedPageLayout({
   actions,
   showBack = false,
   backFallbackHref,
+  activeNavSlug,
 }: SharedPageLayoutProps) {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { inCabinet, accountRole } = useCabinetSession();
 
-  if (isAuthenticated) {
+  if (inCabinet && accountRole) {
     return (
       <AppShell
         title={title}
         actions={actions}
         showBack={showBack}
         backFallbackHref={backFallbackHref}
+        activeNavSlug={activeNavSlug}
+        accountRole={accountRole as AccountRole | undefined}
       >
         {children}
       </AppShell>

@@ -2,6 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { Children, cloneElement, isValidElement, useCallback, useMemo, useRef } from "react";
+import { cn } from "@/lib/utils/cn";
 import { useShowMore } from "@/hooks/use-show-more";
 import { HomeSectionLink } from "./home-section-link";
 import { HomeShowMoreActions } from "./home-show-more-button";
@@ -18,21 +19,26 @@ interface HomeScrollSectionProps {
   showAllCount?: number;
   showFilters?: boolean;
   showActions?: boolean;
+  denseGrid?: boolean;
+  variant?: "grid" | "slider";
 }
 
 export function HomeScrollSection({
   title,
   linkHref,
-  linkLabel = "Смотреть все",
+  linkLabel = "Все",
   children,
   initialVisibleCount = 5,
   incrementCount = 5,
   showAllCount,
   showFilters = true,
   showActions = true,
+  denseGrid = false,
+  variant = "grid",
 }: HomeScrollSectionProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const baseChildren = useMemo(() => Children.toArray(children), [children]);
+  const isSlider = variant === "slider";
 
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(baseChildren, {
     initialCount: initialVisibleCount,
@@ -41,46 +47,31 @@ export function HomeScrollSection({
   });
 
   const visibleChildren = useMemo(() => {
-    if (!showActions) {
+    if (isSlider) {
       return baseChildren;
     }
 
-    return visibleItems.map(({ key, index }) => {
-      const child = baseChildren[index % Math.min(initialVisibleCount, baseChildren.length)];
+    const items = showActions
+      ? visibleItems
+      : baseChildren.map((item, index) => ({ item, key: `static-${index}`, index }));
 
-      if (isValidElement(child)) {
-        return cloneElement(child, { key });
+    return items.map(({ item, key }) => {
+      if (isValidElement(item)) {
+        return cloneElement(item, { key });
       }
 
-      return child;
+      return item;
     });
-  }, [baseChildren, initialVisibleCount, showActions, visibleItems]);
+  }, [baseChildren, isSlider, showActions, visibleItems]);
 
-  const scrollToNewCards = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    requestAnimationFrame(() => {
-      track.scrollTo({
-        left: track.scrollWidth,
-        behavior: "smooth",
-      });
-    });
-  }, []);
-
-  const handleShowMore = useCallback(() => {
-    showMore();
-    scrollToNewCards();
-  }, [scrollToNewCards, showMore]);
-
-  const scrollNext = () => {
+  const scrollNext = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
     const card = track.firstElementChild as HTMLElement | null;
     const gapValue = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 24;
     const step = card ? card.offsetWidth + gapValue : 284;
     track.scrollBy({ left: step, behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <section className={styles.sectionCards}>
@@ -93,22 +84,28 @@ export function HomeScrollSection({
             </div>
           ) : null}
           {showFilters ? <HomeCardsFilters /> : null}
-          <div className={styles.scrollRow}>
-            <div ref={trackRef} className={styles.scrollTrack}>
+          {isSlider ? (
+            <div className={styles.scrollRow}>
+              <div ref={trackRef} className={styles.scrollTrack}>
+                {visibleChildren}
+              </div>
+              <button
+                type="button"
+                className={styles.scrollArrow}
+                aria-label="Прокрутить вправо"
+                onClick={scrollNext}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <div className={cn(styles.cardsGrid, denseGrid && styles.cardsGridDense)}>
               {visibleChildren}
             </div>
-            <button
-              type="button"
-              className={styles.scrollArrow}
-              aria-label="Прокрутить вправо"
-              onClick={scrollNext}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-          {showActions && (canShowMore || linkHref) ? (
+          )}
+          {!isSlider && showActions && (canShowMore || linkHref) ? (
             <HomeShowMoreActions
-              onShowMore={handleShowMore}
+              onShowMore={showMore}
               canShowMore={canShowMore && !isAllVisible}
               allLinkHref={linkHref}
               allLinkLabel={linkLabel}

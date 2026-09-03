@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { SharedPageShell } from "@/components/layout/shared-page-shell";
+import styles from "@/components/messages/messages.module.css";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
@@ -130,7 +131,7 @@ export default function MessagesPage() {
   }, [activeCategory, sortedThreads]);
 
   return (
-    <SharedPageShell title="Сообщения">
+    <SharedPageShell title="Сообщения" activeNavSlug="messages">
       <div className="w-full mr-auto text-left">
         <Tabs
           tabs={MESSAGE_TABS}
@@ -152,9 +153,13 @@ export default function MessagesPage() {
               return (
                 <Card
                   key={thread.id}
-                  className="flex flex-col h-full w-full max-w-md hover:border-gray-900"
+                  borderHover
+                  className="flex h-full w-full max-w-md flex-col"
                 >
-                  <Link href={`/messages/${thread.id}`} className="block flex-1 text-left">
+                  <Link
+                    href={`/messages/${thread.id}`}
+                    className="block flex-1 text-left cursor-pointer"
+                  >
                     <div className="flex flex-col gap-3 items-start">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline">
@@ -200,7 +205,7 @@ export default function MessagesPage() {
                     <div className="mt-4 pt-3 border-t border-gray-200 w-full text-left">
                       <Link
                         href={thread.relatedLink}
-                        className="text-xs underline text-gray-600 hover:text-gray-900"
+                        className={`text-xs underline ${styles.messageCardLink}`}
                       >
                         {getRelatedLinkLabel(thread)}
                       </Link>

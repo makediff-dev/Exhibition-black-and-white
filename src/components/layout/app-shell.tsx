@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
-import { getNavForRole, isNavItemActive } from "@/constants/nav-menus";
+import { getNavForRole, isNavItemActive, resolveActiveNavSlug } from "@/constants/nav-menus";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { PublicHeader } from "./public-header";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
+import { AccountThemeProvider } from "@/components/account/account-theme-provider";
+import type { AccountRole } from "@/constants/account-role-themes";
+import styles from "@/components/account/account-cabinet.module.css";
+import shellStyles from "@/components/layout/app-shell.module.css";
 
 export function AppShell({
   children,
@@ -18,6 +22,7 @@ export function AppShell({
   showBack = false,
   backFallbackHref,
   activeNavSlug,
+  accountRole,
 }: {
   children: React.ReactNode;
   title?: string;
@@ -25,8 +30,11 @@ export function AppShell({
   showBack?: boolean;
   backFallbackHref?: string;
   activeNavSlug?: string;
+  accountRole?: AccountRole;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarNavRef = useRef<HTMLElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -35,6 +43,7 @@ export function AppShell({
   const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
   const deals = usePrototypeStore((s) => s.deals);
   const nav = getNavForRole(user?.role || "");
+  const resolvedAccountRole = accountRole ?? (user?.role as AccountRole | undefined);
 
   const dealNavSlug = useMemo(() => {
     const match = pathname.match(/^\/deals\/([^/?#]+)/);
@@ -44,7 +53,35 @@ export function AppShell({
     return deal.status === "completed" ? "completed-projects" : "active-projects";
   }, [pathname, deals]);
 
-  const resolvedActiveNavSlug = activeNavSlug ?? dealNavSlug;
+  const resolvedActiveNavSlug = useMemo(() => {
+    if (activeNavSlug != null) return activeNavSlug;
+    if (dealNavSlug != null) return dealNavSlug;
+    const role = user?.role || "";
+    if (!role) return undefined;
+    return resolveActiveNavSlug(pathname, role);
+  }, [activeNavSlug, dealNavSlug, pathname, user?.role]);
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+
+  useLayoutEffect(() => {
+    const positionActiveLink = (navElement: HTMLElement | null) => {
+      if (!navElement) return;
+      const activeLink = navElement.querySelector<HTMLElement>('[data-nav-active="true"]');
+      if (!activeLink) return;
+
+      const centeredTop =
+        activeLink.offsetTop - (navElement.clientHeight - activeLink.offsetHeight) / 2;
+      const maxScrollTop = navElement.scrollHeight - navElement.clientHeight;
+      navElement.scrollTop = Math.max(0, Math.min(centeredTop, maxScrollTop));
+    };
+
+    positionActiveLink(sidebarNavRef.current);
+    if (sidebarOpen) {
+      positionActiveLink(mobileNavRef.current);
+    }
+  }, [resolvedActiveNavSlug, pathname, sidebarOpen, nav.length]);
 
   const handleLogout = () => {
     logout();
@@ -52,17 +89,27 @@ export function AppShell({
   };
 
   const renderNavLink = (item: (typeof nav)[number], onNavigate?: () => void) => {
-    const isActive = resolvedActiveNavSlug
-      ? item.slug === resolvedActiveNavSlug
-      : isNavItemActive(pathname, item);
+    const isActive =
+      resolvedActiveNavSlug !== undefined
+        ? item.slug === resolvedActiveNavSlug
+        : isNavItemActive(pathname, item, user?.role ?? undefined);
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={onNavigate}
+        data-nav-active={isActive ? "true" : undefined}
+        aria-current={isActive ? "page" : undefined}
         className={cn(
-          "block px-3 py-2 text-sm rounded-none",
-          isActive ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-200"
+          "block px-3 py-2 text-sm rounded-button",
+          isActive && shellStyles.sidebarNavLinkActive,
+          resolvedAccountRole
+            ? isActive
+              ? styles.accountNavActive
+              : styles.accountNavItem
+            : isActive
+              ? "bg-gray-900 text-white"
+              : "text-gray-700 hover:bg-gray-200",
         )}
       >
         {item.label}
@@ -70,12 +117,16 @@ export function AppShell({
     );
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <PublicHeader />
-      <div className="flex flex-1">
-        <aside className="hidden lg:flex w-60 shrink-0 border-r border-gray-300 bg-gray-50 flex-col">
-          <nav className="p-3 space-y-0.5 overflow-y-auto flex-1">
+  const cabinetBody = (
+    <div className={shellStyles.cabinetLayout}>
+        <aside
+          className={cn(
+            "hidden md:flex w-60 shrink-0 border-r border-gray-300 flex-col",
+            shellStyles.sidebarSticky,
+            resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
+          )}
+        >
+          <nav ref={sidebarNavRef} className={cn("p-3 space-y-0.5", shellStyles.sidebarNav)}>
             {nav.map((item) => renderNavLink(item))}
           </nav>
           {user && (
@@ -89,14 +140,19 @@ export function AppShell({
         </aside>
 
         {sidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-gray-900/50" onClick={() => setSidebarOpen(false)} />
-            <aside className="absolute left-0 top-0 h-full w-72 bg-gray-50 border-r border-gray-300 p-3 overflow-y-auto">
+            <aside
+              className={cn(
+                "absolute left-0 top-0 h-full w-72 border-r border-gray-300 p-3 overflow-y-auto",
+                resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
+              )}
+            >
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-semibold">Меню</span>
                 <button onClick={() => setSidebarOpen(false)}><X className="h-4 w-4" /></button>
               </div>
-              <nav className="space-y-0.5">
+              <nav ref={mobileNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
                 {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
               </nav>
               {user && (
@@ -120,12 +176,23 @@ export function AppShell({
         )}
 
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
-          <button className="lg:hidden mb-3 flex items-center gap-2 text-sm" onClick={() => setSidebarOpen(true)}>
+          <button
+            className={cn(
+              "md:hidden mb-3 flex items-center gap-2 text-sm",
+              resolvedAccountRole && styles.accountMenuButton,
+            )}
+            onClick={() => setSidebarOpen(true)}
+          >
             <Menu className="h-4 w-4" /> Меню кабинета
           </button>
           <div className="w-full">
             {showCompanyRegistrationPrompt && (
-              <div className="mb-4 border border-gray-900 bg-gray-50 p-4 text-sm">
+              <div
+                className={cn(
+                  "mb-4 border p-4 text-sm rounded-card",
+                  resolvedAccountRole ? styles.accountPromptBanner : "border-gray-900 bg-gray-50",
+                )}
+              >
                 <p className="font-semibold mb-1">Зарегистрируйте компанию</p>
                 <p className="text-gray-600 mb-3">
                   Вы подтвердили личный аккаунт. Теперь можно зарегистрировать компанию и выбрать
@@ -158,7 +225,19 @@ export function AppShell({
             {children}
           </div>
         </main>
-      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <PublicHeader />
+      {resolvedAccountRole ? (
+        <AccountThemeProvider role={resolvedAccountRole} className="flex-1 w-full">
+          {cabinetBody}
+        </AccountThemeProvider>
+      ) : (
+        <div className="flex-1 w-full">{cabinetBody}</div>
+      )}
     </div>
   );
 }

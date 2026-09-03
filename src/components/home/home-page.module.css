@@ -5,8 +5,8 @@
   --color-blue-dark: #2230c7;
   --color-green: #00b23d;
   --color-green-dark: #009a35;
-  --color-purple: #6f38dd;
-  --color-purple-dark: #5c2fc0;
+  --color-purple: #0aaee4;
+  --color-purple-dark: #0893c2;
   --color-pink: #ff0096;
   --color-pink-dark: #e00086;
   --color-footer: #1a8f8f;
@@ -81,6 +81,30 @@
   flex-shrink: 0;
 }
 
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 24px;
+}
+
+.cardsGridDense {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.cardsGrid .tileCard {
+  flex: unset;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+}
+
+.cardsGrid .categoryCard {
+  flex: unset;
+  width: 100%;
+  min-width: 0;
+}
+
 .scrollRow {
   position: relative;
   --scroll-arrow-size: 48px;
@@ -101,6 +125,7 @@
       (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) / var(--scroll-visible-cards)
     );
   min-width: 0;
+  scroll-snap-align: start;
 }
 
 .scrollRow:has(.categoryCard) .scrollArrow {
@@ -129,6 +154,7 @@
       (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) / var(--scroll-visible-cards)
     );
   align-self: stretch;
+  scroll-snap-align: start;
 }
 
 .scrollArrow {
@@ -158,7 +184,7 @@
   justify-content: center;
   align-items: center;
   gap: 20px;
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 .showMoreButton {
@@ -180,7 +206,9 @@
 }
 
 .categoryCard {
-  scroll-snap-align: start;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
 .categoryImage {
@@ -212,6 +240,60 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
   padding-top: 12px;
+  align-items: start;
+}
+
+.quickActionItem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.quickActionRegisterButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.quickActionRegisterButton:hover {
+  filter: brightness(0.92);
+  color: #fff;
+}
+
+.quickActionRegisterButton1 {
+  background: linear-gradient(159.44deg, #28b5b3 0%, #6ad7a8 100.01%);
+}
+
+.quickActionRegisterButton2 {
+  background: linear-gradient(122.62deg, #612fff 0%, #d200a3 100%);
+}
+
+.quickActionRegisterButton3 {
+  background: linear-gradient(122.62deg, #072fff 0%, #8415f3 100%);
+}
+
+.quickActionRegisterButton4 {
+  background: linear-gradient(122.62deg, #0be2d6 7.47%, #0558fa 97.24%);
+}
+
+.quickActionRegisterButton5 {
+  background: linear-gradient(122.62deg, #e31ab6 0%, #f80f55 100%);
 }
 
 .quickActionsTitle {
@@ -235,7 +317,7 @@
 }
 
 .quickActionCard1 {
-  background: linear-gradient(122.62deg, #ff4f42 0%, #ff8e3c 100%);
+  background: linear-gradient(159.44deg, #28b5b3 0%, #6ad7a8 100.01%);
 }
 
 .quickActionCard2 {
@@ -298,8 +380,13 @@
   display: block;
 }
 
+.quickActionImagePhotoContain {
+  object-fit: contain;
+  object-position: center bottom;
+  padding-inline: 12px;
+}
+
 .tileCard {
-  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   border: 0;
@@ -415,6 +502,7 @@
 .tileButtonBlue,
 .tileButtonGreen,
 .tileButtonPurple,
+.tileButtonViolet,
 .tileButtonPink {
   display: inline-flex;
   align-items: center;
@@ -432,43 +520,51 @@
 }
 
 .tileButtonFilled {
-  background: var(--color-primary);
+  background: #28b5b3;
 }
 
 .tileButtonFilled:hover {
-  background: var(--color-primary-dark);
+  background: #1f9696;
 }
 
 .tileButtonBlue {
-  background: var(--color-blue);
+  background: #2939eb;
 }
 
 .tileButtonBlue:hover {
-  background: var(--color-blue-dark);
+  background: #2230c7;
 }
 
 .tileButtonGreen {
-  background: var(--color-green);
+  background: #00b23d;
 }
 
 .tileButtonGreen:hover {
-  background: var(--color-green-dark);
+  background: #009a35;
 }
 
 .tileButtonPurple {
-  background: var(--color-purple);
+  background: #0aaee4;
 }
 
 .tileButtonPurple:hover {
-  background: var(--color-purple-dark);
+  background: #0893c2;
+}
+
+.tileButtonViolet {
+  background: #683bd9;
+}
+
+.tileButtonViolet:hover {
+  background: #5730c0;
 }
 
 .tileButtonPink {
-  background: var(--color-pink);
+  background: #ff0096;
 }
 
 .tileButtonPink:hover {
-  background: var(--color-pink-dark);
+  background: #e00086;
 }
 
 .filtersRow {
@@ -620,7 +716,7 @@
 .heroBanner {
   position: relative;
   width: 100%;
-  height: 585px;
+  height: 400px;
   background: #e5e5e5;
   border: 0;
   border-radius: var(--radius-card);
@@ -1097,28 +1193,13 @@
   flex-shrink: 0;
 }
 
-.eventsGrid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  column-gap: 24px;
-  row-gap: 24px;
-  padding-top: 0;
-}
-
-.eventsGrid .tileCard {
-  flex: unset;
-  width: 100%;
-  max-width: none;
-  height: 100%;
-}
-
 @media (max-width: 1280px) {
-  .eventsGrid {
+  .cardsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .scrollTrack .tileCard {
-    flex: 0 0 240px;
+  .cardsGridDense {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .quickActionsGrid {
@@ -1156,7 +1237,8 @@
     padding-inline: 16px;
   }
 
-  .eventsGrid {
+  .cardsGrid,
+  .cardsGridDense {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 16px;
     row-gap: 16px;

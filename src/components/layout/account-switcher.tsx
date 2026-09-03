@@ -60,20 +60,20 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          "inline-flex items-center justify-between gap-2 border border-gray-900 bg-white px-3 py-1.5 text-sm font-medium hover:bg-gray-50",
-          fullWidth ? "w-full" : "max-w-[260px]"
+          "inline-flex w-[220px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 rounded-button",
+          fullWidth && "w-full max-w-none"
         )}
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <span className="truncate text-left">{user.name}</span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
+        <span className="min-w-0 flex-1 truncate text-left">{user.name}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (
         <div
           className={cn(
-            "absolute right-0 top-full z-50 mt-1 min-w-[280px] border border-gray-300 bg-white shadow-sm",
+            "absolute right-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden border border-gray-300 bg-white shadow-sm rounded-card",
             fullWidth && "left-0 right-0 min-w-0"
           )}
           role="listbox"

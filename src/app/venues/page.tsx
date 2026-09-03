@@ -3,8 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Filter } from "lucide-react";
 import { VenueCard } from "@/components/catalog/venue-card";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -31,13 +30,9 @@ export default function VenuesPage() {
 
 function VenuesPageFallback() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
-        <LoadingState message="Загрузка площадок..." />
-      </main>
-      <Footer />
-    </div>
+    <CabinetAwareLayout title="Площадки">
+      <LoadingState message="Загрузка площадок..." />
+    </CabinetAwareLayout>
   );
 }
 
@@ -108,18 +103,11 @@ function VenuesPageContent() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Площадки</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Каталог площадок для выставок и мероприятий — павильоны, залы и инфраструктура.
-          </p>
-        </div>
-
-        <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
+    <CabinetAwareLayout
+      title="Площадки"
+      description="Каталог площадок для выставок и мероприятий — павильоны, залы и инфраструктура."
+    >
+      <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
         </Button>
@@ -182,7 +170,6 @@ function VenuesPageContent() {
             )}
           </section>
         </div>
-      </main>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
         {filterPanel}
@@ -190,8 +177,6 @@ function VenuesPageContent() {
           Применить
         </Button>
       </Drawer>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

@@ -215,10 +215,10 @@ export function ContractorMyResponsesSection({
 
             return (
               <Link key={response.id} href={`/requests/${response.requestId}/respond`}>
-                <Card className="hover:border-gray-900 transition-colors">
+                <Card hoverable className="">
                   <div className="flex justify-between items-start gap-3 flex-wrap">
                     <div>
-                      <CardTitle>{request?.title ?? "Заявка"}</CardTitle>
+                      <CardTitle>{request?.title ??"Заявка"}</CardTitle>
                       <CardDescription>
                         {formatPrice(response.price)} · {response.deadline} · Статус:{" "}
                         {RESPONSE_STATUS_LABELS[response.status] ?? response.status}

@@ -188,7 +188,7 @@ export function OrganizerSettingsSection({
           </CardDescription>
         </div>
 
-        <div className="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700 space-y-2">
+        <div className="rounded-card border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700 space-y-2">
           <p className="flex items-start gap-2">
             <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
             Администратор может приглашать сотрудников, назначать доступ к разделам кабинета и
@@ -246,7 +246,7 @@ export function OrganizerSettingsSection({
             {PERMISSION_SECTIONS.map((section) => (
               <label
                 key={section.id}
-                className="flex items-center gap-2 text-sm cursor-pointer border border-gray-200 px-3 py-2"
+                className="flex items-center gap-2 text-sm cursor-pointer rounded-button border border-gray-200 px-3 py-2"
               >
                 <input
                   type="checkbox"
@@ -367,7 +367,7 @@ export function OrganizerSettingsSection({
             {PERMISSION_SECTIONS.map((section) => (
               <label
                 key={section.id}
-                className="flex items-center gap-2 text-sm cursor-pointer border border-gray-200 px-3 py-2"
+                className="flex items-center gap-2 text-sm cursor-pointer rounded-button border border-gray-200 px-3 py-2"
               >
                 <input
                   type="checkbox"

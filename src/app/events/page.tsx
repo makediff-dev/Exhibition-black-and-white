@@ -7,8 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { EventsDateFilter, isEventInSelectedPeriod } from "@/components/catalog/events-calendar";
 import { EventCard } from "@/components/catalog/event-card";
 import { Filter } from "lucide-react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
@@ -248,13 +247,9 @@ export default function EventsPage() {
 
 function EventsPageFallback() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
-        <LoadingState message="Загрузка мероприятий..." />
-      </main>
-      <Footer />
-    </div>
+    <CabinetAwareLayout title="Выставки и мероприятия">
+      <LoadingState message="Загрузка мероприятий..." />
+    </CabinetAwareLayout>
   );
 }
 
@@ -382,9 +377,10 @@ function EventsPageContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-
+    <CabinetAwareLayout
+      title="Выставки и мероприятия"
+      description={`Город: ${selectedCity} · Каталог мероприятий для участия`}
+    >
       <CityPickerModal
         open={cityModalOpen}
         onClose={() => setCityModalOpen(false)}
@@ -396,15 +392,7 @@ function EventsPageContent() {
         onConfirm={confirmCity}
       />
 
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Выставки и мероприятия</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Город: {selectedCity} · Каталог мероприятий для участия
-          </p>
-        </div>
-
-        <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
+      <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
         </Button>
@@ -484,7 +472,6 @@ function EventsPageContent() {
             )}
           </section>
         </div>
-      </main>
 
       <Drawer open={filterDrawerOpen} onClose={() => setFilterDrawerOpen(false)} title="Фильтры">
         <FilterFields
@@ -512,8 +499,6 @@ function EventsPageContent() {
         />
         <Button variant={EVENTS_ACCENT} className="w-full mt-4" onClick={() => setFilterDrawerOpen(false)}>Применить</Button>
       </Drawer>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

@@ -202,12 +202,12 @@ export function RepeatOrderForm({
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="border border-gray-300 bg-gray-50 p-4 text-sm">
+      <div className="border border-gray-300 bg-gray-50 p-4 text-sm rounded-card">
         <p className="font-medium text-gray-900">Повтор заказа на основе {deal.number}</p>
         <p className="text-gray-600 mt-1">{deal.title}</p>
       </div>
 
-      <div className="flex items-start gap-2 border border-gray-900 p-3 text-sm">
+      <div className="flex items-start gap-2 border border-gray-300 bg-white p-3 text-sm rounded-card">
         <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
         <p className="font-medium">Цена может измениться!</p>
       </div>

@@ -4,7 +4,7 @@ import { HomeTileCard } from "./home-tile-card";
 
 export function HomeRecommendedVenuesSection() {
   return (
-    <HomeScrollSection title="Рекомендованные площадки" linkHref="/venues" linkLabel="Смотреть все площадки">
+    <HomeScrollSection title="Рекомендованные площадки" linkHref="/venues" linkLabel="Все площадки">
       {HOME_RECOMMENDED_VENUES.map((venue) => (
         <HomeTileCard
           key={venue.id}

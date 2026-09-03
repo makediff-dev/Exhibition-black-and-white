@@ -22,6 +22,7 @@ import { REQUEST_FORMAT_DESCRIPTIONS, REQUEST_FORMAT_LABELS } from "@/constants/
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Request, RequestFormat, TorSection } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { cn } from "@/lib/utils/cn";
 import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
 import {
   formatEventMonthLabel,
@@ -424,11 +425,12 @@ export function RequestWizard({
                       key={contractor.id}
                       type="button"
                       onClick={() => toggleInvitedContractor(contractor.id)}
-                      className={`text-left border px-3 py-2 text-sm transition-colors ${
+                      className={cn(
+                        "text-left border px-3 py-2 text-sm transition-colors rounded-card",
                         selected
-                          ? "border-gray-900 bg-slate-100 font-medium"
-                          : "border-gray-300 hover:border-gray-500"
-                      }`}
+                          ? "border-[var(--account-accent,#2939eb)] bg-[var(--account-accent-soft,#eef0fe)] font-medium"
+                          : "border-gray-300 hover:border-[var(--account-accent,#2939eb)] hover:bg-[var(--account-accent-soft,#eef0fe)]",
+                      )}
                     >
                       {contractor.name}
                       <span className="block text-xs text-gray-600 mt-0.5">{contractor.city}</span>

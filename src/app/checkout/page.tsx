@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { BackButton } from "@/components/ui/back-button";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
@@ -139,34 +137,25 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <PublicHeader />
-        <main className="flex-1 mx-auto max-w-site w-full px-4 py-12">
-          <EmptyState
-            title="Нечего оформлять"
-            description="Корзина пуста — добавьте услуги"
-            actionLabel="В каталог услуг"
-            onAction={() => router.push("/services")}
-          />
-        </main>
-        <Footer />
-      </div>
+      <CabinetAwareLayout title="Оформление заказа">
+        <EmptyState
+          title="Нечего оформлять"
+          description="Корзина пуста — добавьте услуги"
+          actionLabel="В каталог услуг"
+          onAction={() => router.push("/services")}
+        />
+      </CabinetAwareLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <BackButton fallbackHref="/cart" className="mb-4" />
-
-        <h1 className="text-2xl font-bold mb-2">Оформление заказа</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Каждый исполнитель получит отдельный заказ (безопасная сделка). Это позволяет независимо согласовывать условия и оплату с каждым подрядчиком.
-        </p>
-
-        <div className="border border-gray-900 bg-gray-50 p-4 mb-6 text-sm">
+    <CabinetAwareLayout
+      title="Оформление заказа"
+      description="Каждый исполнитель получит отдельный заказ (безопасная сделка). Это позволяет независимо согласовывать условия и оплату с каждым подрядчиком."
+      showBack
+      backFallbackHref="/cart"
+    >
+        <div className="mb-6 rounded-card border border-gray-300 bg-gray-50 p-4 text-sm">
           <p className="font-medium mb-1">Как это работает</p>
           <ol className="list-decimal pl-5 space-y-1 text-gray-700">
             <li>Для каждого исполнителя создаётся отдельная сделка</li>
@@ -222,9 +211,6 @@ export default function CheckoutPage() {
             <Button variant="outline">Назад в корзину</Button>
           </Link>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

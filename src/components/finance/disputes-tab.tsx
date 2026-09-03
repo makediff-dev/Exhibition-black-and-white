@@ -26,7 +26,7 @@ function DisputeCard({ deal }: { deal: Deal }) {
   const recentEvents = deal.history.slice(-2);
 
   return (
-    <Card className="p-[10px] border-gray-900">
+    <Card className="p-[10px]">
       <div className="flex flex-col gap-[10px]">
         <div className="flex flex-wrap items-start justify-between gap-[10px]">
           <div className="space-y-[10px]">
@@ -80,11 +80,11 @@ function DisputeCard({ deal }: { deal: Deal }) {
         </div>
 
         {recentEvents.length > 0 && (
-          <div className="border border-gray-200 divide-y divide-gray-100">
+          <div className="rounded-card border border-gray-200 p-[10px] space-y-[10px]">
             {recentEvents.map((event, index) => (
               <div
                 key={`${deal.id}-${event.date}-${index}`}
-                className="flex flex-wrap items-center justify-between gap-2 px-[10px] py-[10px] text-xs"
+                className="flex flex-wrap items-center justify-between gap-2 text-xs"
               >
                 <span className="text-gray-700">{event.action}</span>
                 <span className="text-gray-500">

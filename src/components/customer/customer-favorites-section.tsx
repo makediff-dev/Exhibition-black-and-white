@@ -59,7 +59,7 @@ const FAVORITE_SECTIONS = [
 function FavoriteEventCard({ event }: { event: Event }) {
   return (
     <Link href={`/events/${event.id}`}>
-      <Card className="h-full hover:border-gray-900">
+      <Card hoverable className="h-full">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
         </div>
@@ -80,7 +80,7 @@ function FavoriteEventCard({ event }: { event: Event }) {
 function FavoriteContractorCard({ contractor }: { contractor: Contractor }) {
   return (
     <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
-      <Card className="h-full hover:border-gray-900">
+      <Card hoverable className="h-full">
         <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
         <CardDescription>
           {contractor.city} · {contractor.geography}
@@ -104,7 +104,7 @@ function FavoriteVenueCard({ venueId }: { venueId: string }) {
 
   return (
     <Link href={href}>
-      <Card className="h-full hover:border-gray-900">
+      <Card hoverable className="h-full">
         <CardTitle className="text-base leading-snug">{venue.shortName}</CardTitle>
         <CardDescription className="flex items-center gap-1 mt-2">
           <MapPin className="h-3.5 w-3.5 shrink-0" />

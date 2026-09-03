@@ -228,14 +228,14 @@ export function VenueEventDetailSection({
                   href={`/account/venue/bookings/${booking.id}`}
                   className="block h-full"
                 >
-                  <Card className="h-full hover:border-gray-900 transition-colors">
+                  <Card hoverable className="h-full">
                     <div className="flex flex-wrap items-center gap-3 mb-2">
                       <Badge variant="outline">{periodLabel}</Badge>
                       <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
                         {BOOKING_STATUS_LABELS[booking.status]}
                       </Badge>
                     </div>
-                    <CardTitle className="text-sm">{hall?.name ?? "Зал"}</CardTitle>
+                    <CardTitle className="text-sm">{hall?.name ??"Зал"}</CardTitle>
                     <CardDescription className="mt-2 space-y-1">
                       <span className="flex items-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5 shrink-0" />

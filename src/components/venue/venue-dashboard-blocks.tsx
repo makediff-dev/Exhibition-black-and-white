@@ -24,6 +24,7 @@ import {
 import type { Booking, EventOrder, VenueInquiry } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { cn } from "@/lib/utils/cn";
 
 const ACTION_ORDER_STATUSES = new Set([
   "pending",
@@ -115,10 +116,11 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
 
           return (
             <Link key={order.id} href={`/account/venue/orders/${order.eventId}`} className="block h-full">
-              <Card
-                className={`h-full transition-colors hover:border-gray-900 ${
-                  highlighted ? "border-2 border-gray-900 bg-gray-50" : ""
-                }`}
+              <Card hoverable
+                className={cn(
+                  "h-full",
+                  highlighted && "bg-gray-50",
+                )}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                   <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
@@ -218,7 +220,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
 
           return (
             <Link key={booking.id} href={`/account/venue/bookings/${booking.id}`} className="block h-full">
-              <Card className="h-full hover:border-gray-900 transition-colors">
+              <Card hoverable className="h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <Badge variant="outline">
                     {booking.periodType

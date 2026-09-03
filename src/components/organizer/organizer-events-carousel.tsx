@@ -98,7 +98,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
               href={`/account/organizer/edit-event?id=${event.id}`}
               className="snap-start shrink-0 w-[240px]"
             >
-              <Card className="h-full hover:border-gray-900 transition-colors overflow-hidden p-0">
+              <Card hoverable className="h-full overflow-hidden p-0">
                 <div className="h-28 bg-gray-100 border-b border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
                   {photo?.title ?? "Фото мероприятия"}
                 </div>

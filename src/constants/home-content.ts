@@ -1,37 +1,56 @@
 import { HOME_IMAGES } from "./home-images";
 
+export type HomeQuickActionRegisterRole = "contractor" | "customer" | "organizer" | "venue";
+
 export const HOME_QUICK_ACTIONS = [
   {
     href: "/services",
     title: "Найти услугу",
     text: "Каталог услуг для выставок: строительство стендов, дизайн, логистика и сопутствующие работы.",
     imageUrl: HOME_IMAGES.quickActions[0],
+    registerRole: "contractor",
+    registerLabel: "Зарегистрировать исполнителя",
   },
   {
     href: "/contractors",
     title: "Найти исполнителя",
     text: "Проверенные исполнители с портфолио, рейтингом и отзывами по категориям выставочных услуг.",
     imageUrl: HOME_IMAGES.quickActions[1],
+    registerRole: "contractor",
+    registerLabel: "Зарегистрировать исполнителя",
   },
   {
     href: "/requests/new",
     title: "Разместить заказ",
     text: "Опубликуйте заявку и получите отклики от исполнителей или выберите формат безопасной сделки.",
     imageUrl: HOME_IMAGES.quickActions[2],
+    registerRole: "customer",
+    registerLabel: "Зарегистрировать заказчика",
   },
   {
     href: "/events",
     title: "Найти выставку",
     text: "Календарь выставок, форумов и конференций по отраслям, городам и датам проведения.",
     imageUrl: HOME_IMAGES.quickActions[3],
+    registerRole: "organizer",
+    registerLabel: "Зарегистрировать организатора",
   },
   {
     href: "/venues",
     title: "Найти площадку",
     text: "Площадки для проведения мероприятий: павильоны, залы, инфраструктура и условия аренды.",
     imageUrl: HOME_IMAGES.quickActions[4],
+    registerRole: "venue",
+    registerLabel: "Зарегистрировать площадку",
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  href: string;
+  title: string;
+  text: string;
+  imageUrl: string;
+  registerRole: HomeQuickActionRegisterRole;
+  registerLabel: string;
+}>;
 
 export const HOME_AUDIENCE_BLOCKS = [
   {

@@ -94,13 +94,13 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{venueNotifications}</CardTitle>
             <CardDescription>Новые уведомления</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/payments">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{incomingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · входящие</CardDescription>
             {incomingPending.breakdown ? (
@@ -111,7 +111,7 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
           </Card>
         </Link>
         <Link href="/account/venue/payments">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{outgoingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · исходящие</CardDescription>
             {outgoingPending.breakdown ? (
@@ -122,19 +122,19 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
           </Card>
         </Link>
         <Link href="/account/venue/halls">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{pavilionCount}</CardTitle>
             <CardDescription>Павильоны</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/bookings">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{pendingBookings}</CardTitle>
             <CardDescription>Ожидают подтверждения</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/halls">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{hallCount}</CardTitle>
             <CardDescription>Залов</CardDescription>
           </Card>

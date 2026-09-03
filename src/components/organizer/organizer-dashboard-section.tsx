@@ -52,19 +52,19 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{organizerNotifications}</CardTitle>
             <CardDescription>Новые уведомления</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/payments">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{incomingInvoices}</CardTitle>
             <CardDescription>Неоплаченные счета · входящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/payments">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{outgoingInvoices}</CardTitle>
             <CardDescription>Неоплаченные счета · исходящие</CardDescription>
           </Card>
@@ -73,19 +73,19 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
 
       <div className="grid md:grid-cols-3 gap-3">
         <Link href="/account/organizer/orders">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{incomingOrders}</CardTitle>
             <CardDescription>Заказы · входящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/orders">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{outgoingOrders}</CardTitle>
             <CardDescription>Заказы · исходящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/events">
-          <Card className="hover:border-gray-900 transition-colors h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{organizerEvents.length}</CardTitle>
             <CardDescription>Мероприятий</CardDescription>
           </Card>

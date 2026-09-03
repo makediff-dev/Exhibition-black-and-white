@@ -16,7 +16,7 @@ export function ReviewCard({ review, onClick }: Props) {
   const extraPhotos = Math.max(photos.length - photoPreview.length, 0);
 
   const content = (
-    <Card className={`h-full flex flex-col ${onClick ? "hover:border-gray-900 transition-colors cursor-pointer" : ""}`}>
+    <Card className="h-full flex flex-col">
       <p className="text-sm font-medium leading-snug mb-[10px]">{review.author}</p>
 
       <p className="text-sm text-gray-700 flex-1">{review.text}</p>

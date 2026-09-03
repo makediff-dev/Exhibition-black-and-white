@@ -33,25 +33,26 @@ export default function HomePage() {
           <HomeCategoryOrdersSection
             categoryIndex={0}
             linkHref="/requests"
-            linkLabel="Смотреть все заказы"
+            linkLabel="Все заказы"
           />
           <HomeCategoryOrdersSection
             categoryIndex={1}
-            linkHref="/services"
-            linkLabel="Все услуги"
+            linkHref="/requests"
+            linkLabel="Все заказы"
           />
           <HomeCategoryOrdersSection
             categoryIndex={2}
-            linkHref="/services"
-            linkLabel="Все услуги"
+            linkHref="/requests"
+            linkLabel="Все заказы"
           />
           <HomeRecommendedServicesSection />
           <HomeCategoryOrdersSection
             categoryIndex={0}
-            linkHref="/requests"
-            linkLabel="Смотреть все заказы"
+            linkHref="/services"
+            linkLabel="Все услуги"
             idSuffix="-repeat"
-            buttonVariant="green"
+            buttonVariant="primary"
+            buttonLabel="Подробнее"
           />
           <HomeRecommendedContractorsSection />
           <HomeContractorsCategorySection

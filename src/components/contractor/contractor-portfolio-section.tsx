@@ -193,7 +193,7 @@ export function PortfolioPreviewCard({
     <>
       <PortfolioPhotoCarousel item={item} interactive={variant === "compact"} />
       <p className="text-xs text-gray-500">{item.year}</p>
-      <CardTitle className="mt-1 text-sm">{item.title || "Новый проект"}</CardTitle>
+      <CardTitle className="mt-1 text-sm">{item.title ||"Новый проект"}</CardTitle>
       <CardDescription className="mt-2 flex-1 line-clamp-2 text-xs">
         {item.description || "Добавьте описание проекта"}
       </CardDescription>

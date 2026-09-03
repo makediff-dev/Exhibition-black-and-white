@@ -1,0 +1,13 @@
+.borderHover,
+.hoverable {
+  transition: border-color 0.15s ease;
+}
+
+.borderHover:hover,
+.hoverable:hover {
+  border-color: var(--account-accent, #2939eb) !important;
+}
+
+.hoverable {
+  cursor: pointer;
+}

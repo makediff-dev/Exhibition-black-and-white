@@ -5,14 +5,14 @@ import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Star, Heart } from "lucide-react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
+import { cn } from "@/lib/utils/cn";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -70,13 +70,10 @@ export default function ServiceDetailPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
+    <CabinetAwareLayout>
+      <BackButton fallbackHref="/services" className="mb-4" />
 
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <BackButton fallbackHref="/services" className="mb-4" />
-
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -246,7 +243,13 @@ export default function ServiceDetailPage() {
                 Итого: <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
               </p>
 
-              <Button className="w-full" variant="green" onClick={handleAddToCart}>
+              <Button
+                className={cn(
+                  "w-full !border-[#2939eb] !bg-[#2939eb] !text-white",
+                  "hover:!border-[#2230c7] hover:!bg-[#2230c7]",
+                )}
+                onClick={handleAddToCart}
+              >
                 <ShoppingCart className="h-4 w-4" />
                 В корзину
               </Button>
@@ -261,9 +264,6 @@ export default function ServiceDetailPage() {
             </div>
           </aside>
         </div>
-      </main>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

@@ -55,7 +55,7 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {myEvents.map((event) => (
           <Link key={event.id} href={`/events/${event.id}`}>
-            <Card className="h-full hover:border-gray-900">
+            <Card hoverable className="h-full">
               <Badge variant="outline" className="mb-2">
                 {EVENT_CATEGORY_LABELS[event.category]}
               </Badge>

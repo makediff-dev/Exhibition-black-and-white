@@ -58,7 +58,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
           <div className="flex w-full flex-col gap-2">
             <Button
               size="sm"
-              variant="purple"
+              variant="violet"
               className="w-full"
               onClick={(event) => {
                 event.preventDefault();

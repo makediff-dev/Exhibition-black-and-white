@@ -188,7 +188,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
 
             return (
               <Link key={event.id} href={`/account/venue/events/${event.id}`} className="block h-full">
-                <Card className="h-full hover:border-gray-900 transition-colors">
+                <Card hoverable className="h-full">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge variant="outline">
                       {event.category === "exhibition"

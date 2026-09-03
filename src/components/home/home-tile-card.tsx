@@ -1,5 +1,8 @@
 import Link from "next/link";
-import type { HomeTileButtonVariant } from "@/constants/home-button-variants";
+import {
+  HOME_TILE_BUTTON_VARIANTS,
+  type HomeTileButtonVariant,
+} from "@/constants/home-button-variants";
 import styles from "./home-page.module.css";
 
 export interface HomeTileCardMetaItem {
@@ -12,6 +15,7 @@ const BUTTON_CLASS_MAP: Record<HomeTileButtonVariant, string> = {
   blue: styles.tileButtonBlue,
   green: styles.tileButtonGreen,
   purple: styles.tileButtonPurple,
+  violet: styles.tileButtonViolet,
   pink: styles.tileButtonPink,
 };
 
@@ -35,6 +39,8 @@ export function HomeTileCard({
   imageUrl,
 }: HomeTileCardProps) {
   const buttonClass = BUTTON_CLASS_MAP[buttonVariant];
+  const buttonColors = HOME_TILE_BUTTON_VARIANTS[buttonVariant];
+  const buttonStyle = { backgroundColor: buttonColors.background };
 
   return (
     <article className={styles.tileCard}>
@@ -69,11 +75,11 @@ export function HomeTileCard({
 
         <div className={styles.tileButtonWrap}>
           {buttonHref ? (
-            <Link href={buttonHref} className={buttonClass}>
+            <Link href={buttonHref} className={buttonClass} style={buttonStyle}>
               {buttonLabel}
             </Link>
           ) : (
-            <button type="button" className={buttonClass} onClick={onButtonClick}>
+            <button type="button" className={buttonClass} style={buttonStyle} onClick={onButtonClick}>
               {buttonLabel}
             </button>
           )}

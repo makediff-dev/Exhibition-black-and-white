@@ -1,3 +1,7 @@
+"use client";
+
+import { useAccountTheme } from "@/components/account/account-theme-provider";
+import styles from "@/components/account/account-cabinet.module.css";
 import { FileQuestion, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./button";
@@ -18,16 +22,21 @@ export function EmptyState({
   actionHref?: string;
   className?: string;
 }) {
+  const accountTheme = useAccountTheme();
+
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-center justify-center py-16 text-center border border-dashed border-gray-300 min-h-[280px]",
-        className
+        "flex w-full min-h-[280px] flex-col items-center justify-center border border-dashed py-16 text-center",
+        accountTheme
+          ? cn("rounded-card", styles.accountEmptyState)
+          : "rounded-[14px] border-gray-300",
+        className,
       )}
     >
-      <FileQuestion className="h-10 w-10 text-gray-400 mb-4" strokeWidth={1.5} />
+      <FileQuestion className="mb-4 h-10 w-10 text-gray-400" strokeWidth={1.5} />
       <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-      {description && <p className="text-sm text-gray-600 mt-2 max-w-md">{description}</p>}
+      {description && <p className="mt-2 max-w-md text-sm text-gray-600">{description}</p>}
       {actionLabel && actionHref && (
         <Link href={actionHref} className="mt-6">
           <Button>{actionLabel}</Button>
@@ -45,7 +54,7 @@ export function EmptyState({
 export function LoadingState({ message = "Загрузка..." }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12">
-      <Loader2 className="h-8 w-8 text-gray-400 animate-spin mb-3" />
+      <Loader2 className="mb-3 h-8 w-8 animate-spin text-gray-400" />
       <p className="text-sm text-gray-600">{message}</p>
     </div>
   );
@@ -60,11 +69,24 @@ export function ErrorState({
   description?: string;
   onRetry?: () => void;
 }) {
+  const accountTheme = useAccountTheme();
+
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center border border-gray-900">
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center border py-12 text-center",
+        accountTheme
+          ? cn("rounded-card", styles.accountErrorState)
+          : "rounded-[14px] border-gray-900",
+      )}
+    >
       <h3 className="text-base font-medium text-gray-900">{title}</h3>
-      {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
-      {onRetry && <Button className="mt-4" variant="outline" onClick={onRetry}>Повторить</Button>}
+      {description && <p className="mt-1 text-sm text-gray-600">{description}</p>}
+      {onRetry && (
+        <Button className="mt-4" variant="outline" onClick={onRetry}>
+          Повторить
+        </Button>
+      )}
     </div>
   );
 }

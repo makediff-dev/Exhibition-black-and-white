@@ -1,3 +1,6 @@
+"use client";
+
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
 import type { LucideIcon } from "lucide-react";
 
@@ -9,17 +12,24 @@ interface BadgeProps {
 }
 
 export function Badge({ children, variant = "outline", icon: Icon, className }: BadgeProps) {
+  const accountTheme = useAccountTheme();
+
   const variants = {
-    solid: "bg-gray-900 text-white border-gray-900",
-    outline: "bg-white text-gray-900 border-gray-900",
+    solid: accountTheme
+      ? "bg-[var(--account-accent)] text-white border-[var(--account-accent)]"
+      : "bg-gray-900 text-white border-gray-900",
+    outline: accountTheme
+      ? "bg-white text-[var(--account-accent)] border-[var(--account-accent)]"
+      : "bg-white text-gray-900 border-gray-900",
     dashed: "bg-gray-50 text-gray-700 border-dashed border-gray-500",
   };
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-[10px] border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-button border px-2 py-0.5 text-xs font-medium",
         variants[variant],
-        className
+        className,
       )}
     >
       {Icon && <Icon className="h-3 w-3" />}

@@ -6,8 +6,7 @@ import { notFound, useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { EventRemindersModal } from "@/components/events/event-reminders-modal";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -89,7 +88,7 @@ function ContractorsGrid({
     <div className="grid sm:grid-cols-2 gap-3">
       {contractors.map((contractor) => (
         <Link key={contractor.id} href={`/contractors/${contractor.id}`}>
-          <Card className="hover:border-gray-900 h-full">
+          <Card hoverable className="h-full">
             <CardTitle>{contractor.name}</CardTitle>
             <div className="flex flex-wrap gap-1 mt-2">
               {contractor.categories.map((category) => (
@@ -105,7 +104,7 @@ function ContractorsGrid({
         </Link>
       ))}
       <Link href={moreHref}>
-        <Card className="h-full border-dashed flex items-center justify-center min-h-[120px] hover:border-gray-900">
+        <Card hoverable className="h-full border-dashed flex items-center justify-center min-h-[120px]">
           <CardTitle className="text-sm font-normal text-center px-4">{moreLabel}</CardTitle>
         </Card>
       </Link>
@@ -195,13 +194,10 @@ export default function EventDetailPage() {
   if (!event) notFound();
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
+    <CabinetAwareLayout>
+      <BackButton fallbackHref="/events" className="mb-4" />
 
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <BackButton fallbackHref="/events" className="mb-4" />
-
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
             <div className="flex flex-wrap gap-2 mb-3">
               <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
@@ -236,7 +232,7 @@ export default function EventDetailPage() {
               <p className="text-sm text-gray-700">{event.description}</p>
               <div className="flex flex-wrap gap-2 mt-4">
                 <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
-                  <Button variant="teal">Найти услуги</Button>
+                  <Button variant="blue">Найти услуги</Button>
                 </Link>
                 {event.bookingAvailable && (
                   <Link href={`/events/${event.id}/booking`}>
@@ -270,7 +266,7 @@ export default function EventDetailPage() {
                 <div className="grid sm:grid-cols-2 gap-3">
                   {services.map((service) => (
                     <Link key={service.id} href={`/services/${service.id}`}>
-                      <Card className="hover:border-gray-900 h-full">
+                      <Card hoverable className="h-full">
                         <CardTitle>{service.title}</CardTitle>
                         <CardDescription>{service.contractorName}</CardDescription>
                       </Card>
@@ -379,7 +375,7 @@ export default function EventDetailPage() {
               <FloorPlanPreview />
               {event.bookingAvailable && (
                 <Link href={`/events/${event.id}/booking`} className="block mt-4">
-                  <Button className="w-full" variant="teal" size="sm">Бронирование в тестовом режиме</Button>
+                  <Button className="w-full" variant="blue" size="sm">Бронирование в тестовом режиме</Button>
                 </Link>
               )}
             </section>
@@ -391,15 +387,12 @@ export default function EventDetailPage() {
             </section>
           </aside>
         </div>
-      </main>
 
       <EventRemindersModal
         open={remindersModalOpen}
         onClose={() => setRemindersModalOpen(false)}
         event={event}
       />
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

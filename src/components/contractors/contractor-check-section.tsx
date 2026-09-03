@@ -97,7 +97,7 @@ export function ContractorCheckSection({
         <LoadingState message="Формируем отчёт о контрагенте..." />
       ) : report ? (
         <div className="space-y-6">
-          <div className="border border-gray-900 p-4">
+          <div className="rounded-card border border-gray-300 bg-white p-4">
             <div className="flex items-center gap-2 mb-2">
               <Badge variant={statusVariant[report.status]}>{statusLabel[report.status]}</Badge>
               <span className="text-xs text-gray-600">Обновлено: {report.updatedAt}</span>
@@ -107,7 +107,7 @@ export function ContractorCheckSection({
 
           <section>
             <h2 className="text-base font-semibold mb-3">Результаты проверки</h2>
-            <div className="border border-gray-300 divide-y divide-gray-200">
+            <div className="overflow-hidden rounded-card border border-gray-300 divide-y divide-gray-200">
               {report.checks.map((check) => (
                 <div
                   key={check.label}
@@ -122,7 +122,7 @@ export function ContractorCheckSection({
             </div>
           </section>
 
-          <p className="text-xs text-gray-500 border border-dashed border-gray-300 p-3">
+          <p className="text-xs text-gray-500 rounded-card border border-dashed border-gray-300 p-3">
             Отчёт носит демонстрационный характер и не является юридическим заключением.
           </p>
 

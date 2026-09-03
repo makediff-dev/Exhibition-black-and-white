@@ -12,6 +12,7 @@ interface HomeCategoryOrdersSectionProps {
   linkLabel: string;
   idSuffix?: string;
   buttonVariant?: HomeTileButtonVariant;
+  buttonLabel?: string;
 }
 
 export function HomeCategoryOrdersSection({
@@ -20,9 +21,11 @@ export function HomeCategoryOrdersSection({
   linkLabel,
   idSuffix = "",
   buttonVariant = "blue",
+  buttonLabel,
 }: HomeCategoryOrdersSectionProps) {
   const { handleRespond } = useHomeOrdersContext();
   const category = HOME_ORDER_CATEGORIES[categoryIndex];
+  const resolvedButtonLabel = buttonLabel ?? (linkHref === "/services" ? "Подробнее" : "Откликнуться");
 
   if (!category) return null;
 
@@ -34,6 +37,7 @@ export function HomeCategoryOrdersSection({
           order={order}
           onRespond={handleRespond}
           buttonVariant={buttonVariant}
+          buttonLabel={resolvedButtonLabel}
         />
       ))}
     </HomeScrollSection>

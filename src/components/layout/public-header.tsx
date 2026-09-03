@@ -15,7 +15,6 @@ const NAV_LINKS = [
   { href: "/contractors", label: "Исполнители" },
   { href: "/services", label: "Услуги" },
   { href: "/venues", label: "Площадки" },
-  { href: "/how-it-works", label: "Как работает сервис" },
 ];
 
 export function PublicHeader() {
@@ -52,7 +51,7 @@ export function PublicHeader() {
                 <Link href="/messages" className="p-2 hover:bg-gray-100" aria-label="Сообщения">
                   <MessageSquare className="h-4 w-4" />
                 </Link>
-                <Link href="/requests/new">
+                <Link href="/requests/new" className="shrink-0">
                   <Button size="sm">Разместить заявку</Button>
                 </Link>
                 <AccountSwitcher />

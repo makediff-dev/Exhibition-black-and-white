@@ -337,7 +337,7 @@ export function DocumentsPanel({
   return (
     <>
       {!edoConnected && user && (
-        <div className="border border-gray-900 bg-gray-50 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="edo-prompt-banner mb-6 flex flex-col gap-3 border border-gray-300 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium">ЭДО не подключён</p>
             <p className="text-sm text-gray-600 mt-1">

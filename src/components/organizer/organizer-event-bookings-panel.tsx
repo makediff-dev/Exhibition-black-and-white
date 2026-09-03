@@ -187,7 +187,7 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
                   onClick={() => setSelectedHallId(hall.id)}
                   className="text-left h-full"
                 >
-                  <Card className="h-full hover:border-gray-900 transition-colors">
+                  <Card className="h-full">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       {hasBooking && <Badge variant="outline">В аренде</Badge>}
                       {hallPlots.length > 0 && (

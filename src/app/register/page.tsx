@@ -226,6 +226,17 @@ function RegisterPageContent() {
       return { ...base, role: "contractor" };
     }
 
+    const roleParam = searchParams.get("role");
+    if (
+      !isRegistrationContinuation &&
+      (roleParam === "customer" ||
+        roleParam === "contractor" ||
+        roleParam === "venue" ||
+        roleParam === "organizer")
+    ) {
+      return { ...base, role: roleParam };
+    }
+
     return base;
   });
 

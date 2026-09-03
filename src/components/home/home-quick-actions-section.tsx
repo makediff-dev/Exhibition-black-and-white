@@ -10,20 +10,31 @@ export function HomeQuickActionsSection() {
           <h2 className={styles.quickActionsTitle}>Как мы помогаем сделать ваш проект важным?</h2>
           <div className={styles.quickActionsGrid}>
             {HOME_QUICK_ACTIONS.map((action, index) => (
-              <Link
-                key={action.title}
-                href={action.href}
-                className={`${styles.quickActionCard} ${styles[`quickActionCard${index + 1}`]}`}
-              >
-                <div className={styles.quickActionTop}>
-                  <h3 className={styles.quickActionTitle}>{action.title}</h3>
-                  <p className={styles.quickActionText}>{action.text}</p>
-                </div>
-                <div className={styles.quickActionImage}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={action.imageUrl} alt="" className={styles.quickActionImagePhoto} />
-                </div>
-              </Link>
+              <div key={action.title} className={styles.quickActionItem}>
+                <Link
+                  href={action.href}
+                  className={`${styles.quickActionCard} ${styles[`quickActionCard${index + 1}`]}`}
+                >
+                  <div className={styles.quickActionTop}>
+                    <h3 className={styles.quickActionTitle}>{action.title}</h3>
+                    <p className={styles.quickActionText}>{action.text}</p>
+                  </div>
+                  <div className={styles.quickActionImage}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={action.imageUrl}
+                      alt=""
+                      className={`${styles.quickActionImagePhoto}${index === 0 ? ` ${styles.quickActionImagePhotoContain}` : ""}`}
+                    />
+                  </div>
+                </Link>
+                <Link
+                  href={`/register?role=${action.registerRole}`}
+                  className={`${styles.quickActionRegisterButton} ${styles[`quickActionRegisterButton${index + 1}`]}`}
+                >
+                  {action.registerLabel}
+                </Link>
+              </div>
             ))}
           </div>
         </div>

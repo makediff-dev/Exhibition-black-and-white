@@ -3,8 +3,7 @@
 import { Suspense } from "react";
 import { useMemo, useState } from "react";
 import { Filter } from "lucide-react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { ContractorCard } from "@/components/catalog/contractor-card";
 import { InviteContractorModal } from "@/components/contractors/invite-contractor-modal";
@@ -133,13 +132,9 @@ export default function ContractorsPage() {
 
 function ContractorsPageFallback() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
-        <LoadingState message="Загрузка исполнителей..." />
-      </main>
-      <Footer />
-    </div>
+    <CabinetAwareLayout title="Исполнители" description="Каталог подрядчиков выставочной индустрии">
+      <LoadingState message="Загрузка исполнителей..." />
+    </CabinetAwareLayout>
   );
 }
 
@@ -202,23 +197,18 @@ function ContractorsPageContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
+    <CabinetAwareLayout
+      title="Исполнители"
+      description="Каталог подрядчиков выставочной индустрии"
+    >
+      <div className="flex gap-2 mb-4 md:hidden">
+        <Button variant="soft-outline" className="w-full" onClick={() => setDrawerOpen(true)}>
+          <Filter className="h-4 w-4" />
+          Фильтры
+        </Button>
+      </div>
 
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Исполнители</h1>
-          <p className="text-sm text-gray-600 mt-1">Каталог подрядчиков выставочной индустрии</p>
-        </div>
-
-        <div className="flex gap-2 mb-4 md:hidden">
-          <Button variant="soft-outline" className="w-full" onClick={() => setDrawerOpen(true)}>
-            <Filter className="h-4 w-4" />
-            Фильтры
-          </Button>
-        </div>
-
-        <div className="catalog-page-grid">
+      <div className="catalog-page-grid">
           <aside className="hidden md:block catalog-filters-panel shrink-0">
             <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex justify-between mb-4">
@@ -273,7 +263,6 @@ function ContractorsPageContent() {
             )}
           </section>
         </div>
-      </main>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
         <FilterPanel
@@ -304,8 +293,6 @@ function ContractorsPageContent() {
         contractor={inviteContractor}
         onClose={() => setInviteContractor(null)}
       />
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

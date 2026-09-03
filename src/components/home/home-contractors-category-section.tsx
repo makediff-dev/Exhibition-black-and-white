@@ -26,7 +26,7 @@ export function HomeContractorsCategorySection({
     <HomeScrollSection
       title={title}
       linkHref="/contractors"
-      linkLabel="Все исполнители в данной категории"
+      linkLabel="Все исполнители"
     >
       {contractors.map((contractor, index) => (
         <HomeTileCard
@@ -39,7 +39,7 @@ export function HomeContractorsCategorySection({
           ]}
           buttonLabel="Подробнее"
           buttonHref={`/contractors/${contractor.id}`}
-          buttonVariant="purple"
+          buttonVariant="violet"
         />
       ))}
     </HomeScrollSection>

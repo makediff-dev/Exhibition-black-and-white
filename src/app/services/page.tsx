@@ -6,8 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Filter, ShoppingCart } from "lucide-react";
 import { ServiceCard } from "@/components/catalog/service-card";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -38,13 +37,9 @@ export default function ServicesPage() {
 
 function ServicesPageFallback() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
-        <LoadingState message="Загрузка услуг..." />
-      </main>
-      <Footer />
-    </div>
+    <CabinetAwareLayout title="Услуги" description="Каталог услуг для выставок и мероприятий">
+      <LoadingState message="Загрузка услуг..." />
+    </CabinetAwareLayout>
   );
 }
 
@@ -152,29 +147,24 @@ function ServicesPageContent() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
+    <CabinetAwareLayout
+      title="Услуги"
+      description="Каталог услуг для выставок и мероприятий"
+      actions={
+        <Link href="/cart">
+          <Button variant="soft-outline">
+            <ShoppingCart className="h-4 w-4" />
+            Корзина
+          </Button>
+        </Link>
+      }
+    >
+      <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
+        <Filter className="h-4 w-4" />
+        Фильтры
+      </Button>
 
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Услуги</h1>
-            <p className="text-sm text-gray-600 mt-1">Каталог услуг для выставок и мероприятий</p>
-          </div>
-          <Link href="/cart">
-            <Button variant="soft-outline">
-              <ShoppingCart className="h-4 w-4" />
-              Корзина
-            </Button>
-          </Link>
-        </div>
-
-        <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
-          <Filter className="h-4 w-4" />
-          Фильтры
-        </Button>
-
-        <div className="catalog-page-grid">
+      <div className="catalog-page-grid">
           <aside className="hidden md:block catalog-filters-panel shrink-0">
             <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex justify-between mb-4">
@@ -214,14 +204,11 @@ function ServicesPageContent() {
             )}
           </section>
         </div>
-      </main>
 
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
         {filterPanel}
         <Button variant={SERVICES_ACCENT} className="w-full mt-4" onClick={() => setDrawerOpen(false)}>Применить</Button>
       </Drawer>
-
-      <Footer />
-    </div>
+    </CabinetAwareLayout>
   );
 }

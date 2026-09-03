@@ -1,0 +1,26 @@
+.cabinetLayout {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  flex: 1;
+}
+
+.sidebarSticky {
+  position: sticky;
+  top: 62px;
+  z-index: 20;
+  align-self: flex-start;
+  height: calc(100vh - 62px);
+  max-height: calc(100vh - 62px);
+}
+
+.sidebarNav {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.sidebarNavLinkActive {
+  scroll-margin-block: 8px;
+}

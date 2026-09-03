@@ -201,7 +201,7 @@ export function VenueBookingsSection({
                 href={`/account/venue/bookings/${booking.id}`}
                 className="block h-full"
               >
-                <Card className="h-full flex flex-col gap-[10px] hover:border-gray-900 transition-colors">
+                <Card hoverable className="h-full flex flex-col gap-[10px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
                     <Badge variant="outline">{periodLabel}</Badge>
                     <Badge variant={booking.status === "pending" ? "solid" : "outline"}>

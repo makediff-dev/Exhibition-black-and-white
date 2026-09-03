@@ -1,16 +1,31 @@
+"use client";
+
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
 import type { ComponentPropsWithoutRef } from "react";
+import styles from "./card.module.css";
 
 export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   children: React.ReactNode;
+  /** Enable border hover when the whole card navigates somewhere (link wrapper or onClick). */
+  hoverable?: boolean;
+  /** Accent border on hover for cards with interactive children inside. */
+  borderHover?: boolean;
 }
 
-export function Card({ children, className, onClick, ...props }: CardProps) {
+export function Card({ children, className, onClick, hoverable, borderHover, ...props }: CardProps) {
+  const accountTheme = useAccountTheme();
+  const isHoverable = hoverable ?? Boolean(onClick);
+
   return (
     <div
+      data-border-hover={borderHover ? "true" : undefined}
+      data-card-hoverable={isHoverable ? "true" : undefined}
       className={cn(
-        "border border-gray-300 bg-white p-4 rounded-[10px]",
-        onClick && "cursor-pointer hover:border-gray-900",
+        "border border-gray-300 bg-white p-4",
+        accountTheme ? "rounded-card" : "rounded-[10px]",
+        isHoverable && styles.hoverable,
+        borderHover && styles.borderHover,
         className,
       )}
       onClick={onClick}

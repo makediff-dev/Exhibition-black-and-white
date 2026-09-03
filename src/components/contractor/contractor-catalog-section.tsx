@@ -234,7 +234,7 @@ export function ContractorCatalogFormSection({
                       <div className="h-16 w-16 shrink-0 border border-dashed border-gray-300 bg-gray-50" />
                     )}
                     <div className="min-w-0">
-                      <CardTitle className="text-sm">{item.title || "Без названия"}</CardTitle>
+                      <CardTitle className="text-sm">{item.title ||"Без названия"}</CardTitle>
                       <CardDescription>
                         {item.price > 0 ? `${formatPrice(item.price)} / ${item.unit}` : "Стоимость не указана"}
                       </CardDescription>

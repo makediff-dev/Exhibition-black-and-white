@@ -1,3 +1,6 @@
+"use client";
+
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
@@ -11,6 +14,7 @@ export type ButtonVariant =
   | "blue"
   | "green"
   | "purple"
+  | "violet"
   | "pink";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,16 +24,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {
+    const accountTheme = useAccountTheme();
+    const resolvedVariant =
+      accountTheme && variant === "primary" ? accountTheme.buttonVariant : variant;
+
     const variants: Record<ButtonVariant, string> = {
       primary: "bg-gray-900 text-white hover:bg-gray-800 border border-gray-900",
       secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300",
-      outline: "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900",
+      outline: accountTheme
+        ? "bg-white text-[var(--account-accent)] hover:bg-[var(--account-accent-soft)] border border-[var(--account-accent)]"
+        : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900",
       "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#d4d4d4] hover:border-[#171717]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",
       teal: "bg-[#28b5b3] text-white hover:bg-[#1f9696] border border-[#28b5b3]",
       blue: "bg-[#2939eb] text-white hover:bg-[#2230c7] border border-[#2939eb]",
       green: "bg-[#00b23d] text-white hover:bg-[#009a35] border border-[#00b23d]",
-      purple: "bg-[#6f38dd] text-white hover:bg-[#5c2fc0] border border-[#6f38dd]",
+      purple: "bg-[#0AAEE4] text-white hover:bg-[#0893C2] border border-[#0AAEE4]",
+      violet: "bg-[#683BD9] text-white hover:bg-[#5730C0] border border-[#683BD9]",
       pink: "bg-[#ff0096] text-white hover:bg-[#e00086] border border-[#ff0096]",
     };
     const sizes = {
@@ -41,8 +52,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "flex items-center justify-center gap-2 rounded-[10px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-          variants[variant],
+          "flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+          variants[resolvedVariant],
           sizes[size],
           className,
         )}

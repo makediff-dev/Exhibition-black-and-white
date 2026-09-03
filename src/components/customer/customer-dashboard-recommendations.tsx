@@ -17,7 +17,7 @@ function RecommendedContractorCard({
 }) {
   return (
     <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
-      <Card className="h-full hover:border-gray-900">
+      <Card hoverable className="h-full">
         <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
         <CardDescription>
           {contractor.city} · {contractor.geography}

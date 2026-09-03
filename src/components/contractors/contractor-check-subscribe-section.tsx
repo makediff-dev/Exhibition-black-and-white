@@ -72,7 +72,7 @@ export function ContractorCheckSubscribeSection({
         {contractor.name} — выберите вариант подписки
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
         {EXTENDED_CHECK_PLANS.map((plan) => {
           const isSelected = selectedPlanId === plan.id;
           const priceLabel =
@@ -86,10 +86,10 @@ export function ContractorCheckSubscribeSection({
               type="button"
               onClick={() => setSelectedPlanId(plan.id)}
               className={cn(
-                "text-left border p-4 transition-colors",
+                "check-plan-card text-left border p-4 transition-colors",
                 isSelected
-                  ? "border-gray-900 bg-gray-50"
-                  : "border-gray-300 hover:border-gray-500"
+                  ? "border-[var(--account-accent,#2939eb)] bg-[var(--account-accent-soft,#eef0fe)]"
+                  : "border-gray-300 hover:border-[var(--account-accent,#2939eb)] hover:bg-[var(--account-accent-soft,#eef0fe)]",
               )}
             >
               <p className="text-sm font-medium text-gray-900">{plan.label}</p>

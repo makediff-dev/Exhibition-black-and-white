@@ -2,8 +2,7 @@
 
 import { notFound, useParams, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { ContractorDetailSection } from "@/components/contractors/contractor-detail-section";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 
@@ -34,14 +33,10 @@ function ContractorDetailContent() {
 
 export default function ContractorDetailPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>
-          <ContractorDetailContent />
-        </Suspense>
-      </main>
-      <Footer />
-    </div>
+    <CabinetAwareLayout>
+      <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>
+        <ContractorDetailContent />
+      </Suspense>
+    </CabinetAwareLayout>
   );
 }

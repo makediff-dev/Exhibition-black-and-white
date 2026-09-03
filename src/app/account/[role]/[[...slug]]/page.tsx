@@ -5,9 +5,9 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { AccountPageRenderer } from "@/components/account/account-page-renderer";
-import type { UserRole } from "@/data/types";
+import type { AccountRole } from "@/constants/account-role-themes";
 
-const VALID_ROLES: UserRole[] = ["customer", "contractor", "venue", "organizer"];
+const VALID_ROLES: AccountRole[] = ["customer", "contractor", "venue", "organizer"];
 
 export default function AccountPage({
   params,
@@ -22,7 +22,7 @@ export default function AccountPage({
     params.then((p) => {
       const role = p.role;
       const slug = p.slug?.join("/") || "";
-      if (!VALID_ROLES.includes(role as UserRole)) {
+      if (!VALID_ROLES.includes(role as AccountRole)) {
         router.push("/");
         return;
       }
@@ -54,8 +54,8 @@ export default function AccountPage({
   }
 
   return (
-    <AppShell>
-      <AccountPageRenderer role={resolved.role as UserRole} slug={resolved.slug} />
+    <AppShell accountRole={resolved.role as AccountRole}>
+      <AccountPageRenderer role={resolved.role as AccountRole} slug={resolved.slug} />
     </AppShell>
   );
 }
