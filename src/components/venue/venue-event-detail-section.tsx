@@ -183,7 +183,7 @@ export function VenueEventDetailSection({
           </Card>
         </div>
 
-        <div className="border border-gray-200 p-3 space-y-1.5">
+        <div className="cabinet-card border border-gray-200 p-3 space-y-1.5">
           <p className="text-sm font-medium">Остатки по площадям</p>
           {meta.availabilityNotes.map((note) => (
             <p key={note} className="text-sm text-gray-700">
@@ -213,7 +213,7 @@ export function VenueEventDetailSection({
         {eventBookings.length === 0 ? (
           <p className="text-sm text-gray-600">Бронирований по этому мероприятию пока нет</p>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-4">
             {eventBookings.map((booking) => {
               const hall = booking.hallId
                 ? SEED_HALLS.find((item) => item.id === booking.hallId)
@@ -226,9 +226,9 @@ export function VenueEventDetailSection({
                 <Link
                   key={booking.id}
                   href={`/account/venue/bookings/${booking.id}`}
-                  className="block h-full"
+                  className="block"
                 >
-                  <Card hoverable className="h-full">
+                  <Card hoverable className="cabinet-card">
                     <div className="flex flex-wrap items-center gap-3 mb-2">
                       <Badge variant="outline">{periodLabel}</Badge>
                       <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
@@ -274,7 +274,7 @@ export function VenueEventDetailSection({
             return (
               <div
                 key={service.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-gray-200 p-3"
+                className="cabinet-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-gray-200 p-3"
               >
                 <div>
                   <p className="font-medium">{service.title}</p>

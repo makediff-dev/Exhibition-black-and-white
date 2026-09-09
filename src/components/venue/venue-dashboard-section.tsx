@@ -94,13 +94,13 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{venueNotifications}</CardTitle>
             <CardDescription>Новые уведомления</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/payments">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{incomingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · входящие</CardDescription>
             {incomingPending.breakdown ? (
@@ -111,7 +111,7 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
           </Card>
         </Link>
         <Link href="/account/venue/payments">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{outgoingPending.count}</CardTitle>
             <CardDescription>Неоплаченные счета · исходящие</CardDescription>
             {outgoingPending.breakdown ? (
@@ -122,19 +122,19 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
           </Card>
         </Link>
         <Link href="/account/venue/halls">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{pavilionCount}</CardTitle>
             <CardDescription>Павильоны</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/bookings">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{pendingBookings}</CardTitle>
             <CardDescription>Ожидают подтверждения</CardDescription>
           </Card>
         </Link>
         <Link href="/account/venue/halls">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{hallCount}</CardTitle>
             <CardDescription>Залов</CardDescription>
           </Card>
@@ -149,7 +149,7 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
 
       <VenueDashboardNegotiationQueue venueId={venueId} />
 
-      <Card className="space-y-2">
+      <Card className="cabinet-card space-y-2">
         <p className="text-sm font-medium">Роли на платформе</p>
         <p className="text-sm text-gray-600">
           Площадка сдаёт залы организатору. Организатор нарезает площадь экспонентам и продаёт

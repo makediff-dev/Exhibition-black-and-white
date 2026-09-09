@@ -25,7 +25,7 @@ function MediaTile({
 }) {
   return (
     <div className="space-y-2">
-      <div className="relative aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+      <div className="relative aspect-[4/3] cabinet-card border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
         {item.type === "photo" ? (
           <Image className="h-8 w-8 text-gray-400" />
         ) : (
@@ -35,7 +35,7 @@ function MediaTile({
           type="button"
           aria-label="Удалить"
           onClick={() => onRemove(item.id)}
-          className="absolute top-2 right-2 inline-flex h-7 w-7 items-center justify-center bg-white hover:bg-gray-100"
+          className="absolute top-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-button bg-white hover:bg-gray-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -62,7 +62,7 @@ function UploadButton({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="inline-flex items-center gap-2 border border-dashed border-gray-400 px-4 py-3 text-sm hover:border-gray-900"
+        className="cabinet-card inline-flex items-center gap-2 border border-dashed border-gray-400 px-4 py-3 text-sm hover:border-gray-900"
       >
         <Upload className="h-4 w-4" />
         {label}

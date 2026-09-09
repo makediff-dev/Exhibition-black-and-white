@@ -99,7 +99,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
             key={key}
             type="button"
             onClick={() => setActiveMonth(key)}
-            className={`px-3 py-1.5 text-sm border transition-colors ${
+            className={`cabinet-chip px-3 py-1.5 text-sm border transition-colors ${
               activeMonth === key
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 bg-white hover:border-gray-900"
@@ -110,7 +110,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
         ))}
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {monthEvents.map(({ event, meta, halls, eventNotifications }, index) => {
           const photo = venuePhotos[index % venuePhotos.length];
 
@@ -118,14 +118,15 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
             <Link
               key={event.id}
               href={`/account/venue/events/${event.id}`}
-              className="snap-start shrink-0 w-[240px]"
+              className="block h-full"
             >
-              <Card hoverable className="h-full overflow-hidden p-0">
-                <div className="h-28 bg-gray-100 border-b border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
-                  {photo?.title ?? "Фото мероприятия"}
-                </div>
+              <Card hoverable className="cabinet-card h-full overflow-hidden">
+                <div className="space-y-3">
+                  <div className="cabinet-card h-28 bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
+                    {photo?.title ?? "Фото мероприятия"}
+                  </div>
 
-                <div className="p-4 space-y-2">
+                  <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Badge variant="outline">
                       {event.category === "exhibition"
@@ -168,6 +169,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
                       ))}
                     </div>
                   ) : null}
+                  </div>
                 </div>
               </Card>
             </Link>

@@ -101,7 +101,8 @@ export function AppShell({
         data-nav-active={isActive ? "true" : undefined}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "block px-3 py-2 text-sm rounded-button",
+          "block w-full py-2 text-sm",
+          shellStyles.sidebarNavLink,
           isActive && shellStyles.sidebarNavLinkActive,
           resolvedAccountRole
             ? isActive
@@ -126,7 +127,7 @@ export function AppShell({
             resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
           )}
         >
-          <nav ref={sidebarNavRef} className={cn("p-3 space-y-0.5", shellStyles.sidebarNav)}>
+          <nav ref={sidebarNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
             {nav.map((item) => renderNavLink(item))}
           </nav>
           {user && (
@@ -144,11 +145,11 @@ export function AppShell({
             <div className="absolute inset-0 bg-gray-900/50" onClick={() => setSidebarOpen(false)} />
             <aside
               className={cn(
-                "absolute left-0 top-0 h-full w-72 border-r border-gray-300 p-3 overflow-y-auto",
+                "absolute left-0 top-0 h-full w-72 border-r border-gray-300 overflow-y-auto",
                 resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
               )}
             >
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center mb-3 px-3 pt-3">
                 <span className="text-sm font-semibold">Меню</span>
                 <button onClick={() => setSidebarOpen(false)}><X className="h-4 w-4" /></button>
               </div>
@@ -156,7 +157,7 @@ export function AppShell({
                 {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
               </nav>
               {user && (
-                <div className="mt-4 pt-4 border-t border-gray-300">
+                <div className="mt-4 pt-4 px-3 pb-3 border-t border-gray-300">
                   <Button
                     variant="outline"
                     size="sm"

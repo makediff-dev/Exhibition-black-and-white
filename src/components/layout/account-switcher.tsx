@@ -6,6 +6,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { ROLE_LABELS } from "@/constants/statuses";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
+import styles from "./account-switcher.module.css";
 
 interface Props {
   className?: string;
@@ -60,7 +61,8 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
         type="button"
         onClick={() => setOpen((value) => !value)}
         className={cn(
-          "inline-flex w-[220px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 rounded-button",
+          styles.trigger,
+          "inline-flex w-[220px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50",
           fullWidth && "w-full max-w-none"
         )}
         aria-expanded={open}
@@ -73,7 +75,8 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
       {open && (
         <div
           className={cn(
-            "absolute right-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden border border-gray-300 bg-white shadow-sm rounded-card",
+            styles.menu,
+            "absolute right-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden border border-gray-300 bg-white shadow-sm",
             fullWidth && "left-0 right-0 min-w-0"
           )}
           role="listbox"

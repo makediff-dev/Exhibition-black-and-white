@@ -167,7 +167,7 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
             {ORGANIZER_EVENT_SERVICE_AUDIENCES.map((item) => (
               <label
                 key={item.id}
-                className="flex items-center gap-2 text-sm border border-gray-300 px-3 py-2 cursor-pointer hover:border-gray-900"
+                className="cabinet-chip flex items-center gap-2 text-sm border border-gray-300 px-3 py-2 cursor-pointer hover:border-gray-900"
               >
                 <input
                   type="checkbox"
@@ -202,7 +202,7 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
             {services.map((service) => (
               <div
                 key={service.id}
-                className="border border-gray-300 p-3 flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+                className="cabinet-card border border-gray-300 p-3 flex flex-col sm:flex-row sm:items-start justify-between gap-3"
               >
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">

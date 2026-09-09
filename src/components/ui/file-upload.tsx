@@ -9,10 +9,12 @@ export function FileUpload({
   label = "Прикрепить файл",
   onUpload,
   accept,
+  fullWidth = false,
 }: {
   label?: string;
   onUpload?: (fileName: string) => void;
   accept?: string;
+  fullWidth?: boolean;
 }) {
   const accountTheme = useAccountTheme();
   const [files, setFiles] = useState<string[]>([]);
@@ -26,10 +28,11 @@ export function FileUpload({
   };
 
   return (
-    <div>
+    <div className={fullWidth ? "w-full" : undefined}>
       <label
         className={cn(
-          "inline-flex items-center gap-2 border border-dashed px-4 py-3 cursor-pointer text-sm rounded-button",
+          "items-center gap-2 border border-dashed px-4 py-3 cursor-pointer text-sm rounded-button",
+          fullWidth ? "flex w-full" : "inline-flex",
           accountTheme
             ? "border-gray-400 hover:border-[var(--account-accent)] text-gray-700"
             : "border-gray-400 hover:border-gray-900",

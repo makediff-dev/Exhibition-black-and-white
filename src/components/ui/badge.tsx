@@ -27,7 +27,7 @@ export function Badge({ children, variant = "outline", icon: Icon, className }: 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-button border px-2 py-0.5 text-xs font-medium",
+        "inline-flex w-fit items-center gap-1 rounded-button border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
         variants[variant],
         className,
       )}

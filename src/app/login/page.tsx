@@ -74,7 +74,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="max-w-md mx-auto">
@@ -114,7 +114,7 @@ function LoginContent() {
               Забыли пароль?
             </Link>
           </div>
-          <Button type="submit" className="w-full">
+          <Button type="submit" variant="teal" className="w-full">
             Войти
           </Button>
         </form>

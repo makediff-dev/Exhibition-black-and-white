@@ -77,7 +77,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
             key={key}
             type="button"
             onClick={() => setActiveMonth(key)}
-            className={`px-3 py-1.5 text-sm border transition-colors ${
+            className={`cabinet-chip px-3 py-1.5 text-sm border transition-colors ${
               activeMonth === key
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 bg-white hover:border-gray-900"
@@ -88,7 +88,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
         ))}
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {monthEvents.map(({ event, eventNotifications }, index) => {
           const photo = photos[index % photos.length];
 
@@ -96,53 +96,55 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
             <Link
               key={event.id}
               href={`/account/organizer/edit-event?id=${event.id}`}
-              className="snap-start shrink-0 w-[240px]"
+              className="block h-full"
             >
-              <Card hoverable className="h-full overflow-hidden p-0">
-                <div className="h-28 bg-gray-100 border-b border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
-                  {photo?.title ?? "Фото мероприятия"}
-                </div>
-
-                <div className="p-4 space-y-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline">
-                      {event.category === "exhibition"
-                        ? "Выставка"
-                        : event.category === "forum"
-                          ? "Форум"
-                          : "Конференция"}
-                    </Badge>
-                    {eventNotifications.length > 0 ? (
-                      <Badge variant="solid">{eventNotifications.length} новых</Badge>
-                    ) : null}
+              <Card hoverable className="cabinet-card h-full overflow-hidden">
+                <div className="space-y-3">
+                  <div className="cabinet-card h-28 bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
+                    {photo?.title ?? "Фото мероприятия"}
                   </div>
 
-                  <CardTitle className="text-sm leading-snug">{event.title}</CardTitle>
-
-                  <CardDescription className="space-y-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                      {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      {event.city}
-                    </span>
-                    <span className="flex items-start gap-1.5">
-                      <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {event.venue}
-                    </span>
-                  </CardDescription>
-
-                  {eventNotifications.length > 0 ? (
-                    <div className="pt-2 border-t border-gray-200 space-y-1">
-                      {eventNotifications.slice(0, 2).map((item: Notification) => (
-                        <p key={item.id} className="text-[11px] text-gray-700 leading-snug">
-                          {item.title}
-                        </p>
-                      ))}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="outline">
+                        {event.category === "exhibition"
+                          ? "Выставка"
+                          : event.category === "forum"
+                            ? "Форум"
+                            : "Конференция"}
+                      </Badge>
+                      {eventNotifications.length > 0 ? (
+                        <Badge variant="solid">{eventNotifications.length} новых</Badge>
+                      ) : null}
                     </div>
-                  ) : null}
+
+                    <CardTitle className="text-sm leading-snug">{event.title}</CardTitle>
+
+                    <CardDescription className="space-y-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                        {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {event.city}
+                      </span>
+                      <span className="flex items-start gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                        {event.venue}
+                      </span>
+                    </CardDescription>
+
+                    {eventNotifications.length > 0 ? (
+                      <div className="pt-2 border-t border-gray-200 space-y-1">
+                        {eventNotifications.slice(0, 2).map((item: Notification) => (
+                          <p key={item.id} className="text-[11px] text-gray-700 leading-snug">
+                            {item.title}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </Card>
             </Link>

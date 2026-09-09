@@ -139,7 +139,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
             type="button"
             onClick={() => setActiveMonth("all")}
             className={cn(
-              "px-3 py-1.5 text-sm border transition-colors",
+              "cabinet-chip px-3 py-1.5 text-sm border transition-colors",
               activeMonth === "all"
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 bg-white hover:border-gray-900"
@@ -156,7 +156,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
                 type="button"
                 onClick={() => setActiveMonth(key)}
                 className={cn(
-                  "px-3 py-1.5 text-sm border transition-colors",
+                  "cabinet-chip px-3 py-1.5 text-sm border transition-colors",
                   activeMonth === key
                     ? "border-gray-900 bg-gray-900 text-white"
                     : count > 0
@@ -182,13 +182,13 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
           description="Измените месяц или статус, чтобы увидеть другие события на площадке"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredEvents.map(({ event, meta, halls, statuses }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 
             return (
               <Link key={event.id} href={`/account/venue/events/${event.id}`} className="block h-full">
-                <Card hoverable className="h-full">
+                <Card hoverable className="cabinet-card h-full">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge variant="outline">
                       {event.category === "exhibition"

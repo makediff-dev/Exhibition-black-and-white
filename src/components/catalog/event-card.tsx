@@ -33,7 +33,7 @@ export function EventCard({ event, recommended = false, imageIndex = 0 }: EventC
   const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
 
   return (
-    <CatalogCard className="relative flex flex-col h-full pb-4" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
       <Link
         href={`/events/${event.id}`}
         className="absolute inset-0 z-0"
@@ -42,7 +42,7 @@ export function EventCard({ event, recommended = false, imageIndex = 0 }: EventC
 
       <CatalogCardImageSlider slides={slides} scrubRatio={scrubRatio} hoverScrub />
 
-      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 min-h-0">
+      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">
         <div className="flex flex-col flex-1 pointer-events-none">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>

@@ -134,7 +134,7 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
 
         <div className="space-y-3">
           <p className="text-sm font-medium">Залы площадки</p>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="flex flex-col gap-4">
             {halls.map((hall) => {
               const config = getHallGridConfig(hall.id);
               const plotCount = getHallPlotCount(hall.id);
@@ -144,9 +144,9 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
                   key={hall.id}
                   type="button"
                   onClick={() => setSelectedHallId(hall.id)}
-                  className="text-left h-full"
+                  className="text-left"
                 >
-                  <Card className="h-full">
+                  <Card hoverable className="cabinet-card">
                     <CardTitle>{hall.name}</CardTitle>
                     <CardDescription>
                       {hall.area.toLocaleString("ru-RU")} кв.м · до {hall.capacity} мест

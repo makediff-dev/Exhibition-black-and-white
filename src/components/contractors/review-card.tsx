@@ -22,11 +22,11 @@ export function ReviewCard({ review, onClick }: Props) {
       <p className="text-sm text-gray-700 flex-1">{review.text}</p>
 
       {photoPreview.length > 0 && (
-        <div className="mt-[10px] grid grid-cols-3 gap-2">
+        <div className="mt-[10px] grid grid-cols-3 gap-2 min-w-0">
           {photoPreview.map((photo, index) => (
             <div
               key={`${review.id}-photo-${index}`}
-              className="aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-1 text-center text-[10px] text-gray-500 leading-tight"
+              className="min-w-0 overflow-hidden aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center px-1.5 py-1 text-center text-[10px] text-gray-500 leading-tight break-words [overflow-wrap:anywhere]"
             >
               {photo}
             </div>

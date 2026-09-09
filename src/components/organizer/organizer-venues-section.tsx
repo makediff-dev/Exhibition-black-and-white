@@ -15,7 +15,7 @@ import { CITIES } from "@/constants/categories";
 import { VENUE_CATALOG } from "@/constants/venues";
 import type { VenueInquiry } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { formatPrice, formatShortDate, pluralizeRu } from "@/lib/utils/formatters";
 import { getVenueStats } from "@/lib/utils/venue-stats";
 
 function buildDemoProposal(venueName: string, minArea: string) {
@@ -206,7 +206,7 @@ export function OrganizerVenuesSection() {
       </div>
 
       {selectedVenueIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border border-gray-300 bg-gray-50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 cabinet-card border border-gray-300 bg-gray-50 p-4">
           <p className="text-sm text-gray-700">
             Выбрано площадок: <strong>{selectedVenueIds.length}</strong>
           </p>
@@ -216,7 +216,7 @@ export function OrganizerVenuesSection() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {venues.map(({ venue, stats }) => {
           const photo = stats.photos[0];
           const isSelected = selectedVenueIds.includes(venue.id);
@@ -225,7 +225,8 @@ export function OrganizerVenuesSection() {
           return (
             <Card
               key={venue.id}
-              className={`h-full overflow-hidden p-0 flex flex-col ${
+              flush
+              className={`cabinet-card h-full overflow-hidden flex flex-col ${
                 isSelected ? "border-gray-900 ring-1 ring-gray-900" : ""
               }`}
             >
@@ -233,42 +234,52 @@ export function OrganizerVenuesSection() {
                 {photo?.title ?? "Фото площадки"}
               </div>
 
-              <div className="p-4 flex flex-col flex-1">
-                <label className="flex items-start gap-2 mb-2 cursor-pointer">
+              <div className="p-4 flex flex-col flex-1 min-w-0">
+                <label className="flex items-center gap-2 mb-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleVenueSelection(venue.id)}
-                    className="mt-1"
+                    className="h-4 w-4 shrink-0"
                   />
-                  <span className="text-xs text-gray-600">Выбрать для группового запроса</span>
+                  <span className="text-xs text-gray-600 leading-none">
+                    Выбрать для группового запроса
+                  </span>
                 </label>
 
                 <CardTitle className="text-base leading-snug">{venue.shortName}</CardTitle>
-                <CardDescription className="mt-1">{venue.legalName}</CardDescription>
+                <CardDescription className="mt-1 line-clamp-2">{venue.legalName}</CardDescription>
 
                 <div className="mt-3 space-y-2 text-sm text-gray-700 flex-1">
                   <p className="flex items-start gap-1.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    {venue.address}
+                    <span>{venue.address}</span>
                   </p>
-                  <p className="flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 shrink-0" />
-                    {stats.pavilions.length} павильонов · {stats.halls.length} залов
+                  <p className="flex items-start gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>
+                      {pluralizeRu(stats.pavilions.length, ["павильон", "павильона", "павильонов"])}
+                      {" · "}
+                      {pluralizeRu(stats.halls.length, ["зал", "зала", "залов"])}
+                    </span>
                   </p>
-                  <p className="flex items-center gap-1.5">
-                    <Maximize2 className="h-3.5 w-3.5 shrink-0" />
-                    {stats.totalArea.toLocaleString("ru-RU")} кв.м · свободно залов:{" "}
-                    {stats.freeHalls}
+                  <p className="flex items-start gap-1.5">
+                    <Maximize2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>
+                      {stats.totalArea.toLocaleString("ru-RU")} кв.м · свободно залов:{" "}
+                      {stats.freeHalls}
+                    </span>
                   </p>
                   <p className="text-gray-900 font-medium">
                     {formatPrice(stats.priceMin)} — {formatPrice(stats.priceMax)} / кв.м
                   </p>
-                  <p className="text-xs text-gray-600 leading-relaxed">{venue.description}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
+                    {venue.description}
+                  </p>
                 </div>
 
                 {inquiry ? (
-                  <div className="mt-4 border border-gray-300 bg-gray-50 p-3 text-xs space-y-2">
+                  <div className="mt-4 cabinet-card border border-gray-300 bg-gray-50 p-3 text-xs space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">Запрос отправлен</span>
                       <Badge variant={inquiry.status === "selected" ? "solid" : "outline"}>
@@ -293,13 +304,13 @@ export function OrganizerVenuesSection() {
                   </div>
                 ) : null}
 
-                <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" className="flex-1 min-w-[140px]">
+                <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col gap-2">
+                  <Button size="sm" variant="outline" className="w-full">
                     Показать на карте
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 min-w-[140px]"
+                    className="w-full"
                     onClick={() => handleSingleRequest(venue.id)}
                   >
                     Сделать запрос
@@ -320,7 +331,7 @@ export function OrganizerVenuesSection() {
           </CardDescription>
           <div className="space-y-3">
             {activeInquiries.map((inquiry) => (
-              <div key={inquiry.id} className="border border-gray-300 p-4 text-sm">
+              <div key={inquiry.id} className="cabinet-card border border-gray-300 p-4 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{inquiry.venueName}</p>
                   <Badge variant={inquiry.status === "selected" ? "solid" : "outline"}>

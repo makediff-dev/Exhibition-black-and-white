@@ -132,7 +132,7 @@ export default function ContractorsPage() {
 
 function ContractorsPageFallback() {
   return (
-    <CabinetAwareLayout title="Исполнители" description="Каталог подрядчиков выставочной индустрии">
+    <CabinetAwareLayout title="Исполнители" description="Каталог подрядчиков выставочной индустрии" className="catalog-list-layout">
       <LoadingState message="Загрузка исполнителей..." />
     </CabinetAwareLayout>
   );
@@ -200,6 +200,7 @@ function ContractorsPageContent() {
     <CabinetAwareLayout
       title="Исполнители"
       description="Каталог подрядчиков выставочной индустрии"
+      className="catalog-list-layout"
     >
       <div className="flex gap-2 mb-4 md:hidden">
         <Button variant="soft-outline" className="w-full" onClick={() => setDrawerOpen(true)}>
@@ -249,7 +250,7 @@ function ContractorsPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
-                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="catalog-cards-grid">
                   {filtered.map((contractor, index) => (
                     <ContractorCard
                       key={contractor.id}

@@ -164,7 +164,7 @@ export function BookingDateCalendarGrid({
               type="button"
               onClick={() => handleDayClick(iso)}
               className={cn(
-                "relative h-9 text-sm border border-transparent hover:border-gray-900",
+                "booking-cell relative h-9 text-sm border border-transparent hover:border-gray-900",
                 !currentMonth && "text-gray-300",
                 selected && "bg-gray-100",
                 isEdge && "bg-gray-900 text-white hover:border-gray-900"
@@ -256,7 +256,7 @@ export function BookingDateRangePicker({
         {displayValue ? (
           <p className="text-sm text-gray-600">Выбрано: {displayValue}</p>
         ) : null}
-        <div className="border border-gray-300">
+        <div className="cabinet-card border border-gray-300">
           <BookingDateCalendarGrid
             markedDates={markedDates}
             dateStatuses={dateStatuses}
@@ -276,7 +276,7 @@ export function BookingDateRangePicker({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 py-2 text-sm text-left hover:border-gray-900"
+        className="flex w-full items-center justify-between gap-3 rounded-button border border-gray-300 bg-white px-3 py-2 text-sm text-left hover:border-gray-900"
       >
         <span className={displayValue ? "text-gray-900" : "text-gray-500"}>
           {displayValue || "Выберите период"}
@@ -285,7 +285,7 @@ export function BookingDateRangePicker({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 border border-gray-300 bg-white shadow-sm">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 cabinet-card overflow-hidden border border-gray-300 bg-white shadow-sm">
           <BookingDateCalendarGrid
             markedDates={markedDates}
             dateStatuses={dateStatuses}

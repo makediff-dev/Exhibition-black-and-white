@@ -38,7 +38,7 @@ function PhotoUploadSection({
           {photos.map((photo, index) => (
             <div
               key={`${title}-${photo}-${index}`}
-              className="aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-2 text-center text-xs text-gray-500"
+              className="cabinet-card aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-2 text-center text-xs text-gray-500"
             >
               {photo}
             </div>
@@ -60,7 +60,7 @@ function ObjectDocumentUpload({
   onUpload: (fileName: string) => void;
 }) {
   return (
-    <div className="border border-gray-200 p-4 space-y-3">
+    <div className="cabinet-card border border-gray-200 p-4 space-y-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm font-medium">{objectName}</p>
         {documentName && (
@@ -159,7 +159,7 @@ export function ContractorProductionSection({ user, showToast }: Props) {
           )}
         </div>
 
-        <div className="border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-700 space-y-2">
+        <div className="cabinet-card border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-700 space-y-2">
           <p>Документы загружайте в формате PDF отдельно по каждому объекту.</p>
           <p>
             Контактные данные арендодателя укажите в договоре аренды — это ускорит проверку

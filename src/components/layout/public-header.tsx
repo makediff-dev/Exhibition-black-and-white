@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Bell, Menu, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
@@ -19,7 +20,8 @@ const NAV_LINKS = [
 
 export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const requestButtonVariant = getAccountRoleTheme(user?.role ?? null)?.buttonVariant ?? "primary";
 
   return (
     <header className={styles.header}>
@@ -52,7 +54,9 @@ export function PublicHeader() {
                   <MessageSquare className="h-4 w-4" />
                 </Link>
                 <Link href="/requests/new" className="shrink-0">
-                  <Button size="sm">Разместить заявку</Button>
+                  <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
+                    Разместить заявку
+                  </Button>
                 </Link>
                 <AccountSwitcher />
               </>
@@ -98,7 +102,9 @@ export function PublicHeader() {
                 </Link>
                 <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
                 <Link href="/requests/new" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full">Разместить заявку</Button>
+                  <Button className="w-full" variant={requestButtonVariant}>
+                    Разместить заявку
+                  </Button>
                 </Link>
               </>
             ) : (

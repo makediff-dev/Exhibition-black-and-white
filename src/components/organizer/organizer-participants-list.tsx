@@ -30,7 +30,7 @@ export function OrganizerParticipantsList({
 
   return (
     <>
-      <div className="overflow-x-auto hidden md:block">
+      <div className="overflow-x-auto hidden md:block cabinet-card border border-gray-300">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-gray-300">
@@ -98,7 +98,7 @@ export function OrganizerParticipantsList({
           const event = eventMap[participant.eventId];
 
           return (
-            <Card key={participant.id}>
+            <Card key={participant.id} className="cabinet-card">
               {showEventColumn && event ? (
                 <CardDescription className="mb-1">{event.title}</CardDescription>
               ) : null}

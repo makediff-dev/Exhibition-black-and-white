@@ -237,7 +237,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
             В павильоне пока нет залов. Добавьте первый зал и настройте его на миллиметровке.
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-4">
             {pavilionHalls.map((hall) => {
               const config = SEED_HALL_GRID_CONFIGS.find((item) => item.hallId === hall.id);
 
@@ -246,15 +246,15 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
                   key={hall.id}
                   type="button"
                   onClick={() => setSelectedHallId(hall.id)}
-                  className="text-left h-full"
+                  className="text-left"
                 >
-                  <Card className="h-full">
+                  <Card hoverable className="cabinet-card">
                     <CardTitle>{hall.name}</CardTitle>
                     <CardDescription>
                       {hall.area.toLocaleString("ru-RU")} кв.м · до {hall.capacity} мест
                       {config ? ` · ${config.widthMeters}×${config.heightMeters} м` : ""}
                     </CardDescription>
-                    <div className="h-16 border border-dashed border-gray-300 mt-3 flex items-center justify-center text-xs text-gray-400">
+                    <div className="cabinet-card h-16 border border-dashed border-gray-300 mt-3 flex items-center justify-center text-xs text-gray-400">
                       {config ? "Миллиметровка настроена" : "Настроить миллиметровку"}
                     </div>
                   </Card>
@@ -314,7 +314,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
         Создать павильон
       </Button>
 
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="flex flex-col gap-4">
         {pavilions.map((pavilion) => {
           const hallCount = getHallCount(pavilion.id);
           const totalArea = getPavilionArea(pavilion.id);
@@ -324,9 +324,9 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
               key={pavilion.id}
               type="button"
               onClick={() => setSelectedPavilionId(pavilion.id)}
-              className="text-left h-full"
+              className="text-left"
             >
-              <Card className="h-full">
+              <Card hoverable className="cabinet-card">
                 <CardTitle>{pavilion.name}</CardTitle>
                 <CardDescription>
                   {hallCount} {hallCount === 1 ? "зал" : hallCount < 5 ? "зала" : "залов"}
@@ -335,7 +335,7 @@ export function VenueHallsSection({ venueId = "venue-1", showToast }: Props) {
                 {pavilion.description ? (
                   <p className="text-xs text-gray-500 mt-2">{pavilion.description}</p>
                 ) : null}
-                <div className="h-20 border border-dashed border-gray-300 mt-3 flex items-center justify-center text-xs text-gray-400">
+                <div className="cabinet-card h-20 border border-dashed border-gray-300 mt-3 flex items-center justify-center text-xs text-gray-400">
                   Фото-заглушка
                 </div>
               </Card>

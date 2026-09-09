@@ -339,8 +339,7 @@ export function OrganizerEventFormSection({
       ) : mode === "edit" && eventId && activeTab === "bookings" ? (
         <OrganizerEventBookingsPanel eventId={eventId} />
       ) : (
-      <div className="grid xl:grid-cols-[minmax(0,42rem)_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
-      <div className="space-y-4">
+      <div className="w-full max-w-3xl space-y-6">
         <Card className="space-y-4">
         <Input
           label="Название"
@@ -470,7 +469,7 @@ export function OrganizerEventFormSection({
           placeholder="Требования к стендам, пропускам, монтажу"
         />
 
-        <FileUpload label="Прикрепить файлы" />
+        <FileUpload label="Прикрепить файлы" fullWidth />
 
         <div className="flex gap-2 flex-wrap pt-2">
           <Button variant="outline" onClick={handleSaveDraft}>
@@ -482,9 +481,7 @@ export function OrganizerEventFormSection({
           <Button onClick={handlePublish}>Опубликовать</Button>
         </div>
       </Card>
-      </div>
 
-      <div className="space-y-6">
         <Card className="space-y-4">
           <div>
             <CardTitle className="text-sm">Ретроспектива и масштаб</CardTitle>
@@ -495,9 +492,9 @@ export function OrganizerEventFormSection({
           </div>
 
           <div className="space-y-3">
-            <FileUpload label="Фото прошлых лет" accept="image/*" />
-            <FileUpload label="Список участников прошлых лет" accept=".pdf,.xlsx,.csv" />
-            <FileUpload label="Статистика развития" accept=".pdf,.xlsx,.pptx" />
+            <FileUpload label="Фото прошлых лет" accept="image/*" fullWidth />
+            <FileUpload label="Список участников прошлых лет" accept=".pdf,.xlsx,.csv" fullWidth />
+            <FileUpload label="Статистика развития" accept=".pdf,.xlsx,.pptx" fullWidth />
           </div>
 
           <p className="text-xs text-gray-600 border border-dashed border-gray-300 p-3">
@@ -506,13 +503,12 @@ export function OrganizerEventFormSection({
           </p>
         </Card>
 
-        <OrganizerEventRecommendedPartnersPanel
-          eventId={eventId}
-          draftEventId={organizerEventDraft?.id}
-          onEnsureDraftId={ensureDraftEventId}
-          showToast={showToast}
-        />
-      </div>
+      <OrganizerEventRecommendedPartnersPanel
+        eventId={eventId}
+        draftEventId={organizerEventDraft?.id}
+        onEnsureDraftId={ensureDraftEventId}
+        showToast={showToast}
+      />
       </div>
       )}
     </div>

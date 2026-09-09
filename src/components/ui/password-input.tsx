@@ -29,7 +29,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             id={inputId}
             type={visible ? "text" : "password"}
             className={cn(
-              "w-full border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900",
+              "w-full rounded-button border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900",
               error && "border-gray-900",
               className
             )}

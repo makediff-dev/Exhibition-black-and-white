@@ -11,9 +11,11 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   hoverable?: boolean;
   /** Accent border on hover for cards with interactive children inside. */
   borderHover?: boolean;
+  /** Remove default padding so media can sit flush to the card edge. */
+  flush?: boolean;
 }
 
-export function Card({ children, className, onClick, hoverable, borderHover, ...props }: CardProps) {
+export function Card({ children, className, onClick, hoverable, borderHover, flush, ...props }: CardProps) {
   const accountTheme = useAccountTheme();
   const isHoverable = hoverable ?? Boolean(onClick);
 
@@ -22,7 +24,9 @@ export function Card({ children, className, onClick, hoverable, borderHover, ...
       data-border-hover={borderHover ? "true" : undefined}
       data-card-hoverable={isHoverable ? "true" : undefined}
       className={cn(
-        "border border-gray-300 bg-white p-4",
+        styles.root,
+        flush && styles.flush,
+        "border border-gray-300 bg-white",
         accountTheme ? "rounded-card" : "rounded-[10px]",
         isHoverable && styles.hoverable,
         borderHover && styles.borderHover,

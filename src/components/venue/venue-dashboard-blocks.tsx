@@ -109,7 +109,7 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
         </Link>
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {serviceOrders.map((order) => {
           const highlighted = actionNotifications.some((item) => item.eventId === order.eventId);
           const eventTitle = getEventTitle(order.eventId);
@@ -118,7 +118,7 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
             <Link key={order.id} href={`/account/venue/orders/${order.eventId}`} className="block h-full">
               <Card hoverable
                 className={cn(
-                  "h-full",
+                  "cabinet-card h-full",
                   highlighted && "bg-gray-50",
                 )}
               >
@@ -211,7 +211,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
         className="max-w-xs"
       />
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {bookings.map((booking) => {
           const eventTitle = getEventTitle(booking.eventId);
           const hallName = getHallName(booking.hallId);
@@ -220,7 +220,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
 
           return (
             <Link key={booking.id} href={`/account/venue/bookings/${booking.id}`} className="block h-full">
-              <Card hoverable className="h-full">
+              <Card hoverable className="cabinet-card h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <Badge variant="outline">
                     {booking.periodType
@@ -309,9 +309,9 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
         className="max-w-xs"
       />
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {inquiries.map((inquiry) => (
-          <Card key={inquiry.id} className="h-full">
+          <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <Badge variant="outline">Запрос площадки</Badge>
               <Badge>{VENUE_INQUIRY_STATUS_LABELS[inquiry.status]}</Badge>

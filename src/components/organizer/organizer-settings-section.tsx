@@ -262,7 +262,7 @@ export function OrganizerSettingsSection({
         <Button onClick={handleInvite}>Отправить приглашение</Button>
 
         {lastInviteLink && (
-          <div className="border border-dashed border-gray-300 p-3 text-sm space-y-2">
+          <div className="cabinet-card border border-dashed border-gray-300 p-3 text-sm space-y-2">
             <p className="text-gray-600">Демо-ссылка приглашения:</p>
             <div className="flex flex-wrap items-center gap-2">
               <code className="text-xs break-all">{lastInviteLink}</code>

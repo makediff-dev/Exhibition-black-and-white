@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Building2, CalendarDays, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
@@ -111,12 +112,17 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
             бронирования или переговоров.
           </p>
         </div>
-        <Link
-          href="/account/organizer/venues"
-          className="text-sm underline hover:text-gray-900 shrink-0"
-        >
-          Площадки проведения
-        </Link>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <Link
+            href="/account/organizer/venues"
+            className="text-sm underline hover:text-gray-900"
+          >
+            Площадки проведения
+          </Link>
+          <Link href="/account/organizer/create-event">
+            <Button size="sm">Создать мероприятие</Button>
+          </Link>
+        </div>
       </div>
 
       <Select
@@ -136,7 +142,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
             type="button"
             onClick={() => setActiveMonth("all")}
             className={cn(
-              "px-3 py-1.5 text-sm border transition-colors",
+              "cabinet-chip px-3 py-1.5 text-sm border transition-colors",
               activeMonth === "all"
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 bg-white hover:border-gray-900"
@@ -153,7 +159,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
                 type="button"
                 onClick={() => setActiveMonth(key)}
                 className={cn(
-                  "px-3 py-1.5 text-sm border transition-colors",
+                  "cabinet-chip px-3 py-1.5 text-sm border transition-colors",
                   activeMonth === key
                     ? "border-gray-900 bg-gray-900 text-white"
                     : count > 0
@@ -179,7 +185,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
           description="Измените месяц или статус, чтобы увидеть другие события"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredEvents.map(({ event, meta, halls, statuses, pendingBookings }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 
@@ -193,7 +199,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
                 }
                 className="block h-full"
               >
-                <Card hoverable className="h-full">
+                <Card hoverable className="cabinet-card h-full">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <Badge variant="outline">
                       {event.category === "exhibition"

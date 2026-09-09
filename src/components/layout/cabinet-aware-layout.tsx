@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
@@ -7,6 +8,14 @@ import { PublicHeader } from "@/components/layout/public-header";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { cn } from "@/lib/utils/cn";
 import type { ReactNode } from "react";
+
+const PUBLIC_CATALOG_PREFIXES = ["/events", "/contractors", "/services", "/venues"];
+
+function isPublicCatalogPath(pathname: string): boolean {
+  return PUBLIC_CATALOG_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 interface CabinetAwareLayoutProps {
   children: ReactNode;
@@ -31,9 +40,11 @@ export function CabinetAwareLayout({
   constrained = true,
   className,
 }: CabinetAwareLayoutProps) {
+  const pathname = usePathname();
   const { inCabinet, accountRole } = useCabinetSession();
+  const showCabinetSidebar = inCabinet && accountRole && !isPublicCatalogPath(pathname);
 
-  if (inCabinet && accountRole) {
+  if (showCabinetSidebar) {
     return (
       <AppShell
         accountRole={accountRole}

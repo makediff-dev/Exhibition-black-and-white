@@ -129,7 +129,7 @@ function VerifyContent() {
       </p>
 
       {state === "success" ? (
-        <div className="flex flex-col items-center py-8 text-center border border-gray-900">
+        <div className="flex flex-col items-center py-8 text-center border border-gray-900 rounded-[10px]">
           <CheckCircle className="h-12 w-12 text-gray-900 mb-4" />
           <h2 className="text-lg font-semibold mb-2">Контакт подтверждён</h2>
           <p className="text-sm text-gray-600 mb-6">
@@ -143,7 +143,7 @@ function VerifyContent() {
             </p>
           )}
           <Link href={fromRegister ? "/login?registered=1" : "/login"}>
-            <Button>Перейти ко входу</Button>
+            <Button variant="teal">Перейти ко входу</Button>
           </Link>
         </div>
       ) : (
@@ -209,7 +209,7 @@ function VerifyContent() {
                 <p className="text-xs text-gray-500">Демо-код: 123456</p>
 
                 {state === "error" && (
-                  <p className="text-sm text-gray-700 border border-gray-900 px-3 py-2">
+                  <p className="text-sm text-gray-700 border border-gray-900 rounded-[10px] px-3 py-2">
                     Код неверен. Проверьте ввод или запросите новый код.
                   </p>
                 )}
@@ -234,7 +234,7 @@ function VerifyContent() {
               </>
             )}
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="teal" className="w-full">
               {codeSent ? "Подтвердить" : "Отправить код"}
             </Button>
 
@@ -262,7 +262,7 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <Suspense fallback={<div className="flex-1 py-8 text-center text-sm text-gray-600">Загрузка...</div>}>
         <VerifyContent />

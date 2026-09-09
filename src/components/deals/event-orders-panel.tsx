@@ -50,7 +50,7 @@ function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: Eve
   const content = (
     <Card
       hoverable={Boolean(href)}
-      className={cn("h-full", highlighted && "bg-gray-50")}
+      className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
     >
       <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
         <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
@@ -222,7 +222,7 @@ export function EventOrdersPanel({
                   {EVENT_ORDER_PRIORITY_LABELS[group.priority]}
                 </h3>
               )}
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {group.items.map((order) => {
                   const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
                   const showEventTitle = Boolean(organizerId || (venueId && !eventId));

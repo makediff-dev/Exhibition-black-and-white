@@ -8,6 +8,7 @@ export type ButtonVariant =
   | "primary"
   | "secondary"
   | "outline"
+  | "teal-outline"
   | "soft-outline"
   | "ghost"
   | "teal"
@@ -34,6 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       outline: accountTheme
         ? "bg-white text-[var(--account-accent)] hover:bg-[var(--account-accent-soft)] border border-[var(--account-accent)]"
         : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900",
+      "teal-outline": "bg-white text-[#28b5b3] hover:bg-[#eaf8f7] border border-[#28b5b3]",
       "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#d4d4d4] hover:border-[#171717]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",
       teal: "bg-[#28b5b3] text-white hover:bg-[#1f9696] border border-[#28b5b3]",

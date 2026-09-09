@@ -117,6 +117,7 @@ export function CompanyProfileSection({ showToast }: Props) {
 
   return (
     <div className="max-w-2xl space-y-4">
+      <h1 className="text-xl font-bold text-gray-900">Профиль компании</h1>
       <Card>
         <CompanyAvatarUpload
           logoUrl={logoUrl}

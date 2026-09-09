@@ -50,7 +50,7 @@ export function ContractorServiceDetailSection({
         )}
       </div>
 
-      <div className="border border-gray-900 p-4 max-w-sm">
+      <div className="cabinet-card border border-gray-900 p-4 max-w-sm">
         <p className="text-2xl font-bold">{formatServicePrice(service)}</p>
         {service.variants && service.variants.length > 0 && (
           <ul className="mt-3 space-y-1 text-sm text-gray-700">
@@ -72,7 +72,7 @@ export function ContractorServiceDetailSection({
       {photoCards.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
-          <div className="border border-gray-300 overflow-hidden max-w-2xl">
+          <div className="cabinet-card border border-gray-300 overflow-hidden max-w-2xl">
             <div className="aspect-[16/10] bg-gray-50 relative">
               {currentPhotoCard?.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -125,7 +125,7 @@ export function ContractorServiceDetailSection({
       </section>
 
       <section className="grid sm:grid-cols-2 gap-4 text-sm max-w-2xl">
-        <div className="border border-gray-300 p-4">
+        <div className="cabinet-card border border-gray-300 p-4">
           <p className="font-medium mb-1">Условия</p>
           <p className="text-gray-700">{service.terms || "—"}</p>
           {service.guaranteeRefund && (
@@ -134,12 +134,12 @@ export function ContractorServiceDetailSection({
             </p>
           )}
         </div>
-        <div className="border border-gray-300 p-4">
+        <div className="cabinet-card border border-gray-300 p-4">
           <p className="font-medium mb-1">Срок выполнения</p>
           <p className="text-gray-700">{service.deadline}</p>
         </div>
         {service.prepaymentPercent !== undefined && (
-          <div className="border border-gray-300 p-4 sm:col-span-2">
+          <div className="cabinet-card border border-gray-300 p-4 sm:col-span-2">
             <p className="font-medium mb-1">Условия оплаты</p>
             <p className="text-gray-700">
               Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
@@ -152,7 +152,7 @@ export function ContractorServiceDetailSection({
         <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
         <div className="space-y-3 max-w-2xl">
           {MOCK_REVIEWS.map((review) => (
-            <div key={review.id} className="border border-gray-300 p-4">
+            <div key={review.id} className="cabinet-card border border-gray-300 p-4">
               <div className="flex justify-between">
                 <p className="text-sm font-medium">{review.author}</p>
                 <span className="text-xs text-gray-600">{review.date}</span>

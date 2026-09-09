@@ -15,6 +15,7 @@
 .accountNavActive {
   background-color: var(--account-accent) !important;
   color: #fff !important;
+  border-radius: 10px;
 }
 
 .accountNavItem {
@@ -90,6 +91,8 @@
 
 .accountCabinet :global(.fill-gray-900) {
   fill: var(--account-accent);
+  stroke: var(--account-accent);
+  color: var(--account-accent);
 }
 
 .accountCabinet :global(.text-gray-900.hover\:text-gray-900:hover) {

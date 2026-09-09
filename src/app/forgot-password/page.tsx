@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="max-w-md mx-auto">
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
               error={errors.contact}
               placeholder="example@mail.ru или +7 900 000-00-00"
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="teal" className="w-full">
               Продолжить
             </Button>
             <Link href="/login" className="block text-center text-sm underline">
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
               placeholder="6 цифр"
             />
             <p className="text-xs text-gray-500">Демо-код: 123456</p>
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="teal" className="w-full">
               Подтвердить код
             </Button>
             <button
@@ -152,21 +152,21 @@ export default function ForgotPasswordPage() {
               error={errors.confirmPassword}
               autoComplete="new-password"
             />
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="teal" className="w-full">
               Сохранить пароль
             </Button>
           </form>
         )}
 
         {step === 4 && (
-          <div className="flex flex-col items-center py-8 text-center border border-gray-900">
+          <div className="flex flex-col items-center py-8 text-center border border-gray-900 rounded-[10px]">
             <CheckCircle className="h-12 w-12 text-gray-900 mb-4" />
             <h2 className="text-lg font-semibold mb-2">Пароль изменён</h2>
             <p className="text-sm text-gray-600 mb-6">
               Теперь вы можете войти с новым паролем
             </p>
             <Link href="/login">
-              <Button>Перейти ко входу</Button>
+              <Button variant="teal">Перейти ко входу</Button>
             </Link>
           </div>
         )}

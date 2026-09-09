@@ -53,7 +53,7 @@ export function CatalogCardImageSlider({
 
   return (
     <div
-      className="relative aspect-[16/10] overflow-hidden rounded-t-[14px] bg-gray-50"
+      className="relative h-[189px] overflow-hidden rounded-t-[14px] bg-gray-50"
       aria-hidden={!hasSlides}
     >
       {currentSlide?.imageUrl ? (

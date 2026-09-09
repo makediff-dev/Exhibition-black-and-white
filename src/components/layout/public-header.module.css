@@ -74,6 +74,10 @@
   flex-shrink: 0;
 }
 
+.requestButton {
+  border-radius: 10px;
+}
+
 .loginButton {
   display: inline-flex;
   align-items: center;

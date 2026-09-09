@@ -121,7 +121,7 @@ export function ContractorDetailSection({
 
   return (
     <>
-      <BackButton fallbackHref={backFallbackHref} className="mb-4" />
+      {accountRole ? null : <BackButton fallbackHref={backFallbackHref} className="mb-4" />}
 
       {(contractor.verified ||
         contractor.hasProduction ||
@@ -148,7 +148,7 @@ export function ContractorDetailSection({
 
           <div className="flex flex-wrap items-center gap-6 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="blue">Пригласить в заявку</Button>
+              <Button variant="purple">Пригласить в заявку</Button>
             </Link>
             <Link
               href={`/services?contractor=${contractor.id}`}
@@ -257,7 +257,7 @@ export function ContractorDetailSection({
               href={getContractorCheckHref(contractor.id, { role: linkRole })}
               className="block w-full mt-4"
             >
-              <Button variant="soft-outline" className="w-full border border-[#d4d4d4]" size="sm">
+              <Button variant="outline" className="w-full" size="sm">
                 Проверить контрагента
               </Button>
             </Link>

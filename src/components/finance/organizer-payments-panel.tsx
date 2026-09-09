@@ -251,7 +251,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
           description="В этой вкладке пока нет финансовых операций по выбранным фильтрам"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const event = payment.eventId ? eventMap[payment.eventId] : undefined;
@@ -265,7 +265,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                 : undefined;
 
             return (
-              <Card key={payment.id} className="h-full flex flex-col">
+              <Card key={payment.id} className="cabinet-card h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                   <Badge variant="outline">{payment.type}</Badge>
                   <Badge variant={status === "pending" ? "solid" : "outline"}>

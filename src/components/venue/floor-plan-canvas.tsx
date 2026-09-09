@@ -206,7 +206,7 @@ export function FloorPlanCanvas({
       <div className="overflow-x-auto">
         <div className={cn(showRulers && "min-w-[480px]")}>
           {showRulers ? (
-            <div className="border border-gray-300 bg-gray-50 inline-block w-full">
+            <div className="cabinet-card overflow-hidden border border-gray-300 bg-gray-50 inline-block w-full">
               <div className="flex w-full">
                 <div className="w-11 shrink-0 flex flex-col">
                   <div className="h-7 border-b border-r border-gray-300 flex items-end justify-center pb-0.5 text-[10px] text-gray-500">
@@ -268,7 +268,7 @@ export function FloorPlanCanvas({
             </div>
           ) : (
             <div
-              className="relative w-full overflow-hidden border border-gray-300 bg-white max-w-3xl"
+              className="relative w-full overflow-hidden cabinet-card border border-gray-300 bg-white max-w-3xl"
               style={{ aspectRatio }}
             >
               {planBody}

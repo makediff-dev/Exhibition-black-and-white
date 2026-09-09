@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { CatalogCard } from "@/components/catalog/catalog-card";
 import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
+import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { CardTitle } from "@/components/ui/card";
 import { usePrototypeStore } from "@/lib/store";
 import { formatServicePrice } from "@/lib/utils/formatters";
@@ -40,6 +41,8 @@ export function ServiceCard({
   onAdd,
 }: ServiceCardProps) {
   const allServices = usePrototypeStore((s) => s.services);
+  const accountTheme = useAccountTheme();
+  const addToCartVariant = accountTheme?.buttonVariant ?? "blue";
   const contractorServicesCount = allServices.filter(
     (item) => item.contractorId === service.contractorId,
   ).length;
@@ -52,7 +55,7 @@ export function ServiceCard({
   const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
 
   return (
-    <CatalogCard className="relative flex flex-col h-full pb-4 cursor-pointer" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full cursor-pointer" {...cardHoverHandlers}>
       <Link
         href={`/services/${service.id}`}
         className="absolute inset-0 z-[1]"
@@ -68,7 +71,7 @@ export function ServiceCard({
           hoverScrub
         />
 
-        <div className="flex flex-col flex-1 px-0 pt-3 min-h-0">
+        <div className="flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">
           <div className="flex flex-col flex-1">
             <CardTitle className="text-sm font-semibold leading-snug">{service.title}</CardTitle>
             <p className="text-xs text-gray-600 mt-1">
@@ -92,7 +95,7 @@ export function ServiceCard({
               {onAdd && (
                 <Button
                   size="sm"
-                  variant="blue"
+                  variant={addToCartVariant}
                   className="w-full"
                   onClick={(event) => {
                     event.preventDefault();

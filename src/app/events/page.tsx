@@ -247,7 +247,7 @@ export default function EventsPage() {
 
 function EventsPageFallback() {
   return (
-    <CabinetAwareLayout title="Выставки и мероприятия">
+    <CabinetAwareLayout title="Выставки и мероприятия" className="catalog-list-layout">
       <LoadingState message="Загрузка мероприятий..." />
     </CabinetAwareLayout>
   );
@@ -380,6 +380,7 @@ function EventsPageContent() {
     <CabinetAwareLayout
       title="Выставки и мероприятия"
       description={`Город: ${selectedCity} · Каталог мероприятий для участия`}
+      className="catalog-list-layout"
     >
       <CityPickerModal
         open={cityModalOpen}
@@ -463,7 +464,7 @@ function EventsPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filteredEvents.length}</p>
-                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="catalog-cards-grid">
                   {filteredEvents.map((event, index) => (
                     <EventCard key={event.id} event={event} recommended={isRecommended(event)} imageIndex={index} />
                   ))}

@@ -34,7 +34,7 @@ export function VenueCard({
   const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
 
   return (
-    <CatalogCard className="relative flex flex-col h-full pb-4" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
       <Link
         href={`/venues/${venue.id}`}
         className="absolute inset-0 z-0"
@@ -49,7 +49,7 @@ export function VenueCard({
         hoverScrub
       />
 
-      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 min-h-0">
+      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">
         <div className="flex flex-col flex-1 pointer-events-none">
           <CardTitle className="text-sm font-semibold leading-snug">{venue.name}</CardTitle>
           <CardDescription className="flex items-center gap-1 text-xs mt-1">

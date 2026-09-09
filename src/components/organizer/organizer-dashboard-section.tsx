@@ -52,19 +52,19 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
     <div className="space-y-6 w-full">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Link href="/notifications">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{organizerNotifications}</CardTitle>
             <CardDescription>Новые уведомления</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/payments">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{incomingInvoices}</CardTitle>
             <CardDescription>Неоплаченные счета · входящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/payments">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{outgoingInvoices}</CardTitle>
             <CardDescription>Неоплаченные счета · исходящие</CardDescription>
           </Card>
@@ -73,19 +73,19 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
 
       <div className="grid md:grid-cols-3 gap-3">
         <Link href="/account/organizer/orders">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{incomingOrders}</CardTitle>
             <CardDescription>Заказы · входящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/orders">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{outgoingOrders}</CardTitle>
             <CardDescription>Заказы · исходящие</CardDescription>
           </Card>
         </Link>
         <Link href="/account/organizer/events">
-          <Card hoverable className="h-full">
+          <Card hoverable className="cabinet-card h-full">
             <CardTitle>{organizerEvents.length}</CardTitle>
             <CardDescription>Мероприятий</CardDescription>
           </Card>
@@ -100,7 +100,7 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
 
       <OrganizerEventsCarousel organizerId={organizerId} />
 
-      <Card className="space-y-2">
+      <Card className="cabinet-card space-y-2">
         <p className="text-sm font-medium">Входящие и исходящие</p>
         <p className="text-sm text-gray-600">
           Входящий заказ — от экспонента или участника мероприятия (аренда площади, услуги).

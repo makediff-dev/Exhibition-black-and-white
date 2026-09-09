@@ -107,7 +107,7 @@ export default function ModerationPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <h1 className="text-2xl font-bold mb-2">Статус модерации</h1>
@@ -117,7 +117,7 @@ export default function ModerationPage() {
 
         <Card className="mb-6">
           <div className="flex items-start gap-4">
-            <StatusIcon className="h-8 w-8 shrink-0 text-gray-900" />
+            <StatusIcon className="h-8 w-8 shrink-0 text-[#28b5b3]" />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <CardTitle>{current.label}</CardTitle>
@@ -159,7 +159,7 @@ export default function ModerationPage() {
         </Card>
 
         {status === "needs_clarification" && (
-          <div className="border border-gray-900 bg-gray-50 p-4 mb-6 flex gap-3 text-sm">
+          <div className="rounded-button border border-[#28b5b3] bg-gray-50 p-4 mb-6 flex gap-3 text-sm">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <div>
               <p className="font-medium mb-1">Запрос модератора</p>
@@ -172,7 +172,7 @@ export default function ModerationPage() {
         )}
 
         {status === "rejected" && (
-          <div className="border border-gray-900 p-4 mb-6 text-sm">
+          <div className="rounded-button border border-[#28b5b3] p-4 mb-6 text-sm">
             <p className="font-medium mb-1">Причина отклонения</p>
             <p className="text-gray-600">
               Данные компании не совпадают с реестром. Проверьте ИНН и повторите регистрацию.
@@ -183,15 +183,15 @@ export default function ModerationPage() {
         {status === "approved" && (
           <div className="mb-6">
             <Link href={`/account/${draft.role ?? "customer"}`}>
-              <Button className="w-full">Перейти в личный кабинет</Button>
+              <Button variant="teal" className="w-full">Перейти в личный кабинет</Button>
             </Link>
           </div>
         )}
 
         {(status === "needs_clarification" || status === "rejected") && (
           <div className="mb-6 flex flex-wrap gap-2">
-            <Button onClick={handleClarifyData}>Уточнить данные</Button>
-            <Button variant="outline" onClick={handleEditApplication}>
+            <Button variant="teal" onClick={handleClarifyData}>Уточнить данные</Button>
+            <Button variant="teal-outline" onClick={handleEditApplication}>
               Редактировать заявку
             </Button>
           </div>
@@ -206,7 +206,7 @@ export default function ModerationPage() {
               <Button
                 key={opt.value}
                 type="button"
-                variant={status === opt.value ? "primary" : "outline"}
+                variant={status === opt.value ? "teal" : "teal-outline"}
                 size="sm"
                 onClick={() => handleDemoStatus(opt.value)}
               >

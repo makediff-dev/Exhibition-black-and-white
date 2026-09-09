@@ -62,7 +62,7 @@ function PortfolioSectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden border border-gray-300 bg-white">
+    <div className="cabinet-card overflow-hidden border border-gray-300 bg-white">
       <button
         type="button"
         className="w-full flex items-start justify-between gap-3 p-4 text-left hover:bg-gray-50"
@@ -617,7 +617,7 @@ export function ContractorPortfolioFormSection({ contractorId, itemId, showToast
             </Button>
       </PortfolioSectionCard>
 
-      <div className="sticky bottom-4 pt-4 border-t border-gray-200 bg-white/95 backdrop-blur">
+      <div className="sticky bottom-4 pt-4 bg-white/95 backdrop-blur">
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={handleSave}>Сохранить</Button>
           <Button type="button" size="sm" variant="outline" onClick={handlePublish}>

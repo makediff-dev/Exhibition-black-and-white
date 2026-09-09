@@ -31,6 +31,65 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+.catalog-list-layout {
+  max-width: 1440px;
+  padding-inline: 48px;
+}
+
+@media (max-width: 767px) {
+  .catalog-list-layout {
+    padding-inline: 16px;
+  }
+}
+
+/* Unlayered so this wins over Tailwind utilities. */
+.catalog-cards-grid {
+  display: grid;
+  column-gap: 24px;
+  row-gap: 24px;
+  justify-content: start;
+  justify-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.catalog-cards-grid > * {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .catalog-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .catalog-cards-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.register-accent :is(.bg-gray-900) {
+  background-color: var(--color-primary) !important;
+}
+
+.register-accent :is(.hover\:bg-gray-800:hover) {
+  background-color: var(--color-primary-dark) !important;
+}
+
+.register-accent :is(.border-gray-900) {
+  border-color: var(--color-primary) !important;
+}
+
+.register-accent :is(.ring-gray-900, .ring-1.ring-gray-900) {
+  --tw-ring-color: var(--color-primary);
+}
+
+.register-accent :is(.hover\:border-gray-900:hover) {
+  border-color: var(--color-primary-dark) !important;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -106,6 +165,18 @@ body {
     border-radius: 10px;
     border: 1px solid #2939eb;
     background-color: #eef0fe;
+  }
+
+  .cabinet-card {
+    border-radius: 14px;
+  }
+
+  .gantt-stage-bar {
+    border-radius: 10px;
+  }
+
+  .cabinet-chip {
+    border-radius: 10px;
   }
 
   [data-border-hover="true"],

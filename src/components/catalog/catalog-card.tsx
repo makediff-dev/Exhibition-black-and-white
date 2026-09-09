@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils/cn";
 export function CatalogCard({ className, ...props }: CardProps) {
   return (
     <Card
+      flush
       className={cn(
-        "border-0 rounded-[14px] overflow-hidden p-0 shadow-none",
+        "border-0 rounded-[14px] overflow-hidden shadow-none",
         className,
       )}
       {...props}

@@ -37,7 +37,7 @@ export default function ServicesPage() {
 
 function ServicesPageFallback() {
   return (
-    <CabinetAwareLayout title="Услуги" description="Каталог услуг для выставок и мероприятий">
+    <CabinetAwareLayout title="Услуги" description="Каталог услуг для выставок и мероприятий" className="catalog-list-layout">
       <LoadingState message="Загрузка услуг..." />
     </CabinetAwareLayout>
   );
@@ -150,6 +150,7 @@ function ServicesPageContent() {
     <CabinetAwareLayout
       title="Услуги"
       description="Каталог услуг для выставок и мероприятий"
+      className="catalog-list-layout"
       actions={
         <Link href="/cart">
           <Button variant="soft-outline">
@@ -188,7 +189,7 @@ function ServicesPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
-                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="catalog-cards-grid">
                   {filtered.map((service, index) => (
                     <ServiceCard
                       key={service.id}

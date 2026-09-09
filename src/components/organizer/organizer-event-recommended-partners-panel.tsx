@@ -13,6 +13,8 @@ import { SEED_CONTRACTORS } from "@/data/mocks/seed";
 import type { EventPartnerCategoryId, EventRecommendedPartner } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { cn } from "@/lib/utils/cn";
+import styles from "./organizer-event-recommended-partners-panel.module.css";
 
 interface Props {
   eventId: string | null;
@@ -120,7 +122,7 @@ export function OrganizerEventRecommendedPartnersPanel({
 
   return (
     <>
-      <Card className="space-y-6">
+      <Card className="space-y-6 min-w-0 overflow-hidden">
         <div>
           <CardTitle className="text-sm">Рекомендованные застройщики</CardTitle>
           <CardDescription className="mt-2">
@@ -134,7 +136,7 @@ export function OrganizerEventRecommendedPartnersPanel({
             const categoryPartners = partners.filter((partner) => partner.categoryId === category.id);
 
             return (
-              <section key={category.id} className="space-y-3">
+              <section key={category.id} className="space-y-3 min-w-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-medium text-gray-900">{category.label}</h3>
                   <Button
@@ -149,12 +151,14 @@ export function OrganizerEventRecommendedPartnersPanel({
                 </div>
 
                 {categoryPartners.length === 0 ? (
-                  <p className="text-sm text-gray-500 border border-dashed border-gray-300 p-4">
-                    Партнёры не добавлены. Нажмите «Добавить», чтобы указать исполнителя в этой
-                    категории.
-                  </p>
+                  <div className={styles.grid}>
+                    <p className="text-sm text-gray-500 cabinet-card border border-dashed border-gray-300 p-4">
+                      Партнёры не добавлены. Нажмите «Добавить», чтобы указать исполнителя в этой
+                      категории.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-3">
+                  <div className={styles.grid}>
                     {categoryPartners.map((partner) => {
                       const title = resolvePartnerTitle(partner);
                       const subtitle = resolvePartnerSubtitle(partner);
@@ -162,27 +166,32 @@ export function OrganizerEventRecommendedPartnersPanel({
                       return (
                         <article
                           key={partner.id}
-                          className={`border p-4 h-full flex flex-col ${
+                          className={cn(
+                            styles.card,
+                            "cabinet-card border p-4 h-full flex flex-col",
                             partner.isRecommended
-                              ? "border-gray-900 bg-gray-50"
-                              : "border-gray-300 bg-white"
-                          }`}
+                              ? "border-gray-900 bg-[var(--account-accent-soft)]"
+                              : "border-gray-300 bg-white",
+                          )}
                         >
-                          <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className={styles.cardHeader}>
                             <button
                               type="button"
                               onClick={() => toggleRecommended(partner)}
-                              className="text-left"
+                              className={styles.badgeButton}
                             >
-                              <Badge variant={partner.isRecommended ? "solid" : "outline"}>
+                              <Badge
+                                variant={partner.isRecommended ? "solid" : "outline"}
+                                className="w-fit max-w-full"
+                              >
                                 {partner.isRecommended ? "Рекомендован" : "Не выбран"}
                               </Badge>
                             </button>
-                            <div className="flex gap-1 shrink-0">
+                            <div className={styles.actions}>
                               <button
                                 type="button"
                                 onClick={() => openEditModal(partner)}
-                                className="inline-flex h-8 w-8 items-center justify-center border border-gray-300 hover:bg-gray-100"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-button border border-gray-300 bg-white hover:bg-gray-100"
                                 aria-label="Редактировать"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
@@ -190,7 +199,7 @@ export function OrganizerEventRecommendedPartnersPanel({
                               <button
                                 type="button"
                                 onClick={() => setDeleteTarget(partner)}
-                                className="inline-flex h-8 w-8 items-center justify-center border border-gray-300 hover:bg-gray-100"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-button border border-gray-300 bg-white hover:bg-gray-100"
                                 aria-label="Удалить"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -198,19 +207,23 @@ export function OrganizerEventRecommendedPartnersPanel({
                             </div>
                           </div>
 
-                          <p className="text-sm font-medium leading-snug">{title}</p>
-                          {subtitle && <p className="text-xs text-gray-600 mt-2">{subtitle}</p>}
+                          <p className="mt-3 text-sm font-medium leading-snug break-words">{title}</p>
+                          {subtitle ? (
+                            <p className="mt-2 text-xs text-gray-600 leading-relaxed line-clamp-3">
+                              {subtitle}
+                            </p>
+                          ) : null}
 
-                          {partner.contractorId && (
+                          {partner.contractorId ? (
                             <Link
                               href={getContractorProfileHref(partner.contractorId, {
                                 role: user?.role,
                               })}
-                              className="inline-block text-xs underline mt-auto pt-3 hover:text-gray-900"
+                              className="mt-auto pt-3 inline-block text-xs underline hover:text-gray-900"
                             >
                               Карточка партнёра
                             </Link>
-                          )}
+                          ) : null}
                         </article>
                       );
                     })}

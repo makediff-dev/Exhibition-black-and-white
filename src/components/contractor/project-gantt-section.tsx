@@ -208,7 +208,7 @@ function GanttStageBarBlock({
     return (
       <div
         className={cn(
-          "absolute top-1.5 h-7 border text-[11px] flex items-center px-1.5 overflow-hidden z-[1]",
+          "gantt-stage-bar absolute top-1.5 h-7 border text-[11px] flex items-center px-1.5 overflow-hidden z-[1]",
           stageBarClass(bar.stage.status, bar.isCustom)
         )}
         style={{
@@ -230,7 +230,7 @@ function GanttStageBarBlock({
   return (
     <div
       className={cn(
-        "absolute top-1.5 h-7 border text-[11px] flex items-center px-1.5 overflow-hidden z-[1]",
+        "gantt-stage-bar absolute top-1.5 h-7 border text-[11px] flex items-center px-1.5 overflow-hidden z-[1]",
         stageBarClass(bar.stage.status, bar.isCustom)
       )}
       style={{ left: left + 2, width: Math.max(width, Math.min(dayWidth * 2, 48)) }}
@@ -968,7 +968,7 @@ function ProjectCalendarView({
             type="button"
             onClick={() => onScaleChange(option.id)}
             className={cn(
-              "px-2.5 py-1 text-xs border transition-colors",
+              "cabinet-chip px-2.5 py-1 text-xs border transition-colors",
               scale === option.id
                 ? "border-gray-900 bg-gray-900 text-white"
                 : "border-gray-300 bg-white text-gray-700 hover:border-gray-900"
@@ -1079,7 +1079,7 @@ function ProjectCalendarView({
                         key={`${event.dealId}-${event.stage.id}`}
                         href={`/deals/${event.dealId}`}
                         className={cn(
-                          "block text-[10px] leading-tight px-1 py-0.5 border truncate hover:underline",
+                          "gantt-stage-bar block text-[10px] leading-tight px-1 py-0.5 border truncate hover:underline",
                           stageBarClass(event.stage.status, event.isCustom)
                         )}
                         title={`${event.dealTitle} · ${event.stage.title}`}
@@ -1244,7 +1244,7 @@ function GanttZoomControls({
           type="button"
           onClick={() => onZoomChange(option.id)}
           className={cn(
-            "px-2.5 py-1 text-xs border transition-colors",
+            "cabinet-chip px-2.5 py-1 text-xs border transition-colors",
             zoom === option.id
               ? "border-gray-900 bg-gray-900 text-white"
               : "border-gray-300 bg-white text-gray-700 hover:border-gray-900"

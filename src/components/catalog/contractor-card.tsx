@@ -25,7 +25,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
   const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
 
   return (
-    <CatalogCard className="relative flex flex-col h-full pb-4" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
       <Link
         href={`/contractors/${contractor.id}`}
         className="absolute inset-0 z-0"
@@ -34,7 +34,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
 
       <CatalogCardImageSlider slides={slides} scrubRatio={scrubRatio} hoverScrub />
 
-      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 min-h-0 pointer-events-none">
+      <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0 pointer-events-none">
         <div className="flex flex-col flex-1">
           <CardTitle className="text-sm font-semibold leading-snug">{contractor.name}</CardTitle>
           <CardDescription className="text-xs mt-1">

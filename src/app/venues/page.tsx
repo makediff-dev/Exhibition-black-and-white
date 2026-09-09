@@ -30,7 +30,7 @@ export default function VenuesPage() {
 
 function VenuesPageFallback() {
   return (
-    <CabinetAwareLayout title="Площадки">
+    <CabinetAwareLayout title="Площадки" className="catalog-list-layout">
       <LoadingState message="Загрузка площадок..." />
     </CabinetAwareLayout>
   );
@@ -106,6 +106,7 @@ function VenuesPageContent() {
     <CabinetAwareLayout
       title="Площадки"
       description="Каталог площадок для выставок и мероприятий — павильоны, залы и инфраструктура."
+      className="catalog-list-layout"
     >
       <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
@@ -138,7 +139,7 @@ function VenuesPageContent() {
             ) : (
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
-                <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="catalog-cards-grid">
                   {filtered.map((venue, index) => {
                     const favoriteId = venue.catalogId ?? venue.id;
                     const canFavorite = Boolean(venue.catalogId);

@@ -16,7 +16,6 @@ import { EmptyState } from "@/components/ui/states";
 import { Modal } from "@/components/ui/modal";
 import { FileUpload } from "@/components/ui/file-upload";
 import { VenueDashboardSection } from "@/components/venue/venue-dashboard-section";
-import { AccountCabinetHeader } from "@/components/account/account-cabinet-header";
 import { BackButton } from "@/components/ui/back-button";
 import { OrganizerDashboardSection } from "@/components/organizer/organizer-dashboard-section";
 import { OrganizerSettingsSection } from "@/components/organizer/organizer-settings-section";
@@ -125,15 +124,15 @@ export function AccountPageRenderer({ role, slug }: Props) {
   const pageTitle =
     slug === "repeat-order"
       ? "Повторить заказ"
+      : slug === "profile" && role !== "venue"
+      ? null
       : isPortfolioFormPage || slug === "portfolio" || isCatalogFormPage || contractorServiceId || (venueEvent && role === "venue") || slug === "floor-plan" || slug === "halls"
       ? null
       : slug === "create-event" || slug === "edit-event" || slug.startsWith("events/") || slug.startsWith("orders/") || slug.startsWith("bookings/") || slug.startsWith("contractors/")
         ? null
-        : isDashboard && role === "venue"
+        : isDashboard && (role === "venue" || role === "organizer")
           ? matchedNav?.label || "Дашборд"
-          : isDashboard && role === "organizer"
-            ? null
-            : matchedNav?.label ?? (slug.includes("/") ? null : "Кабинет");
+          : matchedNav?.label ?? (slug.includes("/") ? null : "Кабинет");
 
   const renderContent = () => {
     if (slug.startsWith("contractors/")) {
@@ -152,23 +151,6 @@ export function AccountPageRenderer({ role, slug }: Props) {
         <BackButton fallbackHref="/account/customer/completed-projects" className="mb-2" />
       )}
       {pageTitle && <h1 className="text-xl font-bold mb-4">{pageTitle}</h1>}
-      {role === "organizer" &&
-      user &&
-      slug !== "create-event" &&
-      slug !== "edit-event" &&
-      !slug.startsWith("events/") ? (
-        <AccountCabinetHeader
-          user={user}
-          asPageTitle={isDashboard}
-          actions={
-            slug === "events" ? (
-              <Link href="/account/organizer/create-event">
-                <Button size="sm">Создать мероприятие</Button>
-              </Link>
-            ) : undefined
-          }
-        />
-      ) : null}
       {renderContent()}
     </div>
   );

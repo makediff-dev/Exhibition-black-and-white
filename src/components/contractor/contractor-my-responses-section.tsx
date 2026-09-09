@@ -209,13 +209,17 @@ export function ContractorMyResponsesSection({
           onAction={() => setFilters(EMPTY_FILTERS)}
         />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           {visibleResponses.map((response) => {
             const request = requests.find((item) => item.id === response.requestId);
 
             return (
-              <Link key={response.id} href={`/requests/${response.requestId}/respond`}>
-                <Card hoverable className="">
+              <Link
+                key={response.id}
+                href={`/requests/${response.requestId}/respond`}
+                className="block"
+              >
+                <Card hoverable className="cabinet-card">
                   <div className="flex justify-between items-start gap-3 flex-wrap">
                     <div>
                       <CardTitle>{request?.title ??"Заявка"}</CardTitle>

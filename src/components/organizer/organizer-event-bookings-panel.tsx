@@ -114,12 +114,12 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
           <CardDescription>Бронирований для этого мероприятия пока нет</CardDescription>
         </Card>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {eventBookings.map((booking) => {
             const hall = SEED_HALLS.find((item) => item.id === booking.hallId);
 
             return (
-              <Card key={booking.id} className="h-full">
+              <Card key={booking.id} className="cabinet-card h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <Badge
                     variant={booking.status === "pending" ? "solid" : "outline"}
@@ -173,7 +173,7 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
         </div>
 
         {!selectedHallId ? (
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {halls.map((hall) => {
               const hasBooking = bookedHallIds.has(hall.id);
               const hallPlots = SEED_FLOOR_PLAN_PLOTS.filter(
@@ -185,9 +185,9 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
                   key={hall.id}
                   type="button"
                   onClick={() => setSelectedHallId(hall.id)}
-                  className="text-left h-full"
+                  className="text-left"
                 >
-                  <Card className="h-full">
+                  <Card hoverable className="cabinet-card h-full">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       {hasBooking && <Badge variant="outline">В аренде</Badge>}
                       {hallPlots.length > 0 && (

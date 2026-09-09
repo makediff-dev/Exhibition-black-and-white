@@ -187,7 +187,7 @@ export function VenueBookingsSection({
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filteredBookings.map((booking) => {
             const event = eventMap[booking.eventId];
             const hall = booking.hallId ? hallMap[booking.hallId] : undefined;
@@ -201,7 +201,7 @@ export function VenueBookingsSection({
                 href={`/account/venue/bookings/${booking.id}`}
                 className="block h-full"
               >
-                <Card hoverable className="h-full flex flex-col gap-[10px]">
+                <Card hoverable className="cabinet-card h-full flex flex-col gap-[10px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
                     <Badge variant="outline">{periodLabel}</Badge>
                     <Badge variant={booking.status === "pending" ? "solid" : "outline"}>

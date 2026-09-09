@@ -557,10 +557,10 @@ function RegisterPageContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className={`mx-auto w-full ${showCompanyFlow ? "max-w-site" : "max-w-3xl"}`}>
+        <div className={`register-accent mx-auto w-full ${showCompanyFlow ? "max-w-site" : "max-w-3xl"}`}>
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
           <p className="text-sm text-gray-600">
@@ -572,7 +572,7 @@ function RegisterPageContent() {
 
         {!showCompanyFlow && !individualEmailSent && !awaitingEmailConfirmation && (
           <div className="mx-auto max-w-lg space-y-4 text-left">
-            <div className="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
+            <div className="rounded-button border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
               Регистрацию компании и выбор роли на платформе можно пройти только после
               подтверждения email личного аккаунта.
             </div>
@@ -626,7 +626,7 @@ function RegisterPageContent() {
                 <p className="text-xs text-gray-700">{errors.serviceNotifications}</p>
               )}
 
-              <Button type="submit" className="w-full">
+              <Button type="submit" variant="teal" className="w-full">
                 Отправить
               </Button>
             </form>
@@ -634,7 +634,7 @@ function RegisterPageContent() {
         )}
 
         {awaitingEmailConfirmation && (
-          <div className="mx-auto max-w-lg border border-gray-300 bg-gray-50 p-6 text-sm text-center">
+          <div className="mx-auto max-w-lg rounded-button border border-gray-300 bg-gray-50 p-6 text-sm text-center">
             <h2 className="text-lg font-semibold mb-2">Подтвердите email</h2>
             <p className="text-gray-700 mb-6">
               Мы отправили письмо на <strong>{form.email}</strong>. Подтвердите адрес, чтобы
@@ -644,7 +644,7 @@ function RegisterPageContent() {
               <Link
                 href={`/verify?from=register&type=email&contact=${encodeURIComponent(form.email ?? "")}`}
               >
-                <Button>Подтвердить email</Button>
+                <Button variant="teal">Подтвердить email</Button>
               </Link>
             </div>
           </div>
@@ -692,13 +692,13 @@ function RegisterPageContent() {
                 className="flex-1"
               />
               <div className="flex items-end">
-                <Button type="button" onClick={handleFindCompany}>
+                <Button type="button" variant="teal" onClick={handleFindCompany}>
                   Найти компанию
                 </Button>
               </div>
             </div>
             {form.companyName && (
-              <div className="border border-gray-300 p-4 space-y-2 text-sm">
+              <div className="rounded-button border border-gray-300 p-4 space-y-2 text-sm">
                 <p><span className="text-gray-500">Название:</span> {form.companyName}</p>
                 <p><span className="text-gray-500">ОГРН:</span> {form.ogrn}</p>
                 <p><span className="text-gray-500">Адрес:</span> {form.address}</p>
@@ -710,7 +710,7 @@ function RegisterPageContent() {
               </div>
             )}
             {form.companyName && (
-              <div className="space-y-4 border border-gray-300 p-4">
+              <div className="space-y-4 rounded-button border border-gray-300 p-4">
                 <div>
                   <p className="text-sm font-medium">Данные для верификации компании</p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -751,7 +751,7 @@ function RegisterPageContent() {
               Подключите электронный документооборот для подписания договоров
             </p>
 
-            <div className="border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
+            <div className="rounded-button border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
               ID в ЭДО можно узнать у любой компании, поэтому одного номера недостаточно.
               После отправки запроса уполномоченное лицо должно подтвердить его в кабинете
               оператора ЭДО — так мы проверяем, что регистрируется представитель компании.
@@ -779,7 +779,7 @@ function RegisterPageContent() {
             />
 
             {form.edoRequestStatus === "pending" && (
-              <div className="border border-gray-900 bg-white p-4 text-sm space-y-2">
+              <div className="rounded-button border border-gray-900 bg-white p-4 text-sm space-y-2">
                 <p className="font-medium">Запрос отправлен в ЭДО компании</p>
                 <p className="text-gray-600">
                   Подписант с правом подписи должен принять приглашение в кабинете{" "}
@@ -803,6 +803,7 @@ function RegisterPageContent() {
               {form.edoRequestStatus !== "confirmed" && !form.edoAuthorityScan && (
                 <Button
                   type="button"
+                  variant="teal"
                   onClick={
                     form.edoRequestStatus === "pending"
                       ? handleCheckEdoConfirmation
@@ -916,7 +917,7 @@ function RegisterPageContent() {
                 <button
                   type="button"
                   onClick={toggleAllCities}
-                  className={`text-xs border px-2 py-1 ${
+                  className={`rounded-button text-xs border px-2 py-1 ${
                     allFilteredCitiesSelected
                       ? "border-gray-900 bg-gray-900 text-white"
                       : "border-gray-300 hover:border-gray-900"
@@ -929,7 +930,7 @@ function RegisterPageContent() {
                     key={city}
                     type="button"
                     onClick={() => toggleArrayItem("cities", city)}
-                    className={`text-xs border px-2 py-1 ${
+                    className={`rounded-button text-xs border px-2 py-1 ${
                       form.cities?.includes(city)
                         ? "border-gray-900 bg-gray-900 text-white"
                         : "border-gray-300 hover:border-gray-900"
@@ -964,7 +965,7 @@ function RegisterPageContent() {
                     key={ind}
                     type="button"
                     onClick={() => toggleArrayItem("industries", ind)}
-                    className={`text-xs border px-2 py-1 ${
+                    className={`rounded-button text-xs border px-2 py-1 ${
                       form.industries?.includes(ind)
                         ? "border-gray-900 bg-gray-900 text-white"
                         : "border-gray-300 hover:border-gray-900"
@@ -977,7 +978,7 @@ function RegisterPageContent() {
             </div>
 
             {form.role === "contractor" && (
-              <div className="space-y-4 border border-gray-300 p-4">
+              <div className="space-y-4 rounded-button border border-gray-300 p-4">
                 <p className="text-sm font-medium">Данные исполнителя</p>
                 <Input
                   label="Укажите опыт работы в сфере, полных лет"
@@ -1193,7 +1194,7 @@ function RegisterPageContent() {
 
         {step === 6 && (
           <div className="space-y-4">
-            <div className="border border-gray-300 bg-gray-50 p-4 text-sm">
+            <div className="rounded-button border border-gray-300 bg-gray-50 p-4 text-sm">
               Код подтверждения отправлен на <strong>{form.email}</strong>. Можете ещё
               проверить папку «Спам».
             </div>
@@ -1228,14 +1229,14 @@ function RegisterPageContent() {
                 </button>
               )}
             </div>
-            <Button type="button" className="w-full" onClick={handleCodeSubmit}>
+            <Button type="button" variant="teal" className="w-full" onClick={handleCodeSubmit}>
               Подтвердить email
             </Button>
           </div>
         )}
 
         {step === 7 && (
-          <div className="flex flex-col items-center py-8 text-center border border-gray-300">
+          <div className="flex flex-col items-center rounded-button py-8 text-center border border-gray-300">
             <CheckCircle className="h-12 w-12 text-gray-900 mb-4" />
             <h2 className="text-lg font-semibold mb-2">Заявка отправлена на модерацию</h2>
             <p className="text-sm text-gray-600 mb-2 max-w-md">
@@ -1246,7 +1247,7 @@ function RegisterPageContent() {
               Обычно модерация занимает до 24 часов. Вы получите уведомление на e-mail,
               указанный при регистрации.
             </p>
-            <Button onClick={handleComplete}>Перейти к статусу модерации</Button>
+            <Button variant="teal" onClick={handleComplete}>Перейти к статусу модерации</Button>
           </div>
         )}
 
@@ -1261,7 +1262,7 @@ function RegisterPageContent() {
               Назад
             </Button>
             {step < 6 && (
-              <Button type="button" onClick={goNext}>
+              <Button type="button" variant="teal" onClick={goNext}>
                 {step === 5 ? "Отправить код на почту" : "Далее"}
               </Button>
             )}

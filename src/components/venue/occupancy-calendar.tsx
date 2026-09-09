@@ -154,7 +154,7 @@ export function OccupancyCalendar({
               title={`${iso}: ${percent}%`}
               onClick={() => onDaySelect(iso)}
               className={cn(
-                "relative h-10 text-xs border border-transparent hover:border-gray-900",
+                "booking-cell relative h-10 text-xs border border-transparent hover:border-gray-900",
                 !currentMonth && "opacity-40",
                 getOccupancyColorClass(percent),
                 selected && "ring-2 ring-gray-900 ring-offset-1"
@@ -172,7 +172,7 @@ export function OccupancyCalendar({
       <div className="flex flex-wrap gap-3 text-xs text-gray-600">
         {LEGEND.map((item) => (
           <span key={item.label} className="inline-flex items-center gap-1.5">
-            <span className={cn("h-3 w-3", item.className)} />
+            <span className={cn("h-3 w-3 rounded-button", item.className)} />
             {item.label}
           </span>
         ))}
