@@ -84,6 +84,7 @@ import { useToast } from "@/components/ui/toast-provider";
 import { getNavForRole } from "@/constants/nav-menus";
 import { DEMO_USERS, SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
 import { getInterestRecommendationReason, getOkvedRecommendationReason, matchInterests, matchOkved } from "@/lib/utils/okved";
+import { withFromParam } from "@/lib/utils/message-related-links";
 import { formatDate, formatDateTime, formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { DEAL_STATUS_LABELS, REQUEST_FORMAT_LABELS, STAGE_STATUS_LABELS } from "@/constants/statuses";
 import { SERVICE_CATEGORIES, CITIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict } from "@/constants/categories";
@@ -107,6 +108,7 @@ export function AccountPageRenderer({ role, slug }: Props) {
   const matchedNav = nav.find((n) => n.slug === slug);
   const current = matchedNav || nav[0];
   const user = useAuthStore((s) => s.user);
+  const router = useRouter();
   const isDashboard = slug === "" || slug === "dashboard";
   const portfolioItemId = slug.startsWith("portfolio/") ? slug.split("/")[1] : null;
   const isCatalogFormPage = slug.startsWith("services/catalog/");
@@ -121,6 +123,8 @@ export function AccountPageRenderer({ role, slug }: Props) {
     role === "contractor"
       ? findContractorForUser(user) ?? undefined
       : undefined;
+  const searchParams = useSearchParams();
+  const fromMessages = searchParams.get("from") === "messages";
   const pageTitle =
     slug === "repeat-order"
       ? "Повторить заказ"
@@ -149,6 +153,13 @@ export function AccountPageRenderer({ role, slug }: Props) {
     <div>
       {slug === "repeat-order" && (
         <BackButton fallbackHref="/account/customer/completed-projects" className="mb-2" />
+      )}
+      {fromMessages && slug === "bookings" && (
+        <BackButton
+          className="mb-2"
+          fallbackHref="/messages"
+          onClick={() => router.push("/messages")}
+        />
       )}
       {pageTitle && <h1 className="text-xl font-bold mb-4">{pageTitle}</h1>}
       {renderContent()}
@@ -393,7 +404,7 @@ function CustomerPages({ slug }: { slug: string }) {
             {okvedRecommendedEvents.map((event) => (
               <Link
                 key={event.id}
-                href={`/events/${event.id}`}
+                href={withFromParam(`/events/${event.id}`, "dashboard")}
                 className="block text-sm mt-2 hover:underline"
               >
                 {event.title} — {getOkvedRecommendationReason(user?.mainOkved || "")}
@@ -402,7 +413,7 @@ function CustomerPages({ slug }: { slug: string }) {
             {interestRecommendedEvents.map((event) => (
               <Link
                 key={event.id}
-                href={`/events/${event.id}`}
+                href={withFromParam(`/events/${event.id}`, "dashboard")}
                 className="block text-sm mt-2 hover:underline"
               >
                 {event.title} — {getInterestRecommendationReason()}
@@ -747,6 +758,19 @@ function CustomerPages({ slug }: { slug: string }) {
 
   if (slug === "settings") {
     return <CustomerSettingsSection customerId={user?.id ?? "user-customer"} showToast={showToast} />;
+  }
+
+  if (slug.startsWith("bookings/")) {
+    const bookingId = slug.split("/")[1];
+    if (bookingId && bookingId !== "event") {
+      return (
+        <VenueBookingDetailSection
+          bookingId={bookingId}
+          role="customer"
+          showToast={showToast}
+        />
+      );
+    }
   }
 
   return <EmptyState title="Раздел не найден" />;
@@ -1152,6 +1176,19 @@ function ContractorPages({ slug }: { slug: string }) {
     return <ContractorSettingsSection contractorId={contractorId} showToast={showToast} />;
   }
 
+  if (slug.startsWith("bookings/")) {
+    const bookingId = slug.split("/")[1];
+    if (bookingId && bookingId !== "event") {
+      return (
+        <VenueBookingDetailSection
+          bookingId={bookingId}
+          role="contractor"
+          showToast={showToast}
+        />
+      );
+    }
+  }
+
   return <EmptyState title="Раздел не найден" />;
 }
 
@@ -1198,7 +1235,13 @@ function VenuePages({ slug }: { slug: string }) {
 
   if (slug.startsWith("bookings/")) {
     const bookingId = slug.split("/")[1];
-    return <VenueBookingDetailSection bookingId={bookingId} showToast={showToast} />;
+    return (
+      <VenueBookingDetailSection
+        bookingId={bookingId}
+        role="venue"
+        showToast={showToast}
+      />
+    );
   }
 
   if (slug === "bookings") {
@@ -1314,6 +1357,19 @@ function OrganizerPages({ slug }: { slug: string }) {
 
   if (slug === "venues") {
     return <OrganizerVenuesSection />;
+  }
+
+  if (slug.startsWith("bookings/")) {
+    const bookingId = slug.split("/")[1];
+    if (bookingId && bookingId !== "event") {
+      return (
+        <VenueBookingDetailSection
+          bookingId={bookingId}
+          role="organizer"
+          showToast={showToast}
+        />
+      );
+    }
   }
 
   if (slug === "participants" || slug === "services" || slug === "bookings") {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
 import { getNavForRole, isNavItemActive, resolveActiveNavSlug } from "@/constants/nav-menus";
@@ -36,6 +36,7 @@ export function AppShell({
   const sidebarNavRef = useRef<HTMLElement>(null);
   const mobileNavRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -53,13 +54,21 @@ export function AppShell({
     return deal.status === "completed" ? "completed-projects" : "active-projects";
   }, [pathname, deals]);
 
+  const from = searchParams.get("from");
+  const fromNavSlug = useMemo(() => {
+    if (from === "dashboard" && nav.some((item) => item.slug === "")) return "";
+    if (from && nav.some((item) => item.slug === from)) return from;
+    return undefined;
+  }, [from, nav]);
+
   const resolvedActiveNavSlug = useMemo(() => {
+    if (fromNavSlug !== undefined) return fromNavSlug;
     if (activeNavSlug != null) return activeNavSlug;
     if (dealNavSlug != null) return dealNavSlug;
     const role = user?.role || "";
     if (!role) return undefined;
     return resolveActiveNavSlug(pathname, role);
-  }, [activeNavSlug, dealNavSlug, pathname, user?.role]);
+  }, [fromNavSlug, activeNavSlug, dealNavSlug, pathname, user?.role]);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -67,14 +76,18 @@ export function AppShell({
 
   useLayoutEffect(() => {
     const positionActiveLink = (navElement: HTMLElement | null) => {
-      if (!navElement) return;
+      if (!navElement || navElement.clientHeight <= 0) return;
       const activeLink = navElement.querySelector<HTMLElement>('[data-nav-active="true"]');
       if (!activeLink) return;
 
-      const centeredTop =
-        activeLink.offsetTop - (navElement.clientHeight - activeLink.offsetHeight) / 2;
-      const maxScrollTop = navElement.scrollHeight - navElement.clientHeight;
-      navElement.scrollTop = Math.max(0, Math.min(centeredTop, maxScrollTop));
+      const viewTop = navElement.scrollTop;
+      const viewBottom = viewTop + navElement.clientHeight;
+      const linkTop = activeLink.offsetTop;
+      const linkBottom = linkTop + activeLink.offsetHeight;
+      const fullyVisible = linkTop >= viewTop && linkBottom <= viewBottom;
+      if (fullyVisible) return;
+
+      activeLink.scrollIntoView({ block: "nearest", inline: "nearest" });
     };
 
     positionActiveLink(sidebarNavRef.current);

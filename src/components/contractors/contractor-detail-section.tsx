@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Star } from "lucide-react";
 import { ResponseFollowUpActions } from "@/components/responses/response-follow-up-actions";
 import { BackButton } from "@/components/ui/back-button";
@@ -17,6 +18,7 @@ import {
   getContractorCheckHref,
   getContractorPortfolioHref,
 } from "@/lib/utils/contractor-profile-links";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 const MOCK_REQUISITES: Record<
   string,
@@ -77,6 +79,7 @@ interface Props {
   backFallbackHref: string;
   accountRole?: UserRole | null;
   fromResponses?: boolean;
+  fromEvent?: boolean;
   requestId?: string | null;
   responseId?: string | null;
 }
@@ -86,11 +89,14 @@ export function ContractorDetailSection({
   backFallbackHref,
   accountRole = null,
   fromResponses = false,
+  fromEvent = false,
   requestId,
   responseId,
 }: Props) {
+  const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
   const { requests, responses } = usePrototypeStore();
+  const from = useSearchParams().get("from");
 
   const contractor = SEED_CONTRACTORS.find((entry) => entry.id === contractorId);
   if (!contractor) return null;
@@ -121,7 +127,11 @@ export function ContractorDetailSection({
 
   return (
     <>
-      {accountRole ? null : <BackButton fallbackHref={backFallbackHref} className="mb-4" />}
+      <BackButton
+        fallbackHref={backFallbackHref}
+        className="mb-4"
+        onClick={from ? () => router.push(backFallbackHref) : undefined}
+      />
 
       {(contractor.verified ||
         contractor.hasProduction ||
@@ -148,10 +158,10 @@ export function ContractorDetailSection({
 
           <div className="flex flex-wrap items-center gap-6 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="purple">Пригласить в заявку</Button>
+              <Button variant="blue">Пригласить в заявку</Button>
             </Link>
             <Link
-              href={`/services?contractor=${contractor.id}`}
+              href={from ? withFromParam(`/services?contractor=${contractor.id}`, from) : `/services?contractor=${contractor.id}`}
               className="text-sm text-gray-900 hover:underline"
             >
               Услуги исполнителя
@@ -181,7 +191,7 @@ export function ContractorDetailSection({
                     <PortfolioCard
                       key={item.id}
                       item={item}
-                      href={getContractorPortfolioHref(contractor.id, item.id, linkRole)}
+                      href={getContractorPortfolioHref(contractor.id, item.id, linkRole, from)}
                     />
                   ))}
                 </div>
@@ -206,7 +216,10 @@ export function ContractorDetailSection({
                 <h2 className="text-lg font-semibold mb-3">Услуги</h2>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {services.map((service) => (
-                    <Link key={service.id} href={`/services/${service.id}`}>
+                    <Link
+                      key={service.id}
+                      href={from ? withFromParam(`/services/${service.id}`, from) : `/services/${service.id}`}
+                    >
                       <Card hoverable className="h-full">
                         <CardTitle>{service.title}</CardTitle>
                         <p className="text-xs text-gray-600 mt-1">{service.category}</p>
@@ -254,7 +267,10 @@ export function ContractorDetailSection({
               </div>
             </dl>
             <Link
-              href={getContractorCheckHref(contractor.id, { role: linkRole })}
+              href={getContractorCheckHref(contractor.id, {
+                role: linkRole,
+                from: from ?? (linkRole ? "checks" : undefined),
+              })}
               className="block w-full mt-4"
             >
               <Button variant="outline" className="w-full" size="sm">

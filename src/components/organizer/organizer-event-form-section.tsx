@@ -123,6 +123,7 @@ export function OrganizerEventFormSection({
   const setOrganizerEventDraft = usePrototypeStore((state) => state.setOrganizerEventDraft);
   const eventId = searchParams.get("id") ?? forcedEventId ?? null;
   const tabFromQuery = searchParams.get("tab");
+  const fromMessages = searchParams.get("from") === "messages";
 
   const existingEvent = useMemo(
     () => (eventId ? SEED_EVENTS.find((event) => event.id === eventId) : undefined),
@@ -288,7 +289,7 @@ export function OrganizerEventFormSection({
   return (
     <div className="space-y-6 w-full">
       <div className="space-y-2">
-        <BackButton fallbackHref="/account/organizer/events" />
+        <BackButton fallbackHref={fromMessages ? "/messages" : "/account/organizer/events"} />
         {mode === "edit" && (existingEvent?.title || form.title) ? (
           <h1 className="text-xl font-bold text-gray-900">
             {existingEvent?.title ?? form.title}
@@ -313,8 +314,8 @@ export function OrganizerEventFormSection({
       </div>
 
       {mode === "edit" && eventId && activeTab === "participants" ? (
-        <div className="space-y-4 w-full">
-          <Card className="space-y-2">
+        <div className="space-y-4 w-full max-w-3xl">
+          <Card className="space-y-2 w-full">
             <CardTitle className="text-sm">Экспоненты мероприятия</CardTitle>
             <CardDescription>
               Участники — компании со своим стендом на выставке. Застройщики и подрядчики — в
@@ -325,7 +326,7 @@ export function OrganizerEventFormSection({
             placeholder="Поиск участника..."
             value={participantQuery}
             onChange={(event) => setParticipantQuery(event.target.value)}
-            className="max-w-sm"
+            className="w-full"
           />
           <OrganizerParticipantsList
             participants={filteredEventParticipants}

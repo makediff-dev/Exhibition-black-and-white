@@ -22,7 +22,7 @@ export function OrganizerParticipantsList({
 
   if (participants.length === 0) {
     return (
-      <Card>
+      <Card className="w-full">
         <CardDescription>Участники не найдены по выбранным фильтрам</CardDescription>
       </Card>
     );

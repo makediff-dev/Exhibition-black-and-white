@@ -218,6 +218,8 @@ export function OrganizerEventRecommendedPartnersPanel({
                             <Link
                               href={getContractorProfileHref(partner.contractorId, {
                                 role: user?.role,
+                                from: "event",
+                                eventId: storageEventId ?? undefined,
                               })}
                               className="mt-auto pt-3 inline-block text-xs underline hover:text-gray-900"
                             >

@@ -401,7 +401,11 @@ export function RequestWizard({
               <Card
                 key={format}
                 onClick={() => update({ format })}
-                className={data.format === format ? "border-gray-900 ring-1 ring-gray-900" : ""}
+                className={
+                  data.format === format
+                    ? "border-gray-900 ring-1 ring-gray-900 bg-[var(--account-accent-soft,#eef0fe)]"
+                    : ""
+                }
               >
                 <CardTitle className="text-sm">{REQUEST_FORMAT_LABELS[format]}</CardTitle>
                 <CardDescription className="text-xs mt-2">
@@ -412,7 +416,7 @@ export function RequestWizard({
           </div>
 
           {data.format === "closed_request" && (
-            <div className="border border-gray-300 p-4 space-y-3">
+            <div className="border border-gray-300 p-4 space-y-3 rounded-card">
               <p className="text-sm font-medium">Пригласите исполнителей *</p>
               <p className="text-xs text-gray-600">
                 Закрытая заявка видна только выбранным исполнителям.
@@ -499,12 +503,14 @@ export function RequestWizard({
             />
           </div>
 
-          <div className="border border-gray-300 divide-y divide-gray-200 max-h-72 overflow-y-auto">
+          <div className="border border-gray-300 divide-y divide-gray-200 max-h-72 overflow-y-auto rounded-card">
             <button
               type="button"
               onClick={() => selectEvent("")}
               className={`w-full text-left px-3 py-3 text-sm transition-colors hover:bg-gray-50 ${
-                !data.eventId ? "bg-slate-100 border border-blue-600 font-medium" : "border border-transparent"
+                !data.eventId
+                  ? "bg-[var(--account-accent-soft,#eef0fe)] font-medium"
+                  : ""
               }`}
             >
               Без привязки к мероприятию
@@ -519,8 +525,8 @@ export function RequestWizard({
                   onClick={() => selectEvent(event.id)}
                   className={`w-full text-left px-3 py-3 text-sm transition-colors hover:bg-gray-50 ${
                     data.eventId === event.id
-                      ? "bg-slate-100 border border-blue-600 font-medium"
-                      : "border border-transparent"
+                      ? "bg-[var(--account-accent-soft,#eef0fe)] font-medium"
+                      : ""
                   }`}
                 >
                   <span className="block">{event.title}</span>
@@ -667,7 +673,7 @@ export function RequestWizard({
       )}
 
       {step === 7 && (
-        <div className="border border-gray-900 p-4 space-y-4 bg-gray-50">
+        <div className="border border-gray-900 p-4 space-y-4 bg-gray-50 rounded-card">
           <h3 className="font-semibold">Предпросмотр заявки</h3>
           <div className="flex flex-wrap gap-2">
             <Badge>{REQUEST_FORMAT_LABELS[data.format]}</Badge>

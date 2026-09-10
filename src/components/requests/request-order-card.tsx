@@ -11,6 +11,7 @@ import type { Deal, Request, Response } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 interface Props {
   request: Request;
@@ -126,7 +127,7 @@ export function RequestOrderCard({ request, deal }: Props) {
               return (
                 <Link
                   key={line.id}
-                  href={line.href}
+                  href={withFromParam(line.href, "requests")}
                   className="block hover:bg-gray-50 transition-colors"
                 >
                   {row}

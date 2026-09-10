@@ -15,9 +15,15 @@ interface AccountThemeProviderProps {
   role: AccountRole;
   children: ReactNode;
   className?: string;
+  tokensOnly?: boolean;
 }
 
-export function AccountThemeProvider({ role, children, className }: AccountThemeProviderProps) {
+export function AccountThemeProvider({
+  role,
+  children,
+  className,
+  tokensOnly = false,
+}: AccountThemeProviderProps) {
   const theme = useMemo(() => getAccountRoleTheme(role)!, [role]);
 
   const style = {
@@ -31,13 +37,17 @@ export function AccountThemeProvider({ role, children, className }: AccountTheme
 
   return (
     <AccountThemeContext.Provider value={theme}>
-      <div
-        data-account-role={role}
-        className={cn(styles.accountCabinet, className)}
-        style={style}
-      >
-        {children}
-      </div>
+      {tokensOnly ? (
+        children
+      ) : (
+        <div
+          data-account-role={role}
+          className={cn(styles.accountCabinet, className)}
+          style={style}
+        >
+          {children}
+        </div>
+      )}
     </AccountThemeContext.Provider>
   );
 }

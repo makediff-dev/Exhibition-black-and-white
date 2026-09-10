@@ -46,7 +46,7 @@ export function FileUpload({
         <ul className="mt-2 space-y-1">
           {files.map((f) => (
             <li key={f} className="text-xs text-gray-600 flex items-center gap-1">
-              <span className="border border-gray-300 px-1 rounded-[4px]">📄</span> {f}
+              <span className="border border-gray-300 px-1 rounded-button">📄</span> {f}
             </li>
           ))}
         </ul>

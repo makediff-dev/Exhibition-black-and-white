@@ -14,6 +14,7 @@ import {
   getContractorProfileHref,
   parseContractorAccountSlug,
 } from "@/lib/utils/contractor-profile-links";
+import { getCabinetBackHref } from "@/lib/utils/message-related-links";
 
 interface Props {
   slug: string;
@@ -44,7 +45,10 @@ function AccountContractorSectionContent({ slug, role }: Props) {
     return (
       <PortfolioDetail
         item={item}
-        backHref={getContractorProfileHref(parsed.contractorId, { role })}
+        backHref={getContractorProfileHref(parsed.contractorId, {
+          role,
+          from: searchParams.get("from") ?? undefined,
+        })}
         editable={false}
       />
     );
@@ -95,15 +99,23 @@ function AccountContractorSectionContent({ slug, role }: Props) {
   }
 
   const fromResponses = searchParams.get("from") === "responses";
+  const fromEvent = searchParams.get("from") === "event";
+  const from = searchParams.get("from");
   const requestId = searchParams.get("requestId");
   const responseId = searchParams.get("responseId");
+  const eventId = searchParams.get("eventId");
 
   const backFallbackHref =
-    fromResponses && requestId
-      ? role === "customer"
-        ? `/account/customer/responses`
-        : `/requests/${requestId}/responses`
-      : `/account/${role}`;
+    getCabinetBackHref(from, "", role) ||
+    (fromEvent && eventId && role === "organizer"
+      ? `/account/organizer/edit-event?id=${eventId}`
+      : fromResponses && requestId
+        ? role === "customer"
+          ? `/account/customer/responses`
+          : `/requests/${requestId}/responses`
+        : role === "organizer"
+          ? "/account/organizer/events"
+          : `/account/${role}`);
 
   const contractor = SEED_CONTRACTORS.find((entry) => entry.id === parsed.contractorId);
   if (!contractor) {
@@ -116,6 +128,7 @@ function AccountContractorSectionContent({ slug, role }: Props) {
       backFallbackHref={backFallbackHref}
       accountRole={role}
       fromResponses={fromResponses}
+      fromEvent={fromEvent}
       requestId={requestId}
       responseId={responseId}
     />

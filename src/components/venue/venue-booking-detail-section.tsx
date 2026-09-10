@@ -2,17 +2,20 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Building2, CalendarDays, User } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
+import type { AccountRole } from "@/constants/account-role-themes";
 import { BOOKING_PERIOD_LABELS, BOOKING_STATUS_LABELS } from "@/constants/statuses";
 import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
+import { withFromMessages } from "@/lib/utils/message-related-links";
 
 function mergeBookings(storedBookings: Booking[]): Booking[] {
   const ids = new Set(storedBookings.map((booking) => booking.id));
@@ -31,27 +34,49 @@ function mergeBookings(storedBookings: Booking[]): Booking[] {
 interface Props {
   bookingId: string;
   venueId?: string;
+  role?: AccountRole;
   showToast: (message: string, type?: "success" | "error" | "info") => void;
+}
+
+function getRelatedEventHref(role: AccountRole | undefined, eventId: string) {
+  if (role === "organizer") {
+    return `/account/organizer/edit-event?id=${encodeURIComponent(eventId)}`;
+  }
+  if (role === "venue") {
+    return `/account/venue/events/${encodeURIComponent(eventId)}`;
+  }
+  return `/events/${encodeURIComponent(eventId)}`;
 }
 
 export function VenueBookingDetailSection({
   bookingId,
   venueId = "venue-1",
+  role,
   showToast,
 }: Props) {
+  const searchParams = useSearchParams();
+  const fromMessages = searchParams.get("from") === "messages";
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
+  const resolvedRole = role ?? "venue";
+  const backHref = fromMessages
+    ? "/messages"
+    : resolvedRole === "venue"
+      ? "/account/venue/bookings"
+      : `/account/${resolvedRole}`;
 
   const booking = useMemo(() => {
-    return mergeBookings(storeBookings).find(
-      (item) => item.id === bookingId && item.venueId === venueId
-    );
-  }, [storeBookings, bookingId, venueId]);
+    return mergeBookings(storeBookings).find((item) => {
+      if (item.id !== bookingId) return false;
+      if (resolvedRole === "venue") return item.venueId === venueId;
+      return true;
+    });
+  }, [storeBookings, bookingId, venueId, resolvedRole]);
 
   if (!booking) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackHref="/account/venue/bookings" />
+        <BackButton fallbackHref={backHref} />
         <EmptyState
           title="Бронирование не найдено"
           description="Проверьте ссылку или вернитесь к списку бронирований"
@@ -78,7 +103,7 @@ export function VenueBookingDetailSection({
 
   return (
     <div className="space-y-4 w-full max-w-3xl">
-      <BackButton fallbackHref="/account/venue/bookings" />
+      <BackButton fallbackHref={backHref} />
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-4">
@@ -137,26 +162,36 @@ export function VenueBookingDetailSection({
             </p>
           </CardDescription>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/account/venue/events/${event.id}`}>
+            <Link
+              href={
+                fromMessages
+                  ? withFromMessages(getRelatedEventHref(resolvedRole, event.id))
+                  : getRelatedEventHref(resolvedRole, event.id)
+              }
+            >
               <Button size="sm" variant="outline">
                 Карточка мероприятия
               </Button>
             </Link>
-            <Link href={`/account/venue/bookings/event/${event.id}`}>
-              <Button size="sm" variant="outline">
-                Бронирования по мероприятию
-              </Button>
-            </Link>
-            <Link href={`/account/venue/orders/${event.id}`}>
-              <Button size="sm" variant="outline">
-                Заказы по мероприятию
-              </Button>
-            </Link>
+            {resolvedRole === "venue" ? (
+              <>
+                <Link href={`/account/venue/bookings/event/${event.id}`}>
+                  <Button size="sm" variant="outline">
+                    Бронирования по мероприятию
+                  </Button>
+                </Link>
+                <Link href={`/account/venue/orders/${event.id}`}>
+                  <Button size="sm" variant="outline">
+                    Заказы по мероприятию
+                  </Button>
+                </Link>
+              </>
+            ) : null}
           </div>
         </Card>
       )}
 
-      {booking.status === "pending" && (
+      {resolvedRole === "venue" && booking.status === "pending" && (
         <div className="flex flex-wrap gap-3">
           <Button onClick={handleConfirm}>Подтвердить бронирование</Button>
           <Button variant="outline" onClick={handleReject}>

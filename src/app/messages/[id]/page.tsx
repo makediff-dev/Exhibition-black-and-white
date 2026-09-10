@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { use, useMemo, useState } from "react";
 import { MessageThreadPanel } from "@/components/messages/message-thread-panel";
-import { SharedPageShell } from "@/components/layout/shared-page-shell";
+import { BackButton } from "@/components/ui/back-button";
 import { EmptyState } from "@/components/ui/states";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 
@@ -49,19 +49,23 @@ export default function MessageThreadPage({
 
   if (!thread) {
     return (
-      <SharedPageShell title="Переписка" showBack backFallbackHref="/messages" activeNavSlug="messages">
+      <>
+        <BackButton fallbackHref="/messages" className="mb-2" />
+        <h1 className="text-xl font-bold text-gray-900 mb-4">Переписка</h1>
         <EmptyState
           title="Переписка не найдена"
           description="Возможно, она была удалена или ссылка неверна"
           actionLabel="К списку сообщений"
           onAction={() => router.push("/messages")}
         />
-      </SharedPageShell>
+      </>
     );
   }
 
   return (
-    <SharedPageShell title={thread.title} showBack backFallbackHref="/messages" activeNavSlug="messages">
+    <>
+      <BackButton fallbackHref="/messages" className="mb-2" />
+      <h1 className="text-xl font-bold text-gray-900 mb-4">{thread.title}</h1>
       <div className="w-full mr-auto text-left max-w-3xl">
         <MessageThreadPanel
           thread={thread}
@@ -73,6 +77,6 @@ export default function MessageThreadPage({
           onSend={handleSend}
         />
       </div>
-    </SharedPageShell>
+    </>
   );
 }

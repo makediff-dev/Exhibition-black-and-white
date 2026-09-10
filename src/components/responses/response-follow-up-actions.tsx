@@ -35,7 +35,7 @@ export function ResponseFollowUpActions({
   };
 
   return (
-    <section className="border border-gray-300 p-4">
+    <section className="border border-gray-300 p-4 rounded-[10px]">
       <p className="text-xs font-medium text-gray-600 mb-2">Дальнейшие действия</p>
       <ul className="space-y-1">
         {RESPONSE_FOLLOW_UP_ACTIONS.map((action) => (

@@ -186,6 +186,7 @@ export function CustomerFavoritesSection() {
                     <ServiceCard
                       key={service.id}
                       service={service}
+                      from="favorites"
                       isFavorite={isFavorite(service.id)}
                       onToggleFavorite={() => handleToggleFavorite(service)}
                       onAdd={() => handleAddToCart(service)}

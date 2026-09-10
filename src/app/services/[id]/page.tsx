@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, ShoppingCart, Star, Heart } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
@@ -10,9 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { getCabinetBackHref } from "@/lib/utils/message-related-links";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -22,6 +25,9 @@ const MOCK_REVIEWS = [
 export default function ServiceDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const { accountRole } = useCabinetSession();
   const { showToast } = useToast();
   const addItem = useCartStore((s) => s.addItem);
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
@@ -69,9 +75,15 @@ export default function ServiceDetailPage() {
     router.push("/checkout");
   };
 
+  const backFallbackHref = getCabinetBackHref(from, "/services", accountRole);
+
   return (
     <CabinetAwareLayout>
-      <BackButton fallbackHref="/services" className="mb-4" />
+      <BackButton
+        fallbackHref={backFallbackHref}
+        className="mb-4"
+        onClick={from ? () => router.push(backFallbackHref) : undefined}
+      />
 
       <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
@@ -80,7 +92,13 @@ export default function ServiceDetailPage() {
                 <Badge variant="outline" className="mb-2">{service.category}</Badge>
                 <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
                 <p className="text-sm text-gray-600">
-                  <Link href={`/contractors/${service.contractorId}`} className="underline">
+                  <Link
+                    href={getContractorProfileHref(service.contractorId, {
+                      role: accountRole,
+                      from: from ?? undefined,
+                    })}
+                    className="underline"
+                  >
                     {service.contractorName}
                   </Link>
                   {" · "}{service.city}

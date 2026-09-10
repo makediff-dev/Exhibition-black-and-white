@@ -83,7 +83,7 @@ export function EstimateBuilder({ sections, onChange, readOnly = false }: Estima
 
   if (sections.length === 0 && !readOnly) {
     return (
-      <div className="border border-dashed border-gray-400 p-6 text-center">
+      <div className="border border-dashed border-gray-400 p-6 text-center rounded-card">
         <p className="text-sm text-gray-600 mb-3">Смета пока пуста</p>
         <Button variant="outline" size="sm" onClick={() => onChange([newSection()])}>
           <Plus className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function EstimateBuilder({ sections, onChange, readOnly = false }: Estima
   return (
     <div className="space-y-4">
       {sections.map((section) => (
-        <div key={section.id} className="border border-gray-300">
+        <div key={section.id} className="border border-gray-300 overflow-hidden rounded-card">
           <div className="flex items-center justify-between border-b border-gray-300 px-3 py-2 bg-gray-50">
             {readOnly ? (
               <span className="text-sm font-medium">{section.title}</span>
@@ -160,7 +160,7 @@ export function EstimateBuilder({ sections, onChange, readOnly = false }: Estima
                             onChange={(e) =>
                               updateItem(section.id, item.id, { quantity: Number(e.target.value) || 1 })
                             }
-                            className="w-full border border-gray-300 px-2 py-1 text-sm"
+                            className="w-full border border-gray-300 px-2 py-1 text-sm rounded-button"
                           />
                         )}
                       </td>
@@ -171,7 +171,7 @@ export function EstimateBuilder({ sections, onChange, readOnly = false }: Estima
                           <input
                             value={item.unit}
                             onChange={(e) => updateItem(section.id, item.id, { unit: e.target.value })}
-                            className="w-full border border-gray-300 px-2 py-1 text-sm"
+                            className="w-full border border-gray-300 px-2 py-1 text-sm rounded-button"
                           />
                         )}
                       </td>
@@ -186,7 +186,7 @@ export function EstimateBuilder({ sections, onChange, readOnly = false }: Estima
                             onChange={(e) =>
                               updateItem(section.id, item.id, { price: Number(e.target.value) || 0 })
                             }
-                            className="w-full border border-gray-300 px-2 py-1 text-sm"
+                            className="w-full border border-gray-300 px-2 py-1 text-sm rounded-button"
                           />
                         )}
                       </td>

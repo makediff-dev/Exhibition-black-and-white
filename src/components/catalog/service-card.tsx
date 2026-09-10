@@ -6,8 +6,10 @@ import { CatalogCard } from "@/components/catalog/catalog-card";
 import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
 import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { CardTitle } from "@/components/ui/card";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatServicePrice } from "@/lib/utils/formatters";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { withFromParam } from "@/lib/utils/message-related-links";
 import type { Service } from "@/data/types";
 import { Button } from "@/components/ui/button";
 import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
@@ -19,6 +21,7 @@ interface ServiceCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   onAdd?: () => void;
+  from?: string;
 }
 
 function formatContractorServicesLabel(count: number): string {
@@ -39,8 +42,10 @@ export function ServiceCard({
   isFavorite = false,
   onToggleFavorite,
   onAdd,
+  from,
 }: ServiceCardProps) {
   const allServices = usePrototypeStore((s) => s.services);
+  const role = useAuthStore((s) => s.user?.role);
   const accountTheme = useAccountTheme();
   const addToCartVariant = accountTheme?.buttonVariant ?? "blue";
   const contractorServicesCount = allServices.filter(
@@ -57,7 +62,7 @@ export function ServiceCard({
   return (
     <CatalogCard className="relative flex flex-col h-full cursor-pointer" {...cardHoverHandlers}>
       <Link
-        href={`/services/${service.id}`}
+        href={from ? withFromParam(`/services/${service.id}`, from) : `/services/${service.id}`}
         className="absolute inset-0 z-[1]"
         aria-label={`Открыть услугу «${service.title}»`}
       />
@@ -107,11 +112,14 @@ export function ServiceCard({
                 </Button>
               )}
               <Link
-                href={`/contractors/${service.contractorId}#portfolio`}
+                href={`${getContractorProfileHref(service.contractorId, {
+                  role,
+                  from,
+                })}#portfolio`}
                 onClick={(event) => event.stopPropagation()}
                 className="block w-full"
               >
-                <Button size="sm" variant="soft-outline" className="w-full">
+                <Button size="sm" variant="outline" className="w-full">
                   Портфолио
                 </Button>
               </Link>

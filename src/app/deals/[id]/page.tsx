@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -232,6 +232,8 @@ function SafeDealFlow({ status }: { status: DealStatus }) {
 
 export default function DealPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const fromMessages = searchParams.get("from") === "messages";
   const id = params.id as string;
   const { user } = useAuthStore();
   const { deals, documents, payments, messages, requests, updateDeal, updateDealStatus } =
@@ -391,7 +393,12 @@ export default function DealPage() {
 
   if (!deal) {
     return (
-      <AppShell title="Сделка" showBack backFallbackHref="/requests">
+      <AppShell
+        title="Сделка"
+        showBack
+        backFallbackHref={fromMessages ? "/messages" : "/requests"}
+        activeNavSlug={fromMessages ? "messages" : undefined}
+      >
         <EmptyState
           title="Сделка не найдена"
           actionLabel="К заявкам"
@@ -405,7 +412,10 @@ export default function DealPage() {
     <AppShell
       title={`${deal.number} — ${deal.title}`}
       showBack
-      backFallbackHref={deal.requestId ? `/requests/${deal.requestId}` : "/requests"}
+      backFallbackHref={
+        fromMessages ? "/messages" : deal.requestId ? `/requests/${deal.requestId}` : "/requests"
+      }
+      activeNavSlug={fromMessages ? "messages" : undefined}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {messageThread && (
@@ -792,7 +802,7 @@ export default function DealPage() {
             <EmptyState title="История пуста" />
           ) : (
             [...deal.history].reverse().map((h, i) => (
-              <li key={i} className="flex gap-3 text-sm border-b border-gray-200 pb-2">
+              <li key={i} className="flex gap-3 text-sm border border-gray-300 p-3 rounded-[10px]">
                 <span className="text-gray-500 shrink-0">{formatShortDate(h.date)}</span>
                 <span>{h.action}</span>
                 <span className="text-gray-500 ml-auto">{h.actor}</span>

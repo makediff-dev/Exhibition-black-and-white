@@ -42,14 +42,14 @@ body {
   }
 }
 
-/* Unlayered so this wins over Tailwind utilities. */
+/* 4 cards per row, 24px gutters, leftover items stay left-aligned. */
 .catalog-cards-grid {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 24px;
   justify-content: start;
   justify-items: stretch;
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .catalog-cards-grid > * {
@@ -58,15 +58,15 @@ body {
   height: 100%;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 1023px) {
   .catalog-cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 1024px) {
+@media (max-width: 639px) {
   .catalog-cards-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

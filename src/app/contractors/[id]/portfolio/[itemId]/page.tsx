@@ -1,15 +1,20 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
-import { PublicHeader } from "@/components/layout/public-header";
-import { Footer } from "@/components/layout/footer";
+import { notFound, useParams, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { PortfolioDetail } from "@/components/contractors/portfolio-detail";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 
-export default function ContractorPortfolioItemPage() {
+function ContractorPortfolioItemContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const contractorId = params.id as string;
   const itemId = params.itemId as string;
+  const from = searchParams.get("from");
+  const { accountRole } = useCabinetSession();
 
   const contractor = SEED_CONTRACTORS.find((entry) => entry.id === contractorId);
   const item = contractor?.portfolio.find((entry) => entry.id === itemId);
@@ -17,16 +22,23 @@ export default function ContractorPortfolioItemPage() {
   if (!contractor || !item) notFound();
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-6">
-        <PortfolioDetail
-          item={item}
-          backHref={`/contractors/${contractorId}`}
-          editable={false}
-        />
-      </main>
-      <Footer />
-    </div>
+    <PortfolioDetail
+      item={item}
+      backHref={getContractorProfileHref(contractorId, {
+        role: accountRole,
+        from: from ?? undefined,
+      })}
+      editable={false}
+    />
+  );
+}
+
+export default function ContractorPortfolioItemPage() {
+  return (
+    <CabinetAwareLayout>
+      <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>
+        <ContractorPortfolioItemContent />
+      </Suspense>
+    </CabinetAwareLayout>
   );
 }

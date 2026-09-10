@@ -1,17 +1,24 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { cn } from "@/lib/utils/cn";
+import { keepsCabinetSidebar } from "@/lib/utils/message-related-links";
 import type { ReactNode } from "react";
 
 const PUBLIC_CATALOG_PREFIXES = ["/events", "/contractors", "/services", "/venues"];
 
 function isPublicCatalogPath(pathname: string): boolean {
+  if (pathname.startsWith("/events/")) {
+    return false;
+  }
+  if (pathname.startsWith("/contractors/")) {
+    return false;
+  }
   return PUBLIC_CATALOG_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
@@ -41,8 +48,13 @@ export function CabinetAwareLayout({
   className,
 }: CabinetAwareLayoutProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { inCabinet, accountRole } = useCabinetSession();
-  const showCabinetSidebar = inCabinet && accountRole && !isPublicCatalogPath(pathname);
+  const from = searchParams.get("from");
+  const showCabinetSidebar =
+    inCabinet &&
+    accountRole &&
+    (keepsCabinetSidebar(from, accountRole) || !isPublicCatalogPath(pathname));
 
   if (showCabinetSidebar) {
     return (

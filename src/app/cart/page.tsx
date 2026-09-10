@@ -10,12 +10,15 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/states";
-import { useCartStore, usePrototypeStore } from "@/lib/store";
+import { useCartStore, usePrototypeStore, useAuthStore } from "@/lib/store";
 import { resolveCartLine } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 export default function CartPage() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const { items, updateItem, removeItem } = useCartStore();
   const services = usePrototypeStore((state) => state.services);
 
@@ -94,7 +97,13 @@ export default function CartPage() {
                 <div className="flex justify-between items-start mb-4 pb-3 border-b border-gray-200">
                   <div>
                     <CardTitle>{group.contractorName}</CardTitle>
-                    <Link href={`/contractors/${group.contractorId}`} className="text-xs underline text-gray-600">
+                    <Link
+                      href={getContractorProfileHref(group.contractorId, {
+                        role: user?.role,
+                        from: "cart",
+                      })}
+                      className="text-xs underline text-gray-600"
+                    >
                       Профиль исполнителя
                     </Link>
                   </div>
@@ -106,7 +115,10 @@ export default function CartPage() {
                     <div key={line.serviceId} className="border border-gray-200 p-3 rounded-card">
                       <div className="flex justify-between gap-4">
                         <div className="flex-1">
-                          <Link href={`/services/${line.serviceId}`} className="text-sm font-medium hover:underline">
+                          <Link
+                            href={withFromParam(`/services/${line.serviceId}`, "cart")}
+                            className="text-sm font-medium hover:underline"
+                          >
                             {line.title}
                           </Link>
                           <p className="text-xs text-gray-600 mt-1">

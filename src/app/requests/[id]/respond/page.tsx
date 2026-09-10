@@ -194,7 +194,7 @@ export default function RespondPage() {
       }
     >
       <div className="max-w-2xl space-y-6">
-        <div className="border border-gray-300 p-4 bg-gray-50 text-sm">
+        <div className="border border-gray-300 p-4 bg-gray-50 text-sm rounded-card">
           <p className="font-medium">{request.title}</p>
           <p className="text-gray-600 mt-1">{request.category} · {request.city}</p>
         </div>

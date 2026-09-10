@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { FloorCell } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
+import { getCabinetBackHref, withFromParam } from "@/lib/utils/message-related-links";
 
 function cellClass(status: FloorCell["status"], isSelected: boolean) {
   if (isSelected) {
@@ -33,6 +34,8 @@ function cellClass(status: FloorCell["status"], isSelected: boolean) {
 export default function EventBookingPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const { showToast } = useToast();
   const id = params.id as string;
   const event = SEED_EVENTS.find((e) => e.id === id);
@@ -45,16 +48,17 @@ export default function EventBookingPage() {
 
   if (!event) notFound();
 
+  const eventHref = from ? withFromParam(`/events/${event.id}`, from) : `/events/${event.id}`;
+
   if (!event.bookingAvailable) {
     return (
       <CabinetAwareLayout
         title="Бронирование недоступно"
         description="Для этого мероприятия бронирование площадей не предусмотрено."
         showBack
-        backFallbackHref={`/events/${event.id}`}
-        activeNavSlug="my-events"
+        backFallbackHref={getCabinetBackHref(from, eventHref, user?.role)}
       >
-        <Link href={`/events/${event.id}`}>
+        <Link href={eventHref}>
           <Button>К мероприятию</Button>
         </Link>
       </CabinetAwareLayout>
@@ -90,7 +94,7 @@ export default function EventBookingPage() {
     updateFloorCell(selectedCellId, "booked");
     setConfirmOpen(false);
     showToast(`Площадь ${selectedCell.label} забронирована`, "success");
-    router.push(`/events/${event.id}`);
+    router.push(eventHref);
   };
 
   return (
@@ -98,8 +102,7 @@ export default function EventBookingPage() {
       title="Бронирование площади"
       description={`${event.city} · ${event.venue} · Выберите свободную ячейку на плане`}
       showBack
-      backFallbackHref={`/events/${event.id}`}
-      activeNavSlug="my-events"
+      backFallbackHref={getCabinetBackHref(from, eventHref, user?.role)}
     >
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div>
@@ -159,7 +162,7 @@ export default function EventBookingPage() {
             >
               Забронировать
             </Button>
-            <Link href={`/events/${event.id}`} className="block">
+            <Link href={eventHref} className="block">
               <Button className="w-full" variant="soft-outline">
                 Отмена
               </Button>

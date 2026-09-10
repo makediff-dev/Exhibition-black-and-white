@@ -123,7 +123,10 @@ export function resolveActiveNavSlug(pathname: string, role: string): string | u
   switch (role) {
     case "customer": {
       if (path.startsWith("/requests")) return pickNavSlug(role, "requests");
-      if (path.startsWith("/contractors") && path.includes("/check")) {
+      if (
+        path.includes("/check") &&
+        (path.startsWith("/contractors") || path.includes("/contractors/"))
+      ) {
         return pickNavSlug(role, "checks");
       }
       if (
@@ -177,6 +180,7 @@ export function resolveActiveNavSlug(pathname: string, role: string): string | u
       if (path.startsWith("/events")) return pickNavSlug(role, "events");
       if (path.startsWith("/venues")) return pickNavSlug(role, "venues");
       if (path.startsWith("/payments")) return pickNavSlug(role, "payments");
+      if (path.startsWith("/account/organizer/contractors")) return pickNavSlug(role, "events");
 
       const accountSlug = matchAccountSlug(path, role);
       if (accountSlug !== undefined) return pickNavSlug(role, accountSlug);
@@ -237,7 +241,10 @@ function matchNavItemPath(path: string, item: NavItem, role?: string): boolean {
     return path.startsWith("/events");
   }
   if (item.slug === "checks") {
-    return path.startsWith("/contractors");
+    return (
+      (path.startsWith("/contractors") || path.includes("/contractors/")) &&
+      path.includes("/check")
+    );
   }
   if (item.slug === "available-requests") return path.startsWith("/requests");
   if (item.slug === "services") return path.startsWith("/services");

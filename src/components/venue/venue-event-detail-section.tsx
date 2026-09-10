@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { Building2, CalendarDays, User } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,8 @@ export function VenueEventDetailSection({
   const { venueEventMeta, venueServices, updateVenueEventMeta, bookings: storeBookings } =
     usePrototypeStore();
   const user = useAuthStore((state) => state.user);
+  const searchParams = useSearchParams();
+  const fromMessages = searchParams.get("from") === "messages";
 
   const event = SEED_EVENTS.find((item) => item.id === eventId && item.venueId === venueId);
   const meta = venueEventMeta.find((item) => item.eventId === eventId && item.venueId === venueId);
@@ -125,7 +128,7 @@ export function VenueEventDetailSection({
 
   return (
     <div className="space-y-6 w-full">
-      <BackButton fallbackHref="/account/venue/events" className="mb-0" />
+      <BackButton fallbackHref={fromMessages ? "/messages" : "/account/venue/events"} className="mb-0" />
 
       {user ? <VenueCabinetHeader user={user} venueId={venueId} /> : null}
 

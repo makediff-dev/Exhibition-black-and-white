@@ -28,6 +28,8 @@ import {
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 type RequestTab = "overview" | "stages" | "documents" | "payments" | "files" | "history";
 
@@ -223,7 +225,10 @@ function RequestDetailContent() {
               <CardTitle className="text-sm mb-3">Мероприятие</CardTitle>
               {event ? (
                 <>
-                  <Link href={`/events/${event.id}`} className="font-medium text-sm hover:underline">
+                  <Link
+                    href={withFromParam(`/events/${event.id}`, "requests")}
+                    className="font-medium text-sm hover:underline"
+                  >
                     {event.title}
                   </Link>
                   <CardDescription className="mt-1">
@@ -283,7 +288,10 @@ function RequestDetailContent() {
                       c ? (
                         <Link
                           key={c.id}
-                          href={`/contractors/${c.id}`}
+                          href={getContractorProfileHref(c.id, {
+                            role: user?.role,
+                            from: "requests",
+                          })}
                           className="block text-sm hover:underline"
                         >
                           {c.name} · {c.city}
@@ -298,8 +306,18 @@ function RequestDetailContent() {
                   <p className="text-xs text-gray-600 mb-2">Откликнувшиеся</p>
                   <div className="space-y-2">
                     {respondingContractors.map(({ response, contractor }) => (
-                      <div key={response.id} className="flex justify-between items-center text-sm border border-gray-200 p-2">
-                        <Link href={`/contractors/${contractor?.id}`} className="hover:underline">
+                      <div key={response.id} className="flex justify-between items-center text-sm border border-gray-200 p-2 rounded-[10px]">
+                        <Link
+                          href={
+                            contractor
+                              ? getContractorProfileHref(contractor.id, {
+                                  role: user?.role,
+                                  from: "requests",
+                                })
+                              : "#"
+                          }
+                          className="hover:underline"
+                        >
                           {response.contractorName}
                         </Link>
                         <span className="font-medium">{formatPrice(response.price)}</span>
@@ -446,7 +464,7 @@ function RequestDetailContent() {
         ) : (
           <ul className="space-y-2">
             {request.history.map((entry, index) => (
-              <li key={index} className="text-sm flex gap-3 border border-gray-300 p-3">
+              <li key={index} className="text-sm flex gap-3 border border-gray-300 p-3 rounded-[10px]">
                 <span className="text-gray-500 shrink-0">{formatShortDate(entry.date)}</span>
                 <span>{entry.action}</span>
               </li>

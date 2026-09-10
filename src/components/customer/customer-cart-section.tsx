@@ -13,6 +13,7 @@ import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { resolveCartLine, isExtendedCheckCartItem } from "@/lib/utils/cart-utils";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice } from "@/lib/utils/formatters";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 export function CustomerCartSection() {
   const router = useRouter();
@@ -102,7 +103,10 @@ export function CustomerCartSection() {
             <div>
               <CardTitle>{group.contractorName}</CardTitle>
               <Link
-                href={getContractorProfileHref(group.contractorId, { role: "customer" })}
+                href={getContractorProfileHref(group.contractorId, {
+                  role: "customer",
+                  from: "cart",
+                })}
                 className="text-xs underline text-gray-600"
               >
                 Профиль исполнителя
@@ -119,7 +123,10 @@ export function CustomerCartSection() {
                     {isExtendedCheckCartItem(line.serviceId) ? (
                       <p className="text-sm font-medium">{line.title}</p>
                     ) : (
-                      <Link href={`/services/${line.serviceId}`} className="text-sm font-medium hover:underline">
+                      <Link
+                        href={withFromParam(`/services/${line.serviceId}`, "cart")}
+                        className="text-sm font-medium hover:underline"
+                      >
                         {line.title}
                       </Link>
                     )}

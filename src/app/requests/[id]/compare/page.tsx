@@ -175,7 +175,7 @@ function CompareContent() {
           onChange={setActiveTab}
         />
         {activeResponse && (
-          <div className="border border-gray-300 p-4 mt-4 space-y-4">
+          <div className="border border-gray-300 p-4 mt-4 space-y-4 rounded-card">
             <div className="flex justify-between items-start">
               <div>
                 <p className="font-semibold">{activeResponse.contractorName}</p>
@@ -199,7 +199,7 @@ function CompareContent() {
 
       <div className="hidden md:grid gap-4" style={{ gridTemplateColumns: `repeat(${compareResponses.length}, 1fr)` }}>
         {compareResponses.map((response) => (
-          <div key={response!.id} className="border border-gray-300 flex flex-col">
+          <div key={response!.id} className="border border-gray-300 flex flex-col overflow-hidden rounded-card">
             <div className="border-b border-gray-300 p-4 bg-gray-50">
               <p className="font-semibold text-sm">{response!.contractorName}</p>
               <p className="text-xl font-bold mt-2">{formatPrice(response!.price)}</p>

@@ -107,9 +107,9 @@ export function RequestDescriptionForm({
               type="button"
               onClick={() => onDescriptionModeChange(option.id)}
               className={cn(
-                "rounded border p-4 text-left transition-colors",
+                "rounded-card border p-4 text-left transition-colors",
                 descriptionMode === option.id
-                  ? "border-gray-900 bg-gray-50 ring-1 ring-gray-900"
+                  ? "border-gray-900 bg-[var(--account-accent-soft,#eef0fe)] ring-1 ring-gray-900"
                   : "border-gray-300 hover:border-gray-900",
               )}
             >

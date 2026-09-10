@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MessageSquare } from "lucide-react";
-import { SharedPageShell } from "@/components/layout/shared-page-shell";
 import styles from "@/components/messages/messages.module.css";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -11,8 +10,13 @@ import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Deal, MessageCategory, MessageThread, Request } from "@/data/types";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import {
+  resolveMessageRelatedHref,
+  withFromMessages,
+} from "@/lib/utils/message-related-links";
 
 const RELATED_TYPE_LABELS: Record<string, string> = {
   deal: "Сделка",
@@ -117,6 +121,7 @@ function getRelatedLinkLabel(thread: MessageThread) {
 }
 
 export default function MessagesPage() {
+  const { accountRole } = useCabinetSession();
   const { messages, deals, requests } = usePrototypeStore();
   const [activeCategory, setActiveCategory] = useState<MessageCategory | "all">("all");
 
@@ -131,7 +136,8 @@ export default function MessagesPage() {
   }, [activeCategory, sortedThreads]);
 
   return (
-    <SharedPageShell title="Сообщения" activeNavSlug="messages">
+    <>
+      <h1 className="text-xl font-bold text-gray-900 mb-4">Сообщения</h1>
       <div className="w-full mr-auto text-left">
         <Tabs
           tabs={MESSAGE_TABS}
@@ -204,7 +210,7 @@ export default function MessagesPage() {
                   {thread.relatedLink && thread.relatedType !== "support" && (
                     <div className="mt-4 pt-3 border-t border-gray-200 w-full text-left">
                       <Link
-                        href={thread.relatedLink}
+                        href={withFromMessages(resolveMessageRelatedHref(thread, accountRole))}
                         className={`text-xs underline ${styles.messageCardLink}`}
                       >
                         {getRelatedLinkLabel(thread)}
@@ -217,6 +223,6 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
-    </SharedPageShell>
+    </>
   );
 }

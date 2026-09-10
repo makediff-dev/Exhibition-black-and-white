@@ -55,7 +55,7 @@ function NewRequestContent() {
           </div>
         </Card>
 
-        <label className="inline-flex items-center gap-2 border border-gray-900 px-3 py-2 text-sm w-fit cursor-pointer">
+        <label className="inline-flex items-center gap-2 border border-gray-300 px-3 py-2 text-sm w-fit cursor-pointer rounded-button">
           <input
             type="checkbox"
             checked={phoneNotifications}
@@ -65,7 +65,7 @@ function NewRequestContent() {
                 showToast("Уведомления на телефон включены", "success");
               }
             }}
-            className="border-gray-900"
+            className="border-gray-300"
           />
           Настроить уведомления на телефон
         </label>

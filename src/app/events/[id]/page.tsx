@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
-import { notFound, useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { EventRemindersModal } from "@/components/events/event-reminders-modal";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
@@ -23,9 +23,15 @@ import {
   SEED_HALLS,
   SEED_SERVICES,
 } from "@/data/mocks/seed";
-import type { Contractor, Event } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import type { Contractor, Event, UserRole } from "@/data/types";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import {
+  getCabinetBackHref,
+  resolveMessageRelatedHref,
+  withFromParam,
+} from "@/lib/utils/message-related-links";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
   exhibition: "Выставка",
@@ -79,15 +85,25 @@ function ContractorsGrid({
   contractors,
   moreHref,
   moreLabel,
+  role,
+  from,
 }: {
   contractors: Contractor[];
   moreHref: string;
   moreLabel: string;
+  role?: UserRole;
+  from?: string | null;
 }) {
   return (
     <div className="grid sm:grid-cols-2 gap-3">
       {contractors.map((contractor) => (
-        <Link key={contractor.id} href={`/contractors/${contractor.id}`}>
+        <Link
+          key={contractor.id}
+          href={getContractorProfileHref(contractor.id, {
+            role,
+            from: from ?? undefined,
+          })}
+        >
           <Card hoverable className="h-full">
             <CardTitle>{contractor.name}</CardTitle>
             <div className="flex flex-wrap gap-1 mt-2">
@@ -114,8 +130,30 @@ function ContractorsGrid({
 
 export default function EventDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = useAuthStore((state) => state.user?.role);
   const id = params.id as string;
   const event = SEED_EVENTS.find((e) => e.id === id);
+  const from = searchParams.get("from");
+  const fromMessages = from === "messages";
+  const bookingHref = from
+    ? withFromParam(`/events/${id}/booking`, from)
+    : `/events/${id}/booking`;
+
+  useLayoutEffect(() => {
+    if (!fromMessages || !event) return;
+    const cabinetHref = resolveMessageRelatedHref(
+      { relatedType: "event", relatedId: event.id, relatedLink: `/events/${event.id}` },
+      role
+    );
+    if (cabinetHref.startsWith("/account/")) {
+      const [path, query = ""] = cabinetHref.split("?");
+      const nextParams = new URLSearchParams(query);
+      nextParams.set("from", "messages");
+      router.replace(`${path}?${nextParams.toString()}`);
+    }
+  }, [event, fromMessages, role, router]);
   const [localCategory, setLocalCategory] = useState("");
   const [regionCategory, setRegionCategory] = useState("");
   const [contractorRegion, setContractorRegion] = useState(
@@ -195,7 +233,7 @@ export default function EventDetailPage() {
 
   return (
     <CabinetAwareLayout>
-      <BackButton fallbackHref="/events" className="mb-4" />
+      <BackButton fallbackHref={getCabinetBackHref(from, "/events", role)} className="mb-4" />
 
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
@@ -232,10 +270,10 @@ export default function EventDetailPage() {
               <p className="text-sm text-gray-700">{event.description}</p>
               <div className="flex flex-wrap gap-2 mt-4">
                 <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
-                  <Button variant="blue">Найти услуги</Button>
+                  <Button variant="primary">Найти услуги</Button>
                 </Link>
                 {event.bookingAvailable && (
-                  <Link href={`/events/${event.id}/booking`}>
+                  <Link href={bookingHref}>
                     <Button variant="soft-outline">Забронировать площадь</Button>
                   </Link>
                 )}
@@ -299,6 +337,8 @@ export default function EventDetailPage() {
                     : `/contractors?city=${encodeURIComponent(event.city)}`
                 }
                 moreLabel="Больше исполнителей в городе"
+                role={role}
+                from={from}
               />
             </section>
 
@@ -345,6 +385,8 @@ export default function EventDetailPage() {
                   return query ? `/contractors?${query}` : "/contractors";
                 })()}
                 moreLabel="Больше исполнителей по регионам"
+                role={role}
+                from={from}
               />
             </section>
           </div>
@@ -374,8 +416,8 @@ export default function EventDetailPage() {
               <h2 className="text-base font-semibold mb-3">План площадки</h2>
               <FloorPlanPreview />
               {event.bookingAvailable && (
-                <Link href={`/events/${event.id}/booking`} className="block mt-4">
-                  <Button className="w-full" variant="blue" size="sm">Бронирование в тестовом режиме</Button>
+                <Link href={bookingHref} className="block mt-4">
+                  <Button className="w-full" variant="primary" size="sm">Бронирование в тестовом режиме</Button>
                 </Link>
               )}
             </section>

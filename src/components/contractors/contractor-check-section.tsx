@@ -130,11 +130,19 @@ export function ContractorCheckSection({
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
               <Button>Пригласить в заявку</Button>
             </Link>
-            <Link href={getContractorProfileHref(contractor.id, { role: accountRole })}>
+            <Link
+              href={getContractorProfileHref(contractor.id, {
+                role: accountRole,
+                from: "checks",
+              })}
+            >
               <Button variant="outline">К профилю</Button>
             </Link>
             <Link
-              href={getContractorCheckSubscribeHref(contractor.id, { role: accountRole })}
+              href={getContractorCheckSubscribeHref(contractor.id, {
+                role: accountRole,
+                from: "checks",
+              })}
             >
               <Button variant="outline">Расширенная проверка</Button>
             </Link>

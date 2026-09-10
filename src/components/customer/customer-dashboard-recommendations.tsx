@@ -16,7 +16,7 @@ function RecommendedContractorCard({
   contractor: (typeof SEED_CONTRACTORS)[number];
 }) {
   return (
-    <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
+    <Link href={getContractorProfileHref(contractor.id, { role: "customer", from: "dashboard" })}>
       <Card hoverable className="h-full">
         <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
         <CardDescription>
@@ -87,7 +87,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {recommendedServices.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+            <ServiceCard key={service.id} service={service} from="dashboard" />
           ))}
         </div>
       </section>

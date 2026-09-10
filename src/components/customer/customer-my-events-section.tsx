@@ -10,6 +10,7 @@ import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Event } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { withFromParam } from "@/lib/utils/message-related-links";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
   exhibition: "Выставка",
@@ -54,7 +55,7 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
       </p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {myEvents.map((event) => (
-          <Link key={event.id} href={`/events/${event.id}`}>
+          <Link key={event.id} href={withFromParam(`/events/${event.id}`, "my-events")}>
             <Card hoverable className="h-full">
               <Badge variant="outline" className="mb-2">
                 {EVENT_CATEGORY_LABELS[event.category]}

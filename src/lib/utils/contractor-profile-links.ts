@@ -7,6 +7,7 @@ interface ContractorProfileLinkOptions {
   from?: string;
   requestId?: string;
   responseId?: string;
+  eventId?: string;
 }
 
 function buildQuery(options?: ContractorProfileLinkOptions) {
@@ -14,6 +15,7 @@ function buildQuery(options?: ContractorProfileLinkOptions) {
   if (options?.from) params.set("from", options.from);
   if (options?.requestId) params.set("requestId", options.requestId);
   if (options?.responseId) params.set("responseId", options.responseId);
+  if (options?.eventId) params.set("eventId", options.eventId);
   const query = params.toString();
   return query ? `?${query}` : "";
 }
@@ -34,24 +36,29 @@ export function getContractorProfileHref(
 export function getContractorPortfolioHref(
   contractorId: string,
   itemId: string,
-  role?: UserRole | null
+  role?: UserRole | null,
+  from?: string | null
 ) {
+  const suffix = buildQuery({ from: from ?? undefined });
+
   if (role && ACCOUNT_ROLES.has(role)) {
-    return `/account/${role}/contractors/${contractorId}/portfolio/${itemId}`;
+    return `/account/${role}/contractors/${contractorId}/portfolio/${itemId}${suffix}`;
   }
 
-  return `/contractors/${contractorId}/portfolio/${itemId}`;
+  return `/contractors/${contractorId}/portfolio/${itemId}${suffix}`;
 }
 
 export function getContractorCheckHref(
   contractorId: string,
-  options?: Pick<ContractorProfileLinkOptions, "role">
+  options?: Pick<ContractorProfileLinkOptions, "role" | "from">
 ) {
+  const suffix = buildQuery(options);
+
   if (options?.role && ACCOUNT_ROLES.has(options.role)) {
-    return `/account/${options.role}/contractors/${contractorId}/check`;
+    return `/account/${options.role}/contractors/${contractorId}/check${suffix}`;
   }
 
-  return `/contractors/${contractorId}/check`;
+  return `/contractors/${contractorId}/check${suffix}`;
 }
 
 export function getContractorCheckSubscribeHref(
