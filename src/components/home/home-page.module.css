@@ -183,7 +183,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
   margin-top: 24px;
 }
 
@@ -567,11 +567,34 @@
   background: #e00086;
 }
 
+.filters {
+  margin-bottom: 24px;
+}
+
+.filtersToggle {
+  display: none;
+}
+
+.filtersToggleIcon,
+.filtersToggleChevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.filtersToggleChevron {
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
+.filtersToggleChevronOpen {
+  transform: rotate(180deg);
+}
+
 .filtersRow {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 24px;
 }
 
 .filterSelectWrap {
@@ -748,7 +771,7 @@
 }
 
 .audienceSection {
-  padding-block: 65px 64px;
+  padding-block: 65px 0;
   border-top: 1px solid #e5e7eb;
 }
 
@@ -961,7 +984,7 @@
 }
 
 .howItWorksSection {
-  padding-block: 120px 0;
+  padding-block: 130px 0;
 }
 
 .howItWorks {
@@ -1082,16 +1105,16 @@
   width: min(100%, 960px);
   margin: 0;
   color: #0c0a08;
-  font-size: 48px;
+  font-size: 28px;
   font-weight: 600;
-  line-height: 50px;
+  line-height: 34px;
   letter-spacing: -0.01px;
   text-align: center;
 }
 
 .howItWorksCards {
   width: 100%;
-  padding-top: 32px;
+  padding-top: 0;
 }
 
 .howFeaturedCard {
@@ -1225,7 +1248,7 @@
 }
 
 .faqSection {
-  padding-block: 120px;
+  padding-block: 130px;
 }
 
 .faqWrap {
@@ -1238,7 +1261,7 @@
 .faqTitle {
   margin: 0;
   width: 100%;
-  font-size: 48px;
+  font-size: 28px;
   line-height: 1.1;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -1454,13 +1477,43 @@
     padding-inline: 16px;
   }
 
+  .containerInner {
+    padding-inline: 0;
+  }
+
+  .heroTitle {
+    font-size: 32px;
+  }
+
+  .heroSubtitle {
+    font-size: 16px;
+  }
+
+  .heroSearch {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .howFeaturedImage {
+    width: calc(100% - 24px);
+    height: 180px;
+    flex: 0 0 auto;
+    margin-left: 24px;
+  }
+
+  .howFeaturedImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .howItWorksTitle {
-    font-size: 36px;
-    line-height: 40px;
+    font-size: 28px;
+    line-height: 34px;
   }
 
   .howFeaturedCard {
-    height: 500px;
+    height: auto;
     flex-direction: column;
     padding-block: 0;
   }
@@ -1472,12 +1525,6 @@
     padding: 32px 24px;
   }
 
-  .howFeaturedImage {
-    width: 1185px;
-    height: 241px;
-    margin-left: 24px;
-  }
-
   .howCardsGrid {
     height: auto;
     grid-template-columns: 1fr;
@@ -1485,9 +1532,58 @@
 
   .cardsGrid,
   .cardsGridDense {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     column-gap: 16px;
     row-gap: 16px;
+  }
+
+  .scrollRow,
+  .scrollRow:has(.categoryCard) {
+    --scroll-visible-cards: 1;
+    --scroll-card-gap: 16px;
+  }
+
+  .scrollArrow {
+    right: 8px;
+  }
+
+  .sectionHeader {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .filtersToggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid #d4d4d4;
+    border-radius: 10px;
+    background: #fff;
+    color: #171717;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .filtersRow {
+    display: none;
+    flex-direction: column;
+    margin-top: 12px;
+  }
+
+  .filtersRowOpen {
+    display: flex;
+  }
+
+  .filterSelectWrap,
+  .filterSelect {
+    width: 100%;
+    min-width: 0;
   }
 
   .heroBannerWrap {
@@ -1519,11 +1615,11 @@
   }
 
   .faqSection {
-    padding-block: 64px;
+    padding-block: 130px;
   }
 
   .faqTitle {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .ctaSection {
