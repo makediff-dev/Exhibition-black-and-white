@@ -13,7 +13,6 @@ import { useToast } from "@/components/ui/toast-provider";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
-import { cn } from "@/lib/utils/cn";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getCabinetBackHref } from "@/lib/utils/message-related-links";
 
@@ -261,13 +260,7 @@ export default function ServiceDetailPage() {
                 Итого: <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
               </p>
 
-              <Button
-                className={cn(
-                  "w-full !border-[#2939eb] !bg-[#2939eb] !text-white",
-                  "hover:!border-[#2230c7] hover:!bg-[#2230c7]",
-                )}
-                onClick={handleAddToCart}
-              >
+              <Button className="w-full" variant="blue" onClick={handleAddToCart}>
                 <ShoppingCart className="h-4 w-4" />
                 В корзину
               </Button>
@@ -275,7 +268,7 @@ export default function ServiceDetailPage() {
                 Оформить заказ
               </Button>
               <Link href={`/requests/new?serviceId=${service.id}`} className="block">
-                <Button className="w-full" variant="soft-outline" size="sm">
+                <Button className="w-full" variant="ghost">
                   Создать заявку по услуге
                 </Button>
               </Link>

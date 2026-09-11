@@ -81,7 +81,7 @@ export function StepIndicator({
         {steps.map((step, i) => (
           <div
             key={step}
-            className={cn("flex items-center gap-2 shrink-0", wide && "flex-1 min-w-0 last:flex-none")}
+            className={cn("flex items-center gap-2 shrink-0", wide && "flex-1 last:flex-none")}
           >
             <div
               className={cn(
@@ -93,7 +93,7 @@ export function StepIndicator({
             >
               {i + 1}
             </div>
-            <span className={cn("text-xs hidden sm:inline truncate", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
+            <span className={cn("text-xs hidden sm:inline", wide ? "whitespace-nowrap" : "truncate", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
               {step}
             </span>
             {i < steps.length - 1 && (

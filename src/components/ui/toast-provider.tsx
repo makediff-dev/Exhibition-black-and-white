@@ -49,8 +49,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         open={Boolean(current)}
         onClose={handleClose}
         title={current ? TOAST_TITLES[current.type] : "Уведомление"}
+        accent="teal"
         footer={
-          <Button type="button" onClick={handleClose}>
+          <Button type="button" variant="teal" onClick={handleClose}>
             Закрыть
           </Button>
         }

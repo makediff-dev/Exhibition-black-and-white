@@ -5,6 +5,8 @@ import { AppShell } from "@/components/layout/app-shell";
 import { BackButton } from "@/components/ui/back-button";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
+import { CatalogAccentProvider } from "@/components/catalog/catalog-accent-provider";
+import { catalogAccentFromPathname } from "@/constants/catalog-section-styles";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { cn } from "@/lib/utils/cn";
 import { keepsCabinetSidebar } from "@/lib/utils/message-related-links";
@@ -51,10 +53,17 @@ export function CabinetAwareLayout({
   const searchParams = useSearchParams();
   const { inCabinet, accountRole } = useCabinetSession();
   const from = searchParams.get("from");
+  const catalogAccent = catalogAccentFromPathname(pathname);
   const showCabinetSidebar =
     inCabinet &&
     accountRole &&
     (keepsCabinetSidebar(from, accountRole) || !isPublicCatalogPath(pathname));
+
+  const accentWrapped = catalogAccent ? (
+    <CatalogAccentProvider accent={catalogAccent}>{children}</CatalogAccentProvider>
+  ) : (
+    children
+  );
 
   if (showCabinetSidebar) {
     return (
@@ -67,13 +76,13 @@ export function CabinetAwareLayout({
         actions={actions}
       >
         {description ? <p className="text-sm text-gray-600 mb-4 -mt-2">{description}</p> : null}
-        <div className={className}>{children}</div>
+        <div className={className}>{accentWrapped}</div>
       </AppShell>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="register-accent flex min-h-screen flex-col">
       <PublicHeader />
       <main
         className={cn(
@@ -92,7 +101,7 @@ export function CabinetAwareLayout({
             {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
           </div>
         )}
-        {children}
+        {accentWrapped}
       </main>
       <Footer />
     </div>

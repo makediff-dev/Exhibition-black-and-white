@@ -1,6 +1,7 @@
 "use client";
 
 import { useAccountTheme } from "@/components/account/account-theme-provider";
+import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { cn } from "@/lib/utils/cn";
 import type { LucideIcon } from "lucide-react";
 
@@ -12,16 +13,23 @@ interface BadgeProps {
 }
 
 export function Badge({ children, variant = "outline", icon: Icon, className }: BadgeProps) {
+  const catalogAccent = useCatalogAccent();
   const accountTheme = useAccountTheme();
 
   const variants = {
-    solid: accountTheme
-      ? "bg-[var(--account-accent)] text-white border-[var(--account-accent)]"
-      : "bg-gray-900 text-white border-gray-900",
-    outline: accountTheme
-      ? "bg-white text-[var(--account-accent)] border-[var(--account-accent)]"
-      : "bg-white text-gray-900 border-gray-900",
-    dashed: "bg-gray-50 text-gray-700 border-dashed border-gray-500",
+    solid: catalogAccent
+      ? "bg-[var(--catalog-accent)] text-white border-[var(--catalog-accent)]"
+      : accountTheme
+        ? "bg-[var(--account-accent)] text-white border-[var(--account-accent)]"
+        : "bg-[#28b5b3] text-white border-[#28b5b3]",
+    outline: catalogAccent
+      ? "bg-white text-[var(--catalog-accent)] border-[var(--catalog-accent)]"
+      : accountTheme
+        ? "bg-white text-[var(--account-accent)] border-[var(--account-accent)]"
+        : "bg-white text-[#28b5b3] border-[#28b5b3]",
+    dashed: catalogAccent
+      ? "bg-[var(--catalog-accent-soft)] text-[var(--catalog-accent)] border-dashed border-[var(--catalog-accent)]"
+      : "bg-gray-50 text-gray-700 border-dashed border-gray-500",
   };
 
   return (

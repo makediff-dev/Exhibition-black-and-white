@@ -61,6 +61,15 @@
   color: #171717;
 }
 
+.navLinkActive {
+  color: var(--color-primary, #28b5b3);
+  font-weight: 600;
+}
+
+.navLinkActive:hover {
+  color: var(--color-primary-dark, #1f9696);
+}
+
 .searchWrap {
   display: none;
   width: 280px;

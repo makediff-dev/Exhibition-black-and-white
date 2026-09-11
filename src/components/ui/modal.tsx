@@ -17,10 +17,12 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
+  accent?: "role" | "teal";
 }
 
-export function Modal({ open, onClose, title, children, footer, wide }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, wide, accent = "role" }: ModalProps) {
   const role = useAuthStore((state) => state.user?.role) as AccountRole | undefined;
+  const useTealAccent = accent === "teal";
 
   useEffect(() => {
     if (!open) return;
@@ -48,14 +50,21 @@ export function Modal({ open, onClose, title, children, footer, wide }: ModalPro
         </button>
       </div>
       <div className={styles.body}>{children}</div>
-      {footer ? <div className={styles.footer}>{footer}</div> : null}
+      {footer ? (
+        <div className={cn(styles.footer, useTealAccent && styles.footerTeal)}>{footer}</div>
+      ) : null}
     </div>
   );
 
   return createPortal(
-    <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div
+      className={cn(styles.overlay, useTealAccent && "register-accent")}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
-      {role ? (
+      {role && !useTealAccent ? (
         <AccountThemeProvider role={role} tokensOnly>
           {panel}
         </AccountThemeProvider>
@@ -73,24 +82,28 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
+  accent = "role",
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
   title: string;
   message: string;
+  accent?: "role" | "teal";
 }) {
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={title}
+      accent={accent}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
             Отмена
           </Button>
           <Button
+            variant={accent === "teal" ? "teal" : "primary"}
             onClick={() => {
               onConfirm();
               onClose();

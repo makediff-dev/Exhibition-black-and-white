@@ -96,7 +96,7 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
                 <Button className="w-full" variant="pink">Смотреть мероприятия</Button>
               </Link>
               <Link href="/register">
-                <Button variant="soft-outline" className="w-full">
+                <Button variant="outline" className="w-full">
                   Связаться с площадкой
                 </Button>
               </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Bell, Menu, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useAuthStore } from "@/lib/store";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { HeaderSearch } from "@/components/layout/header-search";
+import { cn } from "@/lib/utils/cn";
 import styles from "./public-header.module.css";
 
 const NAV_LINKS = [
@@ -18,8 +20,13 @@ const NAV_LINKS = [
   { href: "/venues", label: "Площадки" },
 ];
 
+function isActiveNavLink(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
   const requestButtonVariant = getAccountRoleTheme(user?.role ?? null)?.buttonVariant ?? "primary";
 
@@ -33,11 +40,19 @@ export function PublicHeader() {
           </Link>
 
           <nav className={styles.nav}>
-            {NAV_LINKS.map((link) => (
-              <Link key={link.label} href={link.href} className={styles.navLink}>
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const active = isActiveNavLink(pathname, link.href);
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={cn(styles.navLink, active && styles.navLinkActive)}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className={styles.searchWrap}>
@@ -80,16 +95,23 @@ export function PublicHeader() {
 
       <Drawer open={mobileOpen} onClose={() => setMobileOpen(false)} title="Меню" side="right">
         <nav className="flex flex-col gap-2">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-sm py-2 border-b border-gray-200"
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isActiveNavLink(pathname, link.href);
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={cn(
+                  "text-sm py-2 border-b border-gray-200",
+                  active && "font-semibold text-[#28b5b3]",
+                )}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <HeaderSearch className="mt-2" onNavigate={() => setMobileOpen(false)} />
           <div className="flex flex-col gap-2 mt-4">
             {isAuthenticated ? (

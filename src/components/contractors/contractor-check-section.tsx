@@ -114,7 +114,7 @@ export function ContractorCheckSection({
                   className="flex justify-between items-center px-4 py-3 text-sm"
                 >
                   <span className="text-gray-700">{check.label}</span>
-                  <span className={check.ok ? "text-gray-900 font-medium" : "text-gray-600"}>
+                  <span className={check.ok ? "font-medium text-[var(--catalog-accent,#683BD9)]" : "text-gray-600"}>
                     {check.ok ? "✓" : "!"} {check.result}
                   </span>
                 </div>
@@ -122,7 +122,7 @@ export function ContractorCheckSection({
             </div>
           </section>
 
-          <p className="text-xs text-gray-500 rounded-card border border-dashed border-gray-300 p-3">
+          <p className="text-xs text-gray-500 rounded-card border border-dashed border-[var(--catalog-accent,#683BD9)]/40 p-3">
             Отчёт носит демонстрационный характер и не является юридическим заключением.
           </p>
 

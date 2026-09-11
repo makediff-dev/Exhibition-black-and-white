@@ -1,6 +1,7 @@
 "use client";
 
 import { useAccountTheme } from "@/components/account/account-theme-provider";
+import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { cn } from "@/lib/utils/cn";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
@@ -25,16 +26,25 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {
+    const catalogAccent = useCatalogAccent();
     const accountTheme = useAccountTheme();
     const resolvedVariant =
-      accountTheme && variant === "primary" ? accountTheme.buttonVariant : variant;
+      variant === "primary" && catalogAccent
+        ? catalogAccent.buttonVariant
+        : accountTheme && variant === "primary"
+          ? accountTheme.buttonVariant
+          : variant;
+
+    const outlineClass = catalogAccent
+      ? "bg-white text-[var(--catalog-accent)] hover:bg-[var(--catalog-accent-soft)] border border-[var(--catalog-accent)]"
+      : accountTheme
+        ? "bg-white text-[var(--account-accent)] hover:bg-[var(--account-accent-soft)] border border-[var(--account-accent)]"
+        : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900";
 
     const variants: Record<ButtonVariant, string> = {
       primary: "bg-gray-900 text-white hover:bg-gray-800 border border-gray-900",
       secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300",
-      outline: accountTheme
-        ? "bg-white text-[var(--account-accent)] hover:bg-[var(--account-accent-soft)] border border-[var(--account-accent)]"
-        : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900",
+      outline: outlineClass,
       "teal-outline": "bg-white text-[#28b5b3] hover:bg-[#eaf8f7] border border-[#28b5b3]",
       "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#d4d4d4] hover:border-[#171717]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",

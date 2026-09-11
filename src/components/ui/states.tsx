@@ -1,6 +1,7 @@
 "use client";
 
 import { useAccountTheme } from "@/components/account/account-theme-provider";
+import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import styles from "@/components/account/account-cabinet.module.css";
 import { FileQuestion, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -23,27 +24,45 @@ export function EmptyState({
   className?: string;
 }) {
   const accountTheme = useAccountTheme();
+  const catalogAccent = useCatalogAccent();
+  const actionVariant = catalogAccent
+    ? catalogAccent.buttonVariant
+    : accountTheme
+      ? "primary"
+      : "teal";
 
   return (
     <div
       className={cn(
         "flex w-full min-h-[280px] flex-col items-center justify-center border border-dashed py-16 text-center",
-        accountTheme
-          ? cn("rounded-card", styles.accountEmptyState)
-          : "rounded-[14px] border-gray-300",
+        catalogAccent
+          ? "rounded-[14px] border-[var(--catalog-accent)]/40"
+          : accountTheme
+            ? cn("rounded-card", styles.accountEmptyState)
+            : "rounded-[14px] border-[#28b5b3]/40",
         className,
       )}
     >
-      <FileQuestion className="mb-4 h-10 w-10 text-gray-400" strokeWidth={1.5} />
+      <FileQuestion
+        className={cn(
+          "mb-4 h-10 w-10",
+          catalogAccent
+            ? "text-[var(--catalog-accent)]"
+            : accountTheme
+              ? "text-gray-400"
+              : "text-[#28b5b3]",
+        )}
+        strokeWidth={1.5}
+      />
       <h3 className="text-base font-semibold text-gray-900">{title}</h3>
       {description && <p className="mt-2 max-w-md text-sm text-gray-600">{description}</p>}
       {actionLabel && actionHref && (
         <Link href={actionHref} className="mt-6">
-          <Button>{actionLabel}</Button>
+          <Button variant={actionVariant}>{actionLabel}</Button>
         </Link>
       )}
       {actionLabel && onAction && !actionHref && (
-        <Button className="mt-6" onClick={onAction}>
+        <Button className="mt-6" variant={actionVariant} onClick={onAction}>
           {actionLabel}
         </Button>
       )}

@@ -560,8 +560,7 @@ function RegisterPageContent() {
     <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
-        <div className={`register-accent mx-auto w-full ${showCompanyFlow ? "max-w-site" : "max-w-3xl"}`}>
-        <div className="text-center mb-8">
+        <div className="mx-auto mb-8 w-full max-w-3xl text-center">
           <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
           <p className="text-sm text-gray-600">
             {showCompanyFlow
@@ -569,6 +568,14 @@ function RegisterPageContent() {
               : "Сначала создайте личный аккаунт физического лица"}
           </p>
         </div>
+
+        {showCompanyFlow && (
+          <div className="mb-8 w-full">
+            <StepIndicator steps={REGISTRATION_STEPS} currentStep={step} centered wide />
+          </div>
+        )}
+
+        <div className="register-accent mx-auto w-full max-w-3xl">
 
         {!showCompanyFlow && !individualEmailSent && !awaitingEmailConfirmation && (
           <div className="mx-auto max-w-lg space-y-4 text-left">
@@ -652,15 +659,11 @@ function RegisterPageContent() {
 
         {showCompanyFlow && (
           <>
-        <div className="mb-8">
-          <StepIndicator steps={REGISTRATION_STEPS} currentStep={step} centered wide />
-        </div>
-
         {step === 0 && (
           <div className="space-y-4 text-left">
             <p className="text-sm text-gray-700 text-center">Выберите роль на платформе</p>
             {errors.role && <p className="text-xs text-gray-700">{errors.role}</p>}
-            <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {ROLES.map((role) => (
                 <Card
                   key={role.id}
@@ -682,20 +685,29 @@ function RegisterPageContent() {
 
         {step === 1 && (
           <div className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end max-w-2xl">
-              <Input
-                label="ИНН компании"
-                value={form.inn}
-                onChange={(e) => updateField("inn", e.target.value.replace(/\D/g, "").slice(0, 10))}
-                error={errors.inn}
-                placeholder="10 цифр"
-                className="flex-1"
-              />
-              <div className="flex items-end">
-                <Button type="button" variant="teal" onClick={handleFindCompany}>
+            <div className="space-y-1">
+              <label htmlFor="company-inn" className="text-sm font-medium text-gray-900">
+                ИНН компании
+              </label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="min-w-0 flex-1">
+                  <Input
+                    id="company-inn"
+                    value={form.inn}
+                    onChange={(e) => updateField("inn", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="10 цифр"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="teal"
+                  onClick={handleFindCompany}
+                  className="shrink-0"
+                >
                   Найти компанию
                 </Button>
               </div>
+              {errors.inn && <span className="text-xs text-gray-700">{errors.inn}</span>}
             </div>
             {form.companyName && (
               <div className="rounded-button border border-gray-300 p-4 space-y-2 text-sm">
@@ -746,7 +758,7 @@ function RegisterPageContent() {
         )}
 
         {step === 2 && (
-          <div className="space-y-4 text-left max-w-4xl">
+          <div className="space-y-4 text-left">
             <p className="text-sm text-gray-600 text-center">
               Подключите электронный документооборот для подписания договоров
             </p>
@@ -852,7 +864,7 @@ function RegisterPageContent() {
         )}
 
         {step === 3 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-4">
             <Input
               label="ФИО контактного лица"
               value={form.contactName}
@@ -1255,7 +1267,7 @@ function RegisterPageContent() {
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
             <Button
               type="button"
-              variant="outline"
+              variant="soft-outline"
               onClick={goBack}
               disabled={step === 0}
             >

@@ -55,6 +55,17 @@
   padding: 0.75rem 1rem;
 }
 
+.footerTeal :global(button:not([class*="outline"]):not([class*="ghost"])) {
+  background-color: var(--color-primary, #28b5b3) !important;
+  border-color: var(--color-primary, #28b5b3) !important;
+  color: #fff !important;
+}
+
+.footerTeal :global(button:not([class*="outline"]):not([class*="ghost"]):hover) {
+  background-color: var(--color-primary-dark, #1f9696) !important;
+  border-color: var(--color-primary-dark, #1f9696) !important;
+}
+
 .closeButton {
   border-radius: var(--radius-button, 10px);
   padding: 0.25rem;

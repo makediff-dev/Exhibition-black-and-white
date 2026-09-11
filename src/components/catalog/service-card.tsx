@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CatalogCard } from "@/components/catalog/catalog-card";
 import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
 import { useAccountTheme } from "@/components/account/account-theme-provider";
+import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { CardTitle } from "@/components/ui/card";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatServicePrice } from "@/lib/utils/formatters";
@@ -47,7 +48,8 @@ export function ServiceCard({
   const allServices = usePrototypeStore((s) => s.services);
   const role = useAuthStore((s) => s.user?.role);
   const accountTheme = useAccountTheme();
-  const addToCartVariant = accountTheme?.buttonVariant ?? "blue";
+  const catalogAccent = useCatalogAccent();
+  const addToCartVariant = catalogAccent?.buttonVariant ?? accountTheme?.buttonVariant ?? "blue";
   const contractorServicesCount = allServices.filter(
     (item) => item.contractorId === service.contractorId,
   ).length;
@@ -119,7 +121,7 @@ export function ServiceCard({
                 onClick={(event) => event.stopPropagation()}
                 className="block w-full"
               >
-                <Button size="sm" variant="outline" className="w-full">
+                <Button size="sm" variant="ghost" className="w-full">
                   Портфолио
                 </Button>
               </Link>

@@ -156,15 +156,14 @@ export function ContractorDetailSection({
             {contractor.rating} · {contractor.reviewCount} отзывов
           </p>
 
-          <div className="flex flex-wrap items-center gap-6 mb-8">
+          <div className="flex flex-wrap items-center gap-3 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="blue">Пригласить в заявку</Button>
+              <Button variant="violet">Пригласить в заявку</Button>
             </Link>
             <Link
               href={from ? withFromParam(`/services?contractor=${contractor.id}`, from) : `/services?contractor=${contractor.id}`}
-              className="text-sm text-gray-900 hover:underline"
             >
-              Услуги исполнителя
+              <Button variant="outline">Услуги исполнителя</Button>
             </Link>
           </div>
 

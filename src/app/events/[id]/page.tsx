@@ -257,7 +257,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">
-            <Button type="button" variant="soft-outline" onClick={() => setRemindersModalOpen(true)}>
+            <Button type="button" variant="outline" onClick={() => setRemindersModalOpen(true)}>
               Подключить напоминания
             </Button>
           </div>
@@ -274,7 +274,7 @@ export default function EventDetailPage() {
                 </Link>
                 {event.bookingAvailable && (
                   <Link href={bookingHref}>
-                    <Button variant="soft-outline">Забронировать площадь</Button>
+                    <Button variant="outline">Забронировать площадь</Button>
                   </Link>
                 )}
               </div>

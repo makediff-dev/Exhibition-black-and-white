@@ -110,6 +110,7 @@ export default function ModerationPage() {
     <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+        <div className="mx-auto w-full max-w-3xl">
         <h1 className="text-2xl font-bold mb-2">Статус модерации</h1>
         <p className="text-sm text-gray-600 mb-6">
           Отслеживайте проверку данных вашей компании
@@ -214,6 +215,7 @@ export default function ModerationPage() {
               </Button>
             ))}
           </div>
+        </div>
         </div>
       </main>
       <Footer />
