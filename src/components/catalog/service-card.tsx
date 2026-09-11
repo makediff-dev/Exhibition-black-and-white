@@ -115,7 +115,7 @@ export function ServiceCard({
               )}
               <Link
                 href={`${getContractorProfileHref(service.contractorId, {
-                  role,
+                  role: from ? role : undefined,
                   from,
                 })}#portfolio`}
                 onClick={(event) => event.stopPropagation()}

@@ -100,7 +100,7 @@ function ContractorsGrid({
         <Link
           key={contractor.id}
           href={getContractorProfileHref(contractor.id, {
-            role,
+            role: from ? role : undefined,
             from: from ?? undefined,
           })}
         >

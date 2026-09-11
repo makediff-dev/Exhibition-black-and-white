@@ -158,7 +158,7 @@ export function ContractorDetailSection({
 
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="violet">Пригласить в заявку</Button>
+              <Button variant="primary">Пригласить в заявку</Button>
             </Link>
             <Link
               href={from ? withFromParam(`/services?contractor=${contractor.id}`, from) : `/services?contractor=${contractor.id}`}

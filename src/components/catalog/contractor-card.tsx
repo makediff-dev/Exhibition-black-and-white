@@ -8,7 +8,6 @@ import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import type { Contractor } from "@/data/types";
-import { useAuthStore } from "@/lib/store";
 import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
 import { getContractorCardSlides } from "@/lib/utils/catalog-card-images";
 import {
@@ -23,7 +22,6 @@ interface ContractorCardProps {
 }
 
 export function ContractorCard({ contractor, cardIndex = 0, onInvite }: ContractorCardProps) {
-  const role = useAuthStore((state) => state.user?.role);
   const slides = useMemo(
     () => getContractorCardSlides(contractor.id, contractor.name, cardIndex),
     [contractor.id, contractor.name, cardIndex],
@@ -33,7 +31,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
   return (
     <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
       <Link
-        href={getContractorProfileHref(contractor.id, { role })}
+        href={getContractorProfileHref(contractor.id)}
         className="absolute inset-0 z-0"
         aria-label={`Открыть профиль ${contractor.name}`}
       />
@@ -75,7 +73,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
               Пригласить в заявку
             </Button>
             <Link
-              href={getContractorCheckHref(contractor.id, { role, from: "checks" })}
+              href={getContractorCheckHref(contractor.id)}
               className="block w-full"
             >
               <Button size="sm" variant="ghost" className="w-full">

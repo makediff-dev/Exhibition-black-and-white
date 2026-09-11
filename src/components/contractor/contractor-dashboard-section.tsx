@@ -9,6 +9,7 @@ import type { CompanyProfile } from "@/data/types";
 import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { withFromParam } from "@/lib/utils/message-related-links";
 import { useToast } from "@/components/ui/toast-provider";
 
 interface Props {
@@ -57,6 +58,7 @@ export function ContractorDashboardSection({ user }: Props) {
             <ServiceCard
               key={service.id}
               service={service}
+              from="dashboard"
               onAdd={() => handleAddToCart(service.id)}
             />
           ))}
@@ -72,7 +74,7 @@ export function ContractorDashboardSection({ user }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {upcomingEvents.map((event) => (
-            <Link key={event.id} href={`/events/${event.id}`}>
+            <Link key={event.id} href={withFromParam(`/events/${event.id}`, "dashboard")}>
               <Card hoverable className="h-full">
                 <CardTitle className="text-base leading-snug">{event.title}</CardTitle>
                 <CardDescription className="mt-2">

@@ -1,51 +1,42 @@
-"use client";
-
-import { useState } from "react";
 import { HOME_HOW_IT_WORKS_STEPS } from "@/constants/home-content";
-import { HOME_IMAGES } from "@/constants/home-images";
 import styles from "./home-page.module.css";
 
 export function HomeHowItWorksSection() {
-  const [activeStep, setActiveStep] = useState(0);
+  const [registrationStep, ...otherSteps] = HOME_HOW_IT_WORKS_STEPS;
 
   return (
     <section className={styles.howItWorksSection}>
       <div className={styles.container}>
         <div className={styles.containerInner}>
           <div className={styles.howItWorks}>
-            <div className={styles.howItWorksContent}>
-              <h2 className={styles.sectionTitle}>Как работает сервис</h2>
+            <h2 className={styles.howItWorksTitle}>Как работает сервис</h2>
 
-              <div className={styles.howItWorksBottom}>
-                <div className={styles.howSteps}>
-                  {HOME_HOW_IT_WORKS_STEPS.map((step, index) => {
-                    const isActive = index === activeStep;
-
-                    return (
-                      <div key={step.title} className={styles.howStepGroup}>
-                        <button
-                          type="button"
-                          className={`${styles.howStep} ${isActive ? styles.howStepActive : ""}`}
-                          onClick={() => setActiveStep(index)}
-                        >
-                          <span className={styles.howStepDotWrap}>
-                            <span className={styles.howStepDot} aria-hidden="true" />
-                          </span>
-                          <span className={styles.howStepHead}>
-                            <p className={styles.howStepTitle}>{step.title}</p>
-                          </span>
-                        </button>
-                        {isActive ? <p className={styles.howStepText}>{step.text}</p> : null}
-                      </div>
-                    );
-                  })}
+            <div className={styles.howItWorksCards}>
+              <article className={styles.howFeaturedCard}>
+                <div className={styles.howFeaturedCopy}>
+                  <h3 className={styles.howCardTitle}>{registrationStep.title}</h3>
+                  <p className={styles.howCardText}>{registrationStep.text}</p>
                 </div>
-              </div>
-            </div>
+                <div className={styles.howFeaturedImage}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={registrationStep.imageUrl} alt="" />
+                </div>
+              </article>
 
-            <div className={styles.howImage}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={HOME_IMAGES.howItWorks} alt="" className={styles.howImagePhoto} />
+              <div className={styles.howCardsGrid}>
+                {otherSteps.map((step, index) => (
+                  <article key={step.title} className={styles.howCard}>
+                    <div className={styles.howCardCopy}>
+                      <h3 className={styles.howCardTitle}>{step.title}</h3>
+                      <p className={styles.howCardText}>{step.text}</p>
+                    </div>
+                    <div className={`${styles.howCardImage} ${styles[`howCardImage${index + 1}`]}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={step.imageUrl} alt="" />
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </div>

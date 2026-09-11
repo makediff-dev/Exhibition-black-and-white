@@ -13,6 +13,7 @@ import type { Contractor, Event, Service } from "@/data/types";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { withFromParam } from "@/lib/utils/message-related-links";
 import { useToast } from "@/components/ui/toast-provider";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
@@ -58,7 +59,7 @@ const FAVORITE_SECTIONS = [
 
 function FavoriteEventCard({ event }: { event: Event }) {
   return (
-    <Link href={`/events/${event.id}`}>
+    <Link href={withFromParam(`/events/${event.id}`, "favorites")}>
       <Card hoverable className="h-full">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
@@ -100,7 +101,7 @@ function FavoriteVenueCard({ venueId }: { venueId: string }) {
   if (!venue) return null;
 
   const publicVenue = getPublicVenueByCatalogId(venueId);
-  const href = publicVenue ? `/venues/${publicVenue.id}` : `/venues`;
+  const href = withFromParam(publicVenue ? `/venues/${publicVenue.id}` : `/venues`, "favorites");
 
   return (
     <Link href={href}>

@@ -93,7 +93,7 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
             </div>
             <div className="mt-4 flex flex-col gap-2">
               <Link href={`/events?venue=${encodeURIComponent(venue.name)}`}>
-                <Button className="w-full" variant="pink">Смотреть мероприятия</Button>
+                <Button className="w-full" variant="primary">Смотреть мероприятия</Button>
               </Link>
               <Link href="/register">
                 <Button variant="outline" className="w-full">

@@ -93,7 +93,7 @@ export default function ServiceDetailPage() {
                 <p className="text-sm text-gray-600">
                   <Link
                     href={getContractorProfileHref(service.contractorId, {
-                      role: accountRole,
+                      role: from ? accountRole : undefined,
                       from: from ?? undefined,
                     })}
                     className="underline"
@@ -260,7 +260,7 @@ export default function ServiceDetailPage() {
                 Итого: <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
               </p>
 
-              <Button className="w-full" variant="blue" onClick={handleAddToCart}>
+              <Button className="w-full" variant="primary" onClick={handleAddToCart}>
                 <ShoppingCart className="h-4 w-4" />
                 В корзину
               </Button>

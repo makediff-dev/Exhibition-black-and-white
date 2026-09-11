@@ -747,68 +747,123 @@
   place-items: center;
 }
 
+.audienceSection {
+  padding-block: 65px 64px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.audienceSection .containerInner {
+  max-width: none;
+  padding-inline: 0;
+}
+
 .audienceGrid {
   display: grid;
   gap: 32px;
+  padding-top: 22px;
 }
 
 .audienceRow {
   display: grid;
-  grid-template-columns: 1fr 401px;
+  grid-template-columns: minmax(0, 1fr) 401px;
   gap: 32px;
   align-items: stretch;
 }
 
 .audienceRowReverse {
-  grid-template-columns: 401px 1fr;
+  grid-template-columns: 401px minmax(0, 1fr);
 }
 
 .audienceMedia {
-  min-height: 272px;
-  background: #f5f5f5;
-  border: 1px solid #e5e5e5;
+  position: relative;
+  height: 240px;
   overflow: hidden;
+  border-radius: 20px;
+}
+
+.audienceRow:nth-child(1) .audienceMedia {
+  background: #2939eb;
+}
+
+.audienceRow:nth-child(2) .audienceMedia {
+  background: #6f38dd;
+}
+
+.audienceRow:nth-child(3) .audienceMedia {
+  background: #0aaee4;
+}
+
+.audienceRow:nth-child(4) .audienceMedia {
+  background: #ff0096;
 }
 
 .audienceMediaPhoto {
-  width: 100%;
-  height: 100%;
-  min-height: 272px;
-  object-fit: cover;
+  position: absolute;
+  top: 20px;
+  left: 20px;
   display: block;
+  max-width: none;
+  height: auto;
+  border-radius: 20px;
+}
+
+.audienceRow:nth-child(1) .audienceMediaPhoto {
+  width: 1197px;
+}
+
+.audienceRow:nth-child(2) .audienceMediaPhoto {
+  width: 1440px;
+}
+
+.audienceRow:nth-child(3) .audienceMediaPhoto {
+  width: 1186px;
+}
+
+.audienceRow:nth-child(4) .audienceMediaPhoto {
+  width: 1184px;
 }
 
 .audiencePanel {
-  padding: 32px;
-  border: 1px solid #e5e5e5;
-  background: #fff;
   display: flex;
+  height: 240px;
   flex-direction: column;
+  justify-content: space-between;
+  padding: 32px;
+  border-radius: 20px;
+  background: #dff3f2;
+  color: #000;
 }
 
 .audienceTitle {
-  margin: 0 0 16px;
-  font-size: 32px;
-  line-height: 1.15;
+  margin: 0 0 15px;
+  font-size: 24px;
+  line-height: 1.2;
   font-weight: 700;
 }
 
 .audienceText {
-  margin: 0 0 24px;
-  font-size: 15px;
-  line-height: 1.5;
-  color: #525252;
-  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  color: #000;
 }
 
 .audienceLink {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #171717;
+  font-size: 16px;
+  line-height: 19.2px;
+  font-weight: 700;
+  color: #000;
   text-decoration: none;
+}
+
+.audienceLinkIcon {
+  display: block;
+  width: 16px;
+  height: 16px;
 }
 
 .audienceLink:hover {
@@ -910,10 +965,12 @@
 }
 
 .howItWorks {
-  display: grid;
-  grid-template-columns: minmax(0, 496px) minmax(0, 1fr);
-  gap: 32px;
-  align-items: stretch;
+  display: flex;
+  width: min(100%, 1312px);
+  margin-inline: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .howItWorksContent {
@@ -1019,6 +1076,152 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.howItWorksTitle {
+  width: min(100%, 960px);
+  margin: 0;
+  color: #0c0a08;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 50px;
+  letter-spacing: -0.01px;
+  text-align: center;
+}
+
+.howItWorksCards {
+  width: 100%;
+  padding-top: 32px;
+}
+
+.howFeaturedCard {
+  display: flex;
+  width: 100%;
+  height: 281px;
+  align-items: flex-start;
+  overflow: hidden;
+  padding-block: 20px;
+  border-radius: 20px;
+  background: #dfe0f7;
+}
+
+.howFeaturedCopy {
+  display: flex;
+  width: 546.664px;
+  height: 100%;
+  flex: 0 0 546.664px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px;
+}
+
+.howFeaturedCopy > * {
+  width: 100%;
+  max-width: 389px;
+}
+
+.howFeaturedImage {
+  width: 1185px;
+  height: 241px;
+  flex: 0 0 1185px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.howFeaturedImage img {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
+.howCardsGrid {
+  display: grid;
+  width: 100%;
+  height: 384px;
+  grid-template-columns: 421.33px 421.34px 405px;
+  gap: 32px;
+  overflow: hidden;
+  padding-top: 32px;
+}
+
+.howCard {
+  display: flex;
+  height: 352px;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #dfe0f7;
+}
+
+.howCardCopy {
+  width: 100%;
+  height: 190px;
+  flex: 0 0 190px;
+  padding: 32px 24px;
+}
+
+.howCardTitle {
+  margin: 0 0 16px;
+  color: #000;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.howCardText {
+  margin: 0;
+  color: #534c45;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.howCardImage {
+  position: relative;
+  width: 374px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.howCardImage img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.howCardImage1 {
+  height: 212px;
+}
+
+.howCardImage1 img {
+  top: 0;
+  left: -0.33%;
+  width: 142.67%;
+}
+
+.howCardImage2 {
+  height: 243px;
+}
+
+.howCardImage2 img {
+  top: -13.63%;
+  left: -2.94%;
+  width: 210.16%;
+}
+
+.howCardImage3 {
+  height: 175px;
+}
+
+.howCardImage3 img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .faqSection {
@@ -1210,6 +1413,20 @@
     grid-template-columns: 1fr;
   }
 
+  .howFeaturedCopy {
+    width: 42%;
+    flex-basis: 42%;
+  }
+
+  .howCardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .howCardImage {
+    width: calc(100% - 48px);
+  }
+
   .howItWorksContent {
     min-height: 0;
   }
@@ -1235,6 +1452,35 @@
 @media (max-width: 768px) {
   .container {
     padding-inline: 16px;
+  }
+
+  .howItWorksTitle {
+    font-size: 36px;
+    line-height: 40px;
+  }
+
+  .howFeaturedCard {
+    height: 500px;
+    flex-direction: column;
+    padding-block: 0;
+  }
+
+  .howFeaturedCopy {
+    width: 100%;
+    height: auto;
+    flex-basis: auto;
+    padding: 32px 24px;
+  }
+
+  .howFeaturedImage {
+    width: 1185px;
+    height: 241px;
+    margin-left: 24px;
+  }
+
+  .howCardsGrid {
+    height: auto;
+    grid-template-columns: 1fr;
   }
 
   .cardsGrid,

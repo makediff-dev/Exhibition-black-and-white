@@ -2,7 +2,6 @@ import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { HomeHero } from "@/components/home/home-hero";
 import { HomeCategoriesSection } from "@/components/home/home-categories-section";
-import { HomeQuickActionsSection } from "@/components/home/home-quick-actions-section";
 import { HomeEventsSection } from "@/components/home/home-events-section";
 import { HomeOrdersProvider } from "@/components/home/home-orders-provider";
 import { HomeUrgentOrdersSection } from "@/components/home/home-urgent-orders-section";
@@ -12,6 +11,7 @@ import { HomeRecommendedContractorsSection } from "@/components/home/home-recomm
 import { HomeContractorsCategorySection } from "@/components/home/home-contractors-category-section";
 import { HomeRecommendedVenuesSection } from "@/components/home/home-recommended-venues-section";
 import { HomeMoscowVenuesSection } from "@/components/home/home-moscow-venues-section";
+import { HomeAudienceSection } from "@/components/home/home-audience-section";
 import { HomeWorkFormatsSection } from "@/components/home/home-work-formats-section";
 import { HomeHowItWorksSection } from "@/components/home/home-how-it-works-section";
 import { HomeFaqSection } from "@/components/home/home-faq-section";
@@ -25,7 +25,6 @@ export default function HomePage() {
       <main>
         <HomeHero />
         <HomeCategoriesSection />
-        <HomeQuickActionsSection />
         <HomeEventsSection />
 
         <HomeOrdersProvider>
@@ -69,6 +68,7 @@ export default function HomePage() {
 
         <HomeRecommendedVenuesSection />
         <HomeMoscowVenuesSection />
+        <HomeAudienceSection />
         <HomeWorkFormatsSection />
         <HomeHowItWorksSection />
         <HomeFaqSection />

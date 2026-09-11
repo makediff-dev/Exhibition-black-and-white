@@ -12,20 +12,6 @@ import { cn } from "@/lib/utils/cn";
 import { keepsCabinetSidebar } from "@/lib/utils/message-related-links";
 import type { ReactNode } from "react";
 
-const PUBLIC_CATALOG_PREFIXES = ["/events", "/contractors", "/services", "/venues"];
-
-function isPublicCatalogPath(pathname: string): boolean {
-  if (pathname.startsWith("/events/")) {
-    return false;
-  }
-  if (pathname.startsWith("/contractors/")) {
-    return false;
-  }
-  return PUBLIC_CATALOG_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
-}
-
 interface CabinetAwareLayoutProps {
   children: ReactNode;
   title?: string;
@@ -57,9 +43,9 @@ export function CabinetAwareLayout({
   const showCabinetSidebar =
     inCabinet &&
     accountRole &&
-    (keepsCabinetSidebar(from, accountRole) || !isPublicCatalogPath(pathname));
+    keepsCabinetSidebar(from, accountRole);
 
-  const accentWrapped = catalogAccent ? (
+  const publicContent = catalogAccent ? (
     <CatalogAccentProvider accent={catalogAccent}>{children}</CatalogAccentProvider>
   ) : (
     children
@@ -76,7 +62,7 @@ export function CabinetAwareLayout({
         actions={actions}
       >
         {description ? <p className="text-sm text-gray-600 mb-4 -mt-2">{description}</p> : null}
-        <div className={className}>{accentWrapped}</div>
+        <div className={className}>{children}</div>
       </AppShell>
     );
   }
@@ -101,7 +87,7 @@ export function CabinetAwareLayout({
             {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
           </div>
         )}
-        {accentWrapped}
+        {publicContent}
       </main>
       <Footer />
     </div>
