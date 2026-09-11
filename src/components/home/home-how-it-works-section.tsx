@@ -7,8 +7,7 @@ export function HomeHowItWorksSection() {
   return (
     <section className={styles.howItWorksSection}>
       <div className={styles.container}>
-        <div className={styles.containerInner}>
-          <div className={styles.howItWorks}>
+        <div className={styles.howItWorks}>
             <h2 className={styles.howItWorksTitle}>Как работает сервис</h2>
 
             <div className={styles.howItWorksCards}>
@@ -40,7 +39,6 @@ export function HomeHowItWorksSection() {
             </div>
           </div>
         </div>
-      </div>
     </section>
   );
 }
