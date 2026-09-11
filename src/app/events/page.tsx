@@ -393,7 +393,7 @@ function EventsPageContent() {
         onConfirm={confirmCity}
       />
 
-      <Button variant="soft-outline" className="md:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
+      <Button variant="soft-outline" className="lg:hidden w-full mb-4" onClick={() => setFilterDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
         </Button>
@@ -419,7 +419,7 @@ function EventsPageContent() {
         )}
 
         <div className="catalog-page-grid">
-          <aside className="hidden md:block catalog-filters-panel shrink-0">
+          <aside className="hidden lg:block catalog-filters-panel shrink-0">
             <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold">Фильтры</h2>

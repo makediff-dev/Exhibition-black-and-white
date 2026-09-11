@@ -152,7 +152,7 @@ export default function MessagesPage() {
             description="Выберите другую категорию или дождитесь новых сообщений"
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 justify-items-start">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filteredThreads.map((thread) => {
               const details = getThreadDetails(thread, deals, requests);
 
@@ -160,7 +160,7 @@ export default function MessagesPage() {
                 <Card
                   key={thread.id}
                   borderHover
-                  className="flex h-full w-full max-w-md flex-col"
+                  className="flex h-full w-full flex-col"
                 >
                   <Link
                     href={`/messages/${thread.id}`}

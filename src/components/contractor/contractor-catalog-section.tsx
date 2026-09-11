@@ -221,7 +221,7 @@ export function ContractorCatalogFormSection({
           <div className="space-y-3">
             {catalog.items.map((item) => (
               <Card key={item.id} onClick={() => openEditItemModal(item)}>
-                <div className="flex justify-between items-start gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
                   <div className="flex gap-3 min-w-0">
                     {item.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -343,8 +343,8 @@ export function ContractorServicesListSection({
                   key={service.id}
                   onClick={() => router.push(`/account/contractor/services/${service.id}`)}
                 >
-                  <div className="flex justify-between items-start gap-3">
-                    <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="min-w-0">
                       <CardTitle>{service.title}</CardTitle>
                       <CardDescription>
                         {formatPrice(service.price)} · {service.city} · {service.category}
@@ -353,7 +353,7 @@ export function ContractorServicesListSection({
                         <p className="text-xs text-gray-500 mt-1">Сроки: {service.deadline}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         className="text-sm text-gray-900 hover:text-gray-600"
@@ -389,8 +389,8 @@ export function ContractorServicesListSection({
                   key={catalog.id}
                   onClick={() => router.push(`${SERVICES_LIST_HREF}/catalog/${catalog.id}`)}
                 >
-                  <div className="flex justify-between items-start gap-3">
-                    <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+                    <div className="min-w-0">
                       <CardTitle>{catalog.title}</CardTitle>
                       <CardDescription>
                         {catalog.city} · {catalog.category} · {catalog.items.length} позиций
@@ -399,7 +399,7 @@ export function ContractorServicesListSection({
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{catalog.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"

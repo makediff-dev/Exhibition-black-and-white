@@ -59,6 +59,22 @@
   border-radius: var(--radius-card);
 }
 
+.accountCabinet :global(.catalog-cards-grid) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+  .accountCabinet :global(.catalog-cards-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .accountCabinet :global(.catalog-cards-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .accountCabinet :global(.border-gray-900),
 .accountCabinet :global(.border-2.border-gray-900) {
   border-color: var(--account-accent);

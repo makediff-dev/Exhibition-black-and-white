@@ -8,7 +8,7 @@ import { HomeScrollSection } from "./home-scroll-section";
 import { HomeTileCard } from "./home-tile-card";
 
 export function HomeRecommendedServicesSection() {
-  const services = useMemo(() => SEED_SERVICES.slice(0, 5), []);
+  const services = useMemo(() => SEED_SERVICES.slice(0, 6), []);
 
   return (
     <HomeScrollSection title="Рекомендованные услуги" linkHref="/services" linkLabel="Все услуги">

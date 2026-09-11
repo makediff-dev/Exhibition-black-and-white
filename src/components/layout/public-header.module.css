@@ -134,6 +134,12 @@
   }
 }
 
+@media (min-width: 1800px) {
+  .inner {
+    max-width: 1760px;
+  }
+}
+
 @media (max-width: 1023px) {
   .inner {
     padding: 0 16px;

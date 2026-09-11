@@ -30,6 +30,16 @@
   padding-inline: 16px;
 }
 
+@media (min-width: 1800px) {
+  .container {
+    max-width: 1760px;
+  }
+
+  .containerInner {
+    max-width: 1680px;
+  }
+}
+
 .section {
   padding-block: 100px 60px;
 }
@@ -117,6 +127,16 @@
 .scrollRow:has(.categoryCard) {
   --scroll-card-image-height: 170px;
   --scroll-visible-cards: 6;
+}
+
+@media (min-width: 1800px) {
+  .cardsGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .scrollRow {
+    --scroll-visible-cards: 6;
+  }
 }
 
 .scrollTrack .categoryCard {
@@ -308,7 +328,8 @@
 .quickActionCard {
   display: flex;
   flex-direction: column;
-  height: 400px;
+  height: auto;
+  min-height: 0;
   border: 0;
   text-decoration: none;
   color: #fff;
@@ -337,13 +358,12 @@
 }
 
 .quickActionTop {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  padding: 32px 4px 0;
+  padding: 24px 4px 8px;
 }
 
 .quickActionTitle {
@@ -851,6 +871,7 @@
   height: 240px;
   flex-direction: column;
   justify-content: space-between;
+  gap: 16px;
   padding: 32px;
   border-radius: 20px;
   background: #dff3f2;
@@ -1433,21 +1454,49 @@
   }
 
   .howItWorks {
-    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .howFeaturedCard {
+    height: auto;
+    flex-direction: column;
+    padding: 0 0 20px;
   }
 
   .howFeaturedCopy {
-    width: 42%;
-    flex-basis: 42%;
+    width: 100%;
+    height: auto;
+    flex: 0 0 auto;
+    padding: 32px 24px 16px;
+  }
+
+  .howFeaturedCopy > * {
+    max-width: none;
+  }
+
+  .howFeaturedImage {
+    width: calc(100% - 32px);
+    height: 200px;
+    flex: 0 0 auto;
+    margin: 0 16px;
+  }
+
+  .howFeaturedImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
   }
 
   .howCardsGrid {
+    height: auto;
+    overflow: visible;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
   }
 
   .howCardImage {
-    width: calc(100% - 48px);
+    width: calc(100% - 32px);
   }
 
   .howItWorksContent {
@@ -1465,6 +1514,27 @@
   .audienceRow,
   .audienceRowReverse {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .audiencePanel {
+    order: -1;
+    height: auto;
+    min-height: 0;
+    padding: 24px;
+  }
+
+  .audienceMedia {
+    width: 100%;
+    height: 220px;
+  }
+
+  .audienceRow:nth-child(1) .audienceMediaPhoto,
+  .audienceRow:nth-child(2) .audienceMediaPhoto,
+  .audienceRow:nth-child(3) .audienceMediaPhoto,
+  .audienceRow:nth-child(4) .audienceMediaPhoto {
+    width: auto;
+    height: calc(100% - 20px);
   }
 
   .workFormatsRow {
@@ -1481,30 +1551,94 @@
     padding-inline: 0;
   }
 
+  .hero {
+    padding-top: 32px;
+    margin-bottom: 40px;
+  }
+
   .heroTitle {
     font-size: 32px;
+    line-height: 1.1;
   }
 
   .heroSubtitle {
     font-size: 16px;
+    margin-bottom: 20px;
   }
 
   .heroSearch {
+    height: 48px;
+    flex-wrap: nowrap;
+    padding: 6px;
+  }
+
+  .heroSearchField {
+    padding-left: 10px;
+  }
+
+  .heroSearchButton {
+    height: 36px;
+    padding: 8px 14px;
+  }
+
+  .heroBannerWrap {
+    margin: 28px 0 0;
+  }
+
+  .heroBanner {
+    height: 200px;
+  }
+
+  .heroBannerArrow {
+    right: 8px;
+  }
+
+  .quickActionsTitle {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+
+  .quickActionsGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .quickActionItem {
+    gap: 8px;
+  }
+
+  .quickActionTop {
+    padding: 20px 12px 8px;
+  }
+
+  .quickActionTitle {
+    font-size: 18px;
+  }
+
+  .quickActionText {
+    max-width: none;
+    padding-inline: 8px;
+  }
+
+  .quickActionImage,
+  .quickActionImagePhoto {
+    height: 168px;
+  }
+
+  .quickActionImage {
+    flex-basis: 168px;
+  }
+
+  .quickActionRegisterButton {
+    white-space: normal;
     height: auto;
-    flex-wrap: wrap;
+    min-height: 36px;
+    padding: 10px 12px;
+    line-height: 1.2;
   }
 
-  .howFeaturedImage {
-    width: calc(100% - 24px);
-    height: 180px;
-    flex: 0 0 auto;
-    margin-left: 24px;
-  }
-
-  .howFeaturedImage img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .sectionTitle {
+    font-size: 22px;
   }
 
   .howItWorksTitle {
@@ -1512,22 +1646,57 @@
     line-height: 34px;
   }
 
-  .howFeaturedCard {
-    height: auto;
-    flex-direction: column;
-    padding-block: 0;
-  }
-
-  .howFeaturedCopy {
-    width: 100%;
-    height: auto;
-    flex-basis: auto;
-    padding: 32px 24px;
-  }
-
   .howCardsGrid {
-    height: auto;
     grid-template-columns: 1fr;
+    gap: 16px;
+    padding-top: 16px;
+  }
+
+  .howCard {
+    height: auto;
+    align-items: stretch;
+  }
+
+  .howCardCopy {
+    height: auto;
+    flex: 0 0 auto;
+    padding: 24px 24px 16px;
+  }
+
+  .howCardImage,
+  .howCardImage1,
+  .howCardImage2,
+  .howCardImage3 {
+    width: calc(100% - 32px);
+    height: 180px;
+    margin: 0 16px 16px;
+  }
+
+  .howCardImage img,
+  .howCardImage1 img,
+  .howCardImage2 img,
+  .howCardImage3 img {
+    inset: 0;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+  }
+
+  .sectionHeader .sectionLink {
+    display: none;
+  }
+
+  .showMoreWrap {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .showMoreButton {
+    width: 100%;
+    min-width: 0;
   }
 
   .cardsGrid,
@@ -1586,22 +1755,6 @@
     min-width: 0;
   }
 
-  .heroBannerWrap {
-    margin-inline: 0;
-  }
-
-  .heroBanner {
-    height: 240px;
-  }
-
-  .hero {
-    margin-bottom: 48px;
-  }
-
-  .quickActionsGrid {
-    grid-template-columns: 1fr;
-  }
-
   .sectionCards {
     margin-bottom: 48px;
   }
@@ -1619,21 +1772,25 @@
   }
 
   .faqTitle {
-    font-size: 28px;
+    font-size: 22px;
   }
 
   .ctaSection {
-    padding-bottom: 64px;
+    padding-bottom: 48px;
   }
 
   .ctaCard {
-    padding: 48px 24px;
-    border-radius: 24px;
+    padding: 32px 20px;
+    border-radius: 20px;
   }
 
   .ctaTitle {
-    font-size: 36px;
-    letter-spacing: -0.6px;
+    font-size: 28px;
+    letter-spacing: -0.4px;
+  }
+
+  .ctaTitle br {
+    display: none;
   }
 
   .ctaActions {
@@ -1644,5 +1801,19 @@
   .ctaPrimaryButton,
   .ctaSecondaryButton {
     width: 100%;
+  }
+
+  .tileButtonWrap {
+    width: 100%;
+  }
+
+  .tileButtonFilled,
+  .tileButtonBlue,
+  .tileButtonGreen,
+  .tileButtonPurple,
+  .tileButtonViolet,
+  .tileButtonPink {
+    width: 100%;
+    justify-content: center;
   }
 }

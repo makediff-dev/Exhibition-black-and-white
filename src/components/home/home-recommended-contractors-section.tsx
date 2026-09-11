@@ -7,7 +7,7 @@ import { HomeScrollSection } from "./home-scroll-section";
 import { HomeTileCard } from "./home-tile-card";
 
 export function HomeRecommendedContractorsSection() {
-  const contractors = useMemo(() => SEED_CONTRACTORS.slice(0, 5), []);
+  const contractors = useMemo(() => SEED_CONTRACTORS.slice(0, 6), []);
 
   return (
     <HomeScrollSection

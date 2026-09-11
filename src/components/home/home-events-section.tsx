@@ -12,8 +12,8 @@ import styles from "./home-page.module.css";
 
 export function HomeEventsSection() {
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(SEED_EVENTS, {
-    initialCount: 10,
-    step: 5,
+    initialCount: 12,
+    step: 6,
   });
 
   return (

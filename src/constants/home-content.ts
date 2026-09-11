@@ -190,6 +190,7 @@ export const HOME_RECOMMENDED_VENUES = [
   { id: "rv-3", name: "Loft Hall", city: "Москва", halls: "4 зала", imageUrl: HOME_IMAGES.venue[2] },
   { id: "rv-4", name: "ЦМТ", city: "Москва", halls: "2 павильона", imageUrl: HOME_IMAGES.venue[3] },
   { id: "rv-5", name: "МВЦ «Красная Пресня»", city: "Москва", halls: "5 залов", imageUrl: HOME_IMAGES.venue[4] },
+  { id: "rv-6", name: "Сколково", city: "Москва", halls: "3 зала", imageUrl: HOME_IMAGES.venue[0] },
 ];
 
 export const HOME_MOSCOW_VENUES = [
@@ -198,4 +199,5 @@ export const HOME_MOSCOW_VENUES = [
   { id: "v-3", name: "Гостиный двор", city: "Москва", halls: "2 зала", imageUrl: HOME_IMAGES.venue[2] },
   { id: "v-4", name: "ВДНХ", city: "Москва", halls: "5 павильонов", imageUrl: HOME_IMAGES.venue[3] },
   { id: "v-5", name: "ЦВК «Экспоцентр»", city: "Москва", halls: "4 павильона", imageUrl: HOME_IMAGES.venue[4] },
+  { id: "v-6", name: "Сокольники", city: "Москва", halls: "6 павильонов", imageUrl: HOME_IMAGES.venue[1] },
 ];

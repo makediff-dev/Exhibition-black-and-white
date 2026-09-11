@@ -53,7 +53,7 @@ export function ContractorDashboardSection({ user }: Props) {
             Все услуги
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {catalogServices.map((service) => (
             <ServiceCard
               key={service.id}
@@ -72,7 +72,7 @@ export function ContractorDashboardSection({ user }: Props) {
             Все мероприятия
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {upcomingEvents.map((event) => (
             <Link key={event.id} href={withFromParam(`/events/${event.id}`, "dashboard")}>
               <Card hoverable className="h-full">

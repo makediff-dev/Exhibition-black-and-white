@@ -202,7 +202,7 @@ function ContractorsPageContent() {
       description="Каталог подрядчиков выставочной индустрии"
       className="catalog-list-layout"
     >
-      <div className="flex gap-2 mb-4 md:hidden">
+      <div className="flex gap-2 mb-4 lg:hidden">
         <Button variant="soft-outline" className="w-full" onClick={() => setDrawerOpen(true)}>
           <Filter className="h-4 w-4" />
           Фильтры
@@ -210,7 +210,7 @@ function ContractorsPageContent() {
       </div>
 
       <div className="catalog-page-grid">
-          <aside className="hidden md:block catalog-filters-panel shrink-0">
+          <aside className="hidden lg:block catalog-filters-panel shrink-0">
             <div className="catalog-filters-box p-4 sticky top-20">
               <div className="flex justify-between mb-4">
                 <h2 className="text-sm font-semibold">Фильтры</h2>
