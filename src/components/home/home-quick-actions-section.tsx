@@ -24,7 +24,7 @@ export function HomeQuickActionsSection() {
                     <img
                       src={action.imageUrl}
                       alt=""
-                      className={`${styles.quickActionImagePhoto}${index === 0 ? ` ${styles.quickActionImagePhotoContain}` : ""}`}
+                      className={styles.quickActionImagePhoto}
                     />
                   </div>
                 </Link>

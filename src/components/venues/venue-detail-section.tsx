@@ -27,9 +27,9 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
 
       <section className="grid lg:grid-cols-[minmax(0,1fr)_360px] gap-8 items-start">
         <div className="space-y-6">
-          <div className="overflow-hidden border border-gray-200 rounded-[14px] bg-gray-100">
+          <div className="overflow-hidden border border-gray-200 rounded-[14px] bg-gray-100 aspect-video w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={venue.imageUrl} alt="" className="w-full h-[320px] object-cover" />
+            <img src={venue.imageUrl} alt="" className="h-full w-full object-cover" />
           </div>
 
           <div>
