@@ -81,9 +81,7 @@ export function CatalogCardImageSlider({
           className="pointer-events-auto absolute top-2 right-2 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-gray-500 shadow-sm transition-colors hover:text-gray-900"
           aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
         >
-          <Heart
-            className={`h-4 w-4 ${isFavorite ? "fill-gray-900 text-gray-900" : ""}`}
-          />
+          <Heart className={`h-4 w-4 ${isFavorite ? "fill-gray-900 text-gray-900" : ""}`} />
         </button>
       )}
 

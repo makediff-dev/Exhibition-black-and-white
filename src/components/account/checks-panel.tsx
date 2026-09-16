@@ -150,6 +150,7 @@ export function ChecksPanel({ role = "customer" }: ChecksPanelProps) {
 
     setCartAdded(true);
     showToast("Тариф добавлен в корзину", "success");
+    router.push("/account/customer/cart");
   };
 
   return (

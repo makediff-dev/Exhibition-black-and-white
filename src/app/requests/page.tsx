@@ -13,6 +13,8 @@ import { RequestOrderCard } from "@/components/requests/request-order-card";
 import { RequestRecommendationsSection } from "@/components/requests/request-recommendations-section";
 import type { RequestStatus } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
+import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 
 const TAB_STATUSES: { id: RequestStatus; label: string }[] = [
   { id: "draft", label: "Черновики" },
@@ -32,12 +34,12 @@ function RequestsContent() {
       list = list.filter((request) => request.customerId === user.id);
     }
     if (isAuthenticated && user?.role === "contractor") {
+      const contractorId = getContractorIdForUser(user);
       list = requests.filter((request) => {
-        if (request.status !== "published" && request.status !== "in_progress") return false;
-        if (request.format === "closed_request") {
-          return request.invitedContractorIds.some((id) => id.startsWith("ctr"));
+        if (activeTab === "published") {
+          return isRequestVisibleToContractor(request, contractorId);
         }
-        return true;
+        return false;
       });
     }
     return list.sort((a, b) => (b.publishedAt ?? b.deadline).localeCompare(a.publishedAt ?? a.deadline));

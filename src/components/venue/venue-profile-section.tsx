@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { Image, MessageSquare, Play, Trash2, Upload, Video } from "lucide-react";
+import { Image, Play, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -89,9 +88,6 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
   const setCompanyLogo = usePrototypeStore((state) => state.setCompanyLogo);
   const logoUrl = usePrototypeStore((state) =>
     user?.id ? state.companyLogos[user.id] : undefined
-  );
-  const unreadCount = usePrototypeStore((state) =>
-    state.messages.reduce((sum, thread) => sum + (thread.unread ?? 0), 0)
   );
   const { venueProfileMedia, addVenueProfileMedia, removeVenueProfileMedia } =
     usePrototypeStore();
@@ -259,26 +255,6 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
           onUpload={(fileName) => handleAddMedia("video", "infrastructure", fileName)}
         />
       </section>
-
-      <Card className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <MessageSquare className="h-5 w-5 shrink-0 text-gray-600 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium">Переписка с участниками</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Общайтесь с организаторами, заказчиками и исполнителями внутри платформы
-            </p>
-            {unreadCount > 0 && (
-              <p className="text-xs text-gray-700 mt-2">
-                Непрочитанных сообщений: {unreadCount}
-              </p>
-            )}
-          </div>
-        </div>
-        <Link href="/messages">
-          <Button type="button" variant="outline">Открыть сообщения</Button>
-        </Link>
-      </Card>
 
       <Button
         onClick={() => {

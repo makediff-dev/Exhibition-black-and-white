@@ -16,7 +16,8 @@ import { usePrototypeStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import { resizeImageFile } from "@/lib/utils/resize-image";
 
-const PORTFOLIO_LIST_HREF = "/account/contractor/portfolio";
+const PORTFOLIO_LIST_HREF = "/account/contractor/profile?tab=portfolio";
+const PORTFOLIO_FORM_BASE = "/account/contractor/portfolio";
 
 type SectionKey = "description" | "materials" | "thanks";
 
@@ -221,17 +222,18 @@ export function PortfolioPreviewCard({
 
 interface ListProps {
   contractorId: string;
+  hideTitle?: boolean;
 }
 
-export function ContractorPortfolioListSection({ contractorId }: ListProps) {
+export function ContractorPortfolioListSection({ contractorId, hideTitle = false }: ListProps) {
   const router = useRouter();
   const portfolio = usePrototypeStore((state) => state.getContractorPortfolio(contractorId));
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Портфолио</h1>
-        <Button size="sm" onClick={() => router.push(`${PORTFOLIO_LIST_HREF}/new`)}>
+      <div className={`flex items-center gap-3 ${hideTitle ? "justify-start" : "justify-between"}`}>
+        {hideTitle ? null : <h1 className="text-xl font-bold">Портфолио</h1>}
+        <Button size="sm" onClick={() => router.push(`${PORTFOLIO_FORM_BASE}/new`)}>
           <Plus className="h-4 w-4" />
           Добавить портфолио
         </Button>
@@ -253,7 +255,7 @@ export function ContractorPortfolioListSection({ contractorId }: ListProps) {
               <Card
                 key={item.id}
                 className="flex flex-col h-full min-w-0"
-                onClick={() => router.push(`${PORTFOLIO_LIST_HREF}/${item.id}`)}
+                onClick={() => router.push(`${PORTFOLIO_FORM_BASE}/${item.id}`)}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
                   {item.status === "draft" ? (

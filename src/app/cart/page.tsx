@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Trash2 } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,23 @@ import { resolveCartLine } from "@/lib/utils/cart-utils";
 import { formatPrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
+import { CUSTOMER_CART_HREF, getCheckoutHref } from "@/lib/utils/cart-routes";
 
 export default function CartPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const { items, updateItem, removeItem } = useCartStore();
   const services = usePrototypeStore((state) => state.services);
+
+  useEffect(() => {
+    if (user?.role === "customer") {
+      router.replace(CUSTOMER_CART_HREF);
+    }
+  }, [user?.role, router]);
+
+  if (user?.role === "customer") {
+    return null;
+  }
 
   const grouped = useMemo(() => {
     const map = new Map<string, {
@@ -186,7 +197,7 @@ export default function CartPage() {
                   Будет создано заказов: {grouped.length}
                 </p>
               </div>
-              <Link href="/checkout">
+              <Link href={getCheckoutHref(user?.role)}>
                 <Button size="lg">Перейти к оформлению</Button>
               </Link>
             </Card>

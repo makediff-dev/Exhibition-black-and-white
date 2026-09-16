@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/toast-provider";
 import type { Document, Deal, Event, Request } from "@/data/types";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { isDocumentForUser } from "@/lib/utils/cabinet-scope";
 import { formatDate } from "@/lib/utils/formatters";
 
 const DOC_TABS = [
@@ -154,9 +155,11 @@ function DocumentCardMenu({
 export function DocumentsPanel({
   defaultTab = "all",
   filterMode = "default",
+  hideEdoPrompt = false,
 }: {
   defaultTab?: string;
   filterMode?: "default" | "event-top-level";
+  hideEdoPrompt?: boolean;
 }) {
   const { user } = useAuthStore();
   const { documents, deals, requests } = usePrototypeStore();
@@ -191,12 +194,17 @@ export function DocumentsPanel({
     []
   );
 
+  const scopedDocuments = useMemo(
+    () => documents.filter((doc) => isDocumentForUser(doc, user, deals)),
+    [documents, user, deals]
+  );
+
   const topLevelFilterOptions = useMemo(() => {
     const eventIds = new Set<string>();
     const organizers = new Map<string, string>();
     const years = new Set<string>();
 
-    documents.forEach((doc) => {
+    scopedDocuments.forEach((doc) => {
       const context = resolveDocumentContext(doc, dealMap, requestMap, eventMap);
       if (context.eventId) eventIds.add(context.eventId);
       if (context.organizerId && context.organizerName) {
@@ -228,13 +236,13 @@ export function DocumentsPanel({
           .map((year) => ({ value: year, label: year })),
       ],
     };
-  }, [documents, dealMap, requestMap, eventMap]);
+  }, [scopedDocuments, dealMap, requestMap, eventMap]);
 
   const filterOptions = useMemo(() => {
     const counterparties = new Set<string>();
     const projects = new Map<string, string>();
 
-    documents.forEach((doc) => {
+    scopedDocuments.forEach((doc) => {
       const deal = dealMap[doc.dealId];
       if (!deal) return;
       counterparties.add(deal.contractorName);
@@ -256,10 +264,10 @@ export function DocumentsPanel({
         })),
       ],
     };
-  }, [documents, dealMap]);
+  }, [scopedDocuments, dealMap]);
 
   const filteredDocs = useMemo(() => {
-    return documents.filter((doc) => {
+    return scopedDocuments.filter((doc) => {
       const status = statusOverrides[doc.id] ?? doc.status;
       const context = resolveDocumentContext(doc, dealMap, requestMap, eventMap);
 
@@ -291,7 +299,7 @@ export function DocumentsPanel({
       return true;
     });
   }, [
-    documents,
+    scopedDocuments,
     activeTab,
     statusOverrides,
     dealMap,
@@ -336,7 +344,7 @@ export function DocumentsPanel({
 
   return (
     <>
-      {!edoConnected && user && (
+      {!hideEdoPrompt && !edoConnected && user && (
         <div className="edo-prompt-banner mb-6 flex flex-col gap-3 border border-gray-300 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium">ЭДО не подключён</p>
@@ -448,12 +456,12 @@ export function DocumentsPanel({
               <Card key={doc.id} className="h-full flex flex-col gap-[10px]">
                 <div className="flex items-center justify-between gap-[10px]">
                   <div className="flex flex-wrap items-center gap-[10px] min-w-0">
-                    <Badge variant="outline">{getCategoryLabel(doc.type)}</Badge>
-                    <Badge variant="dashed">
+                    <Badge variant="muted">{getCategoryLabel(doc.type)}</Badge>
+                    <Badge variant="muted">
                       {getDirection(doc) === "incoming" ? "Входящий" : "Исходящий"}
                     </Badge>
                     <Badge
-                      variant={status === "sent" ? "solid" : "outline"}
+                      variant="solid"
                       className={status === "archived" ? "opacity-70" : undefined}
                     >
                       {DOC_STATUS_LABELS[status]}

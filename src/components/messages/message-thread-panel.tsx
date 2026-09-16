@@ -1,6 +1,7 @@
 "use client";
 
 import { Paperclip, Send } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
 import { useAccountTheme } from "@/components/account/account-theme-provider";
 import styles from "@/components/messages/messages.module.css";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,17 @@ export function MessageThreadPanel({
   onSend,
 }: MessageThreadPanelProps) {
   const accountTheme = useAccountTheme();
+  const messagesRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const node = messagesRef.current;
+    if (!node) return;
+    node.scrollTop = node.scrollHeight;
+  }, [thread.id, thread.messages.length]);
 
   return (
     <div className={cn(styles.threadPanel, !accountTheme && "rounded-[14px]")}>
-      <div className={styles.threadMessages}>
+      <div ref={messagesRef} className={styles.threadMessages}>
         {thread.messages.map((msg) => {
           const isOwn = msg.sender === senderName;
 

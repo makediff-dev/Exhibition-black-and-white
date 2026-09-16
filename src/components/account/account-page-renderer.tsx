@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { HelpCircle } from "lucide-react";
-import { Tooltip } from "@/components/ui/tooltip";
+import { ShoppingCart } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,10 +23,10 @@ import { OrganizerEventFormSection } from "@/components/organizer/organizer-even
 import { OrganizerVenuesSection } from "@/components/organizer/organizer-venues-section";
 import { OrganizerParticipantDetailSection } from "@/components/organizer/organizer-participant-detail-section";
 import { CustomerSettingsSection } from "@/components/customer/customer-settings-section";
+import { CustomerProjectsSection } from "@/components/customer/customer-projects-section";
 import { CustomerDashboardRecommendations } from "@/components/customer/customer-dashboard-recommendations";
 import { ContractorDashboardSection } from "@/components/contractor/contractor-dashboard-section";
 import { ContractorServiceDetailSection } from "@/components/contractor/contractor-service-detail-section";
-import { ContractorProductionSection } from "@/components/contractor/contractor-production-section";
 import {
   ContractorServiceFormModal,
   buildServicePayload,
@@ -37,16 +36,13 @@ import {
 } from "@/components/contractor/contractor-service-form-modal";
 import { CustomerFavoritesSection } from "@/components/customer/customer-favorites-section";
 import { CustomerCartSection } from "@/components/customer/customer-cart-section";
+import { CustomerCheckoutSection } from "@/components/customer/customer-checkout-section";
 import { RepeatOrderForm } from "@/components/customer/repeat-order-form";
 import { CustomerMyEventsSection } from "@/components/customer/customer-my-events-section";
-import { VenueFloorPlanSection } from "@/components/venue/venue-floor-plan-section";
 import { VenueHallsSection } from "@/components/venue/venue-halls-section";
 import { ResponseCard } from "@/components/responses/response-card";
 import { ChecksPanel } from "@/components/account/checks-panel";
-import {
-  ContractorPortfolioFormSection,
-  ContractorPortfolioListSection,
-} from "@/components/contractor/contractor-portfolio-section";
+import { ContractorPortfolioFormSection } from "@/components/contractor/contractor-portfolio-section";
 import {
   ContractorCatalogFormSection,
   ContractorServicesListSection,
@@ -55,7 +51,6 @@ import { ContractorMyResponsesSection } from "@/components/contractor/contractor
 import { ProjectGanttSection } from "@/components/contractor/project-gantt-section";
 import { ContractorSettingsSection } from "@/components/contractor/contractor-settings-section";
 import { AccountContractorSection } from "@/components/contractors/account-contractor-section";
-import { ReviewCard } from "@/components/contractors/review-card";
 import { AvailableRequestCard } from "@/components/requests/available-request-card";
 import { VenueServicesSection } from "@/components/venue/venue-services-section";
 import { VenueSettingsSection } from "@/components/venue/venue-settings-section";
@@ -64,11 +59,15 @@ import { VenueBookingsSection } from "@/components/venue/venue-bookings-section"
 import { VenueBookingDetailSection } from "@/components/venue/venue-booking-detail-section";
 import { VenueEventBookingsSection } from "@/components/venue/venue-event-bookings-section";
 import { VenueProfileSection } from "@/components/venue/venue-profile-section";
-import { VenueSpacesSection } from "@/components/venue/venue-spaces-section";
 import { VenueEventDetailSection } from "@/components/venue/venue-event-detail-section";
 import { VenueEventOrdersSection } from "@/components/venue/venue-event-orders-section";
 import { PinLoginSettings } from "@/components/account/pin-login-settings";
 import { CompanyProfileSection } from "@/components/account/company-profile-section";
+import {
+  DashboardStatCard,
+  DashboardStatsGrid,
+  PaymentInvoicesLabel,
+} from "@/components/account/dashboard-stat-card";
 import { PaymentsPanel } from "@/components/finance/payments-panel";
 import { VenuePaymentsPanel } from "@/components/finance/venue-payments-panel";
 import { OrganizerPaymentsPanel } from "@/components/finance/organizer-payments-panel";
@@ -76,21 +75,27 @@ import { EventOrdersPanel } from "@/components/deals/event-orders-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import {
+  getContractorPayoutBalance,
+  isPaymentForUser,
+  isRequestVisibleToContractor,
+} from "@/lib/utils/cabinet-scope";
+import {
   findContractorForUser,
   getContractorIdForUser,
+  getVenueIdForUser,
   isDealForUser,
 } from "@/lib/utils/user-entity-map";
 import { useToast } from "@/components/ui/toast-provider";
 import { getNavForRole } from "@/constants/nav-menus";
 import { DEMO_USERS, SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
 import { getInterestRecommendationReason, getOkvedRecommendationReason, matchInterests, matchOkved } from "@/lib/utils/okved";
+import { CUSTOMER_CART_HREF } from "@/lib/utils/cart-routes";
 import { withFromParam } from "@/lib/utils/message-related-links";
-import { formatDate, formatDateTime, formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { formatDate, formatDateTime, formatPrice } from "@/lib/utils/formatters";
 import { DEAL_STATUS_LABELS, REQUEST_FORMAT_LABELS, STAGE_STATUS_LABELS } from "@/constants/statuses";
-import { SERVICE_CATEGORIES, CITIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict } from "@/constants/categories";
-import type { CompanyProfile, ContractorReview, Request, Service, UserRole } from "@/data/types";
+import type { CompanyProfile, Request, Service, UserRole } from "@/data/types";
 import {
-  AlertCircle, CheckCircle, Clock, Plus, Star,
+  AlertCircle, CheckCircle, Clock, Plus,
 } from "lucide-react";
 
 interface Props {
@@ -128,14 +133,22 @@ export function AccountPageRenderer({ role, slug }: Props) {
   const pageTitle =
     slug === "repeat-order"
       ? "Повторить заказ"
-      : slug === "profile" && role !== "venue"
+      : (slug === "profile" || slug === "legal" || slug === "cities" || slug === "production" || slug === "portfolio" || slug === "reviews") && role !== "venue"
       ? null
-      : isPortfolioFormPage || slug === "portfolio" || isCatalogFormPage || contractorServiceId || (venueEvent && role === "venue") || slug === "floor-plan" || slug === "halls"
+      : isPortfolioFormPage || slug === "portfolio" || isCatalogFormPage || contractorServiceId || (venueEvent && role === "venue") || slug === "floor-plan" || slug === "halls" || slug === "spaces"
       ? null
       : slug === "create-event" || slug === "edit-event" || slug.startsWith("events/") || slug.startsWith("orders/") || slug.startsWith("bookings/") || slug.startsWith("contractors/")
         ? null
         : isDashboard && (role === "venue" || role === "organizer")
           ? matchedNav?.label || "Дашборд"
+          : slug === "documents" && role === "customer"
+            ? "ЭДО и документооборот"
+          : slug === "cart"
+            ? "Корзина"
+          : slug === "checkout"
+            ? "Оформление заказа"
+          : slug === "gantt" && role === "contractor"
+            ? "Сводный график"
           : matchedNav?.label ?? (slug.includes("/") ? null : "Кабинет");
 
   const renderContent = () => {
@@ -152,7 +165,13 @@ export function AccountPageRenderer({ role, slug }: Props) {
   return (
     <div>
       {slug === "repeat-order" && (
-        <BackButton fallbackHref="/account/customer/completed-projects" className="mb-2" />
+        <BackButton fallbackHref="/account/customer/active-projects?tab=completed" className="mb-2" />
+      )}
+      {slug === "checkout" && (
+        <BackButton fallbackHref="/account/customer/cart" className="mb-2" />
+      )}
+      {slug === "gantt" && role === "contractor" && (
+        <BackButton fallbackHref="/account/contractor/active-projects" className="mb-2" />
       )}
       {fromMessages && slug === "bookings" && (
         <BackButton
@@ -161,195 +180,80 @@ export function AccountPageRenderer({ role, slug }: Props) {
           onClick={() => router.push("/messages")}
         />
       )}
-      {pageTitle && <h1 className="text-xl font-bold mb-4">{pageTitle}</h1>}
+      {pageTitle && (
+        <div
+          className={
+            slug === "favorites" || (role === "contractor" && slug === "active-projects")
+              ? "relative mb-[24px]"
+              : "mb-4"
+          }
+        >
+          <h1 className="text-xl font-bold">{pageTitle}</h1>
+          {role === "customer" && slug === "favorites" && (
+            <Link href={CUSTOMER_CART_HREF} className="absolute right-0 top-0">
+              <Button variant="soft-outline">
+                <ShoppingCart className="h-4 w-4" />
+                Корзина
+              </Button>
+            </Link>
+          )}
+          {role === "contractor" && slug === "active-projects" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute right-0 top-0"
+              onClick={() => router.push("/account/contractor/gantt")}
+            >
+              Сводный график
+            </Button>
+          )}
+        </div>
+      )}
       {renderContent()}
     </div>
   );
 }
 
-function PaymentInvoicesLabel({
-  direction,
-  tooltip,
-}: {
-  direction: string;
-  tooltip?: string;
-}) {
-  return (
-    <div className="mt-1">
-      <p className="text-sm text-gray-600">Неоплаченные счета</p>
-      <div className="flex items-center gap-1">
-        <p className="text-sm font-semibold text-gray-900">{direction}</p>
-        {tooltip && (
-          <Tooltip content={tooltip}>
-            <button
-              type="button"
-              className="shrink-0 text-gray-500 hover:text-gray-900"
-              aria-label="Подробнее о неоплаченных исходящих счетах"
-            >
-              <HelpCircle className="h-4 w-4" />
-            </button>
-          </Tooltip>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ContractorCitiesSection({
-  user,
-  showToast,
-}: {
-  user: CompanyProfile | null;
-  showToast: ReturnType<typeof useToast>["showToast"];
-}) {
-  const updateUser = useAuthStore((s) => s.updateUser);
-  const [district, setDistrict] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-
-  const availableCities = useMemo(
-    () => getCitiesByDistrict(district),
-    [district]
-  );
-
-  const handleAddCity = () => {
-    if (!selectedCity || !user) return;
-    if (user.cities.includes(selectedCity)) {
-      showToast("Город уже добавлен", "info");
-      return;
-    }
-    updateUser({ cities: [...user.cities, selectedCity] });
-    showToast("Город добавлен");
-    setSelectedCity("");
-  };
-
-  return (
-    <div className="max-w-lg space-y-4">
-      <p className="text-sm mb-1">Города оказания услуг:</p>
-      <div className="flex flex-wrap gap-2">
-        {user?.cities.map((city) => (
-          <Badge key={city}>{city}</Badge>
-        ))}
-      </div>
-
-      <Select
-        label="Федеральный округ"
-        value={district}
-        onChange={(e) => {
-          setDistrict(e.target.value);
-          setSelectedCity("");
-        }}
-        options={[
-          { value: "", label: "Все федеральные округа" },
-          ...FEDERAL_DISTRICT_OPTIONS.map((item) => ({ value: item, label: item })),
-        ]}
-      />
-
-      <Select
-        label="Добавить город"
-        value={selectedCity}
-        onChange={(e) => setSelectedCity(e.target.value)}
-        options={[
-          { value: "", label: availableCities.length ? "Выберите город" : "Города не найдены" },
-          ...availableCities.map((city) => ({ value: city, label: city })),
-        ]}
-      />
-
-      <Button size="sm" onClick={handleAddCity} disabled={!selectedCity}>
-        Добавить
-      </Button>
-    </div>
-  );
-}
-
 function DashboardWidgets({ role }: { role: string }) {
-  const { requests, deals, notifications, payments } = usePrototypeStore();
+  const { requests, deals, payments } = usePrototypeStore();
   const user = useAuthStore((s) => s.user);
   const activeDeals = deals.filter(
     (d) => d.status !== "completed" && isDealForUser(d, user)
   );
-  const unreadNotif = notifications.filter((n) => !n.read).length;
-  const pendingIncoming = payments.filter(
+  const myPayments = payments.filter((p) => isPaymentForUser(p, user, deals));
+  const pendingIncoming = myPayments.filter(
     (p) => p.status === "pending" && (p.direction === "incoming" || !p.direction)
   ).length;
-  const pendingOutgoing = payments.filter(
+  const pendingOutgoing = myPayments.filter(
     (p) => p.status === "pending" && p.direction === "outgoing"
   ).length;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-      <Card><CardTitle className="text-2xl">{requests.filter((r) => r.status ==="published").length}</CardTitle><CardDescription>{role ==="contractor" ?"Активные заказы" :"Активные заявки"}</CardDescription></Card>
-      <Card><CardTitle className="text-2xl">{activeDeals.length}</CardTitle><CardDescription>Активные проекты</CardDescription></Card>
-      <Card><CardTitle className="text-2xl">{unreadNotif}</CardTitle><CardDescription>Новые уведомления</CardDescription></Card>
-      <Card>
-        <CardTitle className="text-2xl">{pendingOutgoing}</CardTitle>
-        <PaymentInvoicesLabel
-          direction="исходящие"
-          tooltip="Например, если в качестве заказчика выступает агентство и оно выставляет счёт конечному заказчику"
+    <div className="mb-6">
+      <DashboardStatsGrid>
+        <DashboardStatCard
+          value={
+            role === "contractor"
+              ? requests.filter((r) => isRequestVisibleToContractor(r, getContractorIdForUser(user))).length
+              : requests.filter((r) => r.status === "published" && r.customerId === user?.id).length
+          }
+          label={role === "contractor" ? "Активные заказы" : "Активные заявки"}
         />
-      </Card>
-      <Card>
-        <CardTitle className="text-2xl">{pendingIncoming}</CardTitle>
-        <PaymentInvoicesLabel direction="входящие" />
-      </Card>
-    </div>
-  );
-}
-
-function CustomerReviewsSection({
-  deals,
-  showToast,
-}: {
-  deals: ReturnType<typeof usePrototypeStore.getState>["deals"];
-  showToast: ReturnType<typeof useToast>["showToast"];
-}) {
-  const [submitted, setSubmitted] = useState(false);
-
-  return (
-    <div>
-      <p className="text-sm mb-4">Оставьте отзыв о завершённой сделке:</p>
-      <Select
-        label="Сделка"
-        options={deals
-          .filter((deal) => deal.status === "completed")
-          .map((deal) => ({ value: deal.id, label: deal.title }))}
-      />
-      <div className="flex gap-1 my-3">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" className="border border-gray-300 p-2 hover:border-gray-900">
-            <Star className="h-4 w-4" />
-          </button>
-        ))}
-      </div>
-      <Textarea label="Отзыв" />
-
-      <div className="mt-4 flex flex-col lg:flex-row lg:items-start gap-6">
-        <div className="flex flex-col items-start gap-3">
-          <FileUpload
-            label="Прикрепить фото и видео"
-            accept="image/*,video/*"
-            onUpload={() => showToast("Файл добавлен", "success")}
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" onClick={() => setSubmitted(true)}>
-              Отправить
-            </Button>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => showToast("Рекомендация отправлена исполнителю", "success")}
-            >
-              Порекомендовать исполнителя
-            </Button>
-          </div>
-        </div>
-
-        {submitted && (
-          <p className="text-sm text-gray-700 max-w-md">
-            Отзыв отправлен на модерацию, будет опубликован при успешной модерации. Срок
-            публикации может занимать до 7 дней.
-          </p>
-        )}
-      </div>
+        <DashboardStatCard value={activeDeals.length} label="Активные проекты" />
+        <DashboardStatCard
+          value={pendingOutgoing}
+          label={
+            <PaymentInvoicesLabel
+              direction="исходящие"
+              tooltip="Например, если в качестве заказчика выступает агентство и оно выставляет счёт конечному заказчику"
+            />
+          }
+        />
+        <DashboardStatCard
+          value={pendingIncoming}
+          label={<PaymentInvoicesLabel direction="входящие" />}
+        />
+      </DashboardStatsGrid>
     </div>
   );
 }
@@ -363,7 +267,22 @@ function CustomerPages({ slug }: { slug: string }) {
   const searchParams = useSearchParams();
   const repeatDealId = searchParams.get("dealId");
   const [edoModal, setEdoModal] = useState(showEdoPrompt);
-  const [edoTab, setEdoTab] = useState("connection");
+  const [edoTab, setEdoTab] = useState(() =>
+    slug === "documents"
+      ? "documents"
+      : slug === "reminders"
+        ? "reminders"
+        : slug === "closing-docs"
+          ? "closing"
+          : "connection"
+  );
+
+  useEffect(() => {
+    if (slug === "documents") setEdoTab("documents");
+    else if (slug === "reminders") setEdoTab("reminders");
+    else if (slug === "closing-docs") setEdoTab("closing");
+    else if (slug === "edo") setEdoTab("connection");
+  }, [slug]);
 
   const okvedRecommendedEvents = useMemo(() => {
     if (!user) return [];
@@ -384,9 +303,22 @@ function CustomerPages({ slug }: { slug: string }) {
     return (
       <>
         {edoModal && user?.edoStatus === "not_connected" && (
-          <Modal open title="Подключите ЭДО" onClose={() => { setEdoModal(false); setShowEdoPrompt(false); }}
-            footer={<><Button variant="outline" onClick={() => { setEdoModal(false); setShowEdoPrompt(false); }}>Пропустить</Button><Link href="/account/customer/edo"><Button onClick={() => setEdoModal(false)}>Подключить</Button></Link></>}>
-            <p className="text-sm">Для подписания документов рекомендуем подключить электронный документооборот.</p>
+          <Modal
+            open
+            title="Подключите ЭДО"
+            onClose={() => {
+              setEdoModal(false);
+              setShowEdoPrompt(false);
+            }}
+            footer={
+              <Link href="/account/customer/edo">
+                <Button onClick={() => setEdoModal(false)}>Подключить</Button>
+              </Link>
+            }
+          >
+            <p className="text-sm">
+              Для подписания документов рекомендуем подключить электронный документооборот.
+            </p>
           </Modal>
         )}
         <DashboardWidgets role="customer" />
@@ -423,7 +355,13 @@ function CustomerPages({ slug }: { slug: string }) {
         </div>
         <Card className="mt-4">
           <CardTitle>Сделки, требующие действия</CardTitle>
-          {deals.filter((d) => ["negotiation", "stage_review", "awaiting_payment"].includes(d.status)).map((d) => (
+          {deals
+            .filter(
+              (d) =>
+                ["negotiation", "stage_review", "awaiting_payment"].includes(d.status) &&
+                isDealForUser(d, user)
+            )
+            .map((d) => (
             <Link key={d.id} href={`/deals/${d.id}`} className="flex justify-between py-2 border-b border-gray-200 text-sm">
               <span>{d.title}</span>
               <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
@@ -440,43 +378,29 @@ function CustomerPages({ slug }: { slug: string }) {
   }
 
   if (slug === "legal") {
-    return (
-      <div className="space-y-4 max-w-lg">
-        <Input label="ИНН" defaultValue={user?.inn} />
-        <Input label="КПП" defaultValue="770101001" />
-        <Input label="ОГРН (для ООО)" defaultValue={user?.ogrn} />
-        <Input label="ОГРНИП (для ИП)" defaultValue="" placeholder="Заполняется для индивидуальных предпринимателей" />
-        <Input label="Юридический адрес" defaultValue={user?.address} />
-        <Input label="Фактический адрес" defaultValue={user?.actualAddress ?? ""} />
-        <Input label="Сайт" defaultValue={user?.website ?? ""} />
-        <Input label="Телефон компании" defaultValue={user?.phone ?? ""} />
-        <Input label="Руководитель" defaultValue={user?.director} />
-        <Input label="Расчётный счёт" defaultValue="40702810XXXXXXXXXXXX" />
-        <Input label="БИК" defaultValue="044525225" />
-        <Input label="Банк" defaultValue="ПАО «Вымышленный Банк»" />
-        <Input label="Корреспондентский счёт банка" defaultValue="30101810XXXXXXXXXXXX" />
-        <Button onClick={() => showToast("Данные сохранены")}>Сохранить</Button>
-      </div>
-    );
+    return <CompanyProfileSection showToast={showToast} initialTab="company" />;
   }
 
-  if (slug === "edo" || slug === "reminders" || slug === "closing-docs") {
-    const currentTab =
-      slug === "reminders" ? "reminders" : slug === "closing-docs" ? "closing" : edoTab;
+  if (slug === "edo" || slug === "reminders" || slug === "closing-docs" || slug === "documents") {
     const pendingDocs = documents.filter((d) => d.status === "sent");
+    const isDocumentsTab = edoTab === "documents";
     return (
-      <div className="max-w-2xl space-y-4">
+      <div className="space-y-4 w-full">
         <Tabs
           tabs={[
             { id: "connection", label: "Подключение ЭДО" },
+            { id: "documents", label: "Документы" },
             { id: "reminders", label: `Напоминания${pendingDocs.length ? ` (${pendingDocs.length})` : ""}` },
             { id: "closing", label: "Запрос закрывающих" },
           ]}
-          activeTab={currentTab}
+          activeTab={edoTab}
           onChange={setEdoTab}
+          className="w-full"
         />
 
-        {currentTab === "connection" && (
+        <div className={isDocumentsTab ? undefined : "max-w-2xl"}>
+
+        {edoTab === "connection" && (
           <div className="space-y-4 max-w-lg">
             {user?.edoStatus === "connected" ? (
               <div className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4" /> ЭДО подключено</div>
@@ -507,7 +431,9 @@ function CustomerPages({ slug }: { slug: string }) {
           </div>
         )}
 
-        {currentTab === "reminders" && (
+        {edoTab === "documents" && <DocumentsPanel hideEdoPrompt />}
+
+        {edoTab === "reminders" && (
           <Card>
             <p className="text-sm text-gray-600 mb-4">Напоминания о входящих документах и сроках.</p>
             {pendingDocs.map((d) => (
@@ -520,7 +446,7 @@ function CustomerPages({ slug }: { slug: string }) {
           </Card>
         )}
 
-        {currentTab === "closing" && (
+        {edoTab === "closing" && (
           <div>
             <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
             <div className="flex flex-col gap-3">
@@ -530,6 +456,7 @@ function CustomerPages({ slug }: { slug: string }) {
             </div>
           </div>
         )}
+        </div>
       </div>
     );
   }
@@ -540,6 +467,10 @@ function CustomerPages({ slug }: { slug: string }) {
 
   if (slug === "cart") {
     return <CustomerCartSection />;
+  }
+
+  if (slug === "checkout") {
+    return <CustomerCheckoutSection cartHref="/account/customer/cart" />;
   }
 
   if (slug === "responses") {
@@ -630,51 +561,18 @@ function CustomerPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "active-projects") {
-    const active = deals.filter((d) => d.customerId === user?.id && d.status !== "completed");
+  if (slug === "active-projects" || slug === "completed-projects") {
+    const projectTab =
+      slug === "completed-projects" || searchParams.get("tab") === "completed"
+        ? "completed"
+        : "active";
+    const customerDeals = deals.filter((deal) => deal.customerId === user?.id);
     return (
-      <div className="flex flex-col gap-4">
-        {active.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`} className="block">
-            <Card hoverable>
-              <div className="flex justify-between">
-                <CardTitle>{d.title}</CardTitle>
-                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
-              </div>
-              <CardDescription>{d.contractorName} · {formatPrice(d.totalPrice)}</CardDescription>
-            </Card>
-          </Link>
-        ))}
-        {active.length === 0 && <EmptyState title="Нет активных проектов" />}
-      </div>
-    );
-  }
-
-  if (slug === "completed-projects") {
-    const completed = deals.filter((d) => d.customerId === user?.id && d.status === "completed");
-    if (completed.length === 0) {
-      return <EmptyState title="Нет завершённых проектов" description="Здесь появятся проекты после завершения сделок" />;
-    }
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {completed.map((d) => (
-          <Card key={d.id} borderHover className="flex h-full flex-col">
-            <Link href={`/deals/${d.id}`} className="flex-1 block">
-              <CardTitle>{d.title}</CardTitle>
-              <CardDescription className="mt-2">
-                {d.number} · {d.contractorName} · {formatPrice(d.totalPrice)}
-              </CardDescription>
-            </Link>
-            <Button
-              variant="outline"
-              className="mt-4 w-full"
-              onClick={() => router.push(`/account/customer/repeat-order?dealId=${d.id}`)}
-            >
-              Повторить заказ
-            </Button>
-          </Card>
-        ))}
-      </div>
+      <CustomerProjectsSection
+        key={projectTab}
+        deals={customerDeals}
+        initialTab={projectTab}
+      />
     );
   }
 
@@ -689,7 +587,7 @@ function CustomerPages({ slug }: { slug: string }) {
             title="Заказ не найден"
             description="Выберите завершённый проект для повторения"
             actionLabel="К завершённым проектам"
-            onAction={() => router.push("/account/customer/completed-projects")}
+            onAction={() => router.push("/account/customer/active-projects?tab=completed")}
           />
         );
       }
@@ -703,7 +601,7 @@ function CustomerPages({ slug }: { slug: string }) {
           deal={deal}
           relatedRequest={relatedRequest}
           onCreated={(requestId) => router.push(`/requests/${requestId}`)}
-          onCancel={() => router.push("/account/customer/completed-projects")}
+          onCancel={() => router.push("/account/customer/active-projects?tab=completed")}
         />
       );
     }
@@ -746,11 +644,6 @@ function CustomerPages({ slug }: { slug: string }) {
   }
 
   if (slug === "payments") return <PaymentsPanel />;
-  if (slug === "documents") return <DocumentsPanel />;
-
-  if (slug === "reviews") {
-    return <CustomerReviewsSection deals={deals} showToast={showToast} />;
-  }
 
   if (slug === "my-events") {
     return <CustomerMyEventsSection customerId={user?.id ?? "user-customer"} />;
@@ -778,10 +671,10 @@ function CustomerPages({ slug }: { slug: string }) {
 
 function ContractorPages({ slug }: { slug: string }) {
   const user = useAuthStore((s) => s.user);
-  const { requests, deals, responses, services, addService, updateService, removeService, getContractorCatalogs, removeServiceCatalog } = usePrototypeStore();
+  const { requests, deals, responses, services, payments, addService, updateService, removeService, getContractorCatalogs, removeServiceCatalog } = usePrototypeStore();
   const { showToast } = useToast();
   const router = useRouter();
-  const [reviewModal, setReviewModal] = useState<ContractorReview | null>(null);
+  const searchParams = useSearchParams();
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [serviceForm, setServiceForm] = useState<ServiceFormState>(createEmptyServiceForm);
@@ -852,7 +745,10 @@ function ContractorPages({ slug }: { slug: string }) {
               </Link>
             </div>
             <div className="space-y-2">
-              {requests.filter((r) => r.status === "published").slice(0, 3).map((request) => {
+              {requests
+                .filter((r) => isRequestVisibleToContractor(r, getContractorIdForUser(user)))
+                .slice(0, 3)
+                .map((request) => {
                 const customerName = request.customerName ?? DEMO_USERS.customer.name;
                 const responseDeadline = request.responseDeadlineAt
                   ? formatDateTime(request.responseDeadlineAt)
@@ -878,7 +774,9 @@ function ContractorPages({ slug }: { slug: string }) {
           </Card>
           <Card>
             <CardTitle>Доступно к выплате</CardTitle>
-            <p className="text-2xl font-bold mt-2">{formatPrice(185000)}</p>
+            <p className="text-2xl font-bold mt-2">
+              {formatPrice(getContractorPayoutBalance(payments, deals, user))}
+            </p>
           </Card>
         </div>
         <ContractorDashboardSection user={user} />
@@ -886,16 +784,18 @@ function ContractorPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "profile") {
-    return <CompanyProfileSection showToast={showToast} />;
-  }
-
-  if (slug === "cities") {
-    return <ContractorCitiesSection user={user} showToast={showToast} />;
-  }
-
-  if (slug === "production") {
-    return <ContractorProductionSection user={user} showToast={showToast} />;
+  if (
+    slug === "profile" ||
+    slug === "cities" ||
+    slug === "production" ||
+    slug === "portfolio" ||
+    slug === "reviews"
+  ) {
+    const profileTab =
+      slug === "cities" || slug === "production" || slug === "portfolio" || slug === "reviews"
+        ? slug
+        : undefined;
+    return <CompanyProfileSection showToast={showToast} initialTab={profileTab} />;
   }
 
   if (slug.startsWith("services/catalog/")) {
@@ -1004,13 +904,10 @@ function ContractorPages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "portfolio") {
-    const contractorId = getContractorIdForUser(user) ?? "ctr-1";
-    return <ContractorPortfolioListSection contractorId={contractorId} />;
-  }
-
   if (slug === "available-requests") {
-    const available = requests.filter((r) => r.status === "published");
+    const available = requests.filter((r) =>
+      isRequestVisibleToContractor(r, getContractorIdForUser(user))
+    );
 
     if (available.length === 0) {
       return (
@@ -1048,40 +945,25 @@ function ContractorPages({ slug }: { slug: string }) {
   }
 
   if (slug === "active-projects" || slug === "completed-projects") {
-    const isCompleted = slug === "completed-projects";
+    const projectTab =
+      slug === "completed-projects" || searchParams.get("tab") === "completed"
+        ? "completed"
+        : "active";
     const contractorId = getContractorIdForUser(user);
-    const filtered = deals.filter(
-      (d) =>
-        ((contractorId !== null && d.contractorId === contractorId) ||
-          d.contractorName === user?.name) &&
-        (isCompleted ? d.status === "completed" : d.status !== "completed")
+    const contractorDeals = deals.filter(
+      (deal) =>
+        (contractorId !== null && deal.contractorId === contractorId) ||
+        deal.contractorName === user?.name,
     );
-    if (filtered.length === 0) {
-      return (
-        <EmptyState
-          title={isCompleted ? "Завершённых проектов пока нет" : "Активных проектов пока нет"}
-          description={isCompleted ? "Здесь появятся проекты после завершения сделок" : "Откликайтесь на заявки, чтобы начать проекты"}
-          actionLabel={isCompleted ? "Активные проекты" : "Доступные заявки"}
-          onAction={() => router.push(isCompleted ? "/account/contractor/active-projects" : "/account/contractor/available-requests")}
-        />
-      );
-    }
     return (
-      <div className="flex flex-col gap-4">
-        {filtered.map((d) => (
-          <Link key={d.id} href={`/deals/${d.id}`} className="block">
-            <Card hoverable>
-              <div className="flex justify-between items-start gap-3 flex-wrap">
-                <div>
-                  <CardTitle>{d.title}</CardTitle>
-                  <CardDescription>{d.number} · {formatPrice(d.totalPrice)}</CardDescription>
-                </div>
-                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <CustomerProjectsSection
+        key={projectTab}
+        deals={contractorDeals}
+        initialTab={projectTab}
+        basePath="/account/contractor/active-projects"
+        partnerName={(deal) => deal.customerName}
+        showRepeatOrder={false}
+      />
     );
   }
 
@@ -1103,73 +985,6 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "payouts") return <PaymentsPanel defaultTab="payouts" />;
   if (slug === "documents") return <DocumentsPanel />;
-
-  if (slug === "reviews") {
-    const contractor = findContractorForUser(user);
-    const reviews = contractor?.reviews ?? [];
-    return (
-      <div className="space-y-4">
-        <Card>
-          <div className="flex items-baseline gap-3">
-            <p className="text-3xl font-bold flex items-center gap-1">
-              <Star className="h-6 w-6" /> {user?.rating ?? contractor?.rating}
-            </p>
-            <p className="text-sm text-gray-600">{user?.reviewCount ?? contractor?.reviewCount} отзывов</p>
-          </div>
-        </Card>
-
-        {reviews.length === 0 ? (
-          <EmptyState title="Отзывов пока нет" description="Отзывы появятся после завершённых сделок" />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {reviews.map((rv) => (
-              <ReviewCard key={rv.id} review={rv} onClick={() => setReviewModal(rv)} />
-            ))}
-          </div>
-        )}
-
-        <Modal
-          open={!!reviewModal}
-          onClose={() => setReviewModal(null)}
-          title={reviewModal?.author ?? "Отзыв"}
-          footer={<Button variant="outline" onClick={() => setReviewModal(null)}>Закрыть</Button>}
-        >
-          {reviewModal && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-sm">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${i < reviewModal.rating ? "fill-gray-900 text-gray-900" : "text-gray-300"}`}
-                    />
-                  ))}
-                  <span className="ml-1 font-medium">{reviewModal.rating}.0</span>
-                </div>
-                <span className="text-xs text-gray-500">{formatShortDate(reviewModal.date)}</span>
-              </div>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{reviewModal.text}</p>
-              {(reviewModal.photos?.length ?? 0) > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {reviewModal.photos?.map((photo, index) => (
-                    <div
-                      key={`${reviewModal.id}-modal-photo-${index}`}
-                      className="aspect-[4/3] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-2 text-center text-xs text-gray-500"
-                    >
-                      {photo}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {(reviewModal.videos?.length ?? 0) > 0 && (
-                <p className="text-xs text-gray-600">Видео: {reviewModal.videos?.join(", ")}</p>
-              )}
-            </div>
-          )}
-        </Modal>
-      </div>
-    );
-  }
 
   if (slug === "settings") {
     const contractorId = getContractorIdForUser(user) ?? "ctr-1";
@@ -1194,43 +1009,43 @@ function ContractorPages({ slug }: { slug: string }) {
 
 function VenuePages({ slug }: { slug: string }) {
   const { showToast } = useToast();
+  const user = useAuthStore((s) => s.user);
+  const venueId = getVenueIdForUser(user);
 
   if (slug === "" || slug === "dashboard") {
-    return <VenueDashboardSection />;
+    return <VenueDashboardSection venueId={venueId} />;
   }
 
   if (slug === "profile") {
-    return <VenueProfileSection showToast={showToast} />;
+    return <VenueProfileSection venueId={venueId} showToast={showToast} />;
   }
 
-  if (slug === "halls") {
-    return <VenueHallsSection showToast={showToast} />;
-  }
-
-  if (slug === "spaces") {
-    return <VenueSpacesSection showToast={showToast} />;
-  }
-
-  if (slug === "floor-plan") {
-    return <VenueFloorPlanSection />;
+  if (slug === "halls" || slug === "spaces" || slug === "floor-plan") {
+    return (
+      <VenueHallsSection
+        venueId={venueId}
+        showToast={showToast}
+        initialHallTab={slug === "floor-plan" ? "plan" : slug === "spaces" ? "sale" : "card"}
+      />
+    );
   }
 
   if (slug.startsWith("events/")) {
     const eventId = slug.split("/")[1];
-    return <VenueEventDetailSection eventId={eventId} showToast={showToast} />;
+    return <VenueEventDetailSection venueId={venueId} eventId={eventId} showToast={showToast} />;
   }
 
   if (slug === "events") {
-    return <VenueEventsSection />;
+    return <VenueEventsSection venueId={venueId} />;
   }
 
   if (slug === "venue-services") {
-    return <VenueServicesSection showToast={showToast} />;
+    return <VenueServicesSection venueId={venueId} showToast={showToast} />;
   }
 
   if (slug.startsWith("bookings/event/")) {
     const eventId = slug.split("/")[2];
-    return <VenueEventBookingsSection eventId={eventId} />;
+    return <VenueEventBookingsSection eventId={eventId} venueId={venueId} />;
   }
 
   if (slug.startsWith("bookings/")) {
@@ -1238,6 +1053,7 @@ function VenuePages({ slug }: { slug: string }) {
     return (
       <VenueBookingDetailSection
         bookingId={bookingId}
+        venueId={venueId}
         role="venue"
         showToast={showToast}
       />
@@ -1245,18 +1061,18 @@ function VenuePages({ slug }: { slug: string }) {
   }
 
   if (slug === "bookings") {
-    return <VenueBookingsSection />;
+    return <VenueBookingsSection venueId={venueId} />;
   }
 
   if (slug.startsWith("orders/")) {
     const eventId = slug.split("/")[1];
-    return <VenueEventOrdersSection eventId={eventId} />;
+    return <VenueEventOrdersSection eventId={eventId} venueId={venueId} />;
   }
 
   if (slug === "orders") {
     return (
       <EventOrdersPanel
-        venueId="venue-1"
+        venueId={venueId}
         showVenueNote
         showDirectionFilter
         title="Заказы площадки"
@@ -1265,12 +1081,12 @@ function VenuePages({ slug }: { slug: string }) {
     );
   }
 
-  if (slug === "payments") return <VenuePaymentsPanel />;
+  if (slug === "payments") return <VenuePaymentsPanel venueId={venueId} />;
   if (slug === "documents") return <DocumentsPanel />;
   if (slug === "notifications") return <Link href="/notifications"><Button>Уведомления</Button></Link>;
 
   if (slug === "settings") {
-    return <VenueSettingsSection showToast={showToast} />;
+    return <VenueSettingsSection venueId={venueId} showToast={showToast} />;
   }
 
   return <EmptyState title="Раздел не найден" />;

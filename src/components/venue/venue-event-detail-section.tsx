@@ -163,11 +163,6 @@ export function VenueEventDetailSection({
                 Заказы · {eventOrdersCount}
               </Button>
             </Link>
-            <Link href={`/events/${event.id}`}>
-              <Button size="sm" variant="outline">
-                Публичная страница
-              </Button>
-            </Link>
           </div>
         </div>
 
@@ -232,11 +227,9 @@ export function VenueEventDetailSection({
                   className="block"
                 >
                   <Card hoverable className="cabinet-card">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <Badge variant="outline">{periodLabel}</Badge>
-                      <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
-                        {BOOKING_STATUS_LABELS[booking.status]}
-                      </Badge>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <Badge variant="muted">{periodLabel}</Badge>
+                      <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
                     </div>
                     <CardTitle className="text-sm">{hall?.name ??"Зал"}</CardTitle>
                     <CardDescription className="mt-2 space-y-1">
@@ -284,7 +277,7 @@ export function VenueEventDetailSection({
                   <p className="text-sm text-gray-600">{service.price}</p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {service.audiences.map((audience) => (
-                      <Badge key={audience} variant="outline">
+                      <Badge key={audience} variant="muted">
                         {getAudienceLabel(audience)}
                       </Badge>
                     ))}

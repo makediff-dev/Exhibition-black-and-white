@@ -17,13 +17,12 @@ import {
   SEED_HALL_GRID_FEATURES,
   SEED_HALLS,
 } from "@/data/mocks/seed";
-import type { CompanyProfile } from "@/data/types";
-import { VenueCabinetHeader } from "@/components/venue/venue-cabinet-header";
-import { useAuthStore } from "@/lib/store";
 import { formatPrice } from "@/lib/utils/formatters";
 
 interface Props {
   venueId?: string;
+  hallId?: string;
+  embedded?: boolean;
 }
 
 const PLOT_STATUS_LABELS = {
@@ -37,17 +36,14 @@ function FloorPlanPageHeader({
   onBack,
   subtitle,
   description,
-  user,
 }: {
   onBack?: () => void;
   subtitle?: string;
   description?: string;
-  user?: CompanyProfile | null;
 }) {
   return (
     <div className="space-y-4 mb-2">
       {onBack ? <BackButton onClick={onBack} className="mb-0" /> : null}
-      {user ? <VenueCabinetHeader user={user} /> : null}
       <div>
         <h1 className="text-xl font-bold">Схема размещения</h1>
         {subtitle ? <h2 className="text-lg font-semibold mt-2">{subtitle}</h2> : null}
@@ -57,8 +53,11 @@ function FloorPlanPageHeader({
   );
 }
 
-export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
-  const user = useAuthStore((state) => state.user);
+export function VenueFloorPlanSection({
+  venueId = "venue-1",
+  hallId,
+  embedded = false,
+}: Props) {
   const halls = useMemo(
     () => SEED_HALLS.filter((hall) => hall.venueId === venueId),
     [venueId]
@@ -69,7 +68,7 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
     [venueId]
   );
 
-  const [selectedHallId, setSelectedHallId] = useState<string | null>(null);
+  const [selectedHallId, setSelectedHallId] = useState<string | null>(hallId ?? null);
   const [selectedPlotId, setSelectedPlotId] = useState<string | null>(null);
   const [activeEventId, setActiveEventId] = useState(events[0]?.id ?? "evt-1");
 
@@ -129,7 +128,6 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
       <div className="space-y-6 w-full">
         <FloorPlanPageHeader
           description="Выберите зал, чтобы открыть схему размещения. Организатор нарезает площадь на участки — нажмите на участок, чтобы увидеть детальную миллиметровку и заполнение."
-          user={user}
         />
 
         <div className="space-y-3">
@@ -168,13 +166,22 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
     const detailConfig = getPlotDetailConfig(selectedPlot);
 
     return (
-      <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full">
+      {embedded ? (
+        <div>
+          <BackButton onClick={() => setSelectedPlotId(null)} className="mb-0" />
+          <h2 className="text-lg font-semibold mt-4">Участок {selectedPlot.label}</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Детальная миллиметровка участка · {selectedPlot.width}×{selectedPlot.height} м
+          </p>
+        </div>
+      ) : (
         <FloorPlanPageHeader
           onBack={() => setSelectedPlotId(null)}
           subtitle={`Участок ${selectedPlot.label}`}
           description={`Детальная миллиметровка участка · ${selectedPlot.width}×${selectedPlot.height} м`}
-          user={user}
         />
+      )}
 
         <div className="grid md:grid-cols-4 gap-3">
           <Card>
@@ -235,15 +242,16 @@ export function VenueFloorPlanSection({ venueId = "venue-1" }: Props) {
 
   return (
     <div className="space-y-6 w-full">
-      <FloorPlanPageHeader
-        onBack={() => {
-          setSelectedHallId(null);
-          setSelectedPlotId(null);
-        }}
-        subtitle={activeHall?.name}
-        description="Общий план зала — нажмите на участок, чтобы открыть детальную схему"
-        user={user}
-      />
+      {embedded ? null : (
+        <FloorPlanPageHeader
+          onBack={() => {
+            setSelectedHallId(null);
+            setSelectedPlotId(null);
+          }}
+          subtitle={activeHall?.name}
+          description="Общий план зала — нажмите на участок, чтобы открыть детальную схему"
+        />
+      )}
 
       <Select
         label="Мероприятие"

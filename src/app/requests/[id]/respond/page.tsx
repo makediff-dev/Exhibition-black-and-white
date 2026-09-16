@@ -17,7 +17,8 @@ import type { EstimateSection, Response } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { formatPrice } from "@/lib/utils/formatters";
-import { findContractorForUser, isResponseForUser } from "@/lib/utils/user-entity-map";
+import { getContractorIdForUser, findContractorForUser, isResponseForUser } from "@/lib/utils/user-entity-map";
+import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 
 const RESPONSE_STATUS_LABELS: Record<string, string> = {
   pending: "На рассмотрении",
@@ -57,7 +58,7 @@ export default function RespondPage() {
     (r) => r.requestId === id && isResponseForUser(r, user)
   );
 
-  if (request.status !== "published" && !existing) {
+  if (!existing && !isRequestVisibleToContractor(request, getContractorIdForUser(user))) {
     return (
       <AppShell
         title="Отклик недоступен"

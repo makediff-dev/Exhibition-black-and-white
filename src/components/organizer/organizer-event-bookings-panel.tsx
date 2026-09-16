@@ -121,14 +121,10 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
             return (
               <Card key={booking.id} className="cabinet-card h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <Badge
-                    variant={booking.status === "pending" ? "solid" : "outline"}
-                  >
-                    {STATUS_LABELS[booking.status]}
-                  </Badge>
                   {booking.periodType && (
-                    <Badge variant="outline">{PERIOD_LABELS[booking.periodType]}</Badge>
+                    <Badge variant="muted">{PERIOD_LABELS[booking.periodType]}</Badge>
                   )}
+                  <Badge variant="solid">{STATUS_LABELS[booking.status]}</Badge>
                 </div>
 
                 <CardTitle className="text-base mb-2">

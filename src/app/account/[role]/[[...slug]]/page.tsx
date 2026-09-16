@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { AccountPageRenderer } from "@/components/account/account-page-renderer";
-import type { AccountRole } from "@/constants/account-role-themes";
+import { isAllowedCabinetPath } from "@/lib/utils/cabinet-scope";
 
 const VALID_ROLES: AccountRole[] = ["customer", "contractor", "venue", "organizer"];
 
@@ -44,8 +44,14 @@ export default function AccountPage({
 
   useEffect(() => {
     if (user && resolved && user.role !== resolved.role) {
-      const slugPath = resolved.slug ? `/${resolved.slug}` : "";
-      router.replace(`/account/${user.role}${slugPath}`);
+      router.replace(`/account/${user.role}`);
+    }
+  }, [user, resolved, router]);
+
+  useEffect(() => {
+    if (!user || !resolved || user.role !== resolved.role) return;
+    if (!isAllowedCabinetPath(user.role, resolved.slug)) {
+      router.replace(`/account/${user.role}`);
     }
   }, [user, resolved, router]);
 

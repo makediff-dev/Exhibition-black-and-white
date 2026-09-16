@@ -15,7 +15,7 @@ export function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
   const accountTheme = useAccountTheme();
 
   return (
-    <div className={cn("flex border-b border-gray-300 overflow-x-auto", className)}>
+    <div className={cn("flex w-full border-b border-gray-300 overflow-x-auto", className)}>
       {tabs.map((tab) => (
         <button
           key={tab.id}

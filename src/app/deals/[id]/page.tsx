@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { ConfirmModal } from "@/components/ui/modal";
+import { ProjectGanttSection } from "@/components/contractor/project-gantt-section";
 import { DealReviewTab } from "@/components/deals/deal-review-tab";
 import { EventOrdersPanel } from "@/components/deals/event-orders-panel";
 import { Tabs } from "@/components/ui/tabs";
@@ -32,6 +33,7 @@ import {
 import type { Deal, DealStage, DealStatus } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
@@ -55,7 +57,16 @@ const SAFE_DEAL_STEPS = [
   { key: "completed", label: "Завершено" },
 ];
 
-type DealTab = "overview" | "stages" | "documents" | "payments" | "files" | "history" | "review" | "recommend";
+type DealTab =
+  | "overview"
+  | "stages"
+  | "calendar"
+  | "documents"
+  | "payments"
+  | "files"
+  | "history"
+  | "review"
+  | "recommend";
 
 interface DealAction {
   id: string;
@@ -257,8 +268,10 @@ export default function DealPage() {
   const dealPayments = payments.filter((p) => p.dealId === id);
   const messageThread = messages.find((m) => m.relatedId === id);
 
-  const isCustomer = user?.id === deal?.customerId || user?.role === "customer";
-  const isContractor = user?.role === "contractor";
+  const isCustomer = Boolean(user && deal && user.id === deal.customerId);
+  const isContractor = Boolean(
+    user && deal && getContractorIdForUser(user) === deal.contractorId
+  );
   const isVenue = user?.role === "venue";
 
   const actions = useMemo(() => {
@@ -352,6 +365,7 @@ export default function DealPage() {
   const tabs: { id: DealTab; label: string }[] = [
     { id: "overview", label: "Обзор" },
     { id: "stages", label: "Этапы" },
+    { id: "calendar", label: "Календарь" },
     { id: "documents", label: "Документы" },
     { id: "payments", label: "Оплаты" },
     { id: "files", label: "Файлы" },
@@ -620,6 +634,8 @@ export default function DealPage() {
           )}
         </div>
       )}
+
+      {activeTab === "calendar" && <ProjectGanttSection deals={[deal]} compact />}
 
       {activeTab === "stages" && (
         <div className="space-y-4">

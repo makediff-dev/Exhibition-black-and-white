@@ -227,7 +227,7 @@ export const SEED_SERVICES: Service[] = [
 ];
 
 export const SEED_REQUESTS: Request[] = [
-  { id: "req-1", title: "Стенд 36 кв.м на Мебель-2026", format: "open_request", category: "Комплексное строительство выставочных стендов", city: "Москва", cities: ["Москва"], status: "published", budget: { type: "range", min: 400000, max: 600000 }, deadline: "2026-02-15", responseDeadlineAt: "2026-02-01T18:00:00", description: "Нужен стенд для выставки мебели", requirements: "Зона переговоров, витрины", expectedResult: "Готовый стенд к открытию", eventId: "evt-1", invitedContractorIds: [], responseCount: 3, publishedAt: "2026-01-10", customerId: "user-customer", customerName: "ООО «Вымышленная Мебель»", torSections: [{ id: "t1", title: "Общие требования", content: "Площадь 36 кв.м", required: true }], files: ["tz-draft.pdf"], history: [{ date: "2026-01-10", action: "Опубликована" }] },
+  { id: "req-1", title: "Стенд 36 кв.м на Мебель-2026", format: "open_request", category: "Комплексное строительство выставочных стендов", city: "Москва", cities: ["Москва"], status: "in_progress", budget: { type: "range", min: 400000, max: 600000 }, deadline: "2026-02-15", responseDeadlineAt: "2026-02-01T18:00:00", description: "Нужен стенд для выставки мебели", requirements: "Зона переговоров, витрины", expectedResult: "Готовый стенд к открытию", eventId: "evt-1", invitedContractorIds: [], responseCount: 2, publishedAt: "2026-01-10", customerId: "user-customer", customerName: "ООО «Вымышленная Мебель»", torSections: [{ id: "t1", title: "Общие требования", content: "Площадь 36 кв.м", required: true }], files: ["tz-draft.pdf"], history: [{ date: "2026-01-10", action: "Опубликована" }] },
   { id: "req-2", title: "Дизайн-проект для IT Forum", format: "closed_request", category: "Дизайн-проект выставочного стенда", city: "Москва", cities: ["Москва"], status: "published", budget: { type: "fixed", min: 100000 }, deadline: "2026-04-01", responseDeadlineAt: "2026-03-15T12:00:00", description: "Дизайн стенда IT-компании", requirements: "Минимализм, технологичность", expectedResult: "3D-визуализация", eventId: "evt-3", invitedContractorIds: ["ctr-1", "ctr-2"], responseCount: 2, publishedAt: "2026-01-05", customerId: "user-customer", customerName: "ООО «ТехноВижн»", torSections: [], files: [], history: [{ date: "2026-01-05", action: "Опубликована" }] },
   { id: "req-3", title: "Срочный монтаж стенда", format: "urgent", category: "Монтаж", city: "Москва", cities: ["Москва"], status: "in_progress", budget: { type: "fixed", min: 80000 }, deadline: "2026-01-20", description: "Срочный монтаж за 2 дня", requirements: "Работа в ночное время", expectedResult: "Смонтированный стенд", invitedContractorIds: [], responseCount: 1, publishedAt: "2026-01-15", customerId: "user-customer", torSections: [], files: [], history: [] },
   { id: "req-4", title: "Кейтеринг на ПродЭкспо", format: "safe_deal", category: "Кейтеринг", city: "Казань", cities: ["Казань"], status: "published", budget: { type: "hidden" }, deadline: "2026-05-30", responseDeadlineAt: "2026-05-01T23:59:00", description: "Кейтеринг для 100 человек", requirements: "Вегетарианское меню", expectedResult: "Организованный фуршет", eventId: "evt-4", invitedContractorIds: [], responseCount: 1, publishedAt: "2026-01-08", customerId: "user-customer", customerName: "ООО «ПродМаркет»", torSections: [], files: [], history: [] },
@@ -236,7 +236,7 @@ export const SEED_REQUESTS: Request[] = [
 ];
 
 export const SEED_RESPONSES: Response[] = [
-  { id: "res-1", requestId: "req-1", contractorId: "ctr-1", contractorName: "ООО «СтендПро»", price: 520000, deadline: "14 дней", terms: "Предоплата 50%", comment: "Готовы выполнить в срок", approach: "Стандартная конструкция с брендированием", status: "pending", rating: 4.8, validUntil: "2026-02-01", estimate: [{ id: "es1", title: "Конструкция", items: [{ id: "i1", name: "Стенды", quantity: 1, unit: "компл.", price: 300000, hidden: false }] }], files: ["estimate.pdf"] },
+  { id: "res-1", requestId: "req-1", contractorId: "ctr-1", contractorName: "ООО «СтендПро»", price: 520000, deadline: "14 дней", terms: "Предоплата 50%", comment: "Готовы выполнить в срок", approach: "Стандартная конструкция с брендированием", status: "accepted", rating: 4.8, validUntil: "2026-02-01", estimate: [{ id: "es1", title: "Конструкция", items: [{ id: "i1", name: "Стенды", quantity: 1, unit: "компл.", price: 300000, hidden: false }] }], files: ["estimate.pdf"] },
   { id: "res-2", requestId: "req-1", contractorId: "ctr-2", contractorName: "ООО «ДизайнСтенд»", price: 480000, deadline: "16 дней", terms: "Поэтапная оплата", comment: "Уникальный дизайн", approach: "Авторский проект", status: "pending", rating: 4.6, validUntil: "2026-02-01", estimate: [{ id: "es2", title: "Дизайн", items: [{ id: "i2", name: "Проект", quantity: 1, unit: "шт.", price: 85000, hidden: false }] }], files: [] },
   { id: "res-3", requestId: "req-2", contractorId: "ctr-2", contractorName: "ООО «ДизайнСтенд»", price: 95000, deadline: "10 дней", terms: "Фиксированная цена", comment: "", approach: "Минималистичный стиль", status: "pending", rating: 4.6, validUntil: "2026-03-15", estimate: [], files: [] },
   { id: "res-4", requestId: "req-3", contractorId: "ctr-1", contractorName: "ООО «СтендПро»", price: 85000, deadline: "2 дня", terms: "100% предоплата", comment: "Можем начать сегодня", approach: "Ночной монтаж", status: "accepted", rating: 4.8, validUntil: "2026-01-18", estimate: [], files: [] },
@@ -825,8 +825,6 @@ export const SEED_VENUE_EMPLOYEES: VenueEmployee[] = [
       "dashboard",
       "profile",
       "halls",
-      "spaces",
-      "floor-plan",
       "events",
       "venue-services",
       "bookings",
@@ -930,7 +928,6 @@ export const SEED_CUSTOMER_EMPLOYEES: CustomerEmployee[] = [
       "checks",
       "payments",
       "documents",
-      "reviews",
     ],
     pinLoginEnabled: true,
     joinedAt: "2025-04-12",

@@ -1226,6 +1226,7 @@ function ProjectListView({
 interface ProjectGanttSectionProps {
   deals: Deal[];
   onBrowseRequests?: () => void;
+  compact?: boolean;
 }
 
 function GanttZoomControls({
@@ -1257,7 +1258,11 @@ function GanttZoomControls({
   );
 }
 
-export function ProjectGanttSection({ deals, onBrowseRequests }: ProjectGanttSectionProps) {
+export function ProjectGanttSection({
+  deals,
+  onBrowseRequests,
+  compact = false,
+}: ProjectGanttSectionProps) {
   const [view, setView] = useState("gantt");
   const [calendarScale, setCalendarScale] = useState<CalendarScale>("quarter");
   const [ganttZoom, setGanttZoom] = useState<GanttZoom>("compact");
@@ -1276,17 +1281,11 @@ export function ProjectGanttSection({ deals, onBrowseRequests }: ProjectGanttSec
       <EmptyState
         title="Активных проектов пока нет"
         description="Откликайтесь на заявки, чтобы увидеть график работ"
-        actionLabel="Доступные заявки"
+        actionLabel={onBrowseRequests ? "Доступные заявки" : undefined}
         onAction={onBrowseRequests}
       />
     );
   }
-
-  const dateRange = useMemo(() => {
-    const rows = buildGanttRows(deals, projectTimelineRows);
-    const range = getTimelineRange(rows);
-    return `${formatDayHeader(range.start)} — ${formatDayHeader(range.end)}`;
-  }, [deals, projectTimelineRows]);
 
   const timelineHandlers = {
     onAddRow: (dealId: string) => setRowModalDealId(dealId),
@@ -1295,13 +1294,15 @@ export function ProjectGanttSection({ deals, onBrowseRequests }: ProjectGanttSec
 
   return (
     <div className="space-y-4 max-w-full">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-gray-600">
-            {deals.length} {deals.length === 1 ? "проект" : deals.length < 5 ? "проекта" : "проектов"}
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5">Период: {dateRange}</p>
-        </div>
+      {!compact && (
+        <p className="text-sm text-gray-600">
+          {deals.length} {deals.length === 1 ? "проект" : deals.length < 5 ? "проекта" : "проектов"}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {view === "gantt" && (
+          <GanttZoomControls zoom={ganttZoom} onZoomChange={setGanttZoom} />
+        )}
         <Tabs
           tabs={[
             { id: "gantt", label: "Гант" },
@@ -1315,7 +1316,6 @@ export function ProjectGanttSection({ deals, onBrowseRequests }: ProjectGanttSec
 
       {view === "gantt" && (
         <div className="space-y-3">
-          <GanttZoomControls zoom={ganttZoom} onZoomChange={setGanttZoom} />
           <GanttChartView
             deals={deals}
             customRows={projectTimelineRows}

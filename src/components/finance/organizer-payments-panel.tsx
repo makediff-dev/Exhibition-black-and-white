@@ -267,13 +267,13 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
             return (
               <Card key={payment.id} className="cabinet-card h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="outline">{payment.type}</Badge>
-                  <Badge variant={status === "pending" ? "solid" : "outline"}>
+                  <Badge variant="muted">{payment.type}</Badge>
+                  <Badge variant={status === "pending" ? "solid" : "muted"}>
                     {PAYMENT_STATUS_LABELS[status]}
                   </Badge>
-                  {roleLabel && <Badge variant="outline">{roleLabel}</Badge>}
+                  {roleLabel && <Badge variant="muted">{roleLabel}</Badge>}
                   {payment.direction && (
-                    <Badge variant="outline">
+                    <Badge variant="muted">
                       {payment.direction === "incoming" ? "Входящий" : "Исходящий"}
                     </Badge>
                   )}

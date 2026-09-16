@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, CreditCard, Users } from "lucide-react";
+import { Building2, CalendarDays, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import { Tabs } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/toast-provider";
 import { VENUE_PAYMENT_ROLE_LABELS } from "@/constants/statuses";
 import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
@@ -58,13 +56,11 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
   const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
-  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState("pending");
   const [directionFilter, setDirectionFilter] =
     useState<(typeof DIRECTION_FILTERS)[number]["id"]>("all");
   const [roleFilter, setRoleFilter] = useState<(typeof ROLE_FILTERS)[number]["id"]>("all");
-  const [statusOverrides, setStatusOverrides] = useState<Record<string, Payment["status"]>>({});
 
   const venuePayments = useMemo(
     () => payments.filter((payment) => payment.venueId === venueId),
@@ -81,7 +77,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
     [deals]
   );
 
-  const getStatus = (payment: Payment) => statusOverrides[payment.id] ?? payment.status;
+  const getStatus = (payment: Payment) => payment.status;
 
   const filteredPayments = useMemo(() => {
     return venuePayments
@@ -115,7 +111,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [venuePayments, activeTab, directionFilter, roleFilter, statusOverrides]);
+  }, [venuePayments, activeTab, directionFilter, roleFilter]);
 
   const summary = useMemo(() => {
     const pendingIncoming = venuePayments.filter(
@@ -141,12 +137,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
       incomingCount: pendingIncoming.length,
       outgoingCount: pendingOutgoing.length,
     };
-  }, [venuePayments, statusOverrides]);
-
-  const handlePay = (payment: Payment) => {
-    setStatusOverrides((prev) => ({ ...prev, [payment.id]: "paid" }));
-    showToast(`Оплата ${formatPrice(payment.amount)} выполнена (демо)`, "success");
-  };
+  }, [venuePayments]);
 
   return (
     <>
@@ -215,13 +206,13 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
             return (
               <Card key={payment.id} className="h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="outline">{payment.type}</Badge>
-                  <Badge variant={status === "pending" ? "solid" : "outline"}>
+                  <Badge variant="muted">{payment.type}</Badge>
+                  <Badge variant={status === "pending" ? "solid" : "muted"}>
                     {PAYMENT_STATUS_LABELS[status]}
                   </Badge>
                   {payment.participantRole &&
                     payment.participantRole in VENUE_PAYMENT_ROLE_LABELS && (
-                    <Badge variant="outline">
+                    <Badge variant="muted">
                       {
                         VENUE_PAYMENT_ROLE_LABELS[
                           payment.participantRole as keyof typeof VENUE_PAYMENT_ROLE_LABELS
@@ -230,7 +221,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                     </Badge>
                   )}
                   {payment.direction && (
-                    <Badge variant="outline">
+                    <Badge variant="muted">
                       {payment.direction === "incoming" ? "Входящий" : "Исходящий"}
                     </Badge>
                   )}
@@ -255,12 +246,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                   {payment.organizerName && (
                     <p>
                       Организатор:{" "}
-                      <Link
-                        href="/account/organizer/profile"
-                        className="underline hover:text-gray-900"
-                      >
-                        {payment.organizerName}
-                      </Link>
+                      {payment.organizerName}
                     </p>
                   )}
 
@@ -286,15 +272,6 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                     </p>
                   )}
                 </div>
-
-                {status === "pending" && (
-                  <div className="mt-[10px] pt-[10px]">
-                    <Button className="w-full" onClick={() => handlePay(payment)}>
-                      <CreditCard className="h-4 w-4" />
-                      Оплата
-                    </Button>
-                  </div>
-                )}
               </Card>
             );
           })}

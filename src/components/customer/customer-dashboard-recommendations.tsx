@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { Star } from "lucide-react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { ServiceCard } from "@/components/catalog/service-card";
+import { useToast } from "@/components/ui/toast-provider";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
-import type { CompanyProfile } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import type { CompanyProfile, Service } from "@/data/types";
+import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { getCartHref } from "@/lib/utils/cart-routes";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 
 function RecommendedContractorCard({
@@ -37,7 +40,12 @@ interface Props {
 }
 
 export function CustomerDashboardRecommendations({ user }: Props) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const services = usePrototypeStore((state) => state.services);
+  const addItem = useCartStore((state) => state.addItem);
+  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+  const isFavorite = useFavoritesStore((state) => state.isFavorite);
 
   const recommendedContractors = useMemo(() => {
     const userCategories = new Set(user?.categories ?? []);
@@ -61,6 +69,20 @@ export function CustomerDashboardRecommendations({ user }: Props) {
     const list = (matched.length > 0 ? matched : [...services].sort((a, b) => b.rating - a.rating)).slice(0, 4);
     return list;
   }, [services, user]);
+
+  const handleAddToCart = (service: Service) => {
+    addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
+    showToast(`«${service.title}» добавлено в корзину`, "success");
+    router.push(getCartHref(user?.role));
+  };
+
+  const handleToggleFavorite = (service: Service) => {
+    const added = toggleFavorite(service.id);
+    showToast(
+      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
+      added ? "success" : "info",
+    );
+  };
 
   return (
     <div className="space-y-8 mt-8">
@@ -87,7 +109,14 @@ export function CustomerDashboardRecommendations({ user }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {recommendedServices.map((service) => (
-            <ServiceCard key={service.id} service={service} from="dashboard" />
+            <ServiceCard
+              key={service.id}
+              service={service}
+              from="dashboard"
+              isFavorite={isFavorite(service.id)}
+              onToggleFavorite={() => handleToggleFavorite(service)}
+              onAdd={() => handleAddToCart(service)}
+            />
           ))}
         </div>
       </section>

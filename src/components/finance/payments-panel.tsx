@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { CreditCard, HelpCircle, Shield, Wallet } from "lucide-react";
+import { HelpCircle, Shield, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { Tooltip } from "@/components/ui/tooltip";
-import { useToast } from "@/components/ui/toast-provider";
 import type { Payment } from "@/data/types";
 import { SEED_PAYMENTS } from "@/data/mocks/seed";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { isDealForUser } from "@/lib/utils/user-entity-map";
+import { isPaymentForUser } from "@/lib/utils/cabinet-scope";
 import { DisputesTab } from "@/components/finance/disputes-tab";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
 
@@ -41,36 +41,36 @@ const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
 };
 
 export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string }) {
+  const user = useAuthStore((s) => s.user);
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
   const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
-  const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [statusOverrides, setStatusOverrides] = useState<Record<string, Payment["status"]>>({});
-
-  const getStatus = (payment: Payment) => statusOverrides[payment.id] ?? payment.status;
 
   const dealMap = useMemo(
     () => Object.fromEntries(deals.map((d) => [d.id, d])),
     [deals]
   );
 
+  const scopedPayments = useMemo(
+    () => payments.filter((payment) => isPaymentForUser(payment, user, deals)),
+    [payments, user, deals]
+  );
 
   const filteredPayments = useMemo(() => {
-    const filtered = payments.filter((p) => {
-      const status = statusOverrides[p.id] ?? p.status;
+    const filtered = scopedPayments.filter((p) => {
       switch (activeTab) {
         case "pending":
-          return p.type.includes("Счёт") && status === "pending";
+          return p.type.includes("Счёт") && p.status === "pending";
         case "history":
-          return status === "paid";
+          return p.status === "paid";
         case "safe":
           return p.type === "Резерв" || p.description.includes("Безопасная");
         case "payouts":
           return p.type === "Выплата";
         case "refunds":
-          return status === "refunded";
+          return p.status === "refunded";
         default:
           return true;
       }
@@ -86,29 +86,24 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
       }
       return a.date.localeCompare(b.date);
     });
-  }, [payments, activeTab, statusOverrides]);
+  }, [scopedPayments, activeTab]);
 
   const breakdown = useMemo(() => {
-    const getS = (p: Payment) => statusOverrides[p.id] ?? p.status;
-    const orderAmount = deals.reduce((sum, d) => sum + d.totalPrice, 0);
-    const reserve = payments
-      .filter((p) => getS(p) === "reserved")
+    const myDeals = deals.filter((deal) => isDealForUser(deal, user));
+    const orderAmount = myDeals.reduce((sum, d) => sum + d.totalPrice, 0);
+    const reserve = scopedPayments
+      .filter((p) => p.status === "reserved")
       .reduce((sum, p) => sum + p.amount, 0);
-    const paid = payments
-      .filter((p) => getS(p) === "paid")
+    const paid = scopedPayments
+      .filter((p) => p.status === "paid")
       .reduce((sum, p) => sum + p.amount, 0);
-    const refunded = payments
-      .filter((p) => getS(p) === "refunded")
+    const refunded = scopedPayments
+      .filter((p) => p.status === "refunded")
       .reduce((sum, p) => sum + p.amount, 0);
     const available = reserve - paid;
 
     return { orderAmount, reserve, paid, available: Math.max(0, available), refunded };
-  }, [deals, payments, statusOverrides]);
-
-  const handlePay = (payment: Payment) => {
-    setStatusOverrides((prev) => ({ ...prev, [payment.id]: "paid" }));
-    showToast(`Оплата ${formatPrice(payment.amount)} выполнена (демо)`, "success");
-  };
+  }, [deals, scopedPayments, user]);
 
   return (
     <>
@@ -165,17 +160,16 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredPayments.map((payment) => {
-            const status = getStatus(payment);
             const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 
             return (
               <Card key={payment.id} className="flex flex-col h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   {activeTab !== "history" && activeTab !== "payouts" && (
-                    <Badge variant="outline">{payment.type}</Badge>
+                    <Badge variant="muted">{payment.type}</Badge>
                   )}
-                  <Badge variant={status === "pending" ? "solid" : "outline"}>
-                    {PAYMENT_STATUS_LABELS[status]}
+                  <Badge variant={payment.status === "pending" ? "solid" : "muted"}>
+                    {PAYMENT_STATUS_LABELS[payment.status]}
                   </Badge>
                 </div>
                 <p className="text-lg font-semibold">{formatPrice(payment.amount)}</p>
@@ -187,12 +181,6 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
                       {deal.number} — {deal.title}
                     </Link>
                   </p>
-                )}
-                {status === "pending" && (
-                  <Button className="w-full mt-4" onClick={() => handlePay(payment)}>
-                    <CreditCard className="h-4 w-4" />
-                    Оплатить
-                  </Button>
                 )}
               </Card>
             );

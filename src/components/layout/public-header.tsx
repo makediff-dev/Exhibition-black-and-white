@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Bell, Menu, MessageSquare } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { HeaderSearch } from "@/components/layout/header-search";
+import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
 import styles from "./public-header.module.css";
 
@@ -62,9 +63,7 @@ export function PublicHeader() {
           <div className={styles.actions}>
             {isAuthenticated ? (
               <>
-                <Link href="/notifications" className="p-2 hover:bg-gray-100 relative" aria-label="Уведомления">
-                  <Bell className="h-4 w-4" />
-                </Link>
+                <NotificationsPopover />
                 <Link href="/messages" className="p-2 hover:bg-gray-100" aria-label="Сообщения">
                   <MessageSquare className="h-4 w-4" />
                 </Link>
@@ -116,9 +115,10 @@ export function PublicHeader() {
           <div className="flex flex-col gap-2 mt-4">
             {isAuthenticated ? (
               <>
-                <Link href="/notifications" onClick={() => setMobileOpen(false)}>
-                  Уведомления
-                </Link>
+                <NotificationsPopover
+                  compactLabel
+                  onNavigate={() => setMobileOpen(false)}
+                />
                 <Link href="/messages" onClick={() => setMobileOpen(false)}>
                   Сообщения
                 </Link>

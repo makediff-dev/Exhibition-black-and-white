@@ -493,8 +493,6 @@ export type VenuePermissionSection =
   | "dashboard"
   | "profile"
   | "halls"
-  | "spaces"
-  | "floor-plan"
   | "events"
   | "venue-services"
   | "bookings"
@@ -553,8 +551,7 @@ export type CustomerPermissionSection =
   | "completed-projects"
   | "checks"
   | "payments"
-  | "documents"
-  | "reviews";
+  | "documents";
 
 export interface CustomerEmployee {
   id: string;

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { useAuthStore } from "@/lib/store";
 
 interface Toast {
   id: string;
@@ -25,6 +26,8 @@ const TOAST_TITLES: Record<Toast["type"], string> = {
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const role = useAuthStore((state) => state.user?.role);
+  const useRoleAccent = Boolean(role);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: Toast["type"] = "success") => {
@@ -49,9 +52,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         open={Boolean(current)}
         onClose={handleClose}
         title={current ? TOAST_TITLES[current.type] : "Уведомление"}
-        accent="teal"
+        accent={useRoleAccent ? "role" : "teal"}
         footer={
-          <Button type="button" variant="teal" onClick={handleClose}>
+          <Button type="button" variant={useRoleAccent ? "primary" : "teal"} onClick={handleClose}>
             Закрыть
           </Button>
         }

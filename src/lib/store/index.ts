@@ -285,6 +285,8 @@ interface PrototypeState {
   addDeal: (deal: Deal) => void;
   updateDeal: (id: string, updates: Partial<Deal>) => void;
   updateDealStatus: (id: string, status: Deal["status"]) => void;
+  addPayment: (payment: Payment) => void;
+  updateVenueInquiry: (id: string, updates: Partial<VenueInquiry>) => void;
   addNotification: (notification: Notification) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -521,6 +523,12 @@ export const usePrototypeStore = create<PrototypeState>()(
           responses: s.responses.map((r) => (r.id === id ? { ...r, ...updates } : r)),
         })),
       addDeal: (deal) => set((s) => ({ deals: [...s.deals, deal] })),
+      addPayment: (payment) =>
+        set((s) =>
+          s.payments.some((item) => item.id === payment.id)
+            ? s
+            : { payments: [...s.payments, payment] }
+        ),
       updateDeal: (id, updates) =>
         set((s) => ({
           deals: s.deals.map((d) => (d.id === id ? { ...d, ...updates } : d)),
@@ -644,8 +652,6 @@ export const usePrototypeStore = create<PrototypeState>()(
                   "dashboard",
                   "profile",
                   "halls",
-                  "spaces",
-                  "floor-plan",
                   "events",
                   "venue-services",
                   "bookings",
@@ -733,7 +739,6 @@ export const usePrototypeStore = create<PrototypeState>()(
                   "checks",
                   "payments",
                   "documents",
-                  "reviews",
                 ],
               };
             }
@@ -811,6 +816,12 @@ export const usePrototypeStore = create<PrototypeState>()(
       setRegistrationDraft: (draft) => set({ registrationDraft: draft }),
       setRequestWizardDraft: (draft) => set({ requestWizardDraft: draft }),
       setOrganizerEventDraft: (draft) => set({ organizerEventDraft: draft }),
+      updateVenueInquiry: (id, updates) =>
+        set((state) => ({
+          venueInquiries: state.venueInquiries.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        })),
       addVenueInquiries: (inquiries) =>
         set((state) => {
           const existingIds = new Set(state.venueInquiries.map((item) => item.id));

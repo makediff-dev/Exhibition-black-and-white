@@ -16,7 +16,9 @@ export function withFromMessages(href: string) {
 
 export function keepsCabinetSidebar(from: string | null, role?: string | null) {
   if (!from) return false;
-  if (from === "messages" || from === "requests" || from === "dashboard") return true;
+  if (from === "messages" || from === "requests" || from === "dashboard" || from === "cart") {
+    return true;
+  }
   if (!role) return false;
   return getNavForRole(role).some((item) => item.slug === from);
 }
@@ -31,7 +33,9 @@ export function getCabinetBackHref(from: string | null, fallback: string, role?:
     const item = getNavForRole(role).find((item) => item.slug === from);
     if (item) return item.href;
   }
-  if (from === "my-events") return "/account/customer/my-events";
+  if (from === "cities" || from === "production" || from === "portfolio") {
+    return `/account/contractor/profile?tab=${from}`;
+  }
   return fallback;
 }
 

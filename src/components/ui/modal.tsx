@@ -34,10 +34,11 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
 
   if (!open || typeof document === "undefined") return null;
 
+  const sizeClass = wide ? styles.panelWide : styles.panelDefault;
   const panel = (
-    <div className={cn(styles.panel, wide ? styles.panelWide : styles.panelDefault)}>
+    <div className={styles.panel}>
       <div className={styles.header}>
-        <h2 id="modal-title" className="text-base font-semibold">
+        <h2 id="modal-title" className={styles.title}>
           {title}
         </h2>
         <button
@@ -46,7 +47,7 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
           className={styles.closeButton}
           aria-label="Закрыть"
         >
-          <X className="h-4 w-4" />
+          <X className={styles.closeIcon} />
         </button>
       </div>
       <div className={styles.body}>{children}</div>
@@ -65,11 +66,11 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
     >
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       {role && !useTealAccent ? (
-        <AccountThemeProvider role={role} tokensOnly>
+        <AccountThemeProvider role={role} tokensOnly className={cn(styles.panelHost, sizeClass)}>
           {panel}
         </AccountThemeProvider>
       ) : (
-        panel
+        <div className={cn(styles.panelHost, sizeClass)}>{panel}</div>
       )}
     </div>,
     document.body,

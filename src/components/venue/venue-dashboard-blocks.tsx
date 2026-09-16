@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AlertCircle, Building2, CalendarDays, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import {
   BOOKING_PERIOD_LABELS,
   BOOKING_STATUS_LABELS,
+  DEAL_STATUS_LABELS,
   EVENT_ORDER_CUSTOMER_ROLE_LABELS,
-  EVENT_ORDER_PRIORITY_LABELS,
   EVENT_ORDER_TYPE_LABELS,
   VENUE_INQUIRY_STATUS_LABELS,
 } from "@/constants/statuses";
@@ -21,8 +22,9 @@ import {
   SEED_HALLS,
   SEED_VENUE_INQUIRIES,
 } from "@/data/mocks/seed";
-import type { Booking, EventOrder, VenueInquiry } from "@/data/types";
+import type { Booking, DealStatus, EventOrder, VenueInquiry } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
+import { useToast } from "@/components/ui/toast-provider";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 
@@ -122,16 +124,21 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
                   highlighted && "bg-gray-50",
                 )}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                  <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <Badge variant="muted">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+                  <Badge variant="solid">
+                    {order.status === "pending"
+                      ? "Ожидает"
+                      : order.status === "completed"
+                        ? "Завершён"
+                        : (DEAL_STATUS_LABELS[order.status as DealStatus] ?? order.status)}
+                  </Badge>
                   {highlighted ? (
                     <Badge variant="solid" className="inline-flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Действие
                     </Badge>
-                  ) : (
-                    <Badge>{EVENT_ORDER_PRIORITY_LABELS[order.priority]}</Badge>
-                  )}
+                  ) : null}
                 </div>
                 <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
                 <CardDescription className="mt-2 space-y-1">
@@ -222,12 +229,12 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
             <Link key={booking.id} href={`/account/venue/bookings/${booking.id}`} className="block h-full">
               <Card hoverable className="cabinet-card h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <Badge variant="outline">
+                  <Badge variant="muted">
                     {booking.periodType
                       ? BOOKING_PERIOD_LABELS[booking.periodType]
                       : "Период"}
                   </Badge>
-                  <Badge>{BOOKING_STATUS_LABELS[booking.status]}</Badge>
+                  <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
                 </div>
                 <CardTitle className="text-sm leading-snug">{eventTitle}</CardTitle>
                 <CardDescription className="mt-2 space-y-1.5">
@@ -265,6 +272,9 @@ interface VenueDashboardNegotiationQueueProps {
 
 export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegotiationQueueProps) {
   const storeInquiries = usePrototypeStore((state) => state.venueInquiries);
+  const updateVenueInquiry = usePrototypeStore((state) => state.updateVenueInquiry);
+  const addBooking = usePrototypeStore((state) => state.addBooking);
+  const { showToast } = useToast();
   const [sortBy, setSortBy] = useState<InquirySort>("sent");
 
   const inquiries = useMemo(() => {
@@ -313,8 +323,8 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
         {inquiries.map((inquiry) => (
           <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <Badge variant="outline">Запрос площадки</Badge>
-              <Badge>{VENUE_INQUIRY_STATUS_LABELS[inquiry.status]}</Badge>
+              <Badge variant="muted">Запрос площадки</Badge>
+              <Badge variant="solid">{VENUE_INQUIRY_STATUS_LABELS[inquiry.status]}</Badge>
             </div>
             <CardTitle className="text-sm leading-snug">{inquiry.venueName}</CardTitle>
             <CardDescription className="mt-2 space-y-1.5">
@@ -335,6 +345,42 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
                 Запрос от {formatShortDate(inquiry.sentAt)}
               </span>
             </CardDescription>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button
+                size="sm"
+                onClick={() => {
+                  updateVenueInquiry(inquiry.id, { status: "selected" });
+                  const hall = SEED_HALLS.find((item) => item.venueId === venueId);
+                  addBooking({
+                    id: `book-inquiry-${inquiry.id}`,
+                    eventId: inquiry.eventDraftId.startsWith("evt-")
+                      ? inquiry.eventDraftId
+                      : "evt-1",
+                    venueId,
+                    hallId: hall?.id,
+                    organizerName: "Организатор",
+                    status: "pending",
+                    date: inquiry.sentAt,
+                    periodType: "event",
+                    periodStart: inquiry.dateFrom,
+                    periodEnd: inquiry.dateTo,
+                  });
+                  showToast("Запрос принят — создано бронирование", "success");
+                }}
+              >
+                Принять
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  updateVenueInquiry(inquiry.id, { status: "declined" });
+                  showToast("Запрос отклонён", "success");
+                }}
+              >
+                Отклонить
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

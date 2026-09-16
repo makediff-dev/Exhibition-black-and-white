@@ -64,6 +64,8 @@ export function OrganizerSettingsSection({
   const [editingEmployee, setEditingEmployee] = useState<OrganizerEmployee | null>(null);
   const [editPermissions, setEditPermissions] = useState<OrganizerPermissionSection[]>([]);
   const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
 
   const employees = useMemo(
     () => organizerEmployees.filter((employee) => employee.organizerId === organizerId),
@@ -172,9 +174,25 @@ export function OrganizerSettingsSection({
       <Card className="space-y-4">
         <div>
           <CardTitle>Личные настройки</CardTitle>
-          <CardDescription>Email и быстрый вход текущего пользователя</CardDescription>
+          <CardDescription>Email, уведомления и быстрый вход текущего пользователя</CardDescription>
         </div>
         <Input label="Email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={emailNotifications}
+            onChange={(event) => setEmailNotifications(event.target.checked)}
+          />
+          Email-уведомления
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={pushNotifications}
+            onChange={(event) => setPushNotifications(event.target.checked)}
+          />
+          Push-уведомления
+        </label>
         <PinLoginSettings />
         <Button onClick={() => showToast("Настройки сохранены")}>Сохранить</Button>
       </Card>
@@ -262,7 +280,7 @@ export function OrganizerSettingsSection({
         <Button onClick={handleInvite}>Отправить приглашение</Button>
 
         {lastInviteLink && (
-          <div className="cabinet-card border border-dashed border-gray-300 p-3 text-sm space-y-2">
+          <div className="border border-dashed border-gray-300 p-3 text-sm space-y-2">
             <p className="text-gray-600">Демо-ссылка приглашения:</p>
             <div className="flex flex-wrap items-center gap-2">
               <code className="text-xs break-all">{lastInviteLink}</code>
@@ -286,55 +304,26 @@ export function OrganizerSettingsSection({
 
           return (
             <Card key={employee.id} className="space-y-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <CardTitle className="text-base">{employee.fullName}</CardTitle>
-                    {employee.isAdmin && <Badge variant="solid">Администратор</Badge>}
-                    <Badge variant="outline">{EMPLOYEE_STATUS_LABELS[employee.status]}</Badge>
-                    {employee.edoVerified && <Badge variant="outline">ЭДО подтверждено</Badge>}
-                  </div>
-                  <CardDescription>
-                    {employee.email} · {employee.phone}
-                  </CardDescription>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {employee.joinedAt
-                      ? `В системе с ${formatDate(employee.joinedAt)}`
-                      : employee.invitedAt
-                        ? `Приглашён ${formatDate(employee.invitedAt)}`
-                        : null}
-                  </p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <CardTitle className="text-base">{employee.fullName}</CardTitle>
+                  {employee.isAdmin && <Badge variant="solid">Администратор</Badge>}
+                  <Badge variant="outline">{EMPLOYEE_STATUS_LABELS[employee.status]}</Badge>
+                  {employee.edoVerified && <Badge variant="outline">ЭДО подтверждено</Badge>}
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {!employee.isAdmin && (
-                    <>
-                      <Button size="sm" variant="outline" onClick={() => openPermissionsModal(employee)}>
-                        Права доступа
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelegateAdmin(employee)}>
-                        Назначить администратором
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleRemoveEmployee(employee)}>
-                        Удалить
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <CardDescription>
+                  {employee.email} · {employee.phone}
+                </CardDescription>
+                <p className="text-xs text-gray-500 mt-1">
+                  {employee.joinedAt
+                    ? `В системе с ${formatDate(employee.joinedAt)}`
+                    : employee.invitedAt
+                      ? `Приглашён ${formatDate(employee.invitedAt)}`
+                      : null}
+                </p>
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {(employee.isAdmin ? ALL_PERMISSIONS : employee.permissions).map((section) => {
-                  const label = PERMISSION_SECTIONS.find((item) => item.id === section)?.label;
-                  return (
-                    <Badge key={section} variant="outline">
-                      {label ?? section}
-                    </Badge>
-                  );
-                })}
-              </div>
-
-              <div className="border-t border-gray-200 pt-3 text-sm">
+              <div className="text-sm">
                 <p className="font-medium mb-1">Настройки входа сотрудника</p>
                 <p className="text-gray-600">
                   PIN-код: {employee.pinLoginEnabled ? "настроен индивидуально" : "не включён"}
@@ -349,6 +338,42 @@ export function OrganizerSettingsSection({
                   </div>
                 )}
               </div>
+
+              <div className="rounded-card border border-gray-200 bg-gray-50 px-3 py-3">
+                <p className="text-xs text-gray-500 mb-2">Доступ к разделам</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(employee.isAdmin ? ALL_PERMISSIONS : employee.permissions).map((section) => {
+                    const label = PERMISSION_SECTIONS.find((item) => item.id === section)?.label;
+                    if (!label) return null;
+                    return (
+                      <span
+                        key={section}
+                        className="inline-flex rounded-button border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {!employee.isAdmin && (
+                <div className="flex flex-wrap items-center gap-2 border-t border-gray-200 pt-3">
+                  <Button size="sm" onClick={() => handleDelegateAdmin(employee)}>
+                    Назначить администратором
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => openPermissionsModal(employee)}>
+                    Права доступа
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEmployee(employee)}
+                    className="ml-auto text-sm font-medium text-red-600 hover:text-red-700"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              )}
             </Card>
           );
         })}
@@ -358,6 +383,14 @@ export function OrganizerSettingsSection({
         open={Boolean(editingEmployee)}
         onClose={() => setEditingEmployee(null)}
         title={`Права доступа: ${editingEmployee?.fullName ?? ""}`}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setEditingEmployee(null)}>
+              Отмена
+            </Button>
+            <Button onClick={savePermissions}>Сохранить</Button>
+          </>
+        }
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
@@ -377,12 +410,6 @@ export function OrganizerSettingsSection({
                 {section.label}
               </label>
             ))}
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={savePermissions}>Сохранить</Button>
-            <Button variant="outline" onClick={() => setEditingEmployee(null)}>
-              Отмена
-            </Button>
           </div>
         </div>
       </Modal>

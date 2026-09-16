@@ -15,6 +15,7 @@ import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store"
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getCabinetBackHref } from "@/lib/utils/message-related-links";
+import { getCartHref, getCheckoutHref } from "@/lib/utils/cart-routes";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -56,7 +57,7 @@ export default function ServiceDetailPage() {
     );
   };
 
-  const handleAddToCart = () => {
+  const addCurrentItem = () => {
     addItem({
       serviceId: service.id,
       quantity,
@@ -66,18 +67,33 @@ export default function ServiceDetailPage() {
       variantName: selectedVariant?.name,
       unitPrice,
     });
+  };
+
+  const handleAddToCart = () => {
+    addCurrentItem();
     showToast(`«${service.title}» добавлено в корзину`, "success");
+    router.push(getCartHref(accountRole));
   };
 
   const handleOrder = () => {
-    handleAddToCart();
-    router.push("/checkout");
+    addCurrentItem();
+    showToast(`«${service.title}» добавлено в корзину`, "success");
+    router.push(getCheckoutHref(accountRole));
   };
 
   const backFallbackHref = getCabinetBackHref(from, "/services", accountRole);
 
   return (
-    <CabinetAwareLayout>
+    <CabinetAwareLayout
+      actions={
+        <Link href={getCartHref(accountRole)}>
+          <Button variant="soft-outline">
+            <ShoppingCart className="h-4 w-4" />
+            Корзина
+          </Button>
+        </Link>
+      }
+    >
       <BackButton
         fallbackHref={backFallbackHref}
         className="mb-4"

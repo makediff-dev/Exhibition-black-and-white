@@ -26,7 +26,8 @@ import {
   isDescriptionSectionFilled,
 } from "@/constants/request-description-sections";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
-import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
+import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
@@ -97,10 +98,14 @@ function RequestDetailContent() {
   }
 
   const isOwner = user?.id === request.customerId;
+  const contractorId = getContractorIdForUser(user);
   const isContractor = user?.role === "contractor";
-  const canRespond = isContractor && request.status === "published";
+  const canRespond =
+    isContractor && isRequestVisibleToContractor(request, contractorId);
   const hasResponded = requestResponses.some(
-    (r) => r.contractorId === "ctr-1" || r.contractorName === user?.name
+    (r) =>
+      (contractorId !== null && r.contractorId === contractorId) ||
+      r.contractorName === user?.name
   );
 
   const publishDraft = () => {

@@ -138,7 +138,7 @@ export function VenueSpacesSection({ venueId = "venue-1", showToast }: Props) {
                 </p>
               </div>
               <button type="button" onClick={() => toggleBlock(block.id)}>
-                <Badge variant={block.open ? "solid" : "outline"}>
+                <Badge variant={block.open ? "solid" : "muted"}>
                   {block.open ? "Открыто" : "Закрыто"}
                 </Badge>
               </button>

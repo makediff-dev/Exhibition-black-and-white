@@ -1,9 +1,151 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabs {
+  width: 100%;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.inbox {
+  display: grid;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.listColumn,
+.chatColumn {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.threadList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.threadCard {
+  padding: 12px 14px;
+}
+
+.threadCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.threadCardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.threadCardDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 11px;
+  color: #737373;
+}
+
+.threadCardTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.threadCardPreview {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #525252;
+}
+
+.threadCardDetails {
+  margin: 0;
+  font-size: 12px;
+  color: #737373;
+}
+
+.threadCardActive {
+  border-color: var(--account-accent, #2939eb);
+  background: var(--account-accent-soft, #eef0fe);
+}
+
+.chatEmpty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 24px;
+  border: 1px dashed #d4d4d4;
+  border-radius: var(--radius-card, 14px);
+  background: #fff;
+  text-align: center;
+}
+
+.chatEmptyTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chatEmptyText {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #737373;
+}
+
+@media (max-width: 959px) {
+  .inboxChatOpen .listColumn {
+    display: none;
+  }
+
+  .inboxListOnly .chatColumn {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .inbox {
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .threadList {
+    padding-right: 2px;
+  }
+}
+
 .threadPanel {
   border: 1px solid #d4d4d4;
   border-radius: var(--radius-card, 14px);
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   background: #fff;
 }
@@ -15,7 +157,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-height: 50vh;
+  min-height: 0;
 }
 
 .messageBubbleOwn {
@@ -39,9 +181,13 @@
   background: #fafafa;
   border-bottom-left-radius: var(--radius-card, 14px);
   border-bottom-right-radius: var(--radius-card, 14px);
+  flex-shrink: 0;
 }
 
 .messageCardLink {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
   color: var(--account-accent, #2939eb);
   transition: color 0.15s ease;
 }

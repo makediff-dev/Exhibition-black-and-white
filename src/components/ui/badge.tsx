@@ -7,7 +7,7 @@ import type { LucideIcon } from "lucide-react";
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: "solid" | "outline" | "dashed";
+  variant?: "solid" | "outline" | "dashed" | "muted";
   icon?: LucideIcon;
   className?: string;
 }
@@ -30,6 +30,7 @@ export function Badge({ children, variant = "outline", icon: Icon, className }: 
     dashed: catalogAccent
       ? "bg-[var(--catalog-accent-soft)] text-[var(--catalog-accent)] border-dashed border-[var(--catalog-accent)]"
       : "bg-gray-50 text-gray-700 border-dashed border-gray-500",
+    muted: "bg-white text-gray-600 border-gray-300",
   };
 
   return (

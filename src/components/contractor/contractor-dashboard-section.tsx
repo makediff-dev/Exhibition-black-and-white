@@ -6,11 +6,10 @@ import { ServiceCard } from "@/components/catalog/service-card";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { CompanyProfile } from "@/data/types";
-import { useCartStore, usePrototypeStore } from "@/lib/store";
+import { usePrototypeStore } from "@/lib/store";
 import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { withFromParam } from "@/lib/utils/message-related-links";
-import { useToast } from "@/components/ui/toast-provider";
 
 interface Props {
   user: CompanyProfile | null;
@@ -18,9 +17,6 @@ interface Props {
 
 export function ContractorDashboardSection({ user }: Props) {
   const services = usePrototypeStore((state) => state.services);
-  const addItem = useCartStore((state) => state.addItem);
-  const { showToast } = useToast();
-
   const contractorId = getContractorIdForUser(user);
 
   const catalogServices = useMemo(() => {
@@ -39,11 +35,6 @@ export function ContractorDashboardSection({ user }: Props) {
     return (matched.length > 0 ? matched : sorted).slice(0, 6);
   }, [user]);
 
-  const handleAddToCart = (serviceId: string) => {
-    addItem({ serviceId, quantity: 1, comment: "", files: [] });
-    showToast("Услуга добавлена в корзину", "success");
-  };
-
   return (
     <div className="space-y-8 mt-8">
       <section>
@@ -59,7 +50,6 @@ export function ContractorDashboardSection({ user }: Props) {
               key={service.id}
               service={service}
               from="dashboard"
-              onAdd={() => handleAddToCart(service.id)}
             />
           ))}
         </div>

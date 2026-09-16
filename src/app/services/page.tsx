@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Filter, ShoppingCart } from "lucide-react";
 import { ServiceCard } from "@/components/catalog/service-card";
@@ -16,7 +16,9 @@ import { useToast } from "@/components/ui/toast-provider";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
 import type { Service } from "@/data/types";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { getCartHref } from "@/lib/utils/cart-routes";
 
 const SERVICES_ACCENT = CATALOG_SECTION_ACCENT.services;
 
@@ -45,7 +47,10 @@ function ServicesPageFallback() {
 
 function ServicesPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { showToast } = useToast();
+  const { accountRole } = useCabinetSession();
+  const cartHref = getCartHref(accountRole);
   const addItem = useCartStore((s) => s.addItem);
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const isFavorite = useFavoritesStore((s) => s.isFavorite);
@@ -96,6 +101,7 @@ function ServicesPageContent() {
   const handleAdd = (service: Service) => {
     addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
     showToast(`«${service.title}» добавлено в корзину`, "success");
+    router.push(cartHref);
   };
 
   const handleToggleFavorite = (service: Service) => {
@@ -152,7 +158,7 @@ function ServicesPageContent() {
       description="Каталог услуг для выставок и мероприятий"
       className="catalog-list-layout"
       actions={
-        <Link href="/cart">
+        <Link href={cartHref}>
           <Button variant="soft-outline">
             <ShoppingCart className="h-4 w-4" />
             Корзина

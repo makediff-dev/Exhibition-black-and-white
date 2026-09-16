@@ -15,7 +15,7 @@ import { BOOKING_PERIOD_LABELS, BOOKING_STATUS_LABELS } from "@/constants/status
 import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
-import { formatShortDate } from "@/lib/utils/formatters";
+import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
 
 function mergeBookings(storedBookings: Booking[]): Booking[] {
   const ids = new Set(storedBookings.map((booking) => booking.id));
@@ -74,6 +74,8 @@ export function VenueBookingsSection({
 }: Props) {
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
+  const addPayment = usePrototypeStore((state) => state.addPayment);
+  const payments = usePrototypeStore((state) => state.payments);
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -142,7 +144,13 @@ export function VenueBookingsSection({
 
   const handleConfirm = (booking: Booking) => {
     updateBooking(booking.id, { status: "confirmed" });
-    showToast("Бронирование подтверждено", "success");
+    const hall = booking.hallId ? hallMap[booking.hallId] : undefined;
+    const amount = hall ? hall.area * 400 : 100000;
+    const invoice = buildBookingInvoice(booking, amount);
+    if (!payments.some((item) => item.id === invoice.id)) {
+      addPayment(invoice);
+    }
+    showToast("Бронирование подтверждено, счёт выставлен", "success");
   };
 
   const handleReject = (booking: Booking) => {
@@ -203,10 +211,8 @@ export function VenueBookingsSection({
               >
                 <Card hoverable className="cabinet-card h-full flex flex-col gap-[10px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
-                    <Badge variant="outline">{periodLabel}</Badge>
-                    <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
-                      {BOOKING_STATUS_LABELS[booking.status]}
-                    </Badge>
+                    <Badge variant="muted">{periodLabel}</Badge>
+                    <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
                   </div>
 
                   <CardTitle className="text-sm">

@@ -52,9 +52,9 @@ function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: Eve
       hoverable={Boolean(href)}
       className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-        <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
-        <Badge>{getOrderStatusLabel(order.status)}</Badge>
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <Badge variant="muted">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+        <Badge variant="solid">{getOrderStatusLabel(order.status)}</Badge>
       </div>
       <CardTitle className="text-sm">{order.title}</CardTitle>
       <CardDescription className="mt-2 space-y-1">
@@ -129,6 +129,7 @@ export function EventOrdersPanel({
   const orders = useMemo(
     () =>
       SEED_EVENT_ORDERS.filter((order) => {
+        if (currentDealId) return order.dealId === currentDealId;
         if (eventId && order.eventId !== eventId) return false;
         if (organizerId) {
           const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
@@ -136,7 +137,7 @@ export function EventOrdersPanel({
         }
         return !venueId || order.venueId === venueId;
       }),
-    [eventId, organizerId, venueId]
+    [eventId, organizerId, venueId, currentDealId]
   );
 
   const filteredOrders = useMemo(

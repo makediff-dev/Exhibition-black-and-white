@@ -117,7 +117,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
             бронирования или переговоров.
           </p>
         </div>
-        <Link href="/account/venue/spaces" className="text-sm underline hover:text-gray-900 shrink-0">
+        <Link href="/account/venue/halls" className="text-sm underline hover:text-gray-900 shrink-0">
           Календарь площадей
         </Link>
       </div>
@@ -190,7 +190,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
               <Link key={event.id} href={`/account/venue/events/${event.id}`} className="block h-full">
                 <Card hoverable className="cabinet-card h-full">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge variant="outline">
+                    <Badge variant="muted">
                       {event.category === "exhibition"
                         ? "Выставка"
                         : event.category === "forum"
@@ -203,7 +203,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
                       </Badge>
                     ))}
                     {lowAvailability && (
-                      <Badge variant="outline">Мало свободной площади</Badge>
+                      <Badge variant="muted">Мало свободной площади</Badge>
                     )}
                   </div>
 

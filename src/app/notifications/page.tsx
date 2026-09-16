@@ -10,8 +10,10 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import type { Notification, NotificationPriority } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate } from "@/lib/utils/formatters";
+import { resolveNotificationHref } from "@/lib/utils/notification-links";
+import { isNotificationForUser } from "@/lib/utils/cabinet-scope";
 import { cn } from "@/lib/utils/cn";
 
 const PRIORITY_LABELS: Record<NotificationPriority, string> = {
@@ -20,10 +22,10 @@ const PRIORITY_LABELS: Record<NotificationPriority, string> = {
   info: "Информация",
 };
 
-const PRIORITY_VARIANT: Record<NotificationPriority, "solid" | "outline" | "dashed"> = {
+const PRIORITY_VARIANT: Record<NotificationPriority, "solid" | "muted"> = {
   action_required: "solid",
-  deadline: "dashed",
-  info: "outline",
+  deadline: "solid",
+  info: "muted",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -36,20 +38,27 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
+  const role = useAuthStore((state) => state.user?.role);
+  const deals = usePrototypeStore((state) => state.deals);
   const { notifications, markNotificationRead, markAllNotificationsRead } = usePrototypeStore();
   const [categoryFilter, setCategoryFilter] = useState("");
 
+  const visibleNotifications = useMemo(
+    () => notifications.filter((item) => isNotificationForUser(item, role)),
+    [notifications, role]
+  );
+
   const categories = useMemo(() => {
-    const set = new Set(notifications.map((n) => n.category));
+    const set = new Set(visibleNotifications.map((n) => n.category));
     return Array.from(set);
-  }, [notifications]);
+  }, [visibleNotifications]);
 
   const filtered = useMemo(() => {
-    if (!categoryFilter) return notifications;
-    return notifications.filter((n) => n.category === categoryFilter);
-  }, [notifications, categoryFilter]);
+    if (!categoryFilter) return visibleNotifications;
+    return visibleNotifications.filter((n) => n.category === categoryFilter);
+  }, [visibleNotifications, categoryFilter]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = visibleNotifications.filter((n) => !n.read).length;
 
   const handleMarkRead = (notification: Notification) => {
     if (!notification.read) {
@@ -97,53 +106,60 @@ export default function NotificationsPage() {
         />
       ) : (
         <div className="space-y-2">
-          {filtered.map((notification) => (
-            <Card
-              key={notification.id}
-              className={cn(
-                "transition-colors",
-                !notification.read && "border-gray-900 bg-gray-50"
-              )}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <Badge variant={PRIORITY_VARIANT[notification.priority]}>
-                      {PRIORITY_LABELS[notification.priority]}
-                    </Badge>
-                    <Badge variant="outline">
-                      {CATEGORY_LABELS[notification.category] || notification.category}
-                    </Badge>
-                    {!notification.read && (
-                      <span className="h-2 w-2 rounded-full bg-gray-900 shrink-0" aria-hidden />
-                    )}
-                  </div>
-                  <p className="text-sm font-semibold">{notification.title}</p>
-                  <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                  <p className="text-xs text-gray-500 mt-2">{formatDate(notification.date)}</p>
-                </div>
+          {filtered.map((notification) => {
+            const href = resolveNotificationHref(notification, role, deals);
 
-                <div className="flex flex-wrap gap-2 shrink-0">
-                  {!notification.read && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMarkRead(notification)}
-                    >
-                      Прочитано
-                    </Button>
-                  )}
-                  {notification.link && (
-                    <Link href={notification.link} onClick={() => handleMarkRead(notification)}>
-                      <Button variant="outline" size="sm">
-                        Перейти
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+            return (
+              <Card
+                key={notification.id}
+                className={cn(
+                  "transition-colors",
+                  href && "hover:bg-gray-50",
+                  !notification.read && "border-gray-900 bg-gray-50"
+                )}
+              >
+                {href ? (
+                  <Link
+                    href={href}
+                    className="block text-inherit no-underline"
+                    onClick={() => handleMarkRead(notification)}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <Badge variant={PRIORITY_VARIANT[notification.priority]}>
+                        {PRIORITY_LABELS[notification.priority]}
+                      </Badge>
+                      <Badge variant="muted">
+                        {CATEGORY_LABELS[notification.category] || notification.category}
+                      </Badge>
+                      {!notification.read && (
+                        <span className="h-2 w-2 rounded-full bg-gray-900 shrink-0" aria-hidden />
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold">{notification.title}</p>
+                    <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    <p className="text-xs text-gray-500 mt-2">{formatDate(notification.date)}</p>
+                  </Link>
+                ) : (
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <Badge variant={PRIORITY_VARIANT[notification.priority]}>
+                        {PRIORITY_LABELS[notification.priority]}
+                      </Badge>
+                      <Badge variant="muted">
+                        {CATEGORY_LABELS[notification.category] || notification.category}
+                      </Badge>
+                      {!notification.read && (
+                        <span className="h-2 w-2 rounded-full bg-gray-900 shrink-0" aria-hidden />
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold">{notification.title}</p>
+                    <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    <p className="text-xs text-gray-500 mt-2">{formatDate(notification.date)}</p>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </SharedPageShell>

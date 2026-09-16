@@ -32,12 +32,6 @@ function parseIsoDate(value: string) {
   return new Date(year, month - 1, day);
 }
 
-function isWithinRange(date: string, start: string, end: string) {
-  if (!start) return false;
-  const endDate = end || start;
-  return date >= start && date <= endDate;
-}
-
 export function BookingDateStatusLegend() {
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-600">
@@ -65,7 +59,10 @@ export function BookingDateCalendarGrid({
   const [viewMonth, setViewMonth] = useState(
     new Date(initialMonth.getFullYear(), initialMonth.getMonth(), 1)
   );
-  const [pendingStart, setPendingStart] = useState<string | null>(null);
+  const [pendingStart, setPendingStart] = useState<string | null>(
+    rangeStart && (!rangeEnd || rangeEnd === rangeStart) ? rangeStart : null
+  );
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   const markedSet = useMemo(() => new Set(markedDates), [markedDates]);
 
@@ -103,21 +100,33 @@ export function BookingDateCalendarGrid({
     return days;
   }, [viewMonth]);
 
+  const isPickingEnd = Boolean(pendingStart || (rangeStart && rangeEnd === rangeStart));
+  const startDate = pendingStart || rangeStart;
+
   const handleDayClick = (iso: string) => {
-    if (!pendingStart || iso < pendingStart) {
+    if (!isPickingEnd || !startDate || iso < startDate) {
       setPendingStart(iso);
+      setHoveredDate(iso);
       onRangeChange(iso, iso);
       return;
     }
 
-    onRangeChange(pendingStart, iso);
     setPendingStart(null);
+    setHoveredDate(null);
+    onRangeChange(startDate, iso);
     onComplete?.();
   };
 
   const shiftMonth = (delta: number) => {
+    setHoveredDate(null);
     setViewMonth((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
   };
+
+  const previewEnd =
+    isPickingEnd && startDate && hoveredDate && hoveredDate > startDate ? hoveredDate : null;
+  const confirmedEnd =
+    !isPickingEnd && rangeStart && rangeEnd && rangeEnd !== rangeStart ? rangeEnd : null;
+  const rangeEndIso = previewEnd ?? confirmedEnd;
 
   return (
     <div className="p-3">
@@ -151,10 +160,18 @@ export function BookingDateCalendarGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div
+        className="grid grid-cols-7 gap-1"
+        onMouseLeave={() => setHoveredDate(null)}
+      >
         {calendarDays.map(({ iso, day, currentMonth }) => {
-          const selected = isWithinRange(iso, rangeStart, rangeEnd);
-          const isEdge = iso === rangeStart || iso === (rangeEnd || rangeStart);
+          const inRange = Boolean(
+            startDate && rangeEndIso && iso > startDate && iso < rangeEndIso
+          );
+          const isStart = Boolean(startDate && iso === startDate);
+          const isConfirmedEnd = Boolean(confirmedEnd && iso === confirmedEnd);
+          const isHoverEnd = Boolean(previewEnd && iso === previewEnd);
+          const isFilledEdge = isStart || isConfirmedEnd;
           const statuses = dateStatuses[iso] ?? [];
           const hasLegacyMark = markedSet.has(iso) && statuses.length === 0;
 
@@ -163,15 +180,20 @@ export function BookingDateCalendarGrid({
               key={iso}
               type="button"
               onClick={() => handleDayClick(iso)}
+              onMouseEnter={() => {
+                if (isPickingEnd) setHoveredDate(iso);
+              }}
               className={cn(
-                "booking-cell relative h-9 text-sm border border-transparent hover:border-gray-900",
+                "booking-cell relative h-9 text-sm border border-transparent bg-white",
                 !currentMonth && "text-gray-300",
-                selected && "bg-gray-100",
-                isEdge && "bg-gray-900 text-white hover:border-gray-900"
+                inRange && !isHoverEnd && "bg-gray-100",
+                isFilledEdge && "border-gray-900 bg-gray-900 text-white",
+                isHoverEnd && "border-gray-900 bg-white text-gray-900",
+                !isFilledEdge && !isHoverEnd && "hover:border-gray-900"
               )}
             >
               {day}
-              {(statuses.length > 0 || hasLegacyMark) && !isEdge && (
+              {(statuses.length > 0 || hasLegacyMark) && !isFilledEdge && (
                 <span className="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-0.5">
                   {statuses.length > 0
                     ? statuses.map((status) => (
@@ -200,6 +222,7 @@ export function BookingDateCalendarGrid({
             className="text-xs underline hover:text-gray-900"
             onClick={() => {
               setPendingStart(null);
+              setHoveredDate(null);
               onRangeChange("", "");
             }}
           >

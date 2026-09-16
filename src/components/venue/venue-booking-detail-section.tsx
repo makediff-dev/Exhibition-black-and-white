@@ -15,7 +15,7 @@ import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
-import { withFromMessages } from "@/lib/utils/message-related-links";
+import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
 
 function mergeBookings(storedBookings: Booking[]): Booking[] {
   const ids = new Set(storedBookings.map((booking) => booking.id));
@@ -58,6 +58,8 @@ export function VenueBookingDetailSection({
   const fromMessages = searchParams.get("from") === "messages";
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
+  const addPayment = usePrototypeStore((state) => state.addPayment);
+  const payments = usePrototypeStore((state) => state.payments);
   const resolvedRole = role ?? "venue";
   const backHref = fromMessages
     ? "/messages"
@@ -93,7 +95,13 @@ export function VenueBookingDetailSection({
 
   const handleConfirm = () => {
     updateBooking(booking.id, { status: "confirmed" });
-    showToast("Бронирование подтверждено", "success");
+    const hall = booking.hallId ? SEED_HALLS.find((item) => item.id === booking.hallId) : undefined;
+    const amount = hall ? hall.area * 400 : 100000;
+    const invoice = buildBookingInvoice(booking, amount);
+    if (!payments.some((item) => item.id === invoice.id)) {
+      addPayment(invoice);
+    }
+    showToast("Бронирование подтверждено, счёт выставлен", "success");
   };
 
   const handleReject = () => {
@@ -106,11 +114,9 @@ export function VenueBookingDetailSection({
       <BackButton fallbackHref={backHref} />
 
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-4">
-          <Badge variant="outline">{periodLabel}</Badge>
-          <Badge variant={booking.status === "pending" ? "solid" : "outline"}>
-            {BOOKING_STATUS_LABELS[booking.status]}
-          </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="muted">{periodLabel}</Badge>
+          <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
         </div>
         <h1 className="text-xl font-bold">{event?.title ?? "Бронирование"}</h1>
         <p className="text-sm text-gray-600">

@@ -13,12 +13,14 @@ import { useCartStore, usePrototypeStore } from "@/lib/store";
 import { resolveCartLine, isExtendedCheckCartItem } from "@/lib/utils/cart-utils";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatPrice } from "@/lib/utils/formatters";
+import { getCheckoutHref } from "@/lib/utils/cart-routes";
 import { withFromParam } from "@/lib/utils/message-related-links";
 
 export function CustomerCartSection() {
   const router = useRouter();
   const { items, updateItem, removeItem } = useCartStore();
   const services = usePrototypeStore((state) => state.services);
+  const checkoutHref = getCheckoutHref("customer");
 
   const grouped = useMemo(() => {
     const map = new Map<
@@ -203,9 +205,9 @@ export function CustomerCartSection() {
           <p className="text-2xl font-bold">{formatPrice(total)}</p>
           <p className="text-xs text-gray-600 mt-1">Будет создано заказов: {grouped.length}</p>
         </div>
-        <Link href="/checkout">
-          <Button size="lg">Перейти к оформлению</Button>
-        </Link>
+        <Button size="lg" onClick={() => router.push(checkoutHref)}>
+          Перейти к оформлению
+        </Button>
       </Card>
 
       <Card className="border-dashed">

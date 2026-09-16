@@ -38,7 +38,9 @@ export function AccountThemeProvider({
   return (
     <AccountThemeContext.Provider value={theme}>
       {tokensOnly ? (
-        children
+        <div className={className} style={style}>
+          {children}
+        </div>
       ) : (
         <div
           data-account-role={role}

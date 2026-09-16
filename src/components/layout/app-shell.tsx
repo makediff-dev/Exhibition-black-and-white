@@ -51,8 +51,11 @@ export function AppShell({
     if (!match) return undefined;
     const deal = deals.find((item) => item.id === match[1]);
     if (!deal) return undefined;
-    return deal.status === "completed" ? "completed-projects" : "active-projects";
-  }, [pathname, deals]);
+    if (deal.status === "completed" && nav.some((item) => item.slug === "completed-projects")) {
+      return "completed-projects";
+    }
+    return "active-projects";
+  }, [pathname, deals, nav]);
 
   const from = searchParams.get("from");
   const fromNavSlug = useMemo(() => {

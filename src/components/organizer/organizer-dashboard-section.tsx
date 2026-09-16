@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import {
+  DashboardStatCard,
+  DashboardStatsGrid,
+  PaymentInvoicesLabel,
+} from "@/components/account/dashboard-stat-card";
 import { OrganizerEventsCarousel } from "@/components/organizer/organizer-events-carousel";
 import { SEED_EVENT_ORDERS, SEED_EVENTS } from "@/data/mocks/seed";
 import { usePrototypeStore } from "@/lib/store";
@@ -18,7 +23,7 @@ function isOrganizerEventOrder(order: (typeof SEED_EVENT_ORDERS)[number], organi
 }
 
 export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Props) {
-  const { notifications, documents } = usePrototypeStore();
+  const { payments } = usePrototypeStore();
 
   const organizerEvents = SEED_EVENTS.filter((event) => event.organizerId === organizerId);
 
@@ -30,67 +35,48 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
   const incomingOrders = organizerOrders.filter((order) => order.direction === "incoming").length;
   const outgoingOrders = organizerOrders.filter((order) => order.direction === "outgoing").length;
 
-  const organizerNotifications = useMemo(
-    () => notifications.filter((item) => item.audience === "organizer" && !item.read).length,
-    [notifications]
+  const organizerPayments = useMemo(
+    () => payments.filter((payment) => payment.organizerId === organizerId),
+    [payments, organizerId]
   );
 
-  const organizerDocs = useMemo(
-    () => documents.filter((doc) => doc.organizerId === organizerId && doc.type === "Счёт"),
-    [documents, organizerId]
-  );
-
-  const incomingInvoices = organizerDocs.filter(
-    (doc) => doc.direction === "incoming" && doc.status !== "signed" && doc.status !== "archived"
+  const incomingInvoices = organizerPayments.filter(
+    (payment) => payment.direction === "incoming" && payment.status === "pending"
   ).length;
 
-  const outgoingInvoices = organizerDocs.filter(
-    (doc) => doc.direction === "outgoing" && doc.status !== "signed" && doc.status !== "archived"
+  const outgoingInvoices = organizerPayments.filter(
+    (payment) => payment.direction === "outgoing" && payment.status === "pending"
   ).length;
 
   return (
     <div className="space-y-6 w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <Link href="/notifications">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{organizerNotifications}</CardTitle>
-            <CardDescription>Новые уведомления</CardDescription>
-          </Card>
-        </Link>
-        <Link href="/account/organizer/payments">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{incomingInvoices}</CardTitle>
-            <CardDescription>Неоплаченные счета · входящие</CardDescription>
-          </Card>
-        </Link>
-        <Link href="/account/organizer/payments">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{outgoingInvoices}</CardTitle>
-            <CardDescription>Неоплаченные счета · исходящие</CardDescription>
-          </Card>
-        </Link>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-3">
-        <Link href="/account/organizer/orders">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{incomingOrders}</CardTitle>
-            <CardDescription>Заказы · входящие</CardDescription>
-          </Card>
-        </Link>
-        <Link href="/account/organizer/orders">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{outgoingOrders}</CardTitle>
-            <CardDescription>Заказы · исходящие</CardDescription>
-          </Card>
-        </Link>
-        <Link href="/account/organizer/events">
-          <Card hoverable className="cabinet-card h-full">
-            <CardTitle>{organizerEvents.length}</CardTitle>
-            <CardDescription>Мероприятий</CardDescription>
-          </Card>
-        </Link>
-      </div>
+      <DashboardStatsGrid>
+        <DashboardStatCard
+          value={organizerEvents.length}
+          label="Мероприятия"
+          href="/account/organizer/events"
+        />
+        <DashboardStatCard
+          value={incomingOrders + outgoingOrders}
+          label="Активные заказы"
+          href="/account/organizer/orders"
+        />
+        <DashboardStatCard
+          value={outgoingInvoices}
+          href="/account/organizer/payments"
+          label={
+            <PaymentInvoicesLabel
+              direction="исходящие"
+              tooltip="Счета, которые организатор оплачивает площадке и подрядчикам"
+            />
+          }
+        />
+        <DashboardStatCard
+          value={incomingInvoices}
+          href="/account/organizer/payments"
+          label={<PaymentInvoicesLabel direction="входящие" />}
+        />
+      </DashboardStatsGrid>
 
       <div className="flex flex-wrap gap-2">
         <Link href="/account/organizer/create-event">

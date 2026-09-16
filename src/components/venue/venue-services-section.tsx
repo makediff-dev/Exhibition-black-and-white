@@ -164,14 +164,14 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <p className="font-medium text-sm">{service.title}</p>
-                    <Badge variant={service.active ? "solid" : "outline"}>
+                    <Badge variant={service.active ? "solid" : "muted"}>
                       {service.active ? "Активна" : "Неактивна"}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{service.price}</p>
                   <div className="flex flex-wrap gap-1">
                     {service.audiences.map((audience) => (
-                      <Badge key={`${service.id}-${audience}`} variant="outline">
+                      <Badge key={`${service.id}-${audience}`} variant="muted">
                         {getAudienceLabel(audience)}
                       </Badge>
                     ))}

@@ -10,9 +10,11 @@ import { EmptyState } from "@/components/ui/states";
 import { VENUE_CATALOG, getPublicVenueByCatalogId } from "@/constants/venues";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Contractor, Event, Service } from "@/data/types";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { getCartHref } from "@/lib/utils/cart-routes";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import { useToast } from "@/components/ui/toast-provider";
 
@@ -120,6 +122,7 @@ function FavoriteVenueCard({ venueId }: { venueId: string }) {
 
 export function CustomerFavoritesSection() {
   const router = useRouter();
+  const { accountRole } = useCabinetSession();
   const { showToast } = useToast();
   const services = usePrototypeStore((state) => state.services);
   const addItem = useCartStore((state) => state.addItem);
@@ -162,6 +165,7 @@ export function CustomerFavoritesSection() {
   const handleAddToCart = (service: Service) => {
     addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
     showToast(`«${service.title}» добавлено в корзину`, "success");
+    router.push(getCartHref(accountRole));
   };
 
   return (
