@@ -16,6 +16,7 @@ import type { Booking } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
+import { withFromMessages } from "@/lib/utils/message-related-links";
 
 function mergeBookings(storedBookings: Booking[]): Booking[] {
   const ids = new Set(storedBookings.map((booking) => booking.id));

@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { useAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { AccountPageRenderer } from "@/components/account/account-page-renderer";
+import type { AccountRole } from "@/constants/account-role-themes";
 import { isAllowedCabinetPath } from "@/lib/utils/cabinet-scope";
 
 const VALID_ROLES: AccountRole[] = ["customer", "contractor", "venue", "organizer"];

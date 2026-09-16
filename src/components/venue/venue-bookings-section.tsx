@@ -16,6 +16,7 @@ import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
+import { formatShortDate } from "@/lib/utils/formatters";
 
 function mergeBookings(storedBookings: Booking[]): Booking[] {
   const ids = new Set(storedBookings.map((booking) => booking.id));

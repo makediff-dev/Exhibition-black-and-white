@@ -31,6 +31,7 @@ import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 
 type RequestTab = "overview" | "stages" | "documents" | "payments" | "files" | "history";
 
