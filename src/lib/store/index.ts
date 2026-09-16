@@ -366,6 +366,53 @@ function sanitizeCompanyLogos(logos: Record<string, string> | undefined): Record
   );
 }
 
+function mergeMessageThreads(
+  stored: MessageThread[] | undefined,
+  seedItems: MessageThread[]
+): MessageThread[] {
+  if (!stored?.length) return seedItems;
+
+  const storedMap = new Map(stored.map((thread) => [thread.id, thread]));
+  const mergedSeed = seedItems.map((seed) => {
+    const existing = storedMap.get(seed.id);
+    if (!existing) return seed;
+
+    const seedMessageIds = new Set(seed.messages.map((message) => message.id));
+    const extraMessages = existing.messages.filter((message) => !seedMessageIds.has(message.id));
+    const messages = extraMessages.length ? [...seed.messages, ...extraMessages] : seed.messages;
+    const last = messages[messages.length - 1];
+
+    return {
+      ...seed,
+      unread: existing.unread,
+      messages,
+      lastMessage: last?.text ?? seed.lastMessage,
+      lastDate: last?.date ?? seed.lastDate,
+    };
+  });
+
+  const seedIds = new Set(seedItems.map((thread) => thread.id));
+  const extras = stored.filter((thread) => !seedIds.has(thread.id));
+  return extras.length ? [...mergedSeed, ...extras] : mergedSeed;
+}
+
+function mergeNotificationsById(
+  stored: Notification[] | undefined,
+  seedItems: Notification[]
+): Notification[] {
+  if (!stored?.length) return seedItems;
+
+  const seedMap = new Map(seedItems.map((item) => [item.id, item]));
+  const merged = stored.map((item) => {
+    const seed = seedMap.get(item.id);
+    if (!seed) return item;
+    return { ...seed, read: item.read };
+  });
+  const storedIds = new Set(stored.map((item) => item.id));
+  const missing = seedItems.filter((item) => !storedIds.has(item.id));
+  return missing.length ? [...merged, ...missing] : merged;
+}
+
 function mergeById<T extends { id: string }>(stored: T[] | undefined, seedItems: T[]): T[] {
   if (!stored?.length) return seedItems;
   const ids = new Set(stored.map((item) => item.id));
@@ -978,6 +1025,8 @@ export const usePrototypeStore = create<PrototypeState>()(
           payments: mergeById(persisted.payments, fresh.payments),
           participants: mergeParticipantsById(persisted.participants, fresh.participants),
           bookings: mergeBookingsById(persisted.bookings, fresh.bookings),
+          messages: mergeMessageThreads(persisted.messages, fresh.messages),
+          notifications: mergeNotificationsById(persisted.notifications, fresh.notifications),
         };
       },
     }

@@ -18,7 +18,7 @@ import {
   resolveMessageRelatedHref,
   withFromMessages,
 } from "@/lib/utils/message-related-links";
-import { isThreadForUser } from "@/lib/utils/cabinet-scope";
+import { getThreadInboxCategory, isThreadForUser } from "@/lib/utils/cabinet-scope";
 import { cn } from "@/lib/utils/cn";
 
 const RELATED_TYPE_LABELS: Record<string, string> = {
@@ -33,17 +33,12 @@ const MESSAGE_TABS: { id: MessageCategory | "all"; label: string }[] = [
   { id: "all", label: "Все" },
   { id: "system", label: "Системные" },
   { id: "customer", label: "Заказчики" },
+  { id: "contractor", label: "Исполнители" },
   { id: "venue", label: "Площадки" },
   { id: "organizer", label: "Организаторы" },
 ];
 
 const CUSTOMER_NAME = "ООО «Вымышленная Мебель»";
-
-function resolveCategory(thread: MessageThread): MessageCategory {
-  if (thread.category) return thread.category;
-  if (thread.relatedType === "support") return "system";
-  return "customer";
-}
 
 function getRequestCost(request: Request) {
   if (request.budget.type === "range" && request.budget.min && request.budget.max) {
@@ -92,21 +87,21 @@ function getThreadDetails(
     };
   }
 
-  if (thread.category === "venue") {
-    const event = SEED_EVENTS.find((item) => item.id === "evt-1");
+  if (thread.relatedType === "event") {
+    const event = SEED_EVENTS.find((item) => item.id === thread.relatedId);
     return {
       customer: "—",
-      event: event?.title ?? "—",
+      event: event?.title ?? thread.title,
       venue: event?.venue ?? "—",
       cost: "—",
     };
   }
 
-  if (thread.category === "organizer") {
-    const event = SEED_EVENTS.find((item) => item.id === thread.relatedId);
+  if (thread.relatedType === "booking") {
+    const event = SEED_EVENTS.find((item) => item.id === "evt-1");
     return {
       customer: "—",
-      event: event?.title ?? thread.title,
+      event: event?.title ?? "—",
       venue: event?.venue ?? "—",
       cost: "—",
     };
@@ -184,10 +179,24 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
     [sortedThreads, accountRole, user?.role]
   );
 
+  const currentRole = accountRole ?? user?.role;
+
   const filteredThreads = useMemo(() => {
     if (activeCategory === "all") return scopedThreads;
-    return scopedThreads.filter((thread) => resolveCategory(thread) === activeCategory);
-  }, [activeCategory, scopedThreads]);
+    return scopedThreads.filter(
+      (thread) => getThreadInboxCategory(thread, currentRole) === activeCategory
+    );
+  }, [activeCategory, scopedThreads, currentRole]);
+
+  const visibleTabs = useMemo(
+    () =>
+      MESSAGE_TABS.filter(
+        (tab) =>
+          tab.id === "all" ||
+          scopedThreads.some((thread) => getThreadInboxCategory(thread, currentRole) === tab.id)
+      ),
+    [scopedThreads, currentRole]
+  );
 
   const selectedThread = useMemo(
     () => (selectedThreadId ? messages.find((thread) => thread.id === selectedThreadId) : undefined),
@@ -216,7 +225,7 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
     <div ref={pageRef} className={styles.page}>
       <h1 className="text-xl font-bold text-gray-900 mb-4">Сообщения</h1>
       <Tabs
-        tabs={MESSAGE_TABS}
+        tabs={visibleTabs}
         activeTab={activeCategory}
         onChange={(id) => setActiveCategory(id as MessageCategory | "all")}
         className={styles.tabs}

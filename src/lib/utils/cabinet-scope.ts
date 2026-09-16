@@ -3,6 +3,7 @@ import type {
   CompanyProfile,
   Deal,
   Document,
+  MessageCategory,
   MessageThread,
   Notification,
   Payment,
@@ -69,6 +70,8 @@ export function isThreadForUser(
   thread: MessageThread,
   role: UserRole | null | undefined
 ): boolean {
+  if (!role) return false;
+  if (thread.participantRoles?.length) return thread.participantRoles.includes(role);
   if (thread.category === "system") return true;
   if (role === "customer" || role === "contractor") return thread.category === "customer";
   if (role === "venue") return thread.category === "venue";
@@ -76,12 +79,28 @@ export function isThreadForUser(
   return false;
 }
 
+export function getThreadInboxCategory(
+  thread: MessageThread,
+  role: UserRole | null | undefined
+): MessageCategory {
+  if (thread.category === "system" || thread.relatedType === "support") return "system";
+  if (role && thread.participantRoles?.includes(role)) {
+    const counterpart = thread.participantRoles.find((item) => item !== role);
+    if (counterpart === "customer") return "customer";
+    if (counterpart === "contractor") return "contractor";
+    if (counterpart === "venue") return "venue";
+    if (counterpart === "organizer") return "organizer";
+  }
+  return thread.category;
+}
+
 export function isNotificationForUser(
   notification: Notification,
   role: UserRole | null | undefined
 ): boolean {
+  if (!role) return false;
   if (notification.audience) return notification.audience === role;
-  return role === "customer" || role === "contractor" || !role;
+  return role === "customer";
 }
 
 export function isRequestVisibleToContractor(

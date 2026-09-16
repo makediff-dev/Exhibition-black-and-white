@@ -6,8 +6,6 @@ import type {
   Document,
   Event,
   FloorCell,
-  MessageThread,
-  Notification,
   Participant,
   Payment,
   OrganizerEventService,
@@ -32,6 +30,9 @@ import type {
   HallGridFeature,
   FloorPlanPlot,
 } from "@/data/types";
+import { SEED_MESSAGES, SEED_NOTIFICATIONS } from "@/data/mocks/seed-messages";
+
+export { SEED_MESSAGES, SEED_NOTIFICATIONS };
 
 export const DEMO_USERS: Record<string, CompanyProfile> = {
   customer: {
@@ -444,31 +445,6 @@ export const SEED_PAYMENTS: Payment[] = [
   { id: "opay-8", organizerId: "user-organizer", eventId: "evt-5", participantRole: "exhibitor", counterpartyName: "ООО «ТехноВижн»", type: "Счёт к оплате", amount: 32000, status: "refunded", date: "2026-05-10", description: "Возврат за отмену участия — Мода и Стиль", direction: "incoming" },
   { id: "opay-9", organizerId: "user-organizer", eventId: "evt-1", participantRole: "exhibitor", counterpartyName: "ООО «Вымышленная Мебель»", type: "Выплата", amount: 140000, status: "paid", date: "2026-01-25", description: "Предоплата 50% — Мебель-2026", direction: "incoming" },
   { id: "opay-10", organizerId: "user-organizer", eventId: "evt-5", participantRole: "venue", counterpartyName: "ЭкспоЦентр", type: "Счёт к оплате", amount: 450000, status: "pending", date: "2026-06-01", description: "Аренда зала — Мода и Стиль", direction: "outgoing" },
-];
-
-export const SEED_NOTIFICATIONS: Notification[] = [
-  { id: "notif-1", title: "Новый отклик", message: "ООО «СтендПро» откликнулся на заявку", priority: "action_required", read: false, date: "2026-01-11", link: "/requests/req-1/responses", category: "responses" },
-  { id: "notif-2", title: "Этап принят", message: "Дизайн-проект по сделке СД-2026-001 принят", priority: "info", read: false, date: "2026-01-21", link: "/deals/deal-1", category: "deals" },
-  { id: "notif-3", title: "Срок приближается", message: "Дедлайн монтажа через 3 дня", priority: "deadline", read: true, date: "2026-01-17", link: "/deals/deal-1", category: "deals" },
-  { id: "notif-4", title: "Документ на подпись", message: "Акт по сделке СД-2026-002", priority: "action_required", read: false, date: "2026-01-16", link: "/documents", category: "documents" },
-  { id: "notif-5", title: "Подключите ЭДО", message: "Для подписания документов подключите ЭДО", priority: "info", read: true, date: "2026-01-10", link: "/account/customer/edo", category: "system" },
-  { id: "vnotif-1", title: "Подтвердите бронирование", message: "Мебель-2026: новая заявка на павильон 1", priority: "action_required", read: false, date: "2026-01-18", link: "/account/venue/bookings", category: "bookings", eventId: "evt-1", audience: "venue" },
-  { id: "vnotif-2", title: "Счёт к оплате", message: "IT Forum Russia: входящий счёт от организатора", priority: "action_required", read: false, date: "2026-01-17", link: "/account/venue/payments", category: "payments", eventId: "evt-3", audience: "venue" },
-  { id: "vnotif-3", title: "Документ на подпись", message: "Мода и Стиль: акт от экспонента", priority: "deadline", read: false, date: "2026-01-16", link: "/account/venue/documents", category: "documents", eventId: "evt-5", audience: "venue" },
-  { id: "vnotif-4", title: "Новый заказ услуги", message: "Мебель-2026: застройщик заказал пропуска", priority: "info", read: true, date: "2026-01-15", link: "/account/venue/orders/evt-1", category: "orders", eventId: "evt-1", audience: "venue" },
-  { id: "vnotif-5", title: "Требуется действие", message: "Мебель-2026: заявка на аренду лебёдки", priority: "action_required", read: false, date: "2026-01-19", link: "/account/venue/orders/evt-1", category: "orders", eventId: "evt-1", audience: "venue" },
-  { id: "onotif-1", title: "Новый заказ от экспонента", message: "Мебель-2026: ООО «Вымышленная Мебель» — аренда 36 кв.м", priority: "action_required", read: false, date: "2026-01-19", link: "/account/organizer/orders", category: "orders", eventId: "evt-1", audience: "organizer" },
-  { id: "onotif-2", title: "Счёт от площадки", message: "ЭкспоЦентр: счёт за аренду павильона 1", priority: "action_required", read: false, date: "2026-01-18", link: "/account/organizer/payments", category: "payments", eventId: "evt-1", audience: "organizer" },
-  { id: "onotif-3", title: "Новый участник", message: "Мода и Стиль: заявка от ООО «ТехноВижн»", priority: "info", read: false, date: "2026-01-17", link: "/account/organizer/edit-event?id=evt-5&tab=participants", category: "participants", eventId: "evt-5", audience: "organizer" },
-  { id: "onotif-4", title: "Публикация мероприятия", message: "Light & Build Moscow одобрено модератором", priority: "info", read: true, date: "2026-01-12", link: "/account/organizer/events", category: "events", eventId: "evt-10", audience: "organizer" },
-];
-
-export const SEED_MESSAGES: MessageThread[] = [
-  { id: "msg-1", title: "Сделка СД-2026-001", category: "customer", relatedType: "deal", relatedId: "deal-1", relatedLink: "/deals/deal-1", lastMessage: "Когда будет готов дизайн?", lastDate: "2026-01-18", unread: 1, messages: [{ id: "m1", sender: "ООО «Вымышленная Мебель»", text: "Когда будет готов дизайн?", date: "2026-01-18", files: [] }, { id: "m2", sender: "ООО «СтендПро»", text: "К пятнице отправим финальную версию", date: "2026-01-18", files: ["preview.pdf"] }] },
-  { id: "msg-2", title: "Заявка: Стенд 36 кв.м", category: "customer", relatedType: "request", relatedId: "req-1", relatedLink: "/requests/req-1", lastMessage: "Уточните размеры зоны переговоров", lastDate: "2026-01-11", unread: 0, messages: [{ id: "m3", sender: "ООО «ДизайнСтенд»", text: "Уточните размеры зоны переговоров", date: "2026-01-11", files: [] }] },
-  { id: "msg-3", title: "Поддержка", category: "system", relatedType: "support", relatedId: "support", relatedLink: "/messages/msg-3", lastMessage: "Добро пожаловать на платформу!", lastDate: "2026-01-01", unread: 0, messages: [{ id: "m4", sender: "Поддержка", text: "Добро пожаловать на платформу!", date: "2026-01-01", files: [] }] },
-  { id: "msg-4", title: "Бронирование: ЭкспоЦентр", category: "venue", relatedType: "booking", relatedId: "book-1", relatedLink: "/account/venue/bookings", lastMessage: "Подтвердите дату монтажа на площадке", lastDate: "2026-01-16", unread: 1, messages: [{ id: "m5", sender: "ЭкспоЦентр", text: "Подтвердите дату монтажа на площадке", date: "2026-01-16", files: [] }] },
-  { id: "msg-5", title: "Мебель-2026: участие", category: "organizer", relatedType: "event", relatedId: "evt-1", relatedLink: "/events/evt-1", lastMessage: "Отправьте финальный список услуг для каталога мероприятия", lastDate: "2026-01-14", unread: 0, messages: [{ id: "m6", sender: "Организатор Мебель-2026", text: "Отправьте финальный список услуг для каталога мероприятия", date: "2026-01-14", files: [] }] },
 ];
 
 export const SEED_PAVILIONS: VenuePavilion[] = [

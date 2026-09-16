@@ -387,7 +387,7 @@ export interface Notification {
   audience?: UserRole;
 }
 
-export type MessageCategory = "system" | "customer" | "venue" | "organizer";
+export type MessageCategory = "system" | "customer" | "contractor" | "venue" | "organizer";
 
 export interface MessageThread {
   id: string;
@@ -399,6 +399,7 @@ export interface MessageThread {
   lastMessage: string;
   lastDate: string;
   unread: number;
+  participantRoles?: Exclude<UserRole, null>[];
   messages: { id: string; sender: string; text: string; date: string; files: string[] }[];
 }
 
