@@ -11,23 +11,26 @@ import { Tabs } from "@/components/ui/tabs";
 import { VENUE_PAYMENT_ROLE_LABELS } from "@/constants/statuses";
 import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import {
+  PAYMENT_STATUS_LABELS,
+  getLedgerPairNote,
+  getPaymentOperationLabel,
+  getPaymentTradeSideLabel,
+  isViewerPayer,
+  isViewerPayee,
+  keepOwnLedgerCopy,
+} from "@/lib/utils/payment-presentation";
 
 const PAYMENT_TABS = [
-  { id: "pending", label: "Счета к оплате" },
+  { id: "payable", label: "К оплате" },
+  { id: "receivable", label: "К получению" },
   { id: "history", label: "История платежей" },
   { id: "safe", label: "Безопасные сделки" },
   { id: "payouts", label: "Выплаты" },
   { id: "refunds", label: "Возвраты" },
 ];
-
-const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
-  pending: "Ожидает оплаты",
-  paid: "Оплачено",
-  reserved: "Зарезервировано",
-  refunded: "Возвращено",
-};
 
 const ROLE_FILTERS = [
   { id: "all", label: "Все" },
@@ -53,17 +56,22 @@ interface Props {
 }
 
 export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
+  const user = useAuthStore((state) => state.user);
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
   const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
 
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("receivable");
   const [directionFilter, setDirectionFilter] =
     useState<(typeof DIRECTION_FILTERS)[number]["id"]>("all");
   const [roleFilter, setRoleFilter] = useState<(typeof ROLE_FILTERS)[number]["id"]>("all");
 
   const venuePayments = useMemo(
-    () => payments.filter((payment) => payment.venueId === venueId),
+    () =>
+      keepOwnLedgerCopy(
+        payments.filter((payment) => payment.venueId === venueId && !payment.id.startsWith("opay")),
+        "venue"
+      ),
     [payments, venueId]
   );
 
@@ -85,8 +93,10 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
         const status = getStatus(payment);
         const matchesTab = (() => {
           switch (activeTab) {
-            case "pending":
-              return payment.type.includes("Счёт") && status === "pending";
+            case "payable":
+              return status === "pending" && isViewerPayer(payment, user);
+            case "receivable":
+              return status === "pending" && isViewerPayee(payment, user);
             case "history":
               return status === "paid";
             case "safe":
@@ -102,7 +112,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
 
         if (!matchesTab) return false;
 
-        if (activeTab !== "pending") return true;
+        if (activeTab !== "payable" && activeTab !== "receivable") return true;
 
         const direction = payment.direction ?? "incoming";
         if (directionFilter !== "all" && direction !== directionFilter) return false;
@@ -111,7 +121,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [venuePayments, activeTab, directionFilter, roleFilter]);
+  }, [venuePayments, activeTab, directionFilter, roleFilter, user]);
 
   const summary = useMemo(() => {
     const pendingIncoming = venuePayments.filter(
@@ -164,7 +174,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
 
       <Tabs tabs={PAYMENT_TABS} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
-      {activeTab === "pending" && (
+      {(activeTab === "payable" || activeTab === "receivable") && (
         <div className="grid sm:grid-cols-2 gap-4 mb-6 max-w-2xl">
           <Select
             label="Направление"
@@ -206,7 +216,8 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
             return (
               <Card key={payment.id} className="h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="muted">{payment.type}</Badge>
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
                   <Badge variant={status === "pending" ? "solid" : "muted"}>
                     {PAYMENT_STATUS_LABELS[status]}
                   </Badge>
@@ -220,15 +231,20 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                       }
                     </Badge>
                   )}
-                  {payment.direction && (
-                    <Badge variant="muted">
-                      {payment.direction === "incoming" ? "Входящий" : "Исходящий"}
-                    </Badge>
-                  )}
                 </div>
 
                 <p className="text-lg font-semibold mb-[10px]">{formatPrice(payment.amount)}</p>
+                <p className="text-xs text-gray-500 mb-[10px]">
+                  {payment.number ? `Счёт ${payment.number}` : "Номер счёта будет присвоен после выставления"}
+                </p>
                 <p className="text-sm text-gray-600 mb-[10px]">{payment.description}</p>
+                <p className="text-xs text-gray-600 mb-[10px]">
+                  Плательщик: {payment.payerName ?? "не указан"} · Получатель:{" "}
+                  {payment.payeeName ?? "не указан"}
+                </p>
+                {getLedgerPairNote(payment) && (
+                  <p className="text-xs text-gray-500 mb-[10px]">{getLedgerPairNote(payment)}</p>
+                )}
 
                 <div className="space-y-[10px] text-sm flex-1">
                   <p className="flex items-center gap-1 text-xs text-gray-500">
@@ -268,6 +284,16 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                     <p>
                       <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
                         {deal.number} — {deal.title}
+                      </Link>
+                    </p>
+                  )}
+                  {payment.orderId && !deal && (
+                    <p>
+                      <Link
+                        href={`/orders/${payment.orderId}`}
+                        className="underline hover:text-gray-900"
+                      >
+                        Открыть связанный заказ
                       </Link>
                     </p>
                   )}

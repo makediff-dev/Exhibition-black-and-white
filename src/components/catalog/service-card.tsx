@@ -7,12 +7,13 @@ import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-
 import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { CardTitle } from "@/components/ui/card";
-import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
 import { formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import type { Service } from "@/data/types";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast-provider";
 import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
 import { getServiceCardSlides } from "@/lib/utils/catalog-card-images";
 
@@ -47,6 +48,8 @@ export function ServiceCard({
 }: ServiceCardProps) {
   const allServices = usePrototypeStore((s) => s.services);
   const role = useAuthStore((s) => s.user?.role);
+  const addItem = useCartStore((s) => s.addItem);
+  const { showToast } = useToast();
   const accountTheme = useAccountTheme();
   const catalogAccent = useCatalogAccent();
   const addToCartVariant = catalogAccent?.buttonVariant ?? accountTheme?.buttonVariant ?? "blue";
@@ -60,6 +63,21 @@ export function ServiceCard({
     [service, cardIndex],
   );
   const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
+
+  const handleAddToCart = () => {
+    if (onAdd) {
+      onAdd();
+      return;
+    }
+    addItem({
+      serviceId: service.id,
+      quantity: 1,
+      comment: "",
+      files: [],
+      unitPrice: service.price,
+    });
+    showToast(`«${service.title}» добавлено в корзину`, "success");
+  };
 
   return (
     <CatalogCard className="relative flex flex-col h-full cursor-pointer" {...cardHoverHandlers}>
@@ -99,20 +117,18 @@ export function ServiceCard({
 
           <div className="mt-auto pt-4 pointer-events-auto relative z-[3]">
             <div className="flex w-full flex-col gap-2">
-              {onAdd && (
-                <Button
-                  size="sm"
-                  variant={addToCartVariant}
-                  className="w-full"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onAdd();
-                  }}
-                >
-                  В корзину
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant={addToCartVariant}
+                className="w-full"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  handleAddToCart();
+                }}
+              >
+                В корзину
+              </Button>
               <Link
                 href={`${getContractorProfileHref(service.contractorId, {
                   role: from ? role : undefined,

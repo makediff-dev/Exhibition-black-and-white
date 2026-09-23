@@ -10,12 +10,18 @@ import type { PublicVenue } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { getVenueStats } from "@/lib/utils/venue-stats";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { useAuthStore } from "@/lib/store";
+import { canContactVenue } from "@/lib/auth/authorization";
 
 interface VenueDetailSectionProps {
   venue: PublicVenue;
 }
 
 export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
+  const user = useAuthStore((state) => state.user);
+  const venueKey = venue.catalogId ?? venue.id;
+  const contact = canContactVenue(user, venueKey);
+  const returnUrl = `/venues/${venue.id}`;
   const stats = venue.catalogId ? getVenueStats(venue.catalogId) : null;
   const relatedEvents = SEED_EVENTS.filter(
     (event) => event.venue === venue.name || event.venueId === venue.catalogId,
@@ -88,6 +94,11 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
                     </p>
                   ) : null}
                   <p>Свободных залов: {stats.freeHalls}</p>
+                  <p>
+                    Загрузка {stats.occupancyPercent}% за{" "}
+                    {formatShortDate(stats.occupancyPeriodStart)} —{" "}
+                    {formatShortDate(stats.occupancyPeriodEnd)}
+                  </p>
                 </>
               ) : null}
             </div>
@@ -95,11 +106,21 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
               <Link href={`/events?venue=${encodeURIComponent(venue.name)}`}>
                 <Button className="w-full" variant="primary">Смотреть мероприятия</Button>
               </Link>
-              <Link href="/register">
-                <Button variant="outline" className="w-full">
-                  Связаться с площадкой
-                </Button>
-              </Link>
+              {!user ? (
+                <Link href={`/login?returnUrl=${encodeURIComponent(returnUrl)}`}>
+                  <Button variant="outline" className="w-full">
+                    Связаться с площадкой
+                  </Button>
+                </Link>
+              ) : contact.allowed ? (
+                <Link href={`/messages?related=venue&venueId=${encodeURIComponent(venueKey)}`}>
+                  <Button variant="outline" className="w-full">
+                    Связаться с площадкой
+                  </Button>
+                </Link>
+              ) : (
+                <p className="text-xs text-gray-600">{contact.reason}</p>
+              )}
             </div>
           </Card>
         </aside>

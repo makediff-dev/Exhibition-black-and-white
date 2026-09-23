@@ -12,6 +12,8 @@ import { useToast } from "@/components/ui/toast-provider";
 import { validateEmail, validatePhone, validateRequired } from "@/lib/utils/validators";
 import { ROLE_LABELS } from "@/constants/statuses";
 import type { UserRole } from "@/data/types";
+import { registerHref, sanitizeReturnUrl } from "@/lib/auth/session";
+import { FormErrorSummary } from "@/components/ui/form-status";
 
 const DEMO_ROLES: UserRole[] = ["customer", "contractor", "venue", "organizer"];
 
@@ -46,7 +48,8 @@ function LoginContent() {
     ) {
       setShowCompanyRegistrationPrompt(true);
     }
-    router.push(`/account/${role}`);
+    const safeReturn = sanitizeReturnUrl(searchParams.get("returnUrl")) ?? `/account/${role}`;
+    router.replace(safeReturn);
   };
 
   const validateLoginId = (value: string) => {
@@ -64,7 +67,12 @@ function LoginContent() {
     const passwordError = validateRequired(password, "Пароль");
     if (passwordError) nextErrors.password = passwordError;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      requestAnimationFrame(() => {
+        document.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+      });
+      return;
+    }
 
     redirectToAccount("customer");
   };
@@ -76,14 +84,15 @@ function LoginContent() {
   return (
     <div className="register-accent flex flex-col min-h-screen">
       <PublicHeader />
-      <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
+      <main id="main-content" className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-2">Вход</h1>
         <p className="text-sm text-gray-600 mb-6">
           Войдите в личный кабинет по email и паролю или используйте демо-роли для прототипа
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <FormErrorSummary errors={Object.values(errors)} />
           <Input
             label="Email или телефон"
             type="text"
@@ -91,6 +100,7 @@ function LoginContent() {
             onChange={(e) => setLoginId(e.target.value)}
             error={errors.loginId}
             autoComplete="username"
+            required
           />
           <Input
             label="Пароль"
@@ -99,6 +109,7 @@ function LoginContent() {
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
             autoComplete="current-password"
+            required
           />
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -125,7 +136,10 @@ function LoginContent() {
 
         <p className="text-sm text-center mt-4 text-gray-600">
           Нет аккаунта?{" "}
-          <Link href="/register" className="underline font-medium text-gray-900">
+          <Link
+            href={registerHref(undefined, searchParams.get("returnUrl"))}
+            className="underline font-medium text-gray-900"
+          >
             Зарегистрироваться
           </Link>
         </p>

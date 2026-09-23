@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, CreditCard, Users } from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import { Tabs } from "@/components/ui/tabs";
@@ -13,23 +14,26 @@ import { useToast } from "@/components/ui/toast-provider";
 import { ORGANIZER_PAYMENT_ROLE_LABELS } from "@/constants/statuses";
 import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
-import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import {
+  PAYMENT_STATUS_LABELS,
+  getLedgerPairNote,
+  getPaymentOperationLabel,
+  getPaymentTradeSideLabel,
+  isViewerPayer,
+  isViewerPayee,
+  keepOwnLedgerCopy,
+} from "@/lib/utils/payment-presentation";
 
 const PAYMENT_TABS = [
-  { id: "pending", label: "Счета к оплате" },
+  { id: "payable", label: "К оплате" },
+  { id: "receivable", label: "К получению" },
   { id: "history", label: "История платежей" },
   { id: "safe", label: "Безопасные сделки" },
   { id: "payouts", label: "Выплаты" },
   { id: "refunds", label: "Возвраты" },
 ];
-
-const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
-  pending: "Ожидает оплаты",
-  paid: "Оплачено",
-  reserved: "Зарезервировано",
-  refunded: "Возвращено",
-};
 
 const DIRECTION_FILTERS = [
   { id: "all", label: "Все" },
@@ -55,12 +59,13 @@ interface Props {
 }
 
 export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props) {
+  const user = useAuthStore((state) => state.user);
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
   const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("payable");
   const [directionFilter, setDirectionFilter] =
     useState<(typeof DIRECTION_FILTERS)[number]["id"]>("all");
   const [roleFilter, setRoleFilter] = useState<(typeof ROLE_FILTERS)[number]["id"]>("all");
@@ -68,7 +73,11 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
   const [statusOverrides, setStatusOverrides] = useState<Record<string, Payment["status"]>>({});
 
   const organizerPayments = useMemo(
-    () => payments.filter((payment) => payment.organizerId === organizerId),
+    () =>
+      keepOwnLedgerCopy(
+        payments.filter((payment) => payment.organizerId === organizerId && !payment.id.startsWith("vpay")),
+        "organizer"
+      ),
     [payments, organizerId]
   );
 
@@ -101,8 +110,10 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
         const status = getStatus(payment);
         const matchesTab = (() => {
           switch (activeTab) {
-            case "pending":
-              return payment.type.includes("Счёт") && status === "pending";
+            case "payable":
+              return status === "pending" && isViewerPayer(payment, user);
+            case "receivable":
+              return status === "pending" && isViewerPayee(payment, user);
             case "history":
               return status === "paid";
             case "safe":
@@ -118,7 +129,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
 
         if (!matchesTab) return false;
         if (eventFilter !== "all" && payment.eventId !== eventFilter) return false;
-        if (activeTab !== "pending") return true;
+        if (activeTab !== "payable" && activeTab !== "receivable") return true;
 
         const direction = payment.direction ?? "incoming";
         if (directionFilter !== "all" && direction !== directionFilter) return false;
@@ -127,7 +138,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
         return true;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [organizerPayments, activeTab, directionFilter, roleFilter, eventFilter, statusOverrides]);
+  }, [organizerPayments, activeTab, directionFilter, roleFilter, eventFilter, statusOverrides, user]);
 
   const summary = useMemo(() => {
     const pendingIncoming = organizerPayments.filter(
@@ -187,7 +198,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
 
       <Tabs tabs={PAYMENT_TABS} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
-      {activeTab === "pending" && (
+      {(activeTab === "payable" || activeTab === "receivable") && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-w-3xl">
           <Select
             label="Направление"
@@ -228,7 +239,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
         </div>
       )}
 
-      {activeTab !== "pending" && organizerEvents.length > 1 && (
+      {activeTab !== "payable" && activeTab !== "receivable" && organizerEvents.length > 1 && (
         <div className="mb-6 max-w-xs">
           <Select
             label="Мероприятие"
@@ -267,57 +278,55 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
             return (
               <Card key={payment.id} className="cabinet-card h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="muted">{payment.type}</Badge>
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
                   <Badge variant={status === "pending" ? "solid" : "muted"}>
                     {PAYMENT_STATUS_LABELS[status]}
                   </Badge>
                   {roleLabel && <Badge variant="muted">{roleLabel}</Badge>}
-                  {payment.direction && (
-                    <Badge variant="muted">
-                      {payment.direction === "incoming" ? "Входящий" : "Исходящий"}
-                    </Badge>
-                  )}
                 </div>
 
                 <p className="text-lg font-semibold mb-[10px]">{formatPrice(payment.amount)}</p>
-                <p className="text-sm text-gray-600 mb-[10px]">{payment.description}</p>
-
-                <div className="space-y-[10px] text-sm flex-1">
-                  <p className="flex items-center gap-1 text-xs text-gray-500">
-                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                    {formatDate(payment.date)}
-                  </p>
-
+                <div className="space-y-[10px] flex-1">
+                  <CardField label="Счёт">
+                    {payment.number ?? "будет присвоен после выставления"}
+                  </CardField>
+                  <CardField label="Описание">{payment.description}</CardField>
+                  <CardField label="Плательщик">{payment.payerName ?? "не указан"}</CardField>
+                  <CardField label="Получатель">{payment.payeeName ?? "не указан"}</CardField>
+                  {getLedgerPairNote(payment) && (
+                    <CardField label="Проводка">{getLedgerPairNote(payment)}</CardField>
+                  )}
+                  <CardField label="Дата">{formatDate(payment.date)}</CardField>
                   {payment.counterpartyName && (
-                    <p className="flex items-center gap-1 text-gray-700">
-                      <Users className="h-3.5 w-3.5 shrink-0" />
-                      {payment.counterpartyName}
-                    </p>
+                    <CardField label="Контрагент">{payment.counterpartyName}</CardField>
                   )}
-
                   {event && (
-                    <p className="flex items-start gap-1">
-                      <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      <span>
-                        <Link
-                          href={`/account/organizer/edit-event?id=${event.id}`}
-                          className="underline hover:text-gray-900"
-                        >
-                          {event.title}
-                        </Link>
-                        <span className="block text-xs text-gray-500 mt-0.5">
-                          {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                        </span>
-                      </span>
-                    </p>
+                    <CardField label="Мероприятие">
+                      <Link
+                        href={`/account/organizer/edit-event?id=${event.id}`}
+                        className="underline hover:text-gray-700"
+                      >
+                        {event.title}
+                      </Link>
+                    </CardField>
                   )}
-
                   {deal && (
-                    <p>
-                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
+                    <CardField label="Сделка">
+                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-700">
                         {deal.number} — {deal.title}
                       </Link>
-                    </p>
+                    </CardField>
+                  )}
+                  {payment.orderId && !deal && (
+                    <CardField label="Заказ">
+                      <Link
+                        href={`/orders/${payment.orderId}`}
+                        className="underline hover:text-gray-700"
+                      >
+                        Открыть связанный заказ
+                      </Link>
+                    </CardField>
                   )}
                 </div>
 

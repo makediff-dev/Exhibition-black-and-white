@@ -45,6 +45,7 @@ interface DateRangePickerProps {
   label?: string;
   start: string;
   end: string;
+  minDate?: string;
   onChange: (start: string, end: string) => void;
   placeholder?: string;
 }
@@ -53,6 +54,7 @@ export function DateRangePicker({
   label,
   start,
   end,
+  minDate,
   onChange,
   placeholder = "Выберите период",
 }: DateRangePickerProps) {
@@ -81,6 +83,7 @@ export function DateRangePicker({
   }, [open]);
 
   const handleDayClick = (dateKey: string) => {
+    if (minDate && dateKey < minDate) return;
     if (!start || (start && end)) {
       onChange(dateKey, "");
       return;
@@ -154,19 +157,22 @@ export function DateRangePicker({
               const isStart = dateKey === start;
               const isEnd = dateKey === end;
               const inRange = isInRange(dateKey, start, end);
+              const isDisabled = Boolean(minDate && dateKey < minDate);
 
               return (
                 <button
                   key={dateKey}
                   type="button"
+                  disabled={isDisabled}
                   onClick={() => handleDayClick(dateKey)}
                   className={cn(
                     "h-8 rounded-button text-xs border transition-colors",
-                    isStart || isEnd
+                    isDisabled && "text-gray-300 cursor-not-allowed hover:border-transparent",
+                    !isDisabled && (isStart || isEnd)
                       ? "border-gray-900 bg-gray-900 text-white"
-                      : inRange
+                      : !isDisabled && inRange
                         ? "border-transparent bg-gray-100 text-gray-900"
-                        : "border-transparent hover:border-gray-300"
+                        : !isDisabled && "border-transparent hover:border-gray-300"
                   )}
                 >
                   {day.getDate()}

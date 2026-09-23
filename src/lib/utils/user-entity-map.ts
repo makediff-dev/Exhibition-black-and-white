@@ -1,5 +1,5 @@
-import { SEED_CONTRACTORS } from "@/data/mocks/seed";
-import type { CompanyProfile, Deal, Response } from "@/data/types";
+import { SEED_CONTRACTORS } from "../../data/mocks/seed.ts";
+import type { CompanyProfile, Deal, Response } from "../../data/types/index.ts";
 
 const USER_TO_CONTRACTOR_ID: Record<string, string> = {
   "user-contractor": "ctr-1",

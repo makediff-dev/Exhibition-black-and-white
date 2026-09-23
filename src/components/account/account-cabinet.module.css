@@ -3,8 +3,10 @@
   --radius-button: 10px;
   flex: 1;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   min-width: 0;
+  min-height: 0;
   width: 100%;
 }
 

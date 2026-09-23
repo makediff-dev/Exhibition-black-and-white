@@ -4,11 +4,13 @@ import Link from "next/link";
 import { GitCompare, MessageSquare, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CardField } from "@/components/ui/card-field";
 import { getRequestOrderLines } from "@/constants/request-order-details";
-import { REQUEST_FORMAT_LABELS, REQUEST_STATUS_LABELS } from "@/constants/statuses";
+import { REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Deal, Request, Response } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getRequestStatus } from "@/lib/state/request-machine";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
 import { withFromParam } from "@/lib/utils/message-related-links";
@@ -32,7 +34,9 @@ function getContractorSelected(request: Request, deals: Deal[], responses: Respo
 }
 
 export function RequestOrderCard({ request, deal }: Props) {
+  const user = useAuthStore((state) => state.user);
   const { updateRequest, deals, responses } = usePrototypeStore();
+  const lifecycle = getRequestStatus(request, user, responses, deals);
   const { showToast } = useToast();
   const event = request.eventId ? SEED_EVENTS.find((item) => item.id === request.eventId) : undefined;
   const orderLines = getRequestOrderLines(request.id);
@@ -56,26 +60,17 @@ export function RequestOrderCard({ request, deal }: Props) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{REQUEST_FORMAT_LABELS[request.format]}</Badge>
-            <Badge variant={request.status === "published" ? "solid" : "outline"}>
-              {REQUEST_STATUS_LABELS[request.status]}
+            <Badge variant={lifecycle.code === "collecting_proposals" ? "solid" : "outline"}>
+              {lifecycle.label}
             </Badge>
           </div>
         </div>
 
-        <p>
-          <span className="text-gray-600">мероприятие:</span>{" "}
-          <span className="font-medium">{event?.title ?? "—"}</span>
-        </p>
-        <p>
-          <span className="text-gray-600">Площадка</span>{" "}
-          <span className="font-medium">{event ? `"${event.venue}"` : "—"}</span>
-        </p>
-        <p>
-          <span className="text-gray-600">Дата:</span>{" "}
-          <span className="font-medium">
-            {event ? `${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}` : "—"}
-          </span>
-        </p>
+        <CardField label="Мероприятие">{event?.title ?? "—"}</CardField>
+        <CardField label="Площадка">{event ? event.venue : "—"}</CardField>
+        <CardField label="Дата">
+          {event ? `${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}` : "—"}
+        </CardField>
 
         <p className="font-semibold pt-1">Позиции в корзине по заказу:</p>
 

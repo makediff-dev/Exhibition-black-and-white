@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/app-shell";
-import { useAuthStore } from "@/lib/store";
+import React, { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AppShell } from "@/components/layout/app-shell";
 import { AccountPageRenderer } from "@/components/account/account-page-renderer";
+import { ForbiddenState, LoadingState } from "@/components/ui/states";
 import type { AccountRole } from "@/constants/account-role-themes";
-import { isAllowedCabinetPath } from "@/lib/utils/cabinet-scope";
-
-const VALID_ROLES: AccountRole[] = ["customer", "contractor", "venue", "organizer"];
+import { ROLE_LABELS } from "@/constants/statuses";
+import { useAuthHydrated } from "@/lib/hooks/use-auth-hydrated";
+import { useAuthStore } from "@/lib/store";
+import { canAccessCabinetPath } from "@/lib/auth/authorization";
+import { loginHref } from "@/lib/auth/session";
 
 export default function AccountPage({
   params,
@@ -16,53 +18,51 @@ export default function AccountPage({
   params: Promise<{ role: string; slug?: string[] }>;
 }) {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const { isAuthenticated, user } = useAuthStore();
-  const [resolved, setResolved] = useState<{ role: string; slug: string } | null>(null);
+  const resolvedParams = use(params);
+  const role = resolvedParams.role;
+  const slug = resolvedParams.slug?.join("/") || "";
 
   useEffect(() => {
-    params.then((p) => {
-      const role = p.role;
-      const slug = p.slug?.join("/") || "";
-      if (!VALID_ROLES.includes(role as AccountRole)) {
-        router.push("/");
-        return;
-      }
-      setResolved({ role, slug });
-    });
-  }, [params, router]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
+    if (!hydrated) return;
+    if (!isAuthenticated || !user) {
+      router.replace(loginHref(`/account/${role}${slug ? `/${slug}` : ""}`));
     }
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, user, router, role, slug]);
 
   useEffect(() => {
-    if (resolved?.role === "customer" && resolved.slug === "requests") {
+    if (user?.role === "customer" && slug === "requests") {
       router.replace("/requests");
     }
-  }, [resolved, router]);
+  }, [user, slug, router]);
 
-  useEffect(() => {
-    if (user && resolved && user.role !== resolved.role) {
-      router.replace(`/account/${user.role}`);
-    }
-  }, [user, resolved, router]);
+  if (!hydrated) {
+    return <LoadingState message="Загрузка кабинета..." />;
+  }
 
-  useEffect(() => {
-    if (!user || !resolved || user.role !== resolved.role) return;
-    if (!isAllowedCabinetPath(user.role, resolved.slug)) {
-      router.replace(`/account/${user.role}`);
-    }
-  }, [user, resolved, router]);
+  if (!isAuthenticated || !user) {
+    return <LoadingState message="Переход к входу..." />;
+  }
 
-  if (!resolved || !user) {
-    return <div className="p-8 text-center text-sm text-gray-500">Загрузка...</div>;
+  const access = canAccessCabinetPath(user, role, slug);
+  if (!access.allowed) {
+    const homeHref = `/account/${user.role}`;
+    return (
+      <AppShell accountRole={user.role as AccountRole} title="Нет доступа">
+        <ForbiddenState
+          title="Раздел недоступен"
+          description={access.reason}
+          actionLabel={`Перейти в кабинет: ${ROLE_LABELS[user.role as keyof typeof ROLE_LABELS]}`}
+          actionHref={homeHref}
+        />
+      </AppShell>
+    );
   }
 
   return (
-    <AppShell accountRole={resolved.role as AccountRole}>
-      <AccountPageRenderer role={resolved.role as AccountRole} slug={resolved.slug} />
+    <AppShell accountRole={role as AccountRole}>
+      <AccountPageRenderer role={role as AccountRole} slug={slug} />
     </AppShell>
   );
 }

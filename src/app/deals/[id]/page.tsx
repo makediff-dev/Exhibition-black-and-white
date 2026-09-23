@@ -23,7 +23,11 @@ import { ProjectGanttSection } from "@/components/contractor/project-gantt-secti
 import { DealReviewTab } from "@/components/deals/deal-review-tab";
 import { EventOrdersPanel } from "@/components/deals/event-orders-panel";
 import { Tabs } from "@/components/ui/tabs";
-import { EmptyState } from "@/components/ui/states";
+import { EmptyState, ForbiddenState } from "@/components/ui/states";
+import { canMutateDeal, canReadDeal, canReadDocument, canReadPayment } from "@/lib/auth/authorization";
+import { dealActionToStatus, getDealStatus } from "@/lib/state/deal-machine";
+import type { ActionCode } from "@/lib/state/types";
+import { StatusSummary } from "@/components/ui/status-summary";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +41,7 @@ import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
+import { RequireAuth } from "@/components/auth/require-auth";
 
 const STAGE_STATUS_LABELS: Record<DealStage["status"], string> = {
   pending: "Ожидает",
@@ -77,6 +82,73 @@ interface DealAction {
   confirm?: string;
   stageUpdate?: Partial<DealStage>;
 }
+
+const DEAL_ACTION_META: Partial<Record<ActionCode, Omit<DealAction, "status">>> = {
+  confirm_terms: {
+    id: "confirm",
+    label: "Подтвердить условия",
+    icon: <Check className="h-4 w-4" />,
+    confirm: "Подтвердить условия сделки?",
+  },
+  pay: {
+    id: "pay",
+    label: "Оплатить",
+    icon: <CreditCard className="h-4 w-4" />,
+    confirm: "Подтвердить оплату?",
+  },
+  accept_stage: {
+    id: "accept",
+    label: "Принять этап",
+    icon: <Check className="h-4 w-4" />,
+    confirm: "Принять результат этапа?",
+  },
+  request_revision: {
+    id: "remarks",
+    label: "Замечания",
+    variant: "outline",
+    icon: <AlertTriangle className="h-4 w-4" />,
+    confirm: "Отправить на доработку?",
+  },
+  start_work: {
+    id: "start",
+    label: "Начать работу",
+    icon: <Play className="h-4 w-4" />,
+    stageUpdate: { status: "in_progress" },
+  },
+  submit_stage: {
+    id: "submit",
+    label: "Передать результат",
+    icon: <Send className="h-4 w-4" />,
+    confirm: "Передать результат этапа на проверку?",
+    stageUpdate: { status: "review", result: "Результат передан" },
+  },
+  request_payout: {
+    id: "payout",
+    label: "Запросить выплату",
+    icon: <CreditCard className="h-4 w-4" />,
+    confirm: "Запросить выплату по принятому этапу?",
+  },
+  complete_deal: {
+    id: "complete",
+    label: "Завершить сделку",
+    icon: <Check className="h-4 w-4" />,
+    confirm: "Завершить сделку?",
+  },
+  open_dispute: {
+    id: "dispute",
+    label: "Открыть спор",
+    variant: "outline",
+    icon: <AlertTriangle className="h-4 w-4" />,
+    confirm: "Открыть спор по сделке?",
+  },
+  resolve_dispute: {
+    id: "resolve",
+    label: "Принять решение спора",
+    icon: <Check className="h-4 w-4" />,
+    confirm:
+      "Принять демонстрационное решение: частичная компенсация заказчику, сделка завершена?",
+  },
+};
 
 function getCustomerActions(deal: Deal): DealAction[] {
   const actions: DealAction[] = [];
@@ -241,7 +313,7 @@ function SafeDealFlow({ status }: { status: DealStatus }) {
   );
 }
 
-export default function DealPage() {
+function DealPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromMessages = searchParams.get("from") === "messages";
@@ -264,8 +336,11 @@ export default function DealPage() {
     ? requests.find((request) => request.id === deal.requestId)
     : undefined;
   const eventId = deal?.eventId ?? linkedRequest?.eventId;
-  const dealDocuments = documents.filter((d) => d.dealId === id);
-  const dealPayments = payments.filter((p) => p.dealId === id);
+  const dealDocuments = documents.filter(
+    (d) => d.dealId === id && canReadDocument(d, user, deals)
+  );
+  const dealPayments = payments.filter((p) => p.dealId === id && canReadPayment(p, user, deals));
+  const dealAccess = canReadDeal(user, deal);
   const messageThread = messages.find((m) => m.relatedId === id);
 
   const isCustomer = Boolean(user && deal && user.id === deal.customerId);
@@ -274,21 +349,20 @@ export default function DealPage() {
   );
   const isVenue = user?.role === "venue";
 
+  const lifecycle = deal ? getDealStatus(deal, user) : null;
+
   const actions = useMemo(() => {
-    if (!deal) return [];
-    if (isCustomer) return getCustomerActions(deal);
-    if (isContractor) return getContractorActions(deal);
-    return [];
-  }, [deal, isCustomer, isContractor]);
+    if (!deal || !lifecycle) return [];
+    return lifecycle.allowedActions.flatMap((code) => {
+      const meta = DEAL_ACTION_META[code];
+      const status = dealActionToStatus(deal, user, code);
+      if (!meta || !status) return [];
+      return [{ ...meta, status }];
+    });
+  }, [deal, user, lifecycle]);
 
   const isStageReview = deal?.status === "stage_review";
-  const stageReviewActions = useMemo(
-    () => (deal && isStageReview ? getCustomerActions(deal) : []),
-    [deal, isStageReview]
-  );
-  const remarksAction =
-    stageReviewActions.find((action) => action.id === "remarks") ??
-    actions.find((action) => action.id === "remarks");
+  const remarksAction = actions.find((action) => action.id === "remarks");
 
   const handleActionClick = (action: DealAction) => {
     if (action.confirm) {
@@ -317,6 +391,11 @@ export default function DealPage() {
 
   const executeAction = (action: DealAction) => {
     if (!deal) return;
+    const mutation = canMutateDeal(user, deal);
+    if (!mutation.allowed) {
+      showToast(mutation.reason, "error");
+      return;
+    }
 
     let updatedStages = deal.stages;
     if (action.stageUpdate) {
@@ -377,6 +456,11 @@ export default function DealPage() {
   ];
 
   const handleDealUpdate = (updates: Partial<Deal>) => {
+    const mutation = canMutateDeal(user, deal);
+    if (!mutation.allowed) {
+      showToast(mutation.reason, "error");
+      return;
+    }
     updateDeal(deal!.id, updates);
   };
 
@@ -404,6 +488,23 @@ export default function DealPage() {
         : `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
+
+  if (deal && !dealAccess.allowed) {
+    return (
+      <AppShell
+        title="Нет доступа"
+        showBack
+        backFallbackHref={user?.role ? `/account/${user.role}` : "/login"}
+      >
+        <ForbiddenState
+          title="Сделка недоступна"
+          description={dealAccess.reason}
+          actionLabel={user?.role ? "В свой кабинет" : "Войти"}
+          actionHref={user?.role ? `/account/${user.role}` : "/login"}
+        />
+      </AppShell>
+    );
+  }
 
   if (!deal) {
     return (
@@ -514,10 +615,14 @@ export default function DealPage() {
       />
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <Badge>{DEAL_STATUS_LABELS[deal.status]}</Badge>
+        <Badge>{lifecycle?.label ?? DEAL_STATUS_LABELS[deal.status]}</Badge>
         <Badge variant="outline">{REQUEST_FORMAT_LABELS[deal.format]}</Badge>
         <Badge variant="outline">{formatPrice(deal.totalPrice)}</Badge>
+        <Badge variant="outline">
+          {user?.role === "contractor" ? "Вы продаёте" : "Вы покупаете"}
+        </Badge>
       </div>
+      {lifecycle && <div className="mb-4"><StatusSummary status={lifecycle} /></div>}
 
       {deal.format === "safe_deal" && <SafeDealFlow status={deal.status} />}
 
@@ -828,5 +933,13 @@ export default function DealPage() {
         </ul>
       )}
     </AppShell>
+  );
+}
+
+export default function DealPageRoute() {
+  return (
+    <RequireAuth>
+      <DealPage />
+    </RequireAuth>
   );
 }

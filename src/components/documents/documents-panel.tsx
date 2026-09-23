@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -22,6 +23,7 @@ import type { Document, Deal, Event, Request } from "@/data/types";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { isDocumentForUser } from "@/lib/utils/cabinet-scope";
+import { canMutateDocument } from "@/lib/auth/authorization";
 import { formatDate } from "@/lib/utils/formatters";
 
 const DOC_TABS = [
@@ -64,7 +66,7 @@ function resolveDocumentContext(
   requestMap: Record<string, Request>,
   eventMap: Record<string, Event>
 ) {
-  const deal = dealMap[doc.dealId];
+  const deal = doc.dealId ? dealMap[doc.dealId] : undefined;
   const request = deal?.requestId ? requestMap[deal.requestId] : undefined;
   const eventId = doc.eventId ?? deal?.eventId ?? request?.eventId;
   const event = eventId ? eventMap[eventId] : undefined;
@@ -243,7 +245,7 @@ export function DocumentsPanel({
     const projects = new Map<string, string>();
 
     scopedDocuments.forEach((doc) => {
-      const deal = dealMap[doc.dealId];
+      const deal = doc.dealId ? dealMap[doc.dealId] : undefined;
       if (!deal) return;
       counterparties.add(deal.contractorName);
       projects.set(deal.id, deal.title);
@@ -320,6 +322,11 @@ export function DocumentsPanel({
   };
 
   const handleSendEdo = (doc: Document) => {
+    const mutation = canMutateDocument(doc, user, deals);
+    if (!mutation.allowed) {
+      showToast(mutation.reason, "error");
+      return;
+    }
     if (!edoConnected) {
       showToast("Подключите ЭДО для отправки документов", "error");
       return;
@@ -329,6 +336,11 @@ export function DocumentsPanel({
   };
 
   const handleSign = (doc: Document) => {
+    const mutation = canMutateDocument(doc, user, deals);
+    if (!mutation.allowed) {
+      showToast(mutation.reason, "error");
+      return;
+    }
     if (!edoConnected) {
       showToast("Подключите ЭДО для подписания", "error");
       return;
@@ -476,37 +488,34 @@ export function DocumentsPanel({
                 </div>
 
                 <p className="text-sm font-semibold">{doc.number}</p>
-                <div className="space-y-[10px] text-sm text-gray-600 flex-1">
-                  <p>
-                    <span className="text-gray-900 font-medium">Дата:</span>{" "}
-                    {formatDate(doc.date)}
-                  </p>
-                  <p>
-                    <span className="text-gray-900 font-medium">Стороны:</span>{" "}
-                    {doc.parties}
-                  </p>
+                <div className="space-y-[10px] flex-1">
+                  <CardField label="Дата">{formatDate(doc.date)}</CardField>
+                  <CardField label="Стороны">{doc.parties}</CardField>
                   {filterMode === "event-top-level" && context.event && (
-                    <p>
-                      <span className="text-gray-900 font-medium">Мероприятие:</span>{" "}
-                      {context.event.title}
-                    </p>
+                    <CardField label="Мероприятие">{context.event.title}</CardField>
                   )}
                   {filterMode === "event-top-level" && context.organizerName && (
-                    <p>
-                      <span className="text-gray-900 font-medium">Организатор:</span>{" "}
-                      {context.organizerName}
-                    </p>
+                    <CardField label="Организатор">{context.organizerName}</CardField>
                   )}
                   {deal && (
-                    <p>
-                      <span className="text-gray-900 font-medium">Сделка:</span>{" "}
+                    <CardField label="Сделка">
                       <Link
                         href={`/deals/${deal.id}`}
-                        className="underline hover:text-gray-900"
+                        className="underline hover:text-gray-700"
                       >
                         {deal.number} — {deal.title}
                       </Link>
-                    </p>
+                    </CardField>
+                  )}
+                  {doc.orderId && !deal && (
+                    <CardField label="Заказ">
+                      <Link
+                        href={`/orders/${doc.orderId}`}
+                        className="underline hover:text-gray-700"
+                      >
+                        Открыть заказ
+                      </Link>
+                    </CardField>
                   )}
                 </div>
 

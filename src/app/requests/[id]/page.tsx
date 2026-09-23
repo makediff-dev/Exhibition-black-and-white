@@ -20,18 +20,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
-import { REQUEST_FORMAT_LABELS, REQUEST_STATUS_LABELS, STAGE_STATUS_LABELS } from "@/constants/statuses";
+import {
+  DOCUMENT_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  REQUEST_FORMAT_LABELS,
+  STAGE_STATUS_LABELS,
+} from "@/constants/statuses";
 import {
   formatSectionContentForDisplay,
   isDescriptionSectionFilled,
 } from "@/constants/request-description-sections";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
-import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { addDaysIso } from "@/lib/state/clock";
+import { getRequestStatus } from "@/lib/state/request-machine";
+import { StatusSummary } from "@/components/ui/status-summary";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
 
 type RequestTab = "overview" | "stages" | "documents" | "payments" | "files" | "history";
 
@@ -56,7 +64,8 @@ function RequestDetailContent() {
   const params = useParams();
   const id = params.id as string;
   const { user, isAuthenticated } = useAuthStore();
-  const { requests, responses, deals, documents, payments, updateRequest } = usePrototypeStore();
+  const { requests, responses, deals, documents, payments, updateRequest, addRequest } =
+    usePrototypeStore();
   const [activeTab, setActiveTab] = useState<RequestTab>("overview");
 
   const request = requests.find((r) => r.id === id);
@@ -98,36 +107,73 @@ function RequestDetailContent() {
     );
   }
 
-  const isOwner = user?.id === request.customerId;
-  const contractorId = getContractorIdForUser(user);
   const isContractor = user?.role === "contractor";
-  const canRespond =
-    isContractor && isRequestVisibleToContractor(request, contractorId);
-  const hasResponded = requestResponses.some(
-    (r) =>
-      (contractorId !== null && r.contractorId === contractorId) ||
-      r.contractorName === user?.name
-  );
+  const canSeeRequest = !isContractor || isRequestVisibleToContractor(request, user);
+  const lifecycle = getRequestStatus(request, user, requestResponses, deals);
+  const today = getPrototypeNowDateIso();
+
+  if (isContractor && !canSeeRequest) {
+    return (
+      <AppShell title="Заявка недоступна" showBack backFallbackHref="/requests">
+        <EmptyState
+          title="Заявка скрыта для вашего профиля"
+          description={`Категория «${request.category}» или география не входят в вашу специализацию. Расширьте категории или города, чтобы видеть такие заявки.`}
+          actionLabel="Категории в профиле"
+          actionHref="/account/contractor/profile"
+        />
+        <p className="text-center text-sm mt-3">
+          <Link href="/account/contractor/cities" className="underline">
+            Города оказания услуг
+          </Link>
+        </p>
+      </AppShell>
+    );
+  }
 
   const publishDraft = () => {
+    if (!lifecycle.allowedActions.includes("publish")) return;
     updateRequest(request.id, {
       status: "published",
-      publishedAt: new Date().toISOString().split("T")[0],
-      history: [
-        ...request.history,
-        { date: new Date().toISOString().split("T")[0], action: "Опубликована" },
-      ],
+      publishedAt: today,
+      history: [...request.history, { date: today, action: "Опубликована" }],
+    });
+  };
+
+  const extendDeadline = () => {
+    const nextDeadline = `${addDaysIso(today, 14)}T23:59:00`;
+    updateRequest(request.id, {
+      responseDeadlineAt: nextDeadline,
+      history: [...request.history, { date: today, action: "Срок отклика продлён" }],
+    });
+  };
+
+  const archiveRequest = () => {
+    updateRequest(request.id, {
+      status: "archived",
+      history: [...request.history, { date: today, action: "Отправлена в архив" }],
+    });
+  };
+
+  const copyRequest = () => {
+    addRequest({
+      ...request,
+      id: `req-copy-${Date.now()}`,
+      status: "draft",
+      publishedAt: undefined,
+      responseCount: 0,
+      invitedContractorIds: request.invitedContractorIds,
+      history: [{ date: today, action: "Скопирована из просроченной заявки" }],
     });
   };
 
   const actions = (
     <>
-      {isOwner && request.status === "draft" && (
+      {lifecycle.allowedActions.includes("publish") && (
         <Button size="sm" onClick={publishDraft}>
           Опубликовать
         </Button>
       )}
-      {isOwner && request.status === "published" && requestResponses.length > 0 && (
+      {lifecycle.allowedActions.includes("view_responses") && requestResponses.length > 0 && (
         <Link href={`/requests/${id}/responses`}>
           <Button size="sm" variant="outline">
             <MessageSquare className="h-4 w-4" />
@@ -135,7 +181,7 @@ function RequestDetailContent() {
           </Button>
         </Link>
       )}
-      {isOwner && requestResponses.length >= 2 && (
+      {lifecycle.allowedActions.includes("compare") && requestResponses.length >= 2 && (
         <Link href={`/requests/${id}/compare`}>
           <Button size="sm" variant="outline">
             <GitCompare className="h-4 w-4" />
@@ -143,7 +189,7 @@ function RequestDetailContent() {
           </Button>
         </Link>
       )}
-      {canRespond && !hasResponded && (
+      {canSeeRequest && lifecycle.allowedActions.includes("submit_proposal") && (
         <Link href={`/requests/${id}/respond`}>
           <Button size="sm">
             <Send className="h-4 w-4" />
@@ -151,28 +197,33 @@ function RequestDetailContent() {
           </Button>
         </Link>
       )}
-      {canRespond && hasResponded && (
-        <Link href={`/requests/${id}/respond`}>
-          <Button size="sm" variant="outline">
-            <Send className="h-4 w-4" />
-            Ваш отклик отправлен
-          </Button>
-        </Link>
-      )}
-      {relatedDeal && (
+      {lifecycle.allowedActions.includes("open_deal") && relatedDeal && (
         <Link href={`/deals/${relatedDeal.id}`}>
-          <Button size="sm">
-            Открыть сделку
-          </Button>
+          <Button size="sm">Открыть сделку</Button>
         </Link>
       )}
-      {isOwner && request.status === "draft" && (
+      {lifecycle.allowedActions.includes("edit") && (
         <Link href={`/requests/new`}>
           <Button size="sm" variant="ghost">
             <Pencil className="h-4 w-4" />
             Редактировать
           </Button>
         </Link>
+      )}
+      {lifecycle.recoveryActions.includes("extend_deadline") && (
+        <Button size="sm" variant="outline" onClick={extendDeadline}>
+          Продлить срок
+        </Button>
+      )}
+      {lifecycle.recoveryActions.includes("copy_request") && (
+        <Button size="sm" variant="outline" onClick={copyRequest}>
+          Копировать
+        </Button>
+      )}
+      {lifecycle.recoveryActions.includes("archive") && (
+        <Button size="sm" variant="ghost" onClick={archiveRequest}>
+          В архив
+        </Button>
       )}
     </>
   );
@@ -181,9 +232,9 @@ function RequestDetailContent() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
         <Badge>{REQUEST_FORMAT_LABELS[request.format]}</Badge>
-        <Badge variant="outline">{REQUEST_STATUS_LABELS[request.status]}</Badge>
         <Badge variant="dashed">{request.category}</Badge>
       </div>
+      <StatusSummary status={lifecycle} />
 
       <Tabs
         tabs={REQUEST_TABS}
@@ -405,7 +456,7 @@ function RequestDetailContent() {
                   </div>
                   <div className="flex items-center gap-3 text-gray-600">
                     <span>{formatShortDate(doc.date)}</span>
-                    <Badge variant="outline">{doc.status}</Badge>
+                    <Badge variant="outline">{DOCUMENT_STATUS_LABELS[doc.status]}</Badge>
                   </div>
                 </div>
               </Card>
@@ -431,7 +482,9 @@ function RequestDetailContent() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{formatPrice(payment.amount)}</p>
-                    <Badge variant="outline" className="mt-1">{payment.status}</Badge>
+                    <Badge variant="outline" className="mt-1">
+                      {PAYMENT_STATUS_LABELS[payment.status]}
+                    </Badge>
                   </div>
                 </div>
               </Card>

@@ -19,8 +19,9 @@ import { OrganizerEventRecommendedPartnersPanel } from "@/components/organizer/o
 import { CITIES } from "@/constants/categories";
 import { VENUE_CATALOG } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import type { Event } from "@/data/types";
+import type { Booking, Event } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
+import { applyScheduleToEvent, getConfirmedEventSchedule } from "@/lib/utils/entity-links";
 
 const CATEGORY_OPTIONS = [
   { value: "exhibition", label: "Выставка" },
@@ -77,9 +78,11 @@ const EMPTY_FORM: FormState = {
   participantMemo: "",
 };
 
-function mapEventToForm(event: Event): FormState {
+function mapEventToForm(event: Event, bookings: Booking[]): FormState {
   const industryValue =
     INDUSTRY_OPTIONS.find((option) => option.label === event.industry)?.value ?? "furniture";
+  const scheduled = applyScheduleToEvent(event, bookings);
+  const schedule = getConfirmedEventSchedule(event.id, bookings);
 
   return {
     title: event.title,
@@ -87,13 +90,13 @@ function mapEventToForm(event: Event): FormState {
     industry: industryValue,
     description: event.description,
     city: event.city,
-    venueId: event.venueId ?? "venue-1",
-    startDate: event.startDate,
-    endDate: event.endDate,
-    assemblyStart: "",
-    assemblyEnd: "",
-    dismantlingStart: "",
-    dismantlingEnd: "",
+    venueId: scheduled.venueId ?? "venue-1",
+    startDate: scheduled.startDate,
+    endDate: scheduled.endDate,
+    assemblyStart: schedule.assemblyStart ?? "",
+    assemblyEnd: schedule.assemblyEnd ?? "",
+    dismantlingStart: schedule.dismantlingStart ?? "",
+    dismantlingEnd: schedule.dismantlingEnd ?? "",
     participationTerms: event.participationTerms,
     participantInfo: "",
     participantMemo: "",
@@ -215,9 +218,14 @@ export function OrganizerEventFormSection({
     }
   }, [tabFromQuery]);
 
+  const confirmedSchedule = useMemo(
+    () => (eventId ? getConfirmedEventSchedule(eventId, bookings) : { locked: false }),
+    [eventId, bookings]
+  );
+
   useEffect(() => {
     if (mode === "edit" && existingEvent) {
-      setForm(mapEventToForm(existingEvent));
+      setForm(mapEventToForm(existingEvent, bookings));
       return;
     }
     if (mode === "create" && organizerEventDraft) {
@@ -243,9 +251,21 @@ export function OrganizerEventFormSection({
         participantMemo: "",
       });
     }
-  }, [mode, existingEvent, organizerEventDraft]);
+  }, [mode, existingEvent, organizerEventDraft, bookings]);
+
+  const scheduleLocked = Boolean(confirmedSchedule.locked);
+  const lockedScheduleKeys: (keyof FormState)[] = [
+    "venueId",
+    "startDate",
+    "endDate",
+    "assemblyStart",
+    "assemblyEnd",
+    "dismantlingStart",
+    "dismantlingEnd",
+  ];
 
   const updateForm = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    if (scheduleLocked && lockedScheduleKeys.includes(key)) return;
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -401,8 +421,16 @@ export function OrganizerEventFormSection({
             label="Площадка"
             options={VENUE_OPTIONS}
             value={form.venueId}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("venueId", event.target.value)}
           />
+        )}
+
+        {scheduleLocked && (
+          <p className="text-sm text-gray-600">
+            Площадка и периоды взяты из подтверждённых бронирований. Чтобы изменить даты,
+            откройте бронь и отправьте change request — вторая версия расписания не создаётся.
+          </p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -410,12 +438,14 @@ export function OrganizerEventFormSection({
             label="Дата начала"
             type="date"
             value={form.startDate}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("startDate", event.target.value)}
           />
           <Input
             label="Дата окончания"
             type="date"
             value={form.endDate}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("endDate", event.target.value)}
           />
         </div>
@@ -425,12 +455,14 @@ export function OrganizerEventFormSection({
             label="Даты монтажа · с"
             type="date"
             value={form.assemblyStart}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("assemblyStart", event.target.value)}
           />
           <Input
             label="Даты монтажа · по"
             type="date"
             value={form.assemblyEnd}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("assemblyEnd", event.target.value)}
           />
         </div>
@@ -439,6 +471,7 @@ export function OrganizerEventFormSection({
           <Input
             label="Даты демонтажа · с"
             type="date"
+            disabled={scheduleLocked}
             value={form.dismantlingStart}
             onChange={(event) => updateForm("dismantlingStart", event.target.value)}
           />
@@ -446,6 +479,7 @@ export function OrganizerEventFormSection({
             label="Даты демонтажа · по"
             type="date"
             value={form.dismantlingEnd}
+            disabled={scheduleLocked}
             onChange={(event) => updateForm("dismantlingEnd", event.target.value)}
           />
         </div>

@@ -71,6 +71,7 @@ export function CabinetAwareLayout({
     <div className="register-accent flex min-h-screen flex-col">
       <PublicHeader />
       <main
+        id="main-content"
         className={cn(
           "flex-1 w-full px-4 py-6 md:px-6",
           constrained && "mx-auto max-w-site",

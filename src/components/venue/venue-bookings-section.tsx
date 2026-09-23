@@ -10,11 +10,13 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
+import { VenueInquiriesSection } from "@/components/venue/venue-inquiries-section";
 import { BookingDateRangePicker } from "@/components/venue/booking-date-calendar";
-import { BOOKING_PERIOD_LABELS, BOOKING_STATUS_LABELS } from "@/constants/statuses";
+import { BOOKING_PERIOD_LABELS } from "@/constants/statuses";
 import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getBookingStatus } from "@/lib/state/booking-machine";
 import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
 import { formatShortDate } from "@/lib/utils/formatters";
 
@@ -73,6 +75,7 @@ export function VenueBookingsSection({
   initialEventId,
   lockEventFilter = false,
 }: Props) {
+  const user = useAuthStore((state) => state.user);
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
   const addPayment = usePrototypeStore((state) => state.addPayment);
@@ -144,6 +147,11 @@ export function VenueBookingsSection({
   }, [hallBookings, eventFilter, rangeStart, rangeEnd]);
 
   const handleConfirm = (booking: Booking) => {
+    const lifecycle = getBookingStatus(booking, user);
+    if (!lifecycle.allowedActions.includes("confirm_booking")) {
+      showToast(lifecycle.blockedReason ?? "Подтвердить нельзя", "error");
+      return;
+    }
     updateBooking(booking.id, { status: "confirmed" });
     const hall = booking.hallId ? hallMap[booking.hallId] : undefined;
     const amount = hall ? hall.area * 400 : 100000;
@@ -155,7 +163,10 @@ export function VenueBookingsSection({
   };
 
   const handleReject = (booking: Booking) => {
-    updateBooking(booking.id, { status: "rejected" });
+    const lifecycle = getBookingStatus(booking, user);
+    const reason =
+      lifecycle.code === "expired" ? "Период бронирования уже прошёл" : "Отклонено площадкой";
+    updateBooking(booking.id, { status: "rejected", rejectReason: reason });
     showToast("Бронирование отклонено", "success");
   };
 
@@ -165,6 +176,7 @@ export function VenueBookingsSection({
         Организатор бронирует у площадки целые залы на периоды монтажа, проведения
         мероприятия и демонтажа.
       </p>
+      <VenueInquiriesSection venueId={venueId} showToast={showToast} />
 
       <div className={lockEventFilter ? "grid gap-4" : "grid gap-4 sm:grid-cols-2"}>
         {!lockEventFilter ? (
@@ -203,6 +215,7 @@ export function VenueBookingsSection({
             const periodLabel = booking.periodType
               ? BOOKING_PERIOD_LABELS[booking.periodType]
               : "Период";
+            const lifecycle = getBookingStatus(booking, user);
 
             return (
               <Link
@@ -213,7 +226,7 @@ export function VenueBookingsSection({
                 <Card hoverable className="cabinet-card h-full flex flex-col gap-[10px]">
                   <div className="flex flex-wrap items-center gap-[10px]">
                     <Badge variant="muted">{periodLabel}</Badge>
-                    <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
+                    <Badge variant="solid">{lifecycle.label}</Badge>
                   </div>
 
                   <CardTitle className="text-sm">
@@ -257,8 +270,10 @@ export function VenueBookingsSection({
                     </p>
                   </CardDescription>
 
-                  {booking.status === "pending" && (
+                  {(lifecycle.allowedActions.includes("confirm_booking") ||
+                    lifecycle.allowedActions.includes("reject_booking")) && (
                     <div className="flex flex-wrap gap-[10px]">
+                      {lifecycle.allowedActions.includes("confirm_booking") && (
                       <Button
                         size="sm"
                         onClick={(event) => {
@@ -269,6 +284,8 @@ export function VenueBookingsSection({
                       >
                         Подтвердить
                       </Button>
+                      )}
+                      {lifecycle.allowedActions.includes("reject_booking") && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -280,6 +297,7 @@ export function VenueBookingsSection({
                       >
                         Отклонить
                       </Button>
+                      )}
                     </div>
                   )}
                 </Card>

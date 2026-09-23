@@ -4,18 +4,26 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
-import {
-  DEAL_STATUS_LABELS,
-  EVENT_ORDER_CUSTOMER_ROLE_LABELS,
-  EVENT_ORDER_PRIORITY_LABELS,
-  EVENT_ORDER_TYPE_LABELS,
-} from "@/constants/statuses";
+import { EVENT_ORDER_PRIORITY_LABELS, EVENT_ORDER_TYPE_LABELS } from "@/constants/statuses";
 import { SEED_EVENT_ORDERS, SEED_EVENTS } from "@/data/mocks/seed";
-import type { DealStatus, EventOrder, EventOrderPriority } from "@/data/types";
+import type { EventOrder, EventOrderPriority } from "@/data/types";
+import { useAuthStore } from "@/lib/store";
+import { getEventOrderHref } from "@/lib/utils/entity-links";
 import { formatPrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import {
+  COMMERCIAL_ORDER_KIND_LABELS,
+  getCommercialOrderKind,
+  getEventOrderStatusLabel,
+  getOrderCounterparty,
+  getOrderDeadlineLabel,
+  getOrderNextStep,
+  getOrderTradeSide,
+  getOrderTradeSideLabel,
+} from "@/lib/utils/order-presentation";
 
 const PRIORITY_ORDER: EventOrderPriority[] = ["high", "medium", "normal"];
 
@@ -26,56 +34,43 @@ const PRIORITY_FILTERS = [
   { id: "normal", label: "Обычный" },
 ] as const;
 
-function getOrderStatusLabel(status: EventOrder["status"]) {
-  if (status === "pending") return "Ожидает";
-  if (status === "completed") return "Завершён";
-  return DEAL_STATUS_LABELS[status as DealStatus] ?? status;
-}
-
 function getOrderHref(order: EventOrder) {
-  if (order.dealId) return `/deals/${order.dealId}`;
-  if (order.requestId) return `/requests/${order.requestId}`;
-  return undefined;
+  return getEventOrderHref(order);
 }
 
 interface EventOrderCardProps {
   order: EventOrder;
   highlighted?: boolean;
   eventTitle?: string;
-  eventOrdersHref?: string;
 }
 
-function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: EventOrderCardProps) {
+function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps) {
+  const role = useAuthStore((state) => state.user?.role);
   const href = getOrderHref(order);
+  const event = SEED_EVENTS.find((item) => item.id === order.eventId);
+  const side = getOrderTradeSide(order, role);
   const content = (
     <Card
       hoverable={Boolean(href)}
       className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
     >
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <Badge variant="muted">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
-        <Badge variant="solid">{getOrderStatusLabel(order.status)}</Badge>
+      <div className="flex flex-wrap items-center gap-2 mb-[10px]">
+        <Badge variant="muted">{COMMERCIAL_ORDER_KIND_LABELS[getCommercialOrderKind(order.type)]}</Badge>
+        <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+        <Badge variant="solid">{getEventOrderStatusLabel(order.status)}</Badge>
+        <Badge variant="outline">{getOrderTradeSideLabel(side)}</Badge>
       </div>
-      <CardTitle className="text-sm">{order.title}</CardTitle>
-      <CardDescription className="mt-2 space-y-1">
-        {eventTitle && (
-          <span className="block text-xs text-gray-500">
-            Мероприятие:{" "}
-            {eventOrdersHref ? (
-              <Link href={eventOrdersHref} className="underline hover:text-gray-900">
-                {eventTitle}
-              </Link>
-            ) : (
-              eventTitle
-            )}
-          </span>
+      <CardTitle className="text-sm mb-[10px]">{order.title}</CardTitle>
+      <CardDescription className="mt-0 space-y-[10px]">
+        {eventTitle && <CardField label="Мероприятие">{eventTitle}</CardField>}
+        <CardField label="Контрагент">{getOrderCounterparty(order, event?.venue)}</CardField>
+        <CardField label="Предмет">{order.title}</CardField>
+        <CardField label="Следующий шаг">{getOrderNextStep(order, role)}</CardField>
+        {getOrderDeadlineLabel(event) && (
+          <CardField label="Срок">{getOrderDeadlineLabel(event)?.replace(/^Срок:\s*/, "")}</CardField>
         )}
-        <span className="block">
-          {EVENT_ORDER_CUSTOMER_ROLE_LABELS[order.customerRole]}:{" "}
-          <span className="text-gray-900">{order.customerName}</span>
-        </span>
         {order.amount != null && (
-          <span className="block font-medium text-gray-900">
+          <span className="block pt-1 text-lg font-semibold text-gray-900">
             {formatPrice(order.amount)}
           </span>
         )}
@@ -94,8 +89,8 @@ function EventOrderCard({ order, highlighted, eventTitle, eventOrdersHref }: Eve
 
 const DIRECTION_FILTERS = [
   { id: "all", label: "Все" },
-  { id: "incoming", label: "Входящие" },
-  { id: "outgoing", label: "Исходящие" },
+  { id: "incoming", label: "Вы продаёте" },
+  { id: "outgoing", label: "Вы покупаете" },
 ] as const;
 
 interface Props {
@@ -233,11 +228,6 @@ export function EventOrdersPanel({
                       order={order}
                       highlighted={Boolean(currentDealId && order.dealId === currentDealId)}
                       eventTitle={showEventTitle ? orderEvent?.title : undefined}
-                      eventOrdersHref={
-                        venueId && !eventId && order.eventId
-                          ? `/account/venue/orders/${order.eventId}`
-                          : undefined
-                      }
                     />
                   );
                 })}

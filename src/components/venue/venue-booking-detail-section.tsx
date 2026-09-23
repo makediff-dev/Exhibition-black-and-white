@@ -13,7 +13,13 @@ import type { AccountRole } from "@/constants/account-role-themes";
 import { BOOKING_PERIOD_LABELS, BOOKING_STATUS_LABELS } from "@/constants/statuses";
 import { SEED_BOOKINGS, SEED_EVENTS, SEED_HALLS } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getBookingStatus } from "@/lib/state/booking-machine";
+import { StatusSummary } from "@/components/ui/status-summary";
+import { BookingSubjectCard } from "@/components/bookings/booking-subject-card";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 import { buildBookingInvoice } from "@/lib/utils/cabinet-scope";
 import { withFromMessages } from "@/lib/utils/message-related-links";
@@ -57,8 +63,16 @@ export function VenueBookingDetailSection({
 }: Props) {
   const searchParams = useSearchParams();
   const fromMessages = searchParams.get("from") === "messages";
+  const user = useAuthStore((state) => state.user);
+  const [rejectReason, setRejectReason] = useState("");
+  const [altHall, setAltHall] = useState("");
+  const [changeStart, setChangeStart] = useState("");
+  const [changeEnd, setChangeEnd] = useState("");
+  const [changeReason, setChangeReason] = useState("");
   const storeBookings = usePrototypeStore((state) => state.bookings);
   const updateBooking = usePrototypeStore((state) => state.updateBooking);
+  const requestBookingChange = usePrototypeStore((state) => state.requestBookingChange);
+  const resolveBookingChange = usePrototypeStore((state) => state.resolveBookingChange);
   const addPayment = usePrototypeStore((state) => state.addPayment);
   const payments = usePrototypeStore((state) => state.payments);
   const resolvedRole = role ?? "venue";
@@ -94,7 +108,13 @@ export function VenueBookingDetailSection({
     ? BOOKING_PERIOD_LABELS[booking.periodType]
     : "Период";
 
+  const lifecycle = getBookingStatus(booking, user);
+
   const handleConfirm = () => {
+    if (!lifecycle.allowedActions.includes("confirm_booking")) {
+      showToast(lifecycle.blockedReason ?? "Подтвердить нельзя", "error");
+      return;
+    }
     updateBooking(booking.id, { status: "confirmed" });
     const hall = booking.hallId ? SEED_HALLS.find((item) => item.id === booking.hallId) : undefined;
     const amount = hall ? hall.area * 400 : 100000;
@@ -106,7 +126,14 @@ export function VenueBookingDetailSection({
   };
 
   const handleReject = () => {
-    updateBooking(booking.id, { status: "rejected" });
+    const reason =
+      rejectReason.trim() ||
+      (lifecycle.code === "expired" ? "Период бронирования уже прошёл" : "");
+    if (!reason) {
+      showToast("Укажите причину отклонения", "error");
+      return;
+    }
+    updateBooking(booking.id, { status: "rejected", rejectReason: reason });
     showToast("Бронирование отклонено", "success");
   };
 
@@ -117,13 +144,15 @@ export function VenueBookingDetailSection({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="muted">{periodLabel}</Badge>
-          <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
+          <Badge variant="solid">{lifecycle.label}</Badge>
         </div>
         <h1 className="text-xl font-bold">{event?.title ?? "Бронирование"}</h1>
         <p className="text-sm text-gray-600">
-          Заявка от {formatDate(booking.date)} · ID {booking.id}
+          Заявка от {formatDate(booking.date)}
         </p>
       </div>
+
+      <BookingSubjectCard booking={booking} />
 
       <Card className="space-y-4">
         <CardTitle className="text-sm">Детали бронирования</CardTitle>
@@ -198,13 +227,107 @@ export function VenueBookingDetailSection({
         </Card>
       )}
 
-      {resolvedRole === "venue" && booking.status === "pending" && (
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={handleConfirm}>Подтвердить бронирование</Button>
-          <Button variant="outline" onClick={handleReject}>
-            Отклонить
-          </Button>
+      <StatusSummary status={lifecycle} />
+
+      {resolvedRole === "venue" &&
+        (lifecycle.allowedActions.includes("confirm_booking") ||
+          lifecycle.allowedActions.includes("reject_booking")) && (
+        <div className="space-y-3">
+          {lifecycle.allowedActions.includes("reject_booking") && (
+            <Input
+              label="Причина отклонения"
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              placeholder={
+                lifecycle.code === "expired"
+                  ? "Период бронирования уже прошёл"
+                  : "Почему нельзя подтвердить"
+              }
+            />
+          )}
+          <div className="flex flex-wrap gap-3">
+            {lifecycle.allowedActions.includes("confirm_booking") && (
+              <Button onClick={handleConfirm}>Подтвердить бронирование</Button>
+            )}
+            {lifecycle.allowedActions.includes("reject_booking") && (
+              <Button variant="outline" onClick={handleReject}>
+                Отклонить
+              </Button>
+            )}
+          </div>
+          {lifecycle.allowedActions.includes("reject_booking") && (
+            <Input
+              label="Альтернативный зал (необязательно)"
+              value={altHall}
+              onChange={(event) => setAltHall(event.target.value)}
+              placeholder="Зал 2, 8–12 апреля"
+            />
+          )}
         </div>
+      )}
+
+      {lifecycle.allowedActions.includes("request_change") && (
+        <Card className="space-y-3">
+          <CardTitle className="text-sm">Запрос на смену дат</CardTitle>
+          <p className="text-sm text-gray-600">
+            Согласованное расписание меняется только через change request, без второй версии календаря.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Input
+              label="Новая дата с"
+              type="date"
+              value={changeStart}
+              onChange={(event) => setChangeStart(event.target.value)}
+            />
+            <Input
+              label="Новая дата по"
+              type="date"
+              value={changeEnd}
+              onChange={(event) => setChangeEnd(event.target.value)}
+            />
+          </div>
+          <Textarea
+            label="Причина"
+            value={changeReason}
+            onChange={(event) => setChangeReason(event.target.value)}
+          />
+          <Button
+            size="sm"
+            onClick={() => {
+              const ok = requestBookingChange(booking.id, {
+                status: "pending",
+                actor: resolvedRole === "venue" ? "venue" : "organizer",
+                periodStart: changeStart,
+                periodEnd: changeEnd,
+                reason: changeReason,
+              });
+              showToast(
+                ok ? "Запрос на смену дат отправлен" : "Нельзя открыть смену дат",
+                ok ? "success" : "error"
+              );
+            }}
+          >
+            Отправить change request
+          </Button>
+        </Card>
+      )}
+
+      {lifecycle.allowedActions.includes("accept_change") && booking.changeRequest && (
+        <Card className="space-y-3">
+          <CardTitle className="text-sm">Встречный запрос дат</CardTitle>
+          <p className="text-sm">
+            {formatShortDate(booking.changeRequest.periodStart)} —{" "}
+            {formatShortDate(booking.changeRequest.periodEnd)}. {booking.changeRequest.reason}
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => resolveBookingChange(booking.id, true)}>
+              Принять новые даты
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => resolveBookingChange(booking.id, false)}>
+              Отклонить
+            </Button>
+          </div>
+        </Card>
       )}
     </div>
   );

@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { DEAL_STATUS_LABELS } from "@/constants/statuses";
 import type { Deal } from "@/data/types";
-import { formatPrice } from "@/lib/utils/formatters";
+import { getDealStatus } from "@/lib/state/deal-machine";
+import { useAuthStore } from "@/lib/store";
+import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 
 interface Props {
   deals: Deal[];
@@ -28,6 +31,7 @@ export function CustomerProjectsSection({
   showRepeatOrder = true,
 }: Props) {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<"active" | "completed">(initialTab);
 
   const activeDeals = deals.filter((deal) => deal.status !== "completed");
@@ -68,10 +72,28 @@ export function CustomerProjectsSection({
             <Card key={deal.id} borderHover className="flex h-full flex-col">
               <Link href={`/deals/${deal.id}`} className="flex-1 block">
                 <CardTitle>{deal.title}</CardTitle>
-                <Badge className="mt-2">{DEAL_STATUS_LABELS[deal.status]}</Badge>
-                <CardDescription className="mt-2">
-                  {deal.number} · {partnerName(deal)} · {formatPrice(deal.totalPrice)}
-                </CardDescription>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge>{DEAL_STATUS_LABELS[deal.status]}</Badge>
+                  <Badge variant="outline">
+                    {user?.role === "contractor" ? "Вы продаёте" : "Вы покупаете"}
+                  </Badge>
+                </div>
+                <div className="mt-[10px] space-y-[10px]">
+                  <CardField label="Номер">{deal.number}</CardField>
+                  <CardField label="Контрагент">{partnerName(deal)}</CardField>
+                  {(() => {
+                    const lifecycle = getDealStatus(deal, user);
+                    return (
+                      <>
+                        <CardField label="Следующий шаг">{lifecycle.explanation}</CardField>
+                        {lifecycle.deadline ? (
+                          <CardField label="Срок">{formatShortDate(lifecycle.deadline)}</CardField>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                  <p className="pt-1 text-lg font-semibold text-gray-900">{formatPrice(deal.totalPrice)}</p>
+                </div>
               </Link>
               {activeTab === "completed" && showRepeatOrder ? (
                 <Button

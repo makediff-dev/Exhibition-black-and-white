@@ -27,6 +27,7 @@ import type { Contractor, Event, UserRole } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { getOrganizerDisplayName } from "@/lib/utils/organizer-names";
 import {
   getCabinetBackHref,
   resolveMessageRelatedHref,
@@ -241,7 +242,7 @@ export default function EventDetailPage() {
               <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
               <Badge variant="dashed">{event.industry}</Badge>
               {event.bookingAvailable && (
-                <Badge variant="solid">Бронирование в тестовом режиме</Badge>
+                <Badge variant="outline">Можно запросить площадь</Badge>
               )}
             </div>
 
@@ -417,14 +418,19 @@ export default function EventDetailPage() {
               <FloorPlanPreview />
               {event.bookingAvailable && (
                 <Link href={bookingHref} className="block mt-4">
-                  <Button className="w-full" variant="primary" size="sm">Бронирование в тестовом режиме</Button>
+                  <Button className="w-full" variant="primary" size="sm">
+                    Забронировать площадь
+                  </Button>
                 </Link>
               )}
             </section>
 
             <section className="catalog-content-box p-4 text-sm space-y-2">
               <p><span className="font-medium">Период:</span> {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}</p>
-              <p><span className="font-medium">Организатор ID:</span> {event.organizerId}</p>
+              <p>
+                <span className="font-medium">Организатор:</span>{" "}
+                {getOrganizerDisplayName(event.organizerId)}
+              </p>
               <p><span className="font-medium">ОКВЭД-теги:</span> {event.okvedTags.join(", ")}</p>
             </section>
           </aside>

@@ -11,40 +11,18 @@ import type {
   UserRole,
 } from "@/data/types";
 import {
-  getContractorIdForUser,
-  getVenueIdForUser,
-  isDealForUser,
-} from "@/lib/utils/user-entity-map";
-
-function isVenueOwnedPayment(payment: Payment) {
-  return Boolean(payment.venueId);
-}
-
-function isOrganizerOwnedPayment(payment: Payment) {
-  return Boolean(payment.organizerId) && !payment.venueId;
-}
+  canReadDocument,
+  canReadPayment,
+  isAllowedCabinetPath as isAllowedCabinetPathFromAuth,
+  isRequestVisibleToContractor as isRequestVisibleToContractorFromAuth,
+} from "@/lib/auth/authorization";
 
 export function isPaymentForUser(
   payment: Payment,
   user: CompanyProfile | null | undefined,
   deals: Deal[]
 ): boolean {
-  if (!user?.role) return false;
-
-  if (user.role === "venue") {
-    return payment.venueId === getVenueIdForUser(user);
-  }
-
-  if (user.role === "organizer") {
-    return payment.organizerId === user.id;
-  }
-
-  if (isVenueOwnedPayment(payment) || isOrganizerOwnedPayment(payment)) {
-    return false;
-  }
-
-  const deal = payment.dealId ? deals.find((item) => item.id === payment.dealId) : undefined;
-  return Boolean(deal && isDealForUser(deal, user));
+  return canReadPayment(payment, user, deals);
 }
 
 export function isDocumentForUser(
@@ -52,18 +30,7 @@ export function isDocumentForUser(
   user: CompanyProfile | null | undefined,
   deals: Deal[]
 ): boolean {
-  if (!user?.role) return false;
-
-  if (user.role === "venue") {
-    return document.venueId === getVenueIdForUser(user);
-  }
-
-  if (user.role === "organizer") {
-    return document.organizerId === user.id;
-  }
-
-  const deal = deals.find((item) => item.id === document.dealId);
-  return Boolean(deal && isDealForUser(deal, user));
+  return canReadDocument(document, user, deals);
 }
 
 export function isThreadForUser(
@@ -105,12 +72,9 @@ export function isNotificationForUser(
 
 export function isRequestVisibleToContractor(
   request: Request,
-  contractorId: string | null
+  user: CompanyProfile | null | undefined
 ): boolean {
-  if (request.status !== "published") return false;
-  if (request.format !== "closed_request") return true;
-  if (!contractorId) return false;
-  return request.invitedContractorIds.includes(contractorId);
+  return isRequestVisibleToContractorFromAuth(request, user);
 }
 
 export function getContractorPayoutBalance(
@@ -154,83 +118,4 @@ export function buildBookingInvoice(booking: Booking, amount: number): Payment {
   };
 }
 
-export function isAllowedCabinetPath(role: string, slug: string): boolean {
-  const base = slug.split("/")[0] ?? "";
-  if (!base) return true;
-
-  const extras: Record<string, string[]> = {
-    customer: [
-      "cart",
-      "checkout",
-      "legal",
-      "repeat-order",
-      "completed-projects",
-      "edo",
-      "reminders",
-      "closing-docs",
-    ],
-    contractor: [
-      "cities",
-      "production",
-      "portfolio",
-      "reviews",
-      "gantt",
-      "completed-projects",
-      "bookings",
-    ],
-    venue: ["spaces", "floor-plan"],
-    organizer: ["create-event", "edit-event", "participants", "services", "bookings"],
-  };
-
-  const navSlugs: Record<string, string[]> = {
-    customer: [
-      "profile",
-      "messages",
-      "edo",
-      "requests",
-      "my-events",
-      "favorites",
-      "cart",
-      "responses",
-      "active-projects",
-      "checks",
-      "payments",
-      "settings",
-    ],
-    contractor: [
-      "profile",
-      "messages",
-      "services",
-      "available-requests",
-      "my-responses",
-      "active-projects",
-      "payouts",
-      "documents",
-      "settings",
-    ],
-    venue: [
-      "profile",
-      "messages",
-      "halls",
-      "events",
-      "venue-services",
-      "bookings",
-      "orders",
-      "payments",
-      "documents",
-      "settings",
-    ],
-    organizer: [
-      "profile",
-      "messages",
-      "events",
-      "venues",
-      "orders",
-      "payments",
-      "documents",
-      "settings",
-    ],
-  };
-
-  return (navSlugs[role] ?? []).includes(base) || (extras[role] ?? []).includes(base);
-}
+export const isAllowedCabinetPath = isAllowedCabinetPathFromAuth;

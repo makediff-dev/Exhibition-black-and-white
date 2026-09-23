@@ -6,12 +6,11 @@ import { AlertCircle, Building2, CalendarDays, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { Select } from "@/components/ui/select";
 import {
   BOOKING_PERIOD_LABELS,
   BOOKING_STATUS_LABELS,
-  DEAL_STATUS_LABELS,
-  EVENT_ORDER_CUSTOMER_ROLE_LABELS,
   EVENT_ORDER_TYPE_LABELS,
   VENUE_INQUIRY_STATUS_LABELS,
 } from "@/constants/statuses";
@@ -22,11 +21,20 @@ import {
   SEED_HALLS,
   SEED_VENUE_INQUIRIES,
 } from "@/data/mocks/seed";
-import type { Booking, DealStatus, EventOrder, VenueInquiry } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import type { Booking, EventOrder, VenueInquiry } from "@/data/types";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
+import {
+  COMMERCIAL_ORDER_KIND_LABELS,
+  getCommercialOrderKind,
+  getEventOrderStatusLabel,
+  getOrderCounterparty,
+  getOrderNextStep,
+  getOrderTradeSide,
+  getOrderTradeSideLabel,
+} from "@/lib/utils/order-presentation";
 
 const ACTION_ORDER_STATUSES = new Set([
   "pending",
@@ -68,6 +76,7 @@ interface VenueDashboardServiceAlertsProps {
 
 export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAlertsProps) {
   const notifications = usePrototypeStore((state) => state.notifications);
+  const role = useAuthStore((state) => state.user?.role);
 
   const serviceOrders = useMemo(
     () =>
@@ -124,14 +133,14 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
                   highlighted && "bg-gray-50",
                 )}
               >
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <Badge variant="muted">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
-                  <Badge variant="solid">
-                    {order.status === "pending"
-                      ? "Ожидает"
-                      : order.status === "completed"
-                        ? "Завершён"
-                        : (DEAL_STATUS_LABELS[order.status as DealStatus] ?? order.status)}
+                <div className="flex flex-wrap items-center gap-2 mb-[10px]">
+                  <Badge variant="muted">
+                    {COMMERCIAL_ORDER_KIND_LABELS[getCommercialOrderKind(order.type)]}
+                  </Badge>
+                  <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
+                  <Badge variant="solid">{getEventOrderStatusLabel(order.status)}</Badge>
+                  <Badge variant="outline">
+                    {getOrderTradeSideLabel(getOrderTradeSide(order, role))}
                   </Badge>
                   {highlighted ? (
                     <Badge variant="solid" className="inline-flex items-center gap-1">
@@ -140,15 +149,15 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
                     </Badge>
                   ) : null}
                 </div>
-                <CardTitle className="text-sm leading-snug">{order.title}</CardTitle>
-                <CardDescription className="mt-2 space-y-1">
-                  <span className="block text-xs text-gray-500">{eventTitle}</span>
-                  <span className="block">
-                    {EVENT_ORDER_CUSTOMER_ROLE_LABELS[order.customerRole]}:{" "}
-                    <span className="text-gray-900">{order.customerName}</span>
-                  </span>
+                <CardTitle className="text-sm leading-snug mb-[10px]">{order.title}</CardTitle>
+                <CardDescription className="mt-0 space-y-[10px]">
+                  <CardField label="Мероприятие">{eventTitle}</CardField>
+                  <CardField label="Контрагент">
+                    {getOrderCounterparty(order, SEED_EVENTS.find((item) => item.id === order.eventId)?.venue)}
+                  </CardField>
+                  <CardField label="Следующий шаг">{getOrderNextStep(order, role)}</CardField>
                   {order.amount != null ? (
-                    <span className="block font-medium text-gray-900">
+                    <span className="block pt-1 text-lg font-semibold text-gray-900">
                       {formatPrice(order.amount)}
                     </span>
                   ) : null}

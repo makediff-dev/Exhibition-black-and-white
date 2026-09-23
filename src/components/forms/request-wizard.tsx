@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { RequestDescriptionForm } from "@/components/forms/request-description-form";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { CITIES, EVENT_INDUSTRIES, SERVICE_CATEGORIES } from "@/constants/categories";
 import {
-  createDefaultDescriptionSections,
   formatSectionContentForDisplay,
-  isDescriptionSectionComplete,
   isDescriptionSectionFilled,
 } from "@/constants/request-description-sections";
+import {
+  collectRequestWizardIssues,
+  createRequestSections,
+  getRequestSchema,
+} from "@/constants/request-schemas";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
 import { REQUEST_FORMAT_DESCRIPTIONS, REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Request, RequestFormat, TorSection } from "@/data/types";
@@ -50,22 +54,6 @@ const BUDGET_TYPE_DESCRIPTIONS: Record<string, string> = {
   hidden: "Сумма есть, но скрыта — исполнители присылают КП.",
   request_quote: "Сумму не указываете — исполнители сами предлагают цену.",
 };
-
-const MANDATORY_UPLOAD_CATEGORIES = [
-  "Комплексное строительство выставочных стендов",
-  "Дизайн-проект выставочного стенда",
-];
-
-const MANDATORY_FILE_ITEMS = [
-  { id: "layout", label: "Планировка" },
-  { id: "logo", label: "Лого" },
-  { id: "references", label: "Референсы" },
-  {
-    id: "past-stands",
-    label: "Фото прошлых стендов",
-    hint: "если требуется повторить концепцию прошлогоднюю",
-  },
-] as const;
 
 export interface RequestWizardData {
   format: RequestFormat;
@@ -107,7 +95,7 @@ const defaultData = (format: RequestFormat = "open_request"): RequestWizardData 
   files: [],
   mandatoryFiles: {},
   cloudLinks: "",
-  torSections: createDefaultDescriptionSections(),
+  torSections: createRequestSections(""),
   descriptionMode: "structured",
   freeformDescription: "",
   torMode: "constructor" as const,
@@ -120,16 +108,31 @@ interface RequestWizardProps {
   initialEventId?: string;
   initialContractorId?: string;
   initialCategory?: string;
+  initialTitle?: string;
+  initialDescription?: string;
   onPublished: (request: Request) => void;
 }
 
 function applyInitialParams(
   base: RequestWizardData,
-  params: Pick<RequestWizardProps, "initialFormat" | "initialEventId" | "initialContractorId" | "initialCategory">
+  params: Pick<
+    RequestWizardProps,
+    | "initialFormat"
+    | "initialEventId"
+    | "initialContractorId"
+    | "initialCategory"
+    | "initialTitle"
+    | "initialDescription"
+  >
 ): RequestWizardData {
   let next = { ...base };
   if (params.initialFormat) next.format = params.initialFormat;
-  if (params.initialCategory) next.category = params.initialCategory;
+  if (params.initialCategory) {
+    next.category = params.initialCategory;
+    next.torSections = createRequestSections(params.initialCategory);
+  }
+  if (params.initialTitle && !next.title) next.title = params.initialTitle;
+  if (params.initialDescription && !next.description) next.description = params.initialDescription;
   if (params.initialEventId) {
     const event = SEED_EVENTS.find((item) => item.id === params.initialEventId);
     next.eventId = params.initialEventId;
@@ -150,6 +153,8 @@ export function RequestWizard({
   initialEventId,
   initialContractorId,
   initialCategory,
+  initialTitle,
+  initialDescription,
   onPublished,
 }: RequestWizardProps) {
   const { requestWizardDraft, setRequestWizardDraft } = usePrototypeStore();
@@ -179,9 +184,16 @@ export function RequestWizard({
           ...migratedDraft,
           torSections: migratedDraft.torSections?.length
             ? (migratedDraft.torSections as TorSection[])
-            : createDefaultDescriptionSections(),
+            : createRequestSections(migratedDraft.category ?? initialCategory ?? ""),
         },
-        { initialFormat, initialEventId, initialContractorId, initialCategory }
+        {
+          initialFormat,
+          initialEventId,
+          initialContractorId,
+          initialCategory,
+          initialTitle,
+          initialDescription,
+        }
       );
     }
     return applyInitialParams(defaultData(initialFormat), {
@@ -189,17 +201,39 @@ export function RequestWizard({
       initialEventId,
       initialContractorId,
       initialCategory,
+      initialTitle,
+      initialDescription,
     });
   });
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(data));
 
   const update = useCallback((updates: Partial<RequestWizardData>) => {
     setData((prev) => ({ ...prev, ...updates }));
   }, []);
 
+  const persistDraft = useCallback(
+    (next: RequestWizardData, silent = false) => {
+      setRequestWizardDraft(next as unknown as Record<string, unknown>);
+      setSavedSnapshot(JSON.stringify(next));
+      if (!silent) showToast("Черновик заявки сохранён", "info");
+    },
+    [setRequestWizardDraft, showToast]
+  );
+
   const saveDraft = useCallback(() => {
-    setRequestWizardDraft(data as unknown as Record<string, unknown>);
-    showToast("Черновик заявки сохранён", "info");
-  }, [data, setRequestWizardDraft, showToast]);
+    persistDraft(data);
+  }, [data, persistDraft]);
+
+  useEffect(() => {
+    const dirty = JSON.stringify(data) !== savedSnapshot;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [data, savedSnapshot]);
 
   const selectedEvent = useMemo(
     () => SEED_EVENTS.find((e) => e.id === data.eventId),
@@ -255,92 +289,28 @@ export function RequestWizard({
     });
   };
 
-  const isDescriptionValid =
-    data.descriptionMode === "freeform"
-      ? !!data.title.trim() &&
-        !!data.description.trim() &&
-        !!data.freeformDescription.trim()
-      : !!data.title.trim() &&
-        !!data.description.trim() &&
-        data.torSections
-          .filter((section) => section.required)
-          .every((section) => isDescriptionSectionComplete(section.title, section.content));
+  const schema = getRequestSchema(data.category);
+  const today = getPrototypeNowDateIso();
+  const publishIssues = useMemo(
+    () => collectRequestWizardIssues(data, today),
+    [data, today]
+  );
+  const isPublishReady = publishIssues.length === 0;
+  const dateIssue = publishIssues.find((issue) => issue.step === 4);
 
-  const isBudgetValid =
-    data.budget.type === "range"
-      ? !!(data.budget.min && data.budget.max && data.budget.min <= data.budget.max)
-      : data.budget.type === "fixed"
-        ? !!data.budget.min
-        : !!data.budget.type;
-
-  const isFilesValid =
-    !MANDATORY_UPLOAD_CATEGORIES.includes(data.category) ||
-    MANDATORY_FILE_ITEMS.slice(0, 3).every(
-      (item) => (data.mandatoryFiles[item.id] ?? []).length > 0
-    );
-
-  const isPublishReady =
-    !!data.format &&
-    !!data.category &&
-    isDescriptionValid &&
-    !!data.executionStart &&
-    !!data.executionEnd &&
-    data.executionStart <= data.executionEnd &&
-    isBudgetValid &&
-    isFilesValid &&
-    (data.format !== "closed_request" || data.invitedContractorIds.length > 0);
+  const goToStep = (nextStep: number) => {
+    persistDraft(data, true);
+    setStep(nextStep);
+  };
 
   const canProceed = useMemo(() => {
-    switch (step) {
-      case 0:
-        return (
-          !!data.format &&
-          (data.format !== "closed_request" || data.invitedContractorIds.length > 0)
-        );
-      case 1:
-        return !!data.category;
-      case 2:
-        return true;
-      case 3:
-        if (data.descriptionMode === "freeform") {
-          return (
-            !!data.title.trim() &&
-            !!data.description.trim() &&
-            !!data.freeformDescription.trim()
-          );
-        }
-        return (
-          !!data.title.trim() &&
-          !!data.description.trim() &&
-          data.torSections
-            .filter((section) => section.required)
-            .every((section) => isDescriptionSectionComplete(section.title, section.content))
-        );
-      case 4:
-        return (
-          !!data.executionStart &&
-          !!data.executionEnd &&
-          data.executionStart <= data.executionEnd
-        );
-      case 5:
-        return !!data.budget.type;
-      case 6:
-        if (MANDATORY_UPLOAD_CATEGORIES.includes(data.category)) {
-          return MANDATORY_FILE_ITEMS.slice(0, 3).every(
-            (item) => (data.mandatoryFiles[item.id] ?? []).length > 0
-          );
-        }
-        return true;
-      case 7:
-        return isPublishReady;
-      default:
-        return true;
-    }
-  }, [step, data, isPublishReady, isDescriptionValid, isBudgetValid, isFilesValid]);
+    if (step === 7) return true;
+    return !publishIssues.some((issue) => issue.step === step);
+  }, [step, publishIssues]);
 
   const publish = () => {
     if (!isPublishReady) {
-      showToast("Заполните обязательные поля перед публикацией", "error");
+      showToast("Исправьте ошибки из списка перед публикацией", "error");
       return;
     }
     const id = `req-${Date.now()}`;
@@ -360,7 +330,7 @@ export function RequestWizard({
       eventId: data.eventId || undefined,
       invitedContractorIds: data.format === "closed_request" ? data.invitedContractorIds : [],
       responseCount: 0,
-      publishedAt: new Date().toISOString().split("T")[0],
+      publishedAt: today,
       customerId: user?.id ?? "user-customer",
       customerName: user?.name,
       torSections:
@@ -378,15 +348,16 @@ export function RequestWizard({
         ...data.files,
         ...Object.entries(data.mandatoryFiles).flatMap(([itemId, names]) =>
           names.map((name) => {
-            const label = MANDATORY_FILE_ITEMS.find((item) => item.id === itemId)?.label ?? itemId;
+            const label = schema.fileItems.find((item) => item.id === itemId)?.label ?? itemId;
             return `[${label}] ${name}`;
           })
         ),
       ],
       cloudLinks: data.cloudLinks.trim() || undefined,
-      history: [{ date: new Date().toISOString().split("T")[0], action: "Опубликована" }],
+      history: [{ date: today, action: "Опубликована" }],
     };
     setRequestWizardDraft({});
+    setSavedSnapshot(JSON.stringify(defaultData(data.format)));
     onPublished(request);
   };
 
@@ -454,7 +425,14 @@ export function RequestWizard({
         <Select
           label="Категория услуги *"
           value={data.category}
-          onChange={(e) => update({ category: e.target.value })}
+          onChange={(e) => {
+            const category = e.target.value;
+            update({
+              category,
+              torSections: createRequestSections(category),
+              mandatoryFiles: {},
+            });
+          }}
           options={[
             { value: "", label: "Выберите категорию" },
             ...SERVICE_CATEGORIES.map((c) => ({ value: c, label: c })),
@@ -544,11 +522,13 @@ export function RequestWizard({
         <RequestDescriptionForm
           title={data.title}
           summary={data.description}
+          expectedResult={data.expectedResult}
           sections={data.torSections}
           descriptionMode={data.descriptionMode}
           freeformDescription={data.freeformDescription}
           onTitleChange={(title) => update({ title })}
           onSummaryChange={(description) => update({ description })}
+          onExpectedResultChange={(expectedResult) => update({ expectedResult })}
           onSectionsChange={(torSections) => update({ torSections })}
           onDescriptionModeChange={(descriptionMode) => update({ descriptionMode })}
           onFreeformDescriptionChange={(freeformDescription) => update({ freeformDescription })}
@@ -557,13 +537,17 @@ export function RequestWizard({
       )}
 
       {step === 4 && (
-        <DateRangePicker
-          label="Диапазон выполнения *"
-          start={data.executionStart}
-          end={data.executionEnd}
-          onChange={(executionStart, executionEnd) => update({ executionStart, executionEnd })}
-          placeholder="Выберите период в календаре"
-        />
+        <div className="space-y-2">
+          <DateRangePicker
+            label="Диапазон выполнения *"
+            start={data.executionStart}
+            end={data.executionEnd}
+            minDate={today}
+            onChange={(executionStart, executionEnd) => update({ executionStart, executionEnd })}
+            placeholder="Выберите период в календаре"
+          />
+          {dateIssue ? <p className="text-xs text-red-600">{dateIssue.message}</p> : null}
+        </div>
       )}
 
       {step === 5 && (
@@ -617,7 +601,7 @@ export function RequestWizard({
 
       {step === 6 && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-700">Прикрепите чертежи, брифы и другие материалы:</p>
+          <p className="text-sm text-gray-700">{schema.filesIntro}</p>
           <FileUpload
             onUpload={(name) => update({ files: [...data.files, name] })}
           />
@@ -630,13 +614,18 @@ export function RequestWizard({
           )}
 
           <div className="space-y-4">
-            <p className="text-sm font-medium">Обязательные к загрузке файлы:</p>
+            <p className="text-sm font-medium">
+              {schema.fileItems.some((item) => item.required)
+                ? "Файлы по схеме категории"
+                : "Дополнительные файлы (необязательно)"}
+            </p>
             <ol className="space-y-4">
-              {MANDATORY_FILE_ITEMS.map((item, index) => (
+              {schema.fileItems.map((item, index) => (
                 <li key={item.id} className="text-sm">
                   <p className="font-medium">
                     {index + 1}. {item.label}
-                    {"hint" in item && item.hint && (
+                    {item.required ? " *" : " (необязательно)"}
+                    {item.hint && (
                       <span className="font-normal text-gray-600"> ({item.hint})</span>
                     )}
                   </p>
@@ -674,6 +663,24 @@ export function RequestWizard({
 
       {step === 7 && (
         <div className="border border-gray-900 p-4 space-y-4 bg-gray-50 rounded-card">
+          {!isPublishReady && (
+            <div className="border border-red-300 bg-red-50 p-3 space-y-2 rounded-card">
+              <p className="text-sm font-medium text-red-800">Нельзя опубликовать, пока не исправлены поля:</p>
+              <ul className="space-y-1">
+                {publishIssues.map((issue) => (
+                  <li key={`${issue.step}-${issue.message}`}>
+                    <button
+                      type="button"
+                      className="text-sm text-red-800 underline text-left"
+                      onClick={() => goToStep(issue.step)}
+                    >
+                      Шаг «{STEPS[issue.step]}»: {issue.message}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <h3 className="font-semibold">Предпросмотр заявки</h3>
           <div className="flex flex-wrap gap-2">
             <Badge>{REQUEST_FORMAT_LABELS[data.format]}</Badge>
@@ -760,7 +767,7 @@ export function RequestWizard({
       <div className="flex flex-wrap gap-2 justify-between border-t border-gray-300 pt-4">
         <div className="flex gap-2">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
+            <Button variant="outline" onClick={() => goToStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" />
               Назад
             </Button>
@@ -771,12 +778,12 @@ export function RequestWizard({
         </div>
         <div className="flex gap-2">
           {step < STEPS.length - 1 ? (
-            <Button disabled={!canProceed} onClick={() => setStep((s) => s + 1)}>
+            <Button disabled={!canProceed} onClick={() => goToStep(step + 1)}>
               Далее
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button disabled={!canProceed} onClick={publish}>
+            <Button onClick={publish}>
               <Check className="h-4 w-4" />
               Опубликовать
             </Button>

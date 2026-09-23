@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   getDescriptionSectionTemplate,
   parseSectionFieldValues,
-  REQUEST_DESCRIPTION_SECTIONS,
   serializeSectionFieldValues,
 } from "@/constants/request-description-sections";
 import type { TorSection } from "@/data/types";
@@ -16,11 +15,13 @@ export type RequestDescriptionMode = "structured" | "freeform";
 interface RequestDescriptionFormProps {
   title: string;
   summary: string;
+  expectedResult: string;
   sections: TorSection[];
   descriptionMode: RequestDescriptionMode;
   freeformDescription: string;
   onTitleChange: (value: string) => void;
   onSummaryChange: (value: string) => void;
+  onExpectedResultChange: (value: string) => void;
   onSectionsChange: (sections: TorSection[]) => void;
   onDescriptionModeChange: (mode: RequestDescriptionMode) => void;
   onFreeformDescriptionChange: (value: string) => void;
@@ -47,11 +48,13 @@ const DESCRIPTION_MODE_OPTIONS: {
 export function RequestDescriptionForm({
   title,
   summary,
+  expectedResult,
   sections,
   descriptionMode,
   freeformDescription,
   onTitleChange,
   onSummaryChange,
+  onExpectedResultChange,
   onSectionsChange,
   onDescriptionModeChange,
   onFreeformDescriptionChange,
@@ -96,6 +99,13 @@ export function RequestDescriptionForm({
         value={summary}
         onChange={(event) => onSummaryChange(event.target.value)}
         placeholder="1–2 предложения: суть задачи и ключевой результат"
+      />
+
+      <Textarea
+        label="Ожидаемый результат *"
+        value={expectedResult}
+        onChange={(event) => onExpectedResultChange(event.target.value)}
+        placeholder="Что должно быть готово к концу работ"
       />
 
       <div className="space-y-3">
@@ -184,7 +194,7 @@ export function RequestDescriptionForm({
 
           {!compact && (
             <p className="text-xs text-gray-600">
-              Всего разделов: {REQUEST_DESCRIPTION_SECTIONS.length}. Дополнительные материалы
+              Всего разделов: {sections.length}. Дополнительные материалы
               можно приложить на шаге «Файлы».
             </p>
           )}

@@ -39,7 +39,7 @@ export function ContractorDashboardSection({ user }: Props) {
     <div className="space-y-8 mt-8">
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
-          <h2 className="text-lg font-bold">Услуги</h2>
+          <h2 className="text-lg font-bold">Предложения на рынке</h2>
           <Link href="/services" className="text-sm underline">
             Все услуги
           </Link>

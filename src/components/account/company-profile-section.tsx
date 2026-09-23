@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2, FileText, Globe, Hash, MapPin, Phone, ShieldCheck, User,
@@ -19,6 +19,8 @@ import { ContractorReviewsSection } from "@/components/contractor/contractor-rev
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import type { CompanyProfile } from "@/data/types";
 import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
+import { useUnsavedChanges } from "@/lib/hooks/use-unsaved-changes";
+import { FormStatus } from "@/components/ui/form-status";
 
 type CompanyProfileTab = "general" | "company" | "cities" | "production" | "portfolio" | "reviews";
 
@@ -151,6 +153,8 @@ function GeneralProfileFields({
   onLogoUpload,
   onLogoError,
   onSave,
+  dirty,
+  saved,
 }: {
   user: CompanyProfile;
   logoUrl?: string;
@@ -167,6 +171,8 @@ function GeneralProfileFields({
   onLogoUpload: (url: string) => void;
   onLogoError: (message: string) => void;
   onSave: () => void;
+  dirty: boolean;
+  saved: boolean;
 }) {
   return (
     <>
@@ -185,6 +191,8 @@ function GeneralProfileFields({
           label="Отображаемое название"
           value={displayName}
           onChange={(event) => setDisplayName(event.target.value)}
+          required
+          help="Так компанию видят заказчики в каталоге"
         />
         <Textarea
           label="Описание компании"
@@ -219,7 +227,10 @@ function GeneralProfileFields({
           onChange={(event) => setPhone(event.target.value)}
           placeholder="+7 900 000-00-00"
         />
-        <Button type="button" onClick={onSave}>Сохранить</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="button" onClick={onSave}>Сохранить</Button>
+          <FormStatus dirty={dirty} saved={saved} />
+        </div>
       </Card>
     </>
   );
@@ -249,6 +260,20 @@ export function CompanyProfileSection({ showToast, initialTab = "general" }: Pro
   const [actualAddress, setActualAddress] = useState(user?.actualAddress ?? "");
   const [website, setWebsite] = useState(user?.website ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [saved, setSaved] = useState(false);
+
+  const dirty = useMemo(() => {
+    if (!user) return false;
+    return (
+      displayName !== (user.displayName ?? user.name) ||
+      description !== (user.description ?? "") ||
+      actualAddress !== (user.actualAddress ?? "") ||
+      website !== (user.website ?? "") ||
+      phone !== (user.phone ?? "")
+    );
+  }, [user, displayName, description, actualAddress, website, phone]);
+
+  useUnsavedChanges(dirty);
 
   if (!user) return null;
 
@@ -260,6 +285,7 @@ export function CompanyProfileSection({ showToast, initialTab = "general" }: Pro
       website: website.trim(),
       phone: phone.trim(),
     });
+    setSaved(true);
     showToast("Профиль сохранён", "success");
   };
 
@@ -286,6 +312,8 @@ export function CompanyProfileSection({ showToast, initialTab = "general" }: Pro
       onLogoUpload={handleLogoUpload}
       onLogoError={(message) => showToast(message, "error")}
       onSave={handleSave}
+      dirty={dirty}
+      saved={saved && !dirty}
     />
   );
 

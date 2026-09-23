@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Building2, MapPin, Maximize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,32 +14,39 @@ import { useToast } from "@/components/ui/toast-provider";
 import { CITIES } from "@/constants/categories";
 import { VENUE_CATALOG } from "@/constants/venues";
 import type { VenueInquiry } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { BookingSubjectCard } from "@/components/bookings/booking-subject-card";
+import { StatusSummary } from "@/components/ui/status-summary";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getInquiryStatus } from "@/lib/state/inquiry-machine";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
 import { formatPrice, formatShortDate, pluralizeRu } from "@/lib/utils/formatters";
 import { getVenueStats } from "@/lib/utils/venue-stats";
-
-function buildDemoProposal(venueName: string, minArea: string) {
-  const areaHint = minArea ? ` от ${minArea} кв.м` : "";
-  return {
-    proposalSummary: `${venueName} готова рассмотреть проведение мероприятия${areaHint}. Предварительно доступны залы под запрошенные даты.`,
-    proposalPrice: "2 200 – 4 500 ₽ / кв.м",
-  };
-}
 
 export function OrganizerVenuesSection() {
   const router = useRouter();
   const { showToast } = useToast();
+  const user = useAuthStore((state) => state.user);
   const organizerEventDraft = usePrototypeStore((state) => state.organizerEventDraft);
   const venueInquiries = usePrototypeStore((state) => state.venueInquiries);
   const addVenueInquiries = usePrototypeStore((state) => state.addVenueInquiries);
   const selectVenueInquiry = usePrototypeStore((state) => state.selectVenueInquiry);
+  const updateVenueInquiry = usePrototypeStore((state) => state.updateVenueInquiry);
 
-  const [city, setCity] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [city, setCity] = useState(organizerEventDraft?.city ?? "");
+  const [dateFrom, setDateFrom] = useState(organizerEventDraft?.startDate ?? "");
+  const [dateTo, setDateTo] = useState(organizerEventDraft?.endDate ?? "");
   const [minArea, setMinArea] = useState("");
+  const [requirements, setRequirements] = useState("");
   const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [acceptId, setAcceptId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!organizerEventDraft) return;
+    setCity((prev) => prev || organizerEventDraft.city);
+    setDateFrom((prev) => prev || organizerEventDraft.startDate);
+    setDateTo((prev) => prev || organizerEventDraft.endDate);
+  }, [organizerEventDraft]);
 
   const venues = useMemo(() => {
     return VENUE_CATALOG.map((venue) => ({
@@ -79,19 +86,23 @@ export function OrganizerVenuesSection() {
 
     const inquiries: VenueInquiry[] = venueIds.map((venueId) => {
       const venue = VENUE_CATALOG.find((item) => item.id === venueId);
-      const proposal = buildDemoProposal(venue?.shortName ?? "Площадка", minArea);
 
       return {
         id: `vi-${venueId}-${Date.now()}`,
         eventDraftId: organizerEventDraft.id,
+        eventTitle: organizerEventDraft.title,
+        organizerName: user?.name ?? "Организатор",
         venueId,
         venueName: venue?.shortName ?? "Площадка",
         dateFrom,
         dateTo,
         minArea: minArea || undefined,
-        status: "proposal_received",
-        sentAt: new Date().toISOString(),
-        ...proposal,
+        requirements: requirements || undefined,
+        status: "pending",
+        sentAt: getPrototypeNowDateIso(),
+        history: [
+          { date: getPrototypeNowDateIso(), actor: "organizer", action: "Запрос отправлен" },
+        ],
       };
     });
 
@@ -113,8 +124,18 @@ export function OrganizerVenuesSection() {
   };
 
   const handleSelectVenue = (inquiryId: string) => {
-    selectVenueInquiry(inquiryId);
-    showToast("Площадка выбрана. Можно переходить к управлению проектом", "success");
+    setAcceptId(inquiryId);
+  };
+
+  const confirmAccept = () => {
+    if (!acceptId) return;
+    const ok = selectVenueInquiry(acceptId);
+    if (!ok) {
+      showToast("Нельзя закрепить площадку: нет предложения или зал занят", "error");
+      return;
+    }
+    setAcceptId(null);
+    showToast("Площадка закреплена, бронирования стали источником дат", "success");
   };
 
   return (
@@ -204,6 +225,12 @@ export function OrganizerVenuesSection() {
           placeholder="1200"
         />
       </div>
+      <Input
+        label="Требования к площадке"
+        value={requirements}
+        onChange={(event) => setRequirements(event.target.value)}
+        placeholder="Зал от 1200 кв.м, мощность от 200 кВт, ночная разгрузка"
+      />
 
       {selectedVenueIds.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 cabinet-card border border-gray-300 bg-gray-50 p-4">
@@ -283,11 +310,7 @@ export function OrganizerVenuesSection() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">Запрос отправлен</span>
                       <Badge variant={inquiry.status === "selected" ? "solid" : "outline"}>
-                        {inquiry.status === "selected"
-                          ? "Площадка выбрана"
-                          : inquiry.status === "proposal_received"
-                            ? "Есть предложение"
-                            : "Ожидает ответа"}
+                        {getInquiryStatus(inquiry, user).label}
                       </Badge>
                     </div>
                     {inquiry.proposalSummary ? (
@@ -296,9 +319,9 @@ export function OrganizerVenuesSection() {
                     {inquiry.proposalPrice ? (
                       <p className="text-gray-900 font-medium">{inquiry.proposalPrice}</p>
                     ) : null}
-                    {inquiry.status === "proposal_received" ? (
+                    {(inquiry.status === "proposal_received" || inquiry.status === "changes_proposed") ? (
                       <Button size="sm" className="w-full" onClick={() => handleSelectVenue(inquiry.id)}>
-                        Выбрать площадку
+                        Принять предложение
                       </Button>
                     ) : null}
                   </div>
@@ -326,41 +349,47 @@ export function OrganizerVenuesSection() {
         <Card>
           <CardTitle className="text-sm">Запросы площадкам</CardTitle>
           <CardDescription className="mt-2 mb-4">
-            Сравните предложения и выберите площадку с лучшими условиями — только после этого
-            начнётся этап управления проектом.
+            Одна история запросов: и вы, и площадка видите один статус и кто ходит следующим.
           </CardDescription>
           <div className="space-y-3">
-            {activeInquiries.map((inquiry) => (
-              <div key={inquiry.id} className="cabinet-card border border-gray-300 p-4 text-sm">
+            {activeInquiries.map((inquiry) => {
+              const lifecycle = getInquiryStatus(inquiry, user);
+              return (
+              <div key={inquiry.id} className="cabinet-card border border-gray-300 p-4 text-sm space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{inquiry.venueName}</p>
                   <Badge variant={inquiry.status === "selected" ? "solid" : "outline"}>
-                    {inquiry.status === "selected"
-                      ? "Выбрана"
-                      : inquiry.status === "proposal_received"
-                        ? "Предложение получено"
-                        : inquiry.status === "declined"
-                          ? "Отклонена"
-                          : "Ожидает ответа"}
+                    {lifecycle.label}
                   </Badge>
                 </div>
-                <p className="mt-2 text-gray-600">
+                <StatusSummary status={lifecycle} />
+                <p className="text-gray-600">
                   {formatShortDate(inquiry.dateFrom)} — {formatShortDate(inquiry.dateTo)}
                   {inquiry.minArea ? ` · от ${inquiry.minArea} кв.м` : ""}
                 </p>
-                {inquiry.proposalSummary ? (
-                  <p className="mt-2 text-gray-700">{inquiry.proposalSummary}</p>
-                ) : null}
-                {inquiry.proposalPrice ? (
-                  <p className="mt-1 font-medium">{inquiry.proposalPrice}</p>
-                ) : null}
-                {inquiry.status === "proposal_received" ? (
-                  <Button size="sm" className="mt-3" onClick={() => handleSelectVenue(inquiry.id)}>
-                    Выбрать площадку
-                  </Button>
-                ) : null}
+                {(inquiry.status === "proposal_received" || inquiry.status === "changes_proposed") && (
+                  <>
+                    <BookingSubjectCard inquiry={inquiry} />
+                    <Button size="sm" className="mt-1" onClick={() => handleSelectVenue(inquiry.id)}>
+                      Принять предложение
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        updateVenueInquiry(inquiry.id, {
+                          status: "declined",
+                          declineReason: "Организатор отклонил условия",
+                        })
+                      }
+                    >
+                      Отклонить
+                    </Button>
+                  </>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       ) : null}
@@ -390,6 +419,31 @@ export function OrganizerVenuesSection() {
           мероприятия. После этого вы сможете выбрать одну или несколько площадок и дождаться их
           предложений.
         </p>
+      </Modal>
+      <Modal
+        open={Boolean(acceptId)}
+        onClose={() => setAcceptId(null)}
+        title="Подтверждение брони"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setAcceptId(null)}>
+              Назад
+            </Button>
+            <Button onClick={confirmAccept}>Закрепить площадку</Button>
+          </>
+        }
+      >
+        {acceptId ? (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700">
+              После принятия это бронирование станет источником площадки и дат мероприятия.
+              Счёт — согласие, не денежный резерв.
+            </p>
+            <BookingSubjectCard
+              inquiry={venueInquiries.find((item) => item.id === acceptId)}
+            />
+          </div>
+        ) : null}
       </Modal>
     </div>
   );

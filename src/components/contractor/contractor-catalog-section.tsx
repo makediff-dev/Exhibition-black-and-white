@@ -353,7 +353,7 @@ export function ContractorServicesListSection({
                         <p className="text-xs text-gray-500 mt-1">Сроки: {service.deadline}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-5 flex-wrap">
                       <button
                         type="button"
                         className="text-sm text-gray-900 hover:text-gray-600"
@@ -364,16 +364,16 @@ export function ContractorServicesListSection({
                       >
                         Редактировать
                       </button>
-                      <Button
-                        size="sm"
-                        variant="outline"
+                      <button
+                        type="button"
+                        className="text-sm text-red-600 hover:text-red-700"
                         onClick={(event) => {
                           event.stopPropagation();
                           onRemoveService(service.id);
                         }}
                       >
                         Удалить
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </Card>

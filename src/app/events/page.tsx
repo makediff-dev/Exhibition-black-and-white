@@ -137,12 +137,7 @@ function FilterFields({
           onChange={(e) => setBookingOnly(e.target.checked)}
           className="border-gray-900 mt-0.5"
         />
-        <span>
-          Только с бронированием площадей
-          <span className="block text-xs text-gray-500 mt-1">
-            Будет работать в тестовом режиме какое-то время
-          </span>
-        </span>
+        <span>Только с бронированием площадей</span>
       </label>
       {showRecommendedFilter && (
         <label className="flex items-center gap-2 text-sm cursor-pointer">

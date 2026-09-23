@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
 import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, ShoppingCart, Star, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Heart } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,8 @@ import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store"
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getCabinetBackHref } from "@/lib/utils/message-related-links";
-import { getCartHref, getCheckoutHref } from "@/lib/utils/cart-routes";
+import { getCheckoutHref } from "@/lib/utils/cart-routes";
+import { isStandardizedPricedService } from "@/lib/catalog/standardized-service";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -48,6 +49,7 @@ export default function ServiceDetailPage() {
 
   const selectedVariant = service.variants?.find((v) => v.id === selectedVariantId);
   const unitPrice = selectedVariant?.price ?? service.price;
+  const canDirectOrder = isStandardizedPricedService(service);
 
   const handleToggleFavorite = () => {
     const added = toggleFavorite(service.id);
@@ -69,12 +71,6 @@ export default function ServiceDetailPage() {
     });
   };
 
-  const handleAddToCart = () => {
-    addCurrentItem();
-    showToast(`«${service.title}» добавлено в корзину`, "success");
-    router.push(getCartHref(accountRole));
-  };
-
   const handleOrder = () => {
     addCurrentItem();
     showToast(`«${service.title}» добавлено в корзину`, "success");
@@ -84,16 +80,7 @@ export default function ServiceDetailPage() {
   const backFallbackHref = getCabinetBackHref(from, "/services", accountRole);
 
   return (
-    <CabinetAwareLayout
-      actions={
-        <Link href={getCartHref(accountRole)}>
-          <Button variant="soft-outline">
-            <ShoppingCart className="h-4 w-4" />
-            Корзина
-          </Button>
-        </Link>
-      }
-    >
+    <CabinetAwareLayout>
       <BackButton
         fallbackHref={backFallbackHref}
         className="mb-4"
@@ -253,7 +240,7 @@ export default function ServiceDetailPage() {
                 })}
               </p>
 
-              {service.variants && service.variants.length > 0 && (
+              {canDirectOrder && service.variants && service.variants.length > 0 && (
                 <Select
                   label="Вариант"
                   value={selectedVariantId}
@@ -265,27 +252,44 @@ export default function ServiceDetailPage() {
                 />
               )}
 
-              <Select
-                label="Количество"
-                value={String(quantity)}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
-              />
+              {canDirectOrder ? (
+                <>
+                  <Select
+                    label="Количество"
+                    value={String(quantity)}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
+                  />
+                  <p className="text-sm text-gray-600">
+                    Итого:{" "}
+                    <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Цена указана как ориентир. Состав и итог нужно согласовать в запросе предложения.
+                </p>
+              )}
 
-              <p className="text-sm text-gray-600">
-                Итого: <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-gray-600">
+                  <span className="font-medium text-gray-900">Заказать услугу</span> — если предмет и цена
+                  уже определены, можно сразу оформить позицию.
+                </p>
+                <p className="text-xs text-gray-600">
+                  <span className="font-medium text-gray-900">Запросить предложение</span> — если нужно
+                  индивидуальное ТЗ или коммерческое предложение.
+                </p>
+              </div>
 
-              <Button className="w-full" variant="primary" onClick={handleAddToCart}>
-                <ShoppingCart className="h-4 w-4" />
-                В корзину
-              </Button>
-              <Button className="w-full" variant="soft-outline" onClick={handleOrder}>
-                Оформить заказ
-              </Button>
+              {canDirectOrder && (
+                <Button className="w-full" variant="primary" onClick={handleOrder}>
+                  Заказать услугу
+                </Button>
+              )}
               <Link href={`/requests/new?serviceId=${service.id}`} className="block">
-                <Button className="w-full" variant="ghost">
-                  Создать заявку по услуге
+                <Button className="w-full" variant={canDirectOrder ? "ghost" : "primary"}>
+                  Запросить предложение
                 </Button>
               </Link>
             </div>

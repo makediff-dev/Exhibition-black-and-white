@@ -234,7 +234,7 @@ function DashboardWidgets({ role }: { role: string }) {
         <DashboardStatCard
           value={
             role === "contractor"
-              ? requests.filter((r) => isRequestVisibleToContractor(r, getContractorIdForUser(user))).length
+              ? requests.filter((r) => isRequestVisibleToContractor(r, user)).length
               : requests.filter((r) => r.status === "published" && r.customerId === user?.id).length
           }
           label={role === "contractor" ? "Активные заказы" : "Активные заявки"}
@@ -746,7 +746,7 @@ function ContractorPages({ slug }: { slug: string }) {
             </div>
             <div className="space-y-2">
               {requests
-                .filter((r) => isRequestVisibleToContractor(r, getContractorIdForUser(user)))
+                .filter((r) => isRequestVisibleToContractor(r, user))
                 .slice(0, 3)
                 .map((request) => {
                 const customerName = request.customerName ?? DEMO_USERS.customer.name;
@@ -906,7 +906,7 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "available-requests") {
     const available = requests.filter((r) =>
-      isRequestVisibleToContractor(r, getContractorIdForUser(user))
+      isRequestVisibleToContractor(r, user)
     );
 
     if (available.length === 0) {

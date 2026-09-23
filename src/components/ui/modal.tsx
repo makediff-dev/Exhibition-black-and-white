@@ -5,7 +5,8 @@ import type { AccountRole } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
 import styles from "./modal.module.css";
@@ -23,6 +24,8 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, footer, wide, accent = "role" }: ModalProps) {
   const role = useAuthStore((state) => state.user?.role) as AccountRole | undefined;
   const useTealAccent = accent === "teal";
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, panelRef, onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -36,7 +39,7 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
 
   const sizeClass = wide ? styles.panelWide : styles.panelDefault;
   const panel = (
-    <div className={styles.panel}>
+    <div className={styles.panel} ref={panelRef}>
       <div className={styles.header}>
         <h2 id="modal-title" className={styles.title}>
           {title}

@@ -29,10 +29,6 @@ export default function CartPage() {
     }
   }, [user?.role, router]);
 
-  if (user?.role === "customer") {
-    return null;
-  }
-
   const grouped = useMemo(() => {
     const map = new Map<string, {
       contractorName: string;
@@ -80,6 +76,10 @@ export default function CartPage() {
 
     return Array.from(map.values());
   }, [items, services]);
+
+  if (user?.role === "customer") {
+    return null;
+  }
 
   const total = grouped.reduce((sum, g) => sum + g.subtotal, 0);
 

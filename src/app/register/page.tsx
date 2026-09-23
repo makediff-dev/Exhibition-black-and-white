@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle, Clock, RefreshCw } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
@@ -33,6 +33,7 @@ import {
   getCitiesByDistrict,
 } from "@/constants/categories";
 import { ROLE_LABELS } from "@/constants/statuses";
+import { parseRegisterRole } from "@/lib/auth/session";
 import { CONTRACTOR_REGISTRATION_INTENT_KEY } from "@/constants/home-orders";
 import type { UserRole } from "@/data/types";
 
@@ -226,28 +227,13 @@ function RegisterPageContent() {
       return { ...base, role: "contractor" };
     }
 
-    const roleParam = searchParams.get("role");
-    if (
-      !isRegistrationContinuation &&
-      (roleParam === "customer" ||
-        roleParam === "contractor" ||
-        roleParam === "venue" ||
-        roleParam === "organizer")
-    ) {
+    const roleParam = parseRegisterRole(searchParams.get("role"));
+    if (!isRegistrationContinuation && roleParam) {
       return { ...base, role: roleParam };
     }
 
     return base;
   });
-
-  useLayoutEffect(() => {
-    if (isRegistrationContinuation) return;
-    setRegistrationDraft({});
-    setShowCompanyRegistrationPrompt(false);
-    setStep(0);
-    setForm(createEmptyRegistrationForm());
-    setErrors({});
-  }, [isRegistrationContinuation, setRegistrationDraft, setShowCompanyRegistrationPrompt]);
 
   const saveDraft = useCallback(
     (updates: Partial<RegistrationDraft>, nextStep?: number) => {
@@ -567,6 +553,18 @@ function RegisterPageContent() {
               ? "Создайте аккаунт компании на маркетплейсе"
               : "Сначала создайте личный аккаунт физического лица"}
           </p>
+          {form.role && (
+            <p className="mt-3 rounded-button border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
+              Вы регистрируетесь как{" "}
+              <strong>{ROLE_LABELS[form.role as keyof typeof ROLE_LABELS]}</strong>.
+              Роль сохранится после подтверждения email. Её можно изменить до создания компании.
+            </p>
+          )}
+          {!form.role && !showCompanyFlow && (
+            <p className="mt-3 text-sm text-gray-600">
+              Роль на платформе выбирается после подтверждения email, перед созданием компании.
+            </p>
+          )}
         </div>
 
         {showCompanyFlow && (
@@ -584,13 +582,14 @@ function RegisterPageContent() {
               подтверждения email личного аккаунта.
             </div>
 
-            <form onSubmit={handleIndividualSubmit} className="space-y-4">
+            <form onSubmit={handleIndividualSubmit} className="space-y-4" noValidate>
               <Input
                 label="ФИО"
                 value={form.contactName}
                 onChange={(e) => updateField("contactName", e.target.value)}
                 error={errors.contactName}
                 autoComplete="name"
+                required
               />
               <Input
                 label="Почта"
@@ -599,6 +598,7 @@ function RegisterPageContent() {
                 onChange={(e) => updateField("email", e.target.value)}
                 error={errors.email}
                 autoComplete="email"
+                required
               />
               <Input
                 label="Мобильный"
@@ -607,6 +607,7 @@ function RegisterPageContent() {
                 onChange={(e) => updateField("phone", e.target.value)}
                 error={errors.phone}
                 autoComplete="tel"
+                required
               />
 
               <label className="flex items-start gap-2 text-sm cursor-pointer">

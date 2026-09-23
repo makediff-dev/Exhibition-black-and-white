@@ -13,6 +13,9 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import type { Request, RequestFormat } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
+import { canCreateRequest } from "@/lib/auth/authorization";
+import { ForbiddenState } from "@/components/ui/states";
+import { ROLE_LABELS } from "@/constants/statuses";
 
 const VALID_FORMATS: RequestFormat[] = ["open_request", "closed_request", "urgent", "safe_deal"];
 
@@ -28,9 +31,20 @@ function NewRequestContent() {
     formatParam && VALID_FORMATS.includes(formatParam) ? formatParam : undefined;
   const initialEventId = searchParams.get("eventId") ?? undefined;
   const initialContractorId = searchParams.get("contractorId") ?? undefined;
-  const initialCategory = searchParams.get("category") ?? undefined;
+  const serviceId = searchParams.get("serviceId");
+  const services = usePrototypeStore((state) => state.services);
+  const linkedService = serviceId ? services.find((item) => item.id === serviceId) : undefined;
+  const initialCategory =
+    linkedService?.category ?? searchParams.get("category") ?? undefined;
+  const initialTitle = linkedService ? `Запрос предложения: ${linkedService.title}` : undefined;
+  const initialDescription = linkedService?.description;
 
   const handlePublished = (request: Request) => {
+    const permission = canCreateRequest(useAuthStore.getState().user);
+    if (!permission.allowed) {
+      showToast(permission.reason, "error");
+      return;
+    }
     addRequest(request);
     setPublished(request);
     showToast("Заявка успешно опубликована", "success");
@@ -89,6 +103,8 @@ function NewRequestContent() {
       initialEventId={initialEventId}
       initialContractorId={initialContractorId}
       initialCategory={initialCategory}
+      initialTitle={initialTitle}
+      initialDescription={initialDescription}
       onPublished={handlePublished}
     />
   );
@@ -96,6 +112,20 @@ function NewRequestContent() {
 
 function NewRequestPageInner() {
   const { isAuthenticated, user } = useAuthStore();
+  const createAccess = canCreateRequest(user);
+
+  if (isAuthenticated && user && !createAccess.allowed) {
+    return (
+      <AppShell title="Новая заявка" showBack backFallbackHref={`/account/${user.role}`}>
+        <ForbiddenState
+          title="Заявку размещает заказчик"
+          description={createAccess.reason}
+          actionLabel={`В кабинет: ${ROLE_LABELS[user.role as keyof typeof ROLE_LABELS]}`}
+          actionHref={`/account/${user.role}`}
+        />
+      </AppShell>
+    );
+  }
 
   const content = (
     <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>

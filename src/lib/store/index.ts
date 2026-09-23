@@ -33,6 +33,20 @@ import type {
   VenueService,
 } from "@/data/types";
 import { DEMO_USERS, DEMO_ACCESSIBLE_ACCOUNTS, SEED_CONTRACTORS, getSeedData } from "@/data/mocks/seed";
+import { overlaySeedRecords } from "@/lib/store/seed-overlay";
+import {
+  canCreateRequest,
+  canManageEmployees,
+  canMutateDeal,
+  canSubmitProposal,
+} from "@/lib/auth/authorization";
+import { canTransitionBooking } from "@/lib/state/booking-machine";
+import { canTransitionDeal } from "@/lib/state/deal-machine";
+import { canTransitionInquiry } from "@/lib/state/inquiry-machine";
+import { validateProposalPayload } from "@/lib/state/proposal-payload";
+import { canPerformRequestAction } from "@/lib/state/request-machine";
+import { createBookingsFromInquiry } from "@/lib/utils/bookings-from-inquiry";
+import { isHallOccupied } from "@/lib/utils/hall-availability";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -280,7 +294,7 @@ interface PrototypeState {
   removeService: (id: string) => void;
   addRequest: (request: Request) => void;
   updateRequest: (id: string, updates: Partial<Request>) => void;
-  addResponse: (response: Response) => void;
+  addResponse: (response: Response) => boolean;
   updateResponse: (id: string, updates: Partial<Response>) => void;
   addDeal: (deal: Deal) => void;
   updateDeal: (id: string, updates: Partial<Deal>) => void;
@@ -330,7 +344,12 @@ interface PrototypeState {
   setRequestWizardDraft: (draft: Record<string, unknown>) => void;
   setOrganizerEventDraft: (draft: OrganizerEventDraft | null) => void;
   addVenueInquiries: (inquiries: VenueInquiry[]) => void;
-  selectVenueInquiry: (inquiryId: string) => void;
+  selectVenueInquiry: (inquiryId: string) => boolean;
+  requestBookingChange: (
+    bookingId: string,
+    change: NonNullable<Booking["changeRequest"]>
+  ) => boolean;
+  resolveBookingChange: (bookingId: string, accept: boolean) => boolean;
   setCompanyLogo: (userId: string, logoUrl: string) => void;
   getContractorPortfolio: (contractorId: string) => PortfolioItem[];
   setContractorPortfolio: (contractorId: string, portfolio: PortfolioItem[]) => void;
@@ -491,31 +510,7 @@ function mergeDealsById(stored: Deal[] | undefined, seedItems: Deal[]): Deal[] {
 }
 
 function mergeBookingsById(stored: Booking[] | undefined, seedItems: Booking[]): Booking[] {
-  if (!stored?.length) return seedItems;
-
-  const seedMap = new Map(seedItems.map((item) => [item.id, item]));
-  const merged = stored.map((item) => {
-    const seed = seedMap.get(item.id);
-    if (!seed) return item;
-
-    if (!item.hallId || !item.periodType) {
-      return { ...seed, status: item.status };
-    }
-
-    return {
-      ...item,
-      hallId: item.hallId ?? seed.hallId,
-      organizerId: item.organizerId ?? seed.organizerId,
-      organizerName: item.organizerName ?? seed.organizerName,
-      periodType: item.periodType ?? seed.periodType,
-      periodStart: item.periodStart ?? seed.periodStart,
-      periodEnd: item.periodEnd ?? seed.periodEnd,
-    };
-  });
-
-  const storedIds = new Set(stored.map((item) => item.id));
-  const missing = seedItems.filter((item) => !storedIds.has(item.id));
-  return missing.length ? [...merged, ...missing] : merged;
+  return overlaySeedRecords(stored, seedItems, ["status"]);
 }
 
 export const usePrototypeStore = create<PrototypeState>()(
@@ -559,12 +554,62 @@ export const usePrototypeStore = create<PrototypeState>()(
         })),
       removeService: (id) =>
         set((s) => ({ services: s.services.filter((sv) => sv.id !== id) })),
-      addRequest: (request) => set((s) => ({ requests: [...s.requests, request] })),
+      addRequest: (request) =>
+        set((s) => {
+          if (!canCreateRequest(useAuthStore.getState().user).allowed) return s;
+          return { requests: [...s.requests, request] };
+        }),
       updateRequest: (id, updates) =>
-        set((s) => ({
-          requests: s.requests.map((r) => (r.id === id ? { ...r, ...updates } : r)),
-        })),
-      addResponse: (response) => set((s) => ({ responses: [...s.responses, response] })),
+        set((s) => {
+          const user = useAuthStore.getState().user;
+          const request = s.requests.find((item) => item.id === id);
+          if (!user || user.role !== "customer" || !request || request.customerId !== user.id) {
+            return s;
+          }
+          if (updates.status && updates.status !== request.status) {
+            const action =
+              updates.status === "published"
+                ? "publish"
+                : updates.status === "archived"
+                  ? "archive"
+                  : updates.status === "cancelled"
+                    ? "cancel"
+                    : updates.status === "completed"
+                      ? "delete"
+                      : null;
+            if (
+              action &&
+              !canPerformRequestAction(request, user, action, s.responses, s.deals).allowed
+            ) {
+              return s;
+            }
+          }
+          if (
+            updates.responseDeadlineAt &&
+            updates.responseDeadlineAt !== request.responseDeadlineAt &&
+            !canPerformRequestAction(request, user, "extend_deadline", s.responses, s.deals).allowed
+          ) {
+            return s;
+          }
+          return {
+            requests: s.requests.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+          };
+        }),
+      addResponse: (response) => {
+        let accepted = false;
+        set((s) => {
+          const request = s.requests.find((item) => item.id === response.requestId);
+          if (!canSubmitProposal(useAuthStore.getState().user, request, s.responses, s.deals).allowed) {
+            return s;
+          }
+          if (!validateProposalPayload(response).ok) {
+            return s;
+          }
+          accepted = true;
+          return { responses: [...s.responses, response] };
+        });
+        return accepted;
+      },
       updateResponse: (id, updates) =>
         set((s) => ({
           responses: s.responses.map((r) => (r.id === id ? { ...r, ...updates } : r)),
@@ -577,28 +622,38 @@ export const usePrototypeStore = create<PrototypeState>()(
             : { payments: [...s.payments, payment] }
         ),
       updateDeal: (id, updates) =>
-        set((s) => ({
-          deals: s.deals.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-        })),
+        set((s) => {
+          const deal = s.deals.find((item) => item.id === id);
+          if (!canMutateDeal(useAuthStore.getState().user, deal).allowed) return s;
+          return {
+            deals: s.deals.map((d) => (d.id === id ? { ...d, ...updates } : d)),
+          };
+        }),
       updateDealStatus: (id, status) =>
-        set((s) => ({
-          deals: s.deals.map((d) =>
-            d.id === id
-              ? {
-                  ...d,
-                  status,
-                  history: [
-                    ...d.history,
-                    {
-                      date: new Date().toISOString().split("T")[0],
-                      action: `Статус: ${status}`,
-                      actor: "Система",
-                    },
-                  ],
-                }
-              : d
-          ),
-        })),
+        set((s) => {
+          const deal = s.deals.find((item) => item.id === id);
+          const user = useAuthStore.getState().user;
+          if (!canMutateDeal(user, deal).allowed) return s;
+          if (!deal || !canTransitionDeal(deal, user, status).allowed) return s;
+          return {
+            deals: s.deals.map((d) =>
+              d.id === id
+                ? {
+                    ...d,
+                    status,
+                    history: [
+                      ...d.history,
+                      {
+                        date: new Date().toISOString().split("T")[0],
+                        action: `Статус: ${status}`,
+                        actor: "Система",
+                      },
+                    ],
+                  }
+                : d
+            ),
+          };
+        }),
       addNotification: (notification) =>
         set((s) => ({ notifications: [notification, ...s.notifications] })),
       markNotificationRead: (id) =>
@@ -625,11 +680,103 @@ export const usePrototypeStore = create<PrototypeState>()(
           ),
         })),
       addBooking: (booking) =>
-        set((s) => ({ bookings: [...s.bookings, booking] })),
+        set((s) => {
+          if (booking.status === "confirmed" && booking.hallId) {
+            const start = booking.periodStart ?? booking.date;
+            const end = booking.periodEnd ?? start;
+            if (isHallOccupied(s.bookings, booking.hallId, start, end, booking.id)) {
+              return s;
+            }
+          }
+          return { bookings: [...s.bookings, booking] };
+        }),
       updateBooking: (id, updates) =>
-        set((s) => ({
-          bookings: s.bookings.map((b) => (b.id === id ? { ...b, ...updates } : b)),
-        })),
+        set((s) => {
+          const booking = s.bookings.find((item) => item.id === id);
+          if (!booking) return s;
+          if (updates.status && updates.status !== booking.status) {
+            const allowed = canTransitionBooking(
+              booking,
+              useAuthStore.getState().user,
+              updates.status,
+              { rejectReason: updates.rejectReason ?? booking.rejectReason }
+            );
+            if (!allowed.allowed) return s;
+            if (updates.status === "confirmed") {
+              const hallId = updates.hallId ?? booking.hallId;
+              const start = updates.periodStart ?? booking.periodStart ?? booking.date;
+              const end = updates.periodEnd ?? booking.periodEnd ?? start;
+              if (hallId && isHallOccupied(s.bookings, hallId, start, end, booking.id)) {
+                return s;
+              }
+            }
+          }
+          return {
+            bookings: s.bookings.map((b) => (b.id === id ? { ...b, ...updates } : b)),
+          };
+        }),
+      requestBookingChange: (bookingId, change) => {
+        let ok = false;
+        set((s) => {
+          const booking = s.bookings.find((item) => item.id === bookingId);
+          const user = useAuthStore.getState().user;
+          if (!booking || booking.status !== "confirmed") return s;
+          if (booking.changeRequest?.status === "pending") return s;
+          if (user?.role !== "organizer" && user?.role !== "venue") return s;
+          if (!change.reason.trim() || !change.periodStart || !change.periodEnd) return s;
+          ok = true;
+          return {
+            bookings: s.bookings.map((item) =>
+              item.id === bookingId ? { ...item, changeRequest: { ...change, status: "pending" } } : item
+            ),
+          };
+        });
+        return ok;
+      },
+      resolveBookingChange: (bookingId, accept) => {
+        let ok = false;
+        set((s) => {
+          const booking = s.bookings.find((item) => item.id === bookingId);
+          const user = useAuthStore.getState().user;
+          const request = booking?.changeRequest;
+          if (!booking || request?.status !== "pending") return s;
+          const waitingVenue = request.actor === "organizer";
+          if (waitingVenue && user?.role !== "venue") return s;
+          if (!waitingVenue && user?.role !== "organizer") return s;
+          if (accept) {
+            const hallId = booking.hallId;
+            if (
+              hallId &&
+              isHallOccupied(s.bookings, hallId, request.periodStart, request.periodEnd, booking.id)
+            ) {
+              return s;
+            }
+            ok = true;
+            return {
+              bookings: s.bookings.map((item) =>
+                item.id === bookingId
+                  ? {
+                      ...item,
+                      periodStart: request.periodStart,
+                      periodEnd: request.periodEnd,
+                      date: request.periodStart,
+                      changeRequest: { ...request, status: "accepted" },
+                    }
+                  : item
+              ),
+            };
+          }
+          ok = true;
+          return {
+            bookings: s.bookings.map((item) =>
+              item.id === bookingId
+                ? { ...item, changeRequest: { ...request, status: "rejected" } }
+                : item
+            ),
+          };
+        });
+        return ok;
+      },
       updateParticipant: (id, updates) =>
         set((s) => ({
           participants: s.participants.map((item) =>
@@ -677,17 +824,28 @@ export const usePrototypeStore = create<PrototypeState>()(
           eventRecommendedPartners: s.eventRecommendedPartners.filter((item) => item.id !== id),
         })),
       addVenueEmployee: (employee) =>
-        set((s) => ({ venueEmployees: [...s.venueEmployees, employee] })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "venue").allowed) return s;
+          return { venueEmployees: [...s.venueEmployees, employee] };
+        }),
       updateVenueEmployee: (id, updates) =>
-        set((s) => ({
-          venueEmployees: s.venueEmployees.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "venue").allowed) return s;
+          return {
+            venueEmployees: s.venueEmployees.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          };
+        }),
       removeVenueEmployee: (id) =>
-        set((s) => ({ venueEmployees: s.venueEmployees.filter((item) => item.id !== id) })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "venue").allowed) return s;
+          return { venueEmployees: s.venueEmployees.filter((item) => item.id !== id) };
+        }),
       delegateVenueAdmin: (venueId, employeeId) =>
-        set((s) => ({
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "venue").allowed) return s;
+          return {
           venueEmployees: s.venueEmployees.map((item) => {
             if (item.venueId !== venueId) return item;
             if (item.id === employeeId) {
@@ -713,21 +871,33 @@ export const usePrototypeStore = create<PrototypeState>()(
             }
             return item;
           }),
-        })),
+          };
+        }),
       addOrganizerEmployee: (employee) =>
-        set((s) => ({ organizerEmployees: [...s.organizerEmployees, employee] })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "organizer").allowed) return s;
+          return { organizerEmployees: [...s.organizerEmployees, employee] };
+        }),
       updateOrganizerEmployee: (id, updates) =>
-        set((s) => ({
-          organizerEmployees: s.organizerEmployees.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "organizer").allowed) return s;
+          return {
+            organizerEmployees: s.organizerEmployees.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          };
+        }),
       removeOrganizerEmployee: (id) =>
-        set((s) => ({
-          organizerEmployees: s.organizerEmployees.filter((item) => item.id !== id),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "organizer").allowed) return s;
+          return {
+            organizerEmployees: s.organizerEmployees.filter((item) => item.id !== id),
+          };
+        }),
       delegateOrganizerAdmin: (organizerId, employeeId) =>
-        set((s) => ({
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "organizer").allowed) return s;
+          return {
           organizerEmployees: s.organizerEmployees.map((item) => {
             if (item.organizerId !== organizerId) return item;
             if (item.id === employeeId) {
@@ -751,21 +921,33 @@ export const usePrototypeStore = create<PrototypeState>()(
             }
             return item;
           }),
-        })),
+          };
+        }),
       addCustomerEmployee: (employee) =>
-        set((s) => ({ customerEmployees: [...s.customerEmployees, employee] })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "customer").allowed) return s;
+          return { customerEmployees: [...s.customerEmployees, employee] };
+        }),
       updateCustomerEmployee: (id, updates) =>
-        set((s) => ({
-          customerEmployees: s.customerEmployees.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "customer").allowed) return s;
+          return {
+            customerEmployees: s.customerEmployees.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          };
+        }),
       removeCustomerEmployee: (id) =>
-        set((s) => ({
-          customerEmployees: s.customerEmployees.filter((item) => item.id !== id),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "customer").allowed) return s;
+          return {
+            customerEmployees: s.customerEmployees.filter((item) => item.id !== id),
+          };
+        }),
       delegateCustomerAdmin: (customerId, employeeId) =>
-        set((s) => ({
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "customer").allowed) return s;
+          return {
           customerEmployees: s.customerEmployees.map((item) => {
             if (item.customerId !== customerId) return item;
             if (item.id === employeeId) {
@@ -794,21 +976,33 @@ export const usePrototypeStore = create<PrototypeState>()(
             }
             return item;
           }),
-        })),
+          };
+        }),
       addContractorEmployee: (employee) =>
-        set((s) => ({ contractorEmployees: [...s.contractorEmployees, employee] })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "contractor").allowed) return s;
+          return { contractorEmployees: [...s.contractorEmployees, employee] };
+        }),
       updateContractorEmployee: (id, updates) =>
-        set((s) => ({
-          contractorEmployees: s.contractorEmployees.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "contractor").allowed) return s;
+          return {
+            contractorEmployees: s.contractorEmployees.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          };
+        }),
       removeContractorEmployee: (id) =>
-        set((s) => ({
-          contractorEmployees: s.contractorEmployees.filter((item) => item.id !== id),
-        })),
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "contractor").allowed) return s;
+          return {
+            contractorEmployees: s.contractorEmployees.filter((item) => item.id !== id),
+          };
+        }),
       delegateContractorAdmin: (contractorId, employeeId) =>
-        set((s) => ({
+        set((s) => {
+          if (!canManageEmployees(useAuthStore.getState().user, "contractor").allowed) return s;
+          return {
           contractorEmployees: s.contractorEmployees.map((item) => {
             if (item.contractorId !== contractorId) return item;
             if (item.id === employeeId) {
@@ -839,7 +1033,8 @@ export const usePrototypeStore = create<PrototypeState>()(
             }
             return item;
           }),
-        })),
+          };
+        }),
       updateVenueEventMeta: (id, updates) =>
         set((s) => ({
           venueEventMeta: s.venueEventMeta.map((item) =>
@@ -864,37 +1059,75 @@ export const usePrototypeStore = create<PrototypeState>()(
       setRequestWizardDraft: (draft) => set({ requestWizardDraft: draft }),
       setOrganizerEventDraft: (draft) => set({ organizerEventDraft: draft }),
       updateVenueInquiry: (id, updates) =>
-        set((state) => ({
-          venueInquiries: state.venueInquiries.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
-          ),
-        })),
+        set((state) => {
+          const inquiry = state.venueInquiries.find((item) => item.id === id);
+          if (!inquiry) return state;
+          const user = useAuthStore.getState().user;
+          if (updates.status && updates.status !== inquiry.status) {
+            const allowed = canTransitionInquiry(inquiry, user, updates.status, {
+              reason: updates.declineReason ?? updates.changeReason,
+              hallId: updates.hallId ?? inquiry.hallId,
+            });
+            if (!allowed.allowed) return state;
+          }
+          return {
+            venueInquiries: state.venueInquiries.map((item) =>
+              item.id === id ? { ...item, ...updates } : item
+            ),
+          };
+        }),
       addVenueInquiries: (inquiries) =>
         set((state) => {
           const existingIds = new Set(state.venueInquiries.map((item) => item.id));
           const next = inquiries.filter((item) => !existingIds.has(item.id));
           return next.length ? { venueInquiries: [...state.venueInquiries, ...next] } : state;
         }),
-      selectVenueInquiry: (inquiryId) =>
+      selectVenueInquiry: (inquiryId) => {
+        let accepted = false;
         set((state) => {
           const selected = state.venueInquiries.find((item) => item.id === inquiryId);
-          if (!selected || !state.organizerEventDraft) return state;
+          const user = useAuthStore.getState().user;
+          if (!selected) return state;
+          const allowed = canTransitionInquiry(selected, user, "selected");
+          if (!allowed.allowed) return state;
 
+          const nextBookings = createBookingsFromInquiry(selected, user?.id ?? "user-organizer");
+          const conflict = nextBookings.some(
+            (booking) =>
+              booking.hallId &&
+              isHallOccupied(
+                state.bookings,
+                booking.hallId,
+                booking.periodStart ?? booking.date,
+                booking.periodEnd ?? booking.date
+              )
+          );
+          if (conflict) return state;
+
+          accepted = true;
           return {
             venueInquiries: state.venueInquiries.map((item) => {
               if (item.id === inquiryId) return { ...item, status: "selected" as const };
-              if (item.eventDraftId === selected.eventDraftId && item.status === "proposal_received") {
-                return { ...item, status: "declined" as const };
+              if (
+                item.eventDraftId === selected.eventDraftId &&
+                (item.status === "proposal_received" || item.status === "changes_proposed")
+              ) {
+                return { ...item, status: "declined" as const, declineReason: "Выбрана другая площадка" };
               }
               return item;
             }),
-            organizerEventDraft: {
-              ...state.organizerEventDraft,
-              selectedVenueId: selected.venueId,
-              selectedVenueName: selected.venueName,
-            },
+            bookings: [...state.bookings, ...nextBookings],
+            organizerEventDraft: state.organizerEventDraft
+              ? {
+                  ...state.organizerEventDraft,
+                  selectedVenueId: selected.venueId,
+                  selectedVenueName: selected.venueName,
+                }
+              : state.organizerEventDraft,
           };
-        }),
+        });
+        return accepted;
+      },
       setCompanyLogo: (userId, logoUrl) =>
         set((state) => ({
           companyLogos: { ...state.companyLogos, [userId]: logoUrl },
@@ -1022,7 +1255,8 @@ export const usePrototypeStore = create<PrototypeState>()(
           venueEventMeta: mergeById(persisted.venueEventMeta, fresh.venueEventMeta),
           venueProfileMedia: mergeById(persisted.venueProfileMedia, fresh.venueProfileMedia),
           venueInquiries: mergeById(persisted.venueInquiries, fresh.venueInquiries),
-          payments: mergeById(persisted.payments, fresh.payments),
+          documents: overlaySeedRecords(persisted.documents, fresh.documents, ["status"]),
+          payments: overlaySeedRecords(persisted.payments, fresh.payments, ["status"]),
           participants: mergeParticipantsById(persisted.participants, fresh.participants),
           bookings: mergeBookingsById(persisted.bookings, fresh.bookings),
           messages: mergeMessageThreads(persisted.messages, fresh.messages),

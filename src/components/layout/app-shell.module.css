@@ -1,17 +1,28 @@
-.cabinetLayout {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-  flex: 1;
+.page {
+  height: 100dvh;
+  overflow: hidden;
 }
 
-.sidebarSticky {
-  position: sticky;
-  top: 62px;
-  z-index: 20;
-  align-self: flex-start;
-  height: calc(100vh - 62px);
-  max-height: calc(100vh - 62px);
+.cabinetLayout {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar {
+  height: 100%;
+  max-height: 100%;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebarNav {

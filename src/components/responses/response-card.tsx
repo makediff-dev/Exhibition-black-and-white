@@ -8,6 +8,7 @@ import { ContractorRegistryBadges } from "@/components/contractors/contractor-re
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { ConfirmModal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast-provider";
 import { RESPONSE_STATUS_LABELS } from "@/constants/statuses";
@@ -111,35 +112,23 @@ export function ResponseCard({
 
         <p className="text-2xl font-bold">{formatPrice(response.price)}</p>
 
-        <div className="space-y-2 text-sm text-gray-700">
-          <p>{response.approach}</p>
-          {response.comment && <p>{response.comment}</p>}
+        <div className="space-y-[10px]">
+          <CardField label="Подход">{response.approach}</CardField>
+          {response.comment && <CardField label="Комментарий">{response.comment}</CardField>}
           {response.estimate.map((section) => (
-            <p key={section.id}>
-              {section.title}: {section.items.map((item) => item.name).join(", ")}
-            </p>
+            <CardField key={section.id} label={section.title}>
+              {section.items.map((item) => item.name).join(", ")}
+            </CardField>
           ))}
-          {isOwner && <p>Расширенная проверка (услуга платная)</p>}
-          <p>Действует до {formatShortDate(response.validUntil)}</p>
+          {isOwner && <CardField label="Проверка">Расширенная проверка (услуга платная)</CardField>}
+          <CardField label="Действует до">{formatShortDate(response.validUntil)}</CardField>
         </div>
 
         {(category || city || eventTitle) && (
-          <div className="space-y-1 border-t border-gray-200 pt-3 text-sm text-gray-700">
-            {category && (
-              <p>
-                <span className="text-gray-500">Категория:</span> {category}
-              </p>
-            )}
-            {city && (
-              <p>
-                <span className="text-gray-500">Город:</span> {city}
-              </p>
-            )}
-            {eventTitle && (
-              <p>
-                <span className="text-gray-500">Мероприятие:</span> {eventTitle}
-              </p>
-            )}
+          <div className="space-y-[10px] border-t border-gray-200 pt-3">
+            {category && <CardField label="Категория">{category}</CardField>}
+            {city && <CardField label="Город">{city}</CardField>}
+            {eventTitle && <CardField label="Мероприятие">{eventTitle}</CardField>}
           </div>
         )}
 

@@ -19,6 +19,12 @@ import { useToast } from "@/components/ui/toast-provider";
 import { formatPrice } from "@/lib/utils/formatters";
 import { getContractorIdForUser, findContractorForUser, isResponseForUser } from "@/lib/utils/user-entity-map";
 import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
+import { canSubmitProposal } from "@/lib/auth/authorization";
+import { validateProposalPayload } from "@/lib/state/proposal-payload";
+import { getRequestStatus } from "@/lib/state/request-machine";
+import { StatusSummary } from "@/components/ui/status-summary";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
+import { addDaysIso } from "@/lib/state/clock";
 
 const RESPONSE_STATUS_LABELS: Record<string, string> = {
   pending: "На рассмотрении",
@@ -33,6 +39,7 @@ export default function RespondPage() {
   const id = params.id as string;
   const { user } = useAuthStore();
   const { requests, responses, deals, addResponse, updateRequest } = usePrototypeStore();
+  const requestResponses = responses.filter((item) => item.requestId === id);
   const { showToast } = useToast();
 
   const request = requests.find((r) => r.id === id);
@@ -57,8 +64,10 @@ export default function RespondPage() {
   const existing = responses.find(
     (r) => r.requestId === id && isResponseForUser(r, user)
   );
+  const lifecycle = getRequestStatus(request, user, requestResponses, deals);
+  const submitAccess = canSubmitProposal(user, request, requestResponses, deals);
 
-  if (!existing && !isRequestVisibleToContractor(request, getContractorIdForUser(user))) {
+  if (!existing && !isRequestVisibleToContractor(request, user)) {
     return (
       <AppShell
         title="Отклик недоступен"
@@ -67,10 +76,15 @@ export default function RespondPage() {
       >
         <EmptyState
           title="Заявка не принимает отклики"
-          description="Откликнуться можно только на опубликованные заявки"
-          actionLabel="К заявке"
-          actionHref={`/requests/${id}`}
+          description="Эта заявка не совпадает с вашей категорией или географией. Расширьте специализацию в профиле или города оказания услуг, чтобы видеть такие заявки."
+          actionLabel="Категории в профиле"
+          actionHref="/account/contractor/profile"
         />
+        <p className="text-center text-sm">
+          <Link href="/account/contractor/cities" className="underline">
+            Города оказания услуг
+          </Link>
+        </p>
       </AppShell>
     );
   }
@@ -151,12 +165,36 @@ export default function RespondPage() {
     );
   }
 
+  if (!submitAccess.allowed) {
+    return (
+      <AppShell title="Отклик недоступен" showBack backFallbackHref={`/requests/${id}`}>
+        <div className="space-y-4 max-w-2xl">
+          <StatusSummary status={lifecycle} />
+          <EmptyState
+            title="Отклик недоступен"
+            description={submitAccess.reason}
+            actionLabel="К заявке"
+            actionHref={`/requests/${id}`}
+          />
+        </div>
+      </AppShell>
+    );
+  }
+
   const estimateTotal = calcEstimateTotal(estimate);
   const finalPrice = price ? Number(price) : estimateTotal;
 
   const submit = () => {
-    if (!approach.trim() || finalPrice <= 0) {
-      showToast("Заполните подход и цену", "error");
+    if (!submitAccess.allowed) {
+      showToast(submitAccess.reason, "error");
+      return;
+    }
+    const payload = validateProposalPayload({
+      price: finalPrice,
+      approach,
+    });
+    if (!payload.ok) {
+      showToast(payload.reason, "error");
       return;
     }
 
@@ -172,12 +210,16 @@ export default function RespondPage() {
       approach,
       status: "pending",
       rating: contractor?.rating ?? 4.8,
-      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      validUntil: addDaysIso(getPrototypeNowDateIso(), 30),
       estimate,
       files,
     };
 
-    addResponse(response);
+    const accepted = addResponse(response);
+    if (!accepted) {
+      showToast("Отклик отклонён: цена и подход обязательны, заявка должна быть открыта.", "error");
+      return;
+    }
     updateRequest(id, { responseCount: request.responseCount + 1 });
     showToast("Отклик успешно отправлен", "success");
     router.push(`/requests/${id}`);
@@ -199,6 +241,7 @@ export default function RespondPage() {
           <p className="font-medium">{request.title}</p>
           <p className="text-gray-600 mt-1">{request.category} · {request.city}</p>
         </div>
+        <StatusSummary status={lifecycle} />
 
         <Input
           label="Цена, ₽ *"
@@ -251,7 +294,11 @@ export default function RespondPage() {
           )}
         </div>
 
-        <Button onClick={submit} className="w-full sm:w-auto">
+        <Button
+          onClick={submit}
+          className="w-full sm:w-auto"
+          disabled={!submitAccess.allowed}
+        >
           <Send className="h-4 w-4" />
           Отправить отклик
         </Button>

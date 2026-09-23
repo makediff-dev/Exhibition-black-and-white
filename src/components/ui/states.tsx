@@ -79,6 +79,27 @@ export function LoadingState({ message = "Загрузка..." }: { message?: st
   );
 }
 
+export function ForbiddenState({
+  title = "Нет доступа",
+  description,
+  actionLabel = "На главную",
+  actionHref = "/",
+}: {
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+  actionHref?: string;
+}) {
+  return (
+    <EmptyState
+      title={title}
+      description={description}
+      actionLabel={actionLabel}
+      actionHref={actionHref}
+    />
+  );
+}
+
 export function ErrorState({
   title = "Произошла ошибка",
   description,

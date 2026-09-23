@@ -47,8 +47,11 @@ export function DemoMenu() {
     <div className="fixed bottom-4 left-4 z-[90]">
       <div className="border-2 border-dashed border-gray-500 bg-gray-100 shadow-md">
         <button
+          type="button"
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 w-full"
+          aria-expanded={open}
+          aria-label="Инструмент прототипа: смена демо-роли"
         >
           <Beaker className="h-4 w-4" />
           <span>Демо (инструмент прототипа)</span>

@@ -40,13 +40,16 @@ export function Footer() {
             <h4 className={styles.columnTitle}>Правовая информация</h4>
             <ul className={styles.list}>
               <li>
-                <Link href="/how-it-works">Условия использования</Link>
+                <Link href="/legal/terms">Условия использования</Link>
+                <span className="ml-1 text-xs text-gray-500">(документ ещё не опубликован)</span>
               </li>
               <li>
-                <Link href="/how-it-works">Политика конфиденциальности</Link>
+                <Link href="/legal/privacy">Политика конфиденциальности</Link>
+                <span className="ml-1 text-xs text-gray-500">(документ ещё не опубликован)</span>
               </li>
               <li>
-                <Link href="/how-it-works">Контакты</Link>
+                <Link href="/contacts">Контакты</Link>
+                <span className="ml-1 text-xs text-gray-500">(поддержка в прототипе недоступна)</span>
               </li>
             </ul>
           </div>

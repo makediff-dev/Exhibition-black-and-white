@@ -18,7 +18,13 @@ export type DealStatus =
   | "completed"
   | "dispute";
 
-export type RequestStatus = "draft" | "published" | "in_progress" | "completed";
+export type RequestStatus =
+  | "draft"
+  | "published"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "archived";
 
 export type ModerationStatus =
   | "pending"
@@ -339,6 +345,7 @@ export interface EventOrder {
   amount?: number;
   dealId?: string;
   requestId?: string;
+  bookingId?: string;
   direction?: "incoming" | "outgoing";
 }
 
@@ -346,7 +353,9 @@ export interface Document {
   id: string;
   type: string;
   number: string;
-  dealId: string;
+  dealId?: string;
+  orderId?: string;
+  bookingId?: string;
   date: string;
   parties: string;
   status: "draft" | "sent" | "signed" | "archived";
@@ -359,7 +368,11 @@ export interface Document {
 
 export interface Payment {
   id: string;
+  number?: string;
   dealId?: string;
+  orderId?: string;
+  bookingId?: string;
+  ledgerPairId?: string;
   type: string;
   amount: number;
   status: "pending" | "paid" | "reserved" | "refunded";
@@ -372,6 +385,8 @@ export interface Payment {
   organizerName?: string;
   participantRole?: "organizer" | "exhibitor" | "contractor" | "venue";
   counterpartyName?: string;
+  payerName?: string;
+  payeeName?: string;
 }
 
 export interface Notification {
@@ -418,6 +433,11 @@ export interface VenueHall {
   area: number;
   capacity: number;
   available: boolean;
+  widthMeters?: number;
+  lengthMeters?: number;
+  planCoords?: string;
+  powerKw?: number;
+  constraints?: string;
 }
 
 export interface FloorCell {
@@ -437,10 +457,21 @@ export interface Booking {
   organizerId?: string;
   organizerName?: string;
   status: "pending" | "confirmed" | "rejected";
+  rejectReason?: string;
   date: string;
   periodType?: "setup" | "event" | "teardown";
   periodStart?: string;
   periodEnd?: string;
+  inquiryId?: string;
+  holdUntil?: string;
+  cancellationTerms?: string;
+  changeRequest?: {
+    status: "pending" | "accepted" | "rejected";
+    actor: "organizer" | "venue";
+    periodStart: string;
+    periodEnd: string;
+    reason: string;
+  };
 }
 
 export interface Participant {
@@ -673,7 +704,12 @@ export interface FloorPlanPlot {
   companyName?: string;
 }
 
-export type VenueInquiryStatus = "pending" | "proposal_received" | "selected" | "declined";
+export type VenueInquiryStatus =
+  | "pending"
+  | "proposal_received"
+  | "changes_proposed"
+  | "selected"
+  | "declined";
 
 export interface OrganizerEventDraft {
   id: string;
@@ -692,15 +728,31 @@ export interface OrganizerEventDraft {
 export interface VenueInquiry {
   id: string;
   eventDraftId: string;
+  eventTitle?: string;
+  organizerName?: string;
   venueId: string;
   venueName: string;
   dateFrom: string;
   dateTo: string;
+  setupStart?: string;
+  setupEnd?: string;
+  teardownStart?: string;
+  teardownEnd?: string;
   minArea?: string;
+  requirements?: string;
+  hallId?: string;
+  alternativeHallId?: string;
+  alternativeDateFrom?: string;
+  alternativeDateTo?: string;
+  declineReason?: string;
+  changeReason?: string;
+  holdUntil?: string;
+  cancellationTerms?: string;
   status: VenueInquiryStatus;
   sentAt: string;
   proposalSummary?: string;
   proposalPrice?: string;
+  history?: { date: string; action: string; actor: string }[];
 }
 
 export type VenueBookingDateStatus = "rented" | "booked" | "negotiating";

@@ -52,7 +52,7 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
     setOpen(false);
     logout();
     onNavigate?.();
-    router.push("/login");
+    router.replace("/login");
   };
 
   return (
@@ -67,6 +67,7 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
         )}
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-label={`Текущая организация: ${user.name}`}
       >
         <span className="min-w-0 flex-1 truncate text-left">{user.name}</span>
         <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")} />

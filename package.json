@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "preview": "npm run build && npm run start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test src/lib/auth/authorization.test.ts src/lib/auth/session.test.ts src/lib/data/entity-integrity.test.ts src/lib/state/state-machines.test.ts src/lib/state/proposal-payload.test.ts src/lib/state/inquiry-machine.test.ts src/constants/request-schemas.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

@@ -7,11 +7,13 @@ import { Menu, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
+import { loginHref } from "@/lib/auth/session";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
+import { PrototypeBanner } from "@/components/layout/prototype-banner";
 import styles from "./public-header.module.css";
 
 const NAV_LINKS = [
@@ -33,6 +35,10 @@ export function PublicHeader() {
 
   return (
     <header className={styles.header}>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-white focus:px-3 focus:py-2">
+        Перейти к содержимому
+      </a>
+      <PrototypeBanner />
       <div className={styles.inner}>
         <div className={styles.row}>
           <Link href="/" className={styles.logo}>
@@ -67,15 +73,17 @@ export function PublicHeader() {
                 <Link href="/messages" className="p-2 hover:bg-gray-100" aria-label="Сообщения">
                   <MessageSquare className="h-4 w-4" />
                 </Link>
-                <Link href="/requests/new" className="shrink-0">
-                  <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
-                    Разместить заявку
-                  </Button>
-                </Link>
+                {user?.role === "customer" ? (
+                  <Link href="/requests/new" className="shrink-0">
+                    <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
+                      Разместить заявку
+                    </Button>
+                  </Link>
+                ) : null}
                 <AccountSwitcher />
               </>
             ) : (
-              <Link href="/login" className={styles.loginButton}>
+              <Link href={loginHref(pathname)} className={styles.loginButton}>
                 Вход
               </Link>
             )}
@@ -123,14 +131,16 @@ export function PublicHeader() {
                   Сообщения
                 </Link>
                 <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
-                <Link href="/requests/new" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full" variant={requestButtonVariant}>
-                    Разместить заявку
-                  </Button>
-                </Link>
+                {user?.role === "customer" ? (
+                  <Link href="/requests/new" onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full" variant={requestButtonVariant}>
+                      Разместить заявку
+                    </Button>
+                  </Link>
+                ) : null}
               </>
             ) : (
-              <Link href="/login" onClick={() => setMobileOpen(false)}>
+              <Link href={loginHref(pathname)} onClick={() => setMobileOpen(false)}>
                 <Button variant="outline" className="w-full">
                   Вход
                 </Button>

@@ -1,4 +1,4 @@
-import type { MessageThread, Notification, UserRole } from "@/data/types";
+import type { MessageThread, Notification, UserRole } from "../types/index.ts";
 
 export const SEED_NOTIFICATIONS: Notification[] = [
   { id: "notif-1", title: "Новый отклик", message: "ООО «СтендПро» откликнулся на заявку", priority: "action_required", read: false, date: "2026-01-11", link: "/requests/req-1/responses", category: "responses", audience: "customer" },

@@ -19,7 +19,6 @@ import {
   SEED_HALL_GRID_FEATURES,
   SEED_HALLS,
   SEED_PAVILIONS,
-  SEED_VENUE_DAILY_OCCUPANCY,
   SEED_VENUE_INQUIRIES,
   SEED_VENUE_SPACE_BLOCKS,
 } from "@/data/mocks/seed";
@@ -32,7 +31,13 @@ import type {
 } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatPrice } from "@/lib/utils/formatters";
-import { buildVenueDateStatuses, expandIsoDateRange } from "@/lib/utils/venue-date-statuses";
+import { formatShortDate } from "@/lib/utils/formatters";
+import { buildVenueDateStatuses } from "@/lib/utils/venue-date-statuses";
+import {
+  getPrototypeMonthRange,
+  getVenueOccupancyByDate,
+  getVenueOccupancyPercent,
+} from "@/lib/utils/venue-occupancy";
 
 type HallTab = "card" | "sale" | "plan";
 
@@ -83,8 +88,8 @@ export function VenueHallsSection({
   const [newHallName, setNewHallName] = useState("");
   const [newHallArea, setNewHallArea] = useState("1000");
   const [newHallCapacity, setNewHallCapacity] = useState("50");
-  const [rangeStart, setRangeStart] = useState("2026-04-01");
-  const [rangeEnd, setRangeEnd] = useState("2026-04-01");
+  const [rangeStart, setRangeStart] = useState(() => getPrototypeMonthRange().start);
+  const [rangeEnd, setRangeEnd] = useState(() => getPrototypeMonthRange().end);
   const [bookingOpen, setBookingOpen] = useState(true);
 
   const selectedPavilion = pavilions.find((item) => item.id === selectedPavilionId);
@@ -136,29 +141,16 @@ export function VenueHallsSection({
   );
 
   const occupancyByDate = useMemo(() => {
-    return Object.fromEntries(
-      SEED_VENUE_DAILY_OCCUPANCY.filter((item) => item.venueId === venueId).map((item) => [
-        item.date,
-        item.percent,
-      ])
-    );
-  }, [venueId]);
+    const year = rangeStart.slice(0, 4) || "2026";
+    return getVenueOccupancyByDate(venueId, halls, bookings, `${year}-01-01`, `${year}-12-31`);
+  }, [venueId, halls, bookings, rangeStart]);
 
-  const selectedDates = useMemo(
-    () => expandIsoDateRange(rangeStart, rangeEnd),
-    [rangeStart, rangeEnd]
+  const occupancy = useMemo(
+    () => getVenueOccupancyPercent(venueId, halls, bookings, rangeStart, rangeEnd),
+    [venueId, halls, bookings, rangeStart, rangeEnd]
   );
 
-  const averageOccupancy = useMemo(() => {
-    if (selectedDates.length === 0) {
-      const values = Object.values(occupancyByDate);
-      if (!values.length) return 21;
-      return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-    }
-
-    const values = selectedDates.map((date) => occupancyByDate[date] ?? 0);
-    return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-  }, [selectedDates, occupancyByDate]);
+  const averageOccupancy = occupancy.percent;
 
   const totalArea = useMemo(
     () => blocks.reduce((sum, block) => sum + block.area, 0),
@@ -426,8 +418,13 @@ export function VenueHallsSection({
           <CardTitle className="mt-1">{freeArea.toLocaleString("ru-RU")} кв.м</CardTitle>
         </Card>
         <Card>
-          <CardDescription>Загрузка</CardDescription>
+          <CardDescription>
+            Загрузка за {formatShortDate(rangeStart)} — {formatShortDate(rangeEnd)}
+          </CardDescription>
           <CardTitle className="mt-1">{averageOccupancy}%</CardTitle>
+          <p className="text-xs text-gray-500 mt-1">
+            Подтверждённая площадь залов / вся площадь за выбранные дни
+          </p>
         </Card>
       </div>
 

@@ -1,251 +1,115 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
-import { Check, Star } from "lucide-react";
+import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ConfirmModal } from "@/components/ui/modal";
-import { Tabs } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
-import { DEMO_USERS } from "@/data/mocks/seed";
-import type { Deal, DealStage } from "@/data/types";
+import { RESPONSE_STATUS_LABELS } from "@/constants/statuses";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
-import { useToast } from "@/components/ui/toast-provider";
+import { formatPrice } from "@/lib/utils/formatters";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 
-function CompareContent() {
+export default function RequestComparePage() {
   const params = useParams();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const id = params.id as string;
   const { user } = useAuthStore();
-  const {
-    requests,
-    responses,
-    deals,
-    compareResponseIds,
-    addDeal,
-    updateRequest,
-    updateResponse,
-    clearCompare,
-  } = usePrototypeStore();
-  const { showToast } = useToast();
-
-  const [activeTab, setActiveTab] = useState("");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
-
-  const request = requests.find((r) => r.id === id);
-  const idsParam = searchParams.get("ids");
-
-  const compareIds = useMemo(() => {
-    if (idsParam) return idsParam.split(",").filter(Boolean);
-    if (compareResponseIds.length >= 2) return compareResponseIds;
-    const all = responses.filter((r) => r.requestId === id).map((r) => r.id);
-    return all.slice(0, Math.min(3, all.length));
-  }, [idsParam, compareResponseIds, responses, id]);
-
-  const compareResponses = useMemo(
-    () => compareIds.map((rid) => responses.find((r) => r.id === rid)).filter(Boolean),
-    [compareIds, responses]
-  );
-
-  const tabs = compareResponses.map((r) => ({
-    id: r!.id,
-    label: r!.contractorName.split("«")[1]?.replace("»", "") ?? r!.contractorName.slice(0, 12),
-  }));
-
-  const activeResponse = compareResponses.find((r) => r!.id === (activeTab || tabs[0]?.id));
-
-  const createDealFromResponse = (responseId: string) => {
-    const response = responses.find((r) => r.id === responseId);
-    if (!response || !request) return;
-
-    const dealId = `deal-${Date.now()}`;
-    const stages: DealStage[] =
-      response.estimate.length > 0
-        ? response.estimate.map((section, i) => ({
-            id: `st-${dealId}-${i}`,
-            title: section.title,
-            description: section.items.map((item) => item.name).join(", "),
-            price: section.items.reduce((s, item) => s + item.quantity * item.price, 0),
-            deadline: response.deadline,
-            status: i === 0 ? "pending" : "pending",
-            files: [],
-            comments: [],
-          }))
-        : [
-            {
-              id: `st-${dealId}-0`,
-              title: "Выполнение работ",
-              description: response.approach,
-              price: response.price,
-              deadline: response.deadline,
-              status: "pending" as const,
-              files: [],
-              comments: [],
-            },
-          ];
-
-    const deal: Deal = {
-      id: dealId,
-      number: `СД-${new Date().getFullYear()}-${String(deals.length + 1).padStart(3, "0")}`,
-      title: request.title,
-      format: request.format,
-      customerId: request.customerId,
-      customerName: DEMO_USERS.customer.name,
-      contractorId: response.contractorId,
-      contractorName: response.contractorName,
-      totalPrice: response.price,
-      status: request.format === "safe_deal" ? "negotiation" : "awaiting_payment",
-      stages,
-      requestId: request.id,
-      history: [
-        {
-          date: new Date().toISOString().split("T")[0],
-          action: "Сделка создана из сравнения откликов",
-          actor: user?.name ?? "Заказчик",
-        },
-      ],
-      documents: [],
-      commission: Math.round(response.price * 0.05),
-    };
-
-    addDeal(deal);
-    updateRequest(request.id, { status: "in_progress", responseCount: request.responseCount });
-    updateResponse(response.id, { status: "accepted" });
-    responses
-      .filter((r) => r.requestId === id && r.id !== response.id)
-      .forEach((r) => updateResponse(r.id, { status: "rejected" }));
-    clearCompare();
-    showToast("Исполнитель выбран, сделка создана", "success");
-    router.push(`/deals/${dealId}`);
-  };
-
-  const handleSelect = (responseId: string) => {
-    setSelectedResponseId(responseId);
-    setConfirmOpen(true);
-  };
+  const { requests, responses } = usePrototypeStore();
+  const request = requests.find((item) => item.id === id);
+  const requestResponses = responses.filter((item) => item.requestId === id);
+  const isOwner = Boolean(user && request && request.customerId === user.id);
 
   if (!request) {
     return (
-      <EmptyState title="Заявка не найдена" actionLabel="К заявкам" onAction={() => router.push("/requests")} />
+      <AppShell title="Сравнение" showBack backFallbackHref="/requests">
+        <EmptyState title="Заявка не найдена" actionLabel="К заявкам" actionHref="/requests" />
+      </AppShell>
     );
   }
 
-  if (compareResponses.length < 2) {
+  if (!isOwner) {
     return (
-      <EmptyState
-        title="Недостаточно откликов для сравнения"
-        description="Выберите минимум 2 отклика"
-        actionLabel="К откликам"
-        onAction={() => router.push(`/requests/${id}/responses`)}
-      />
+      <AppShell title="Сравнение" showBack backFallbackHref={`/requests/${id}`}>
+        <EmptyState
+          title="Сравнение доступно заказчику"
+          actionLabel="К заявке"
+          actionHref={`/requests/${id}`}
+        />
+      </AppShell>
     );
   }
 
-  const fields = [
-    { label: "Цена", render: (r: (typeof compareResponses)[0]) => formatPrice(r!.price) },
-    { label: "Срок", render: (r: (typeof compareResponses)[0]) => r!.deadline },
-    { label: "Условия", render: (r: (typeof compareResponses)[0]) => r!.terms },
-    { label: "Подход", render: (r: (typeof compareResponses)[0]) => r!.approach },
-    { label: "Рейтинг", render: (r: (typeof compareResponses)[0]) => (
-      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5" />{r!.rating}</span>
-    )},
-    { label: "Действует до", render: (r: (typeof compareResponses)[0]) => formatShortDate(r!.validUntil) },
-  ];
-
-  return (
-    <>
-      <ConfirmModal
-        open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={() => selectedResponseId && createDealFromResponse(selectedResponseId)}
-        title="Выбрать исполнителя"
-        message="Будет создана сделка с выбранным исполнителем. Остальные отклики будут отклонены."
-      />
-
-      <div className="md:hidden mb-4">
-        <Tabs
-          tabs={tabs}
-          activeTab={activeTab || tabs[0]?.id}
-          onChange={setActiveTab}
+  if (requestResponses.length < 2) {
+    return (
+      <AppShell title="Сравнение" showBack backFallbackHref={`/requests/${id}/responses`}>
+        <EmptyState
+          title="Недостаточно откликов для сравнения"
+          description="Сравнение появляется, когда есть минимум два предложения с одинаковой структурой: цена, срок, условия и подход."
+          actionLabel="К откликам"
+          actionHref={`/requests/${id}/responses`}
         />
-        {activeResponse && (
-          <div className="border border-gray-300 p-4 mt-4 space-y-4 rounded-card">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-semibold">{activeResponse.contractorName}</p>
-                <Badge variant="outline" className="mt-1">{activeResponse.status}</Badge>
-              </div>
-              <p className="text-lg font-bold">{formatPrice(activeResponse.price)}</p>
-            </div>
-            {fields.map((f) => (
-              <div key={f.label}>
-                <p className="text-xs text-gray-500">{f.label}</p>
-                <p className="text-sm">{f.render(activeResponse)}</p>
-              </div>
-            ))}
-            <Button className="w-full" onClick={() => handleSelect(activeResponse.id)}>
-              <Check className="h-4 w-4" />
-              Выбрать исполнителя
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <div className="hidden md:grid gap-4" style={{ gridTemplateColumns: `repeat(${compareResponses.length}, 1fr)` }}>
-        {compareResponses.map((response) => (
-          <div key={response!.id} className="border border-gray-300 flex flex-col overflow-hidden rounded-card">
-            <div className="border-b border-gray-300 p-4 bg-gray-50">
-              <p className="font-semibold text-sm">{response!.contractorName}</p>
-              <p className="text-xl font-bold mt-2">{formatPrice(response!.price)}</p>
-              <Badge variant="outline" className="mt-2">{response!.status}</Badge>
-            </div>
-            <div className="p-4 flex-1 space-y-3">
-              {fields.map((f) => (
-                <div key={f.label}>
-                  <p className="text-xs text-gray-500">{f.label}</p>
-                  <div className="text-sm">{f.render(response)}</div>
-                </div>
-              ))}
-            </div>
-            <div className="p-4 border-t border-gray-300">
-              <Button className="w-full" onClick={() => handleSelect(response!.id)}>
-                <Check className="h-4 w-4" />
-                Выбрать
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-    </>
-  );
-}
-
-function ComparePageInner() {
-  const params = useParams();
-  const id = params.id as string;
-  const { requests } = usePrototypeStore();
-  const request = requests.find((r) => r.id === id);
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
-      title="Сравнение откликов"
+      title={`Сравнение: ${request.title}`}
       showBack
-      backFallbackHref={`/requests/${id}`}
+      backFallbackHref={`/requests/${id}/responses`}
     >
-      <Suspense fallback={<p className="text-sm text-gray-600">Загрузка...</p>}>
-        <CompareContent />
-      </Suspense>
+      <div className="space-y-4">
+        <p className="text-sm text-gray-600">
+          Все отклики показаны в одной сетке. Следующий шаг — назначить исполнителя на карточке
+          выбранного КП.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {requestResponses.map((response) => (
+            <Card key={response.id} className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="font-semibold">{response.contractorName}</h2>
+                <Badge variant="outline">{RESPONSE_STATUS_LABELS[response.status]}</Badge>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Цена</dt>
+                  <dd className="font-medium">{formatPrice(response.price)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Срок</dt>
+                  <dd>{response.deadline}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Условия</dt>
+                  <dd className="text-right">{response.terms || "—"}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-600">Рейтинг</dt>
+                  <dd>{response.rating}</dd>
+                </div>
+              </dl>
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Подход</p>
+                <p className="text-sm whitespace-pre-wrap">{response.approach || "—"}</p>
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+                <Link href={getContractorProfileHref(response.contractorId, { role: user?.role })}>
+                  <Button size="sm" variant="outline" className="w-full">
+                    Профиль
+                  </Button>
+                </Link>
+                <Link href={`/requests/${id}/responses`}>
+                  <Button size="sm" className="w-full">
+                    Назначить на списке откликов
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
     </AppShell>
   );
-}
-
-export default function ComparePage() {
-  return <ComparePageInner />;
 }

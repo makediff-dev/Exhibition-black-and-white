@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { HelpCircle, Shield, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -15,6 +16,16 @@ import { isDealForUser } from "@/lib/utils/user-entity-map";
 import { isPaymentForUser } from "@/lib/utils/cabinet-scope";
 import { DisputesTab } from "@/components/finance/disputes-tab";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import {
+  PAYMENT_STATUS_LABELS,
+  getLedgerPairNote,
+  getPaymentOperationLabel,
+  getPaymentTradeSideLabel,
+  isViewerPayer,
+  isViewerPayee,
+  keepOwnLedgerCopy,
+  paymentMatchesRoleLedger,
+} from "@/lib/utils/payment-presentation";
 
 const PENDING_PAYMENT_ORDER = ["pay-4", "pay-8", "pay-9"];
 
@@ -25,7 +36,8 @@ function mergePayments(storedPayments: Payment[]): Payment[] {
 }
 
 const PAYMENT_TABS = [
-  { id: "pending", label: "Счета к оплате" },
+  { id: "payable", label: "К оплате" },
+  { id: "receivable", label: "К получению" },
   { id: "history", label: "История платежей" },
   { id: "safe", label: "Безопасные сделки" },
   { id: "payouts", label: "Выплаты" },
@@ -33,14 +45,7 @@ const PAYMENT_TABS = [
   { id: "disputes", label: "Споры" },
 ];
 
-const PAYMENT_STATUS_LABELS: Record<Payment["status"], string> = {
-  pending: "Ожидает оплаты",
-  paid: "Оплачено",
-  reserved: "Зарезервировано",
-  refunded: "Возвращено",
-};
-
-export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string }) {
+export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string }) {
   const user = useAuthStore((s) => s.user);
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
@@ -54,19 +59,28 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
   );
 
   const scopedPayments = useMemo(
-    () => payments.filter((payment) => isPaymentForUser(payment, user, deals)),
+    () =>
+      keepOwnLedgerCopy(
+        payments.filter(
+          (payment) =>
+            isPaymentForUser(payment, user, deals) && paymentMatchesRoleLedger(payment, user?.role)
+        ),
+        user?.role === "venue" ? "venue" : user?.role === "organizer" ? "organizer" : "other"
+      ),
     [payments, user, deals]
   );
 
   const filteredPayments = useMemo(() => {
     const filtered = scopedPayments.filter((p) => {
       switch (activeTab) {
-        case "pending":
-          return p.type.includes("Счёт") && p.status === "pending";
+        case "payable":
+          return p.status === "pending" && isViewerPayer(p, user);
+        case "receivable":
+          return p.status === "pending" && isViewerPayee(p, user);
         case "history":
           return p.status === "paid";
         case "safe":
-          return p.type === "Резерв" || p.description.includes("Безопасная");
+          return p.type === "Резерв" || p.status === "reserved" || p.description.includes("Безопасная");
         case "payouts":
           return p.type === "Выплата";
         case "refunds":
@@ -76,7 +90,7 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
       }
     });
 
-    if (activeTab !== "pending") return filtered;
+    if (activeTab !== "payable" && activeTab !== "receivable") return filtered;
 
     return [...filtered].sort((a, b) => {
       const aIndex = PENDING_PAYMENT_ORDER.indexOf(a.id);
@@ -165,23 +179,39 @@ export function PaymentsPanel({ defaultTab = "pending" }: { defaultTab?: string 
             return (
               <Card key={payment.id} className="flex flex-col h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  {activeTab !== "history" && activeTab !== "payouts" && (
-                    <Badge variant="muted">{payment.type}</Badge>
-                  )}
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
                   <Badge variant={payment.status === "pending" ? "solid" : "muted"}>
                     {PAYMENT_STATUS_LABELS[payment.status]}
                   </Badge>
                 </div>
-                <p className="text-lg font-semibold">{formatPrice(payment.amount)}</p>
-                <p className="text-sm text-gray-600 mt-2 flex-1">{payment.description}</p>
-                <p className="text-xs text-gray-500 mt-2">{formatDate(payment.date)}</p>
-                {deal && payment.dealId && (
-                  <p className="text-sm mt-3">
-                    <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
-                      {deal.number} — {deal.title}
-                    </Link>
-                  </p>
-                )}
+                <p className="text-lg font-semibold mb-[10px]">{formatPrice(payment.amount)}</p>
+                <div className="space-y-[10px] flex-1">
+                  <CardField label="Счёт">
+                    {payment.number ?? "будет присвоен после выставления"}
+                  </CardField>
+                  <CardField label="Описание">{payment.description}</CardField>
+                  <CardField label="Плательщик">{payment.payerName ?? "не указан"}</CardField>
+                  <CardField label="Получатель">{payment.payeeName ?? "не указан"}</CardField>
+                  {getLedgerPairNote(payment) && (
+                    <CardField label="Проводка">{getLedgerPairNote(payment)}</CardField>
+                  )}
+                  <CardField label="Дата">{formatDate(payment.date)}</CardField>
+                  {payment.orderId && !deal && (
+                    <CardField label="Заказ">
+                      <Link href={`/orders/${payment.orderId}`} className="underline hover:text-gray-700">
+                        Открыть связанный заказ
+                      </Link>
+                    </CardField>
+                  )}
+                  {deal && payment.dealId && (
+                    <CardField label="Сделка">
+                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-700">
+                        {deal.number} — {deal.title}
+                      </Link>
+                    </CardField>
+                  )}
+                </div>
               </Card>
             );
           })}

@@ -23,6 +23,15 @@ export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
   published: "Опубликована",
   in_progress: "В работе",
   completed: "Завершена",
+  cancelled: "Отменена",
+  archived: "В архиве",
+};
+
+export const DOCUMENT_STATUS_LABELS: Record<"draft" | "sent" | "signed" | "archived", string> = {
+  draft: "Черновик",
+  sent: "Ожидает подписи",
+  signed: "Подписан",
+  archived: "Архив",
 };
 
 export const DEAL_STATUS_LABELS: Record<DealStatus, string> = {
@@ -119,10 +128,11 @@ export const PAYMENT_STATUS_LABELS = {
 } as const;
 
 export const VENUE_INQUIRY_STATUS_LABELS = {
-  pending: "Запрос отправлен",
-  proposal_received: "Получено предложение",
-  selected: "Площадка выбрана",
-  declined: "Отклонено",
+  pending: "Ждём площадку",
+  proposal_received: "Ждём организатора",
+  changes_proposed: "Ждём организатора",
+  selected: "Площадка закреплена",
+  declined: "Запрос отклонён",
 } as const;
 
 export const ORGANIZER_PAYMENT_ROLE_LABELS = {
@@ -161,7 +171,7 @@ export const BOOKING_PERIOD_LABELS = {
 } as const;
 
 export const BOOKING_STATUS_LABELS = {
-  pending: "Ожидает подтверждения",
-  confirmed: "Подтверждено",
+  pending: "Ожидает площадку",
+  confirmed: "Площадка согласилась",
   rejected: "Отклонено",
 } as const;

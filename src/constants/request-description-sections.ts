@@ -1,4 +1,4 @@
-import type { TorSection } from "@/data/types";
+import type { TorSection } from "../data/types/index.ts";
 
 export interface RequestDescriptionField {
   id: string;
@@ -14,44 +14,46 @@ export interface RequestDescriptionSectionTemplate {
   fields: RequestDescriptionField[];
 }
 
-export const REQUEST_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
-  {
-    title: "Компания и контакты",
-    required: true,
-    fields: [
-      { id: "companyName", label: "Компания", type: "input", required: true, placeholder: "ООО «Профиль Металл»" },
-      { id: "preparedDate", label: "Дата составления", type: "input", placeholder: "06.01.2026" },
-      {
-        id: "companyDescription",
-        label: "Краткое описание компании",
-        type: "textarea",
-        required: true,
-        placeholder: "Чем занимается компания, ключевые компетенции",
-      },
-      {
-        id: "productLines",
-        label: "Ключевые продуктовые линейки",
-        type: "textarea",
-        placeholder: "Перечислите основные линейки продукции",
-      },
-      {
-        id: "competitiveAdvantages",
-        label: "Конкурентные преимущества",
-        type: "textarea",
-        placeholder: "Что отличает компанию от конкурентов",
-      },
-      { id: "contactPerson", label: "Контактное лицо", type: "input", required: true, placeholder: "Иванов Иван Иванович" },
-      { id: "contactPosition", label: "Должность", type: "input", placeholder: "Исполнительный директор" },
-      {
-        id: "contactPhoneEmail",
-        label: "Телефон / E-mail",
-        type: "input",
-        required: true,
-        placeholder: "+7 900 000-00-00, email@company.ru",
-      },
-      { id: "website", label: "Web-сайт", type: "input", placeholder: "https://www.company.ru/" },
-    ],
-  },
+export const COMPANY_DESCRIPTION_SECTION: RequestDescriptionSectionTemplate = {
+  title: "Компания и контакты",
+  required: true,
+  fields: [
+    { id: "companyName", label: "Компания", type: "input", required: true, placeholder: "ООО «Профиль Металл»" },
+    { id: "preparedDate", label: "Дата составления", type: "input", placeholder: "06.01.2026" },
+    {
+      id: "companyDescription",
+      label: "Краткое описание компании",
+      type: "textarea",
+      required: true,
+      placeholder: "Чем занимается компания, ключевые компетенции",
+    },
+    {
+      id: "productLines",
+      label: "Ключевые продуктовые линейки",
+      type: "textarea",
+      placeholder: "Перечислите основные линейки продукции",
+    },
+    {
+      id: "competitiveAdvantages",
+      label: "Конкурентные преимущества",
+      type: "textarea",
+      placeholder: "Что отличает компанию от конкурентов",
+    },
+    { id: "contactPerson", label: "Контактное лицо", type: "input", required: true, placeholder: "Иванов Иван Иванович" },
+    { id: "contactPosition", label: "Должность", type: "input", placeholder: "Исполнительный директор" },
+    {
+      id: "contactPhoneEmail",
+      label: "Телефон / E-mail",
+      type: "input",
+      required: true,
+      placeholder: "+7 900 000-00-00, email@company.ru",
+    },
+    { id: "website", label: "Web-сайт", type: "input", placeholder: "https://www.company.ru/" },
+  ],
+};
+
+export const STAND_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
+  COMPANY_DESCRIPTION_SECTION,
   {
     title: "Выставка и площадка",
     required: true,
@@ -252,8 +254,93 @@ export const REQUEST_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] =
   },
 ];
 
-export function createDefaultDescriptionSections(): TorSection[] {
-  return REQUEST_DESCRIPTION_SECTIONS.map((section, index) => ({
+export const RENTAL_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
+  COMPANY_DESCRIPTION_SECTION,
+  {
+    title: "Место и период аренды",
+    required: true,
+    fields: [
+      { id: "exhibitionName", label: "Мероприятие или площадка", type: "input", required: true, placeholder: "MosBuild 2026" },
+      { id: "deliveryAddress", label: "Адрес подачи", type: "textarea", required: true, placeholder: "Город, павильон, стенд" },
+      { id: "rentalPeriod", label: "Период аренды", type: "input", required: true, placeholder: "31 марта — 03 апреля 2026" },
+    ],
+  },
+  {
+    title: "Состав оборудования или мебели",
+    required: true,
+    fields: [
+      { id: "itemList", label: "Перечень позиций", type: "textarea", required: true, placeholder: "LED 3×2, стойка ресепшн, 6 стульев" },
+      { id: "itemQuantity", label: "Количество", type: "input", required: true, placeholder: "1 экран, 1 комплект мебели" },
+      { id: "technicalSpecs", label: "Технические требования", type: "textarea", placeholder: "Питание, разрешение, цвет обивки" },
+    ],
+  },
+  {
+    title: "Логистика и монтаж",
+    required: false,
+    fields: [
+      { id: "deliveryWindow", label: "Окно доставки", type: "input", placeholder: "30 марта, 10:00–14:00" },
+      { id: "installationNotes", label: "Монтаж / демонтаж", type: "textarea", placeholder: "Нужен монтаж экрана и вывоз после выставки" },
+    ],
+  },
+];
+
+export const LOGISTICS_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
+  COMPANY_DESCRIPTION_SECTION,
+  {
+    title: "Маршрут и сроки",
+    required: true,
+    fields: [
+      { id: "pickupAddress", label: "Откуда", type: "textarea", required: true, placeholder: "Склад / производство" },
+      { id: "deliveryAddress", label: "Куда", type: "textarea", required: true, placeholder: "Площадка, павильон, стенд" },
+      { id: "transportDates", label: "Даты перевозки и монтажа", type: "input", required: true, placeholder: "28–30 марта 2026" },
+    ],
+  },
+  {
+    title: "Груз",
+    required: true,
+    fields: [
+      { id: "cargoDescription", label: "Состав груза", type: "textarea", required: true, placeholder: "Конструкции стенда, оборудование" },
+      { id: "cargoVolume", label: "Объём и вес", type: "input", required: true, placeholder: "12 м³, 800 кг" },
+      { id: "handlingNotes", label: "Погрузка и особые условия", type: "textarea", placeholder: "Хрупкое, нужна стрела, страхование" },
+    ],
+  },
+];
+
+export const SERVICE_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
+  COMPANY_DESCRIPTION_SECTION,
+  {
+    title: "Место и формат услуги",
+    required: true,
+    fields: [
+      { id: "serviceLocation", label: "Место оказания", type: "textarea", required: true, placeholder: "Павильон, стенд, офис" },
+      { id: "serviceDates", label: "Дата и время", type: "input", required: true, placeholder: "1 апреля, 10:00–18:00" },
+      { id: "serviceFormat", label: "Формат", type: "textarea", required: true, placeholder: "Фуршет, ежедневная уборка, хостес на смену" },
+    ],
+  },
+  {
+    title: "Параметры сервиса",
+    required: true,
+    fields: [
+      { id: "guestCount", label: "Количество гостей или объём", type: "input", required: true, placeholder: "50 персон / 36 м²" },
+      { id: "menuOrScope", label: "Состав услуги", type: "textarea", required: true, placeholder: "Меню, частота клининга, число хостес" },
+      { id: "dietaryNotes", label: "Ограничения и пожелания", type: "textarea", placeholder: "Аллергии, дресс-код, расходники" },
+    ],
+  },
+];
+
+export const REQUEST_DESCRIPTION_SECTIONS = STAND_DESCRIPTION_SECTIONS;
+
+export const ALL_DESCRIPTION_SECTION_TEMPLATES: RequestDescriptionSectionTemplate[] = [
+  ...STAND_DESCRIPTION_SECTIONS,
+  ...RENTAL_DESCRIPTION_SECTIONS,
+  ...LOGISTICS_DESCRIPTION_SECTIONS,
+  ...SERVICE_DESCRIPTION_SECTIONS,
+];
+
+export function createDefaultDescriptionSections(
+  templates: RequestDescriptionSectionTemplate[] = STAND_DESCRIPTION_SECTIONS
+): TorSection[] {
+  return templates.map((section, index) => ({
     id: `desc-${index + 1}`,
     title: section.title,
     content: serializeSectionFieldValues({}),
@@ -262,7 +349,7 @@ export function createDefaultDescriptionSections(): TorSection[] {
 }
 
 export function getDescriptionSectionTemplate(title: string) {
-  return REQUEST_DESCRIPTION_SECTIONS.find((section) => section.title === title);
+  return ALL_DESCRIPTION_SECTION_TEMPLATES.find((section) => section.title === title);
 }
 
 export function parseSectionFieldValues(content: string): Record<string, string> {

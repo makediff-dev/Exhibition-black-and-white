@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
+import { Drawer } from "@/components/ui/drawer";
 import { getNavForRole, isNavItemActive, resolveActiveNavSlug } from "@/constants/nav-menus";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { PublicHeader } from "./public-header";
@@ -35,6 +36,7 @@ export function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarNavRef = useRef<HTMLElement>(null);
   const mobileNavRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -74,6 +76,7 @@ export function AppShell({
   }, [fromNavSlug, activeNavSlug, dealNavSlug, pathname, user?.role]);
 
   useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [pathname]);
 
@@ -101,7 +104,7 @@ export function AppShell({
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    router.replace("/login");
   };
 
   const renderNavLink = (item: (typeof nav)[number], onNavigate?: () => void) => {
@@ -139,7 +142,7 @@ export function AppShell({
         <aside
           className={cn(
             "hidden md:flex w-60 shrink-0 border-r border-gray-300 flex-col",
-            shellStyles.sidebarSticky,
+            shellStyles.sidebar,
             resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
           )}
         >
@@ -156,51 +159,47 @@ export function AppShell({
           )}
         </aside>
 
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
-            <div className="absolute inset-0 bg-gray-900/50" onClick={() => setSidebarOpen(false)} />
-            <aside
-              className={cn(
-                "absolute left-0 top-0 h-full w-72 border-r border-gray-300 overflow-y-auto",
-                resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
-              )}
-            >
-              <div className="flex justify-between items-center mb-3 px-3 pt-3">
-                <span className="text-sm font-semibold">Меню</span>
-                <button onClick={() => setSidebarOpen(false)}><X className="h-4 w-4" /></button>
+        <div className="md:hidden">
+          <Drawer
+            open={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            title="Меню кабинета"
+            side="left"
+          >
+            <nav ref={mobileNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
+              {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
+            </nav>
+            {user && (
+              <div className="mt-4 pt-4 border-t border-gray-300">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Выйти
+                </Button>
               </div>
-              <nav ref={mobileNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
-                {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
-              </nav>
-              {user && (
-                <div className="mt-4 pt-4 px-3 pb-3 border-t border-gray-300">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => {
-                      setSidebarOpen(false);
-                      handleLogout();
-                    }}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Выйти
-                  </Button>
-                </div>
-              )}
-            </aside>
-          </div>
-        )}
+            )}
+          </Drawer>
+        </div>
 
-        <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
+        <main id="main-content" ref={mainRef} className={cn("p-4 md:p-6", shellStyles.main)}>
           <button
+            type="button"
             className={cn(
-              "md:hidden mb-3 flex items-center gap-2 text-sm",
+              "md:hidden mb-3 flex min-h-10 items-center gap-2 text-sm",
               resolvedAccountRole && styles.accountMenuButton,
             )}
+            aria-expanded={sidebarOpen}
+            aria-haspopup="dialog"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-4 w-4" /> Меню кабинета
+            <Menu className="h-4 w-4" aria-hidden="true" /> Меню кабинета
           </button>
           <div className="w-full">
             {showCompanyRegistrationPrompt && (
@@ -246,14 +245,14 @@ export function AppShell({
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={cn("flex flex-col", shellStyles.page)}>
       <PublicHeader />
       {resolvedAccountRole ? (
-        <AccountThemeProvider role={resolvedAccountRole} className="flex-1 w-full">
+        <AccountThemeProvider role={resolvedAccountRole} className="flex-1 min-h-0 w-full">
           {cabinetBody}
         </AccountThemeProvider>
       ) : (
-        <div className="flex-1 w-full">{cabinetBody}</div>
+        <div className="flex-1 min-h-0 w-full">{cabinetBody}</div>
       )}
     </div>
   );
