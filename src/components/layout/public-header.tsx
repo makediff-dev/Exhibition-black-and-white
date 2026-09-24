@@ -13,7 +13,6 @@ import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
-import { PrototypeBanner } from "@/components/layout/prototype-banner";
 import styles from "./public-header.module.css";
 
 const NAV_LINKS = [
@@ -38,7 +37,6 @@ export function PublicHeader() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-white focus:px-3 focus:py-2">
         Перейти к содержимому
       </a>
-      <PrototypeBanner />
       <div className={styles.inner}>
         <div className={styles.row}>
           <Link href="/" className={styles.logo}>
