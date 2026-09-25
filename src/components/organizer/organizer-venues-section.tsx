@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, MapPin, Maximize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +13,27 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { CITIES } from "@/constants/categories";
 import { VENUE_CATALOG } from "@/constants/venues";
+import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { VenueInquiry } from "@/data/types";
 import { BookingSubjectCard } from "@/components/bookings/booking-subject-card";
 import { StatusSummary } from "@/components/ui/status-summary";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getInquiryStatus } from "@/lib/state/inquiry-machine";
 import { getPrototypeNowDateIso } from "@/lib/time/now";
-import { formatPrice, formatShortDate, pluralizeRu } from "@/lib/utils/formatters";
-import { getVenueStats } from "@/lib/utils/venue-stats";
+import { formatShortDate, pluralizeRu } from "@/lib/utils/formatters";
+import {
+  canSendVenueInquiry,
+  buildGroupedVenueInquiries,
+  countOrganizerEvents,
+  listOrganizerInquiryEvents,
+  toInquiryEventOption,
+  type InquiryEventOption,
+} from "@/lib/utils/organizer-venue-inquiry";
+import { formatVenuePriceRange, getVenueStats } from "@/lib/utils/venue-stats";
 
 export function OrganizerVenuesSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showToast } = useToast();
   const user = useAuthStore((state) => state.user);
   const organizerEventDraft = usePrototypeStore((state) => state.organizerEventDraft);
@@ -32,9 +42,29 @@ export function OrganizerVenuesSection() {
   const selectVenueInquiry = usePrototypeStore((state) => state.selectVenueInquiry);
   const updateVenueInquiry = usePrototypeStore((state) => state.updateVenueInquiry);
 
-  const [city, setCity] = useState(organizerEventDraft?.city ?? "");
-  const [dateFrom, setDateFrom] = useState(organizerEventDraft?.startDate ?? "");
-  const [dateTo, setDateTo] = useState(organizerEventDraft?.endDate ?? "");
+  const organizerId = user?.id ?? "user-organizer";
+  const eventIdFromUrl = searchParams.get("eventId");
+  const selectableEvents = useMemo(
+    () => listOrganizerInquiryEvents(SEED_EVENTS, organizerEventDraft, organizerId),
+    [organizerEventDraft, organizerId],
+  );
+  const ownedEventCount = countOrganizerEvents(SEED_EVENTS, organizerId);
+
+  const [selectedEventId, setSelectedEventId] = useState(
+    eventIdFromUrl ?? selectableEvents[0]?.id ?? "",
+  );
+  const selectedEvent: InquiryEventOption | null = useMemo(() => {
+    const fromList = selectableEvents.find((item) => item.id === selectedEventId);
+    if (fromList) return fromList;
+    const fromSeed = SEED_EVENTS.find((item) => item.id === selectedEventId);
+    return fromSeed ? toInquiryEventOption(fromSeed) : null;
+  }, [selectableEvents, selectedEventId]);
+
+  const [city, setCity] = useState(selectedEvent?.city ?? organizerEventDraft?.city ?? "");
+  const [dateFrom, setDateFrom] = useState(
+    selectedEvent?.startDate ?? organizerEventDraft?.startDate ?? "",
+  );
+  const [dateTo, setDateTo] = useState(selectedEvent?.endDate ?? organizerEventDraft?.endDate ?? "");
   const [minArea, setMinArea] = useState("");
   const [requirements, setRequirements] = useState("");
   const [selectedVenueIds, setSelectedVenueIds] = useState<string[]>([]);
@@ -42,11 +72,15 @@ export function OrganizerVenuesSection() {
   const [acceptId, setAcceptId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!organizerEventDraft) return;
-    setCity((prev) => prev || organizerEventDraft.city);
-    setDateFrom((prev) => prev || organizerEventDraft.startDate);
-    setDateTo((prev) => prev || organizerEventDraft.endDate);
-  }, [organizerEventDraft]);
+    if (eventIdFromUrl) setSelectedEventId(eventIdFromUrl);
+  }, [eventIdFromUrl]);
+
+  useEffect(() => {
+    if (!selectedEvent) return;
+    setCity(selectedEvent.city);
+    setDateFrom(selectedEvent.startDate);
+    setDateTo(selectedEvent.endDate);
+  }, [selectedEvent]);
 
   const venues = useMemo(() => {
     return VENUE_CATALOG.map((venue) => ({
@@ -60,9 +94,13 @@ export function OrganizerVenuesSection() {
   }, [city, minArea]);
 
   const activeInquiries = useMemo(() => {
-    if (!organizerEventDraft) return [];
-    return venueInquiries.filter((item) => item.eventDraftId === organizerEventDraft.id);
-  }, [organizerEventDraft, venueInquiries]);
+    if (!selectedEvent) return [];
+    return venueInquiries.filter(
+      (item) => item.eventDraftId === selectedEvent.id || item.eventId === selectedEvent.id,
+    );
+  }, [selectedEvent, venueInquiries]);
+
+  const canSend = canSendVenueInquiry(selectedEvent);
 
   const toggleVenueSelection = (venueId: string) => {
     setSelectedVenueIds((prev) =>
@@ -71,8 +109,12 @@ export function OrganizerVenuesSection() {
   };
 
   const sendInquiries = (venueIds: string[]) => {
-    if (!organizerEventDraft) {
+    if (!selectedEvent) {
       setDraftModalOpen(true);
+      return;
+    }
+    if (!canSend) {
+      showToast("Для завершённого мероприятия запрос площадке отправить нельзя", "error");
       return;
     }
     if (!dateFrom || !dateTo) {
@@ -84,26 +126,17 @@ export function OrganizerVenuesSection() {
       return;
     }
 
-    const inquiries: VenueInquiry[] = venueIds.map((venueId) => {
-      const venue = VENUE_CATALOG.find((item) => item.id === venueId);
-
-      return {
-        id: `vi-${venueId}-${Date.now()}`,
-        eventDraftId: organizerEventDraft.id,
-        eventTitle: organizerEventDraft.title,
-        organizerName: user?.name ?? "Организатор",
-        venueId,
-        venueName: venue?.shortName ?? "Площадка",
-        dateFrom,
-        dateTo,
-        minArea: minArea || undefined,
-        requirements: requirements || undefined,
-        status: "pending",
-        sentAt: getPrototypeNowDateIso(),
-        history: [
-          { date: getPrototypeNowDateIso(), actor: "organizer", action: "Запрос отправлен" },
-        ],
-      };
+    const inquiries: VenueInquiry[] = buildGroupedVenueInquiries({
+      venueIds,
+      event: selectedEvent,
+      organizerName: user?.name ?? "Организатор",
+      dateFrom,
+      dateTo,
+      minArea: minArea || undefined,
+      requirements: requirements || undefined,
+      sentAt: getPrototypeNowDateIso(),
+      resolveVenueName: (venueId) =>
+        VENUE_CATALOG.find((item) => item.id === venueId)?.shortName ?? "Площадка",
     });
 
     addVenueInquiries(inquiries);
@@ -143,56 +176,67 @@ export function OrganizerVenuesSection() {
       <Card className="bg-gray-50">
         <CardTitle className="text-sm">Как работает запрос к площадке</CardTitle>
         <CardDescription className="mt-2 leading-relaxed">
-          Сначала заполните карточку нового мероприятия. Затем отправьте запрос выбранным
-          площадкам на нужные даты — можно выбрать сразу несколько. Площадки пришлют
-          предложения, после чего вы выбираете лучшие условия и только тогда официально
-          закрепляете площадку для проекта.
+          Выберите существующий черновик или предстоящее мероприятие — либо откройте эту
+          страницу с конкретным событием. Затем отправьте запрос выбранным площадкам на
+          нужные даты. Групповой запрос создаёт одну заявку события и отдельные предложения
+          площадок. После ответов вы закрепляете одну площадку.
         </CardDescription>
       </Card>
 
-      {organizerEventDraft ? (
-        <Card>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="text-sm">Черновик мероприятия</CardTitle>
-              <CardDescription className="mt-2">
-                {organizerEventDraft.title} · {organizerEventDraft.city}
-                {organizerEventDraft.startDate && organizerEventDraft.endDate
-                  ? ` · ${formatShortDate(organizerEventDraft.startDate)} — ${formatShortDate(organizerEventDraft.endDate)}`
-                  : null}
+      <Card className="sticky top-20 z-10">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-3">
+            <CardTitle className="text-sm">Контекст запроса</CardTitle>
+            {selectableEvents.length > 0 ? (
+              <Select
+                label="Мероприятие"
+                value={selectedEventId}
+                onChange={(event) => setSelectedEventId(event.target.value)}
+                options={selectableEvents.map((item) => ({
+                  value: item.id,
+                  label: `${item.title} · ${item.kind === "draft" ? "черновик" : "предстоит"}`,
+                }))}
+              />
+            ) : (
+              <CardDescription>
+                Подходящего черновика или будущего мероприятия нет.
+                {ownedEventCount > 0
+                  ? ` В кабинете уже есть ${ownedEventCount} событий в архиве или завершённых — для запроса нужна будущая или черновая карточка.`
+                  : " Создайте карточку нового мероприятия, чтобы отправить запрос."}
               </CardDescription>
-              {organizerEventDraft.selectedVenueName ? (
-                <p className="mt-2 text-sm text-gray-900">
-                  Выбранная площадка: <strong>{organizerEventDraft.selectedVenueName}</strong>
-                </p>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/account/organizer/create-event">
+            )}
+            {selectedEvent ? (
+              <CardDescription>
+                {selectedEvent.title} · {city || selectedEvent.city}
+                {dateFrom && dateTo
+                  ? ` · ${formatShortDate(dateFrom)} — ${formatShortDate(dateTo)}`
+                  : ""}
+                {minArea ? ` · от ${minArea} кв.м` : ""}
+                {requirements ? ` · ${requirements}` : ""}
+              </CardDescription>
+            ) : null}
+            {selectedEvent?.kind === "completed" ? (
+              <p className="text-sm text-gray-700">
+                Мероприятие завершено — новый запрос площадке отправить нельзя.
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/account/organizer/create-event">
+              <Button size="sm" variant="outline">
+                Создать мероприятие
+              </Button>
+            </Link>
+            {selectedEvent && selectedEvent.kind !== "draft" ? (
+              <Link href={`/account/organizer/edit-event?id=${selectedEvent.id}`}>
                 <Button size="sm" variant="outline">
-                  Редактировать мероприятие
+                  Карточка события
                 </Button>
               </Link>
-              {organizerEventDraft.selectedVenueId ? (
-                <Link href="/account/organizer/events">
-                  <Button size="sm">Управление проектом</Button>
-                </Link>
-              ) : null}
-            </div>
+            ) : null}
           </div>
-        </Card>
-      ) : (
-        <Card className="border-dashed">
-          <CardTitle className="text-sm">Сначала создайте мероприятие</CardTitle>
-          <CardDescription className="mt-2">
-            Без карточки мероприятия запрос площадке отправить нельзя — сначала заполните
-            основные параметры события.
-          </CardDescription>
-          <Link href="/account/organizer/create-event" className="inline-block mt-3">
-            <Button size="sm">Создать мероприятие</Button>
-          </Link>
-        </Card>
-      )}
+        </div>
+      </Card>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Select
@@ -237,7 +281,7 @@ export function OrganizerVenuesSection() {
           <p className="text-sm text-gray-700">
             Выбрано площадок: <strong>{selectedVenueIds.length}</strong>
           </p>
-          <Button onClick={handleBulkRequest}>
+          <Button onClick={handleBulkRequest} disabled={!canSend}>
             Отправить запрос выбранным площадкам
           </Button>
         </div>
@@ -298,7 +342,16 @@ export function OrganizerVenuesSection() {
                     </span>
                   </p>
                   <p className="text-gray-900 font-medium">
-                    {formatPrice(stats.priceMin)} — {formatPrice(stats.priceMax)} / кв.м
+                    {formatVenuePriceRange(stats.priceMin, stats.priceMax)}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Загрузка {stats.occupancyPercent}%
+                    {stats.preliminaryOccupancyPercent > 0
+                      ? ` · предварительно ${stats.preliminaryOccupancyPercent}%`
+                      : ""}
+                    {" · "}
+                    занято {stats.occupiedArea.toLocaleString("ru-RU")} кв.м, свободно{" "}
+                    {stats.freeArea.toLocaleString("ru-RU")} кв.м
                   </p>
                   <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">
                     {venue.description}
@@ -334,6 +387,7 @@ export function OrganizerVenuesSection() {
                   <Button
                     size="sm"
                     className="w-full"
+                    disabled={!canSend}
                     onClick={() => handleSingleRequest(venue.id)}
                   >
                     Сделать запрос
@@ -397,7 +451,7 @@ export function OrganizerVenuesSection() {
       <Modal
         open={draftModalOpen}
         onClose={() => setDraftModalOpen(false)}
-        title="Сначала создайте мероприятие"
+        title="Нужна карточка будущего мероприятия"
         footer={
           <>
             <Button variant="outline" onClick={() => setDraftModalOpen(false)}>
@@ -415,9 +469,8 @@ export function OrganizerVenuesSection() {
         }
       >
         <p className="text-sm text-gray-700 leading-relaxed">
-          Чтобы отправить запрос площадке на выбранные даты, сначала заполните карточку нового
-          мероприятия. После этого вы сможете выбрать одну или несколько площадок и дождаться их
-          предложений.
+          Запрос привязывается к черновику или предстоящему мероприятию. Если подходящего события
+          нет, создайте новое — это не значит, что в кабинете нет других карточек.
         </p>
       </Modal>
       <Modal

@@ -1,17 +1,17 @@
-import { getPrototypeNow } from "../time/now.ts";
+import { getNow, parseClockInstant } from "../time/now.ts";
 
 export type DeadlineRelation = "before" | "on" | "after";
 
 export function compareToDeadline(
   deadline: string | undefined | null,
-  now = getPrototypeNow()
+  now = getNow()
 ): DeadlineRelation | null {
   if (!deadline) return null;
 
   const end = deadline.includes("/") ? deadline.split("/")[1] : deadline;
   const deadlineDate = end.includes("T")
-    ? new Date(end.endsWith("Z") ? end : `${end}Z`)
-    : new Date(`${end.slice(0, 10)}T23:59:59.000Z`);
+    ? parseClockInstant(end)
+    : parseClockInstant(`${end.slice(0, 10)}T23:59:59+03:00`);
 
   if (Number.isNaN(deadlineDate.getTime())) return null;
 
@@ -28,21 +28,21 @@ export function compareToDeadline(
 
 export function isDeadlineReached(
   deadline: string | undefined | null,
-  now = getPrototypeNow()
+  now = getNow()
 ): boolean {
   return compareToDeadline(deadline, now) === "after";
 }
 
 export function isOnOrAfterDeadline(
   deadline: string | undefined | null,
-  now = getPrototypeNow()
+  now = getNow()
 ): boolean {
   const relation = compareToDeadline(deadline, now);
   return relation === "on" || relation === "after";
 }
 
 export function addDaysIso(isoDate: string, days: number): string {
-  const date = new Date(`${isoDate.slice(0, 10)}T12:00:00.000Z`);
+  const date = parseClockInstant(`${isoDate.slice(0, 10)}T12:00:00+03:00`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }

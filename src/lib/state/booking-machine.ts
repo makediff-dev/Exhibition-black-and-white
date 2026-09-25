@@ -9,6 +9,7 @@ export type BookingLifecycleCode =
   | "active"
   | "completed"
   | "rejected"
+  | "cancelled"
   | "expired";
 
 const LABELS: Record<BookingLifecycleCode, string> = {
@@ -17,6 +18,7 @@ const LABELS: Record<BookingLifecycleCode, string> = {
   active: "Идёт период",
   completed: "Завершено",
   rejected: "Отклонено",
+  cancelled: "Отменено",
   expired: "Период прошёл",
 };
 
@@ -25,6 +27,7 @@ export function getBookingPeriodEnd(booking: Booking): string {
 }
 
 export function getBookingLifecycleCode(booking: Booking): BookingLifecycleCode {
+  if (booking.status === "cancelled") return "cancelled";
   if (booking.status === "rejected") return "rejected";
 
   const periodEnd = getBookingPeriodEnd(booking);
@@ -64,10 +67,9 @@ export function getBookingStatus(
       if (isApplicant) allowedActions.push("cancel_booking");
       break;
     case "expired":
-      explanation = "Запрошенный период уже прошёл. Подтвердить как новую бронь нельзя.";
-      nextActor = "venue";
-      blockedReason = `Период ${deadline} уже завершён. Подтверждение закрыто.`;
-      if (isVenue) allowedActions.push("reject_booking");
+      explanation = "Запрошенный период уже прошёл. Принять или отклонить задним числом нельзя.";
+      nextActor = "organizer";
+      blockedReason = `Период ${deadline} уже завершён. Создайте новый запрос с предзаполненными данными.`;
       recoveryActions.push("cancel_booking");
       break;
     case "confirmed":
@@ -108,6 +110,11 @@ export function getBookingStatus(
       nextActor = "organizer";
       recoveryActions.push("cancel_booking");
       break;
+    case "cancelled":
+      explanation = "Бронирование отменено и не блокирует инвентарь.";
+      nextActor = "organizer";
+      recoveryActions.push("cancel_booking");
+      break;
   }
 
   return {
@@ -143,10 +150,7 @@ export function canTransitionBooking(
   }
 
   if (nextStatus === "rejected") {
-    if (
-      !status.allowedActions.includes("reject_booking") &&
-      !status.recoveryActions.includes("cancel_booking")
-    ) {
+    if (!status.allowedActions.includes("reject_booking")) {
       return {
         allowed: false,
         reason: status.blockedReason ?? "Отклонить это бронирование нельзя.",

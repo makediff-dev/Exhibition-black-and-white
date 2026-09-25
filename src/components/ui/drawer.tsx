@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils/cn";
-import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
+import { useFocusTrap, useInertSiblings } from "@/lib/hooks/use-focus-trap";
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 interface DrawerProps {
@@ -27,18 +27,7 @@ export function Drawer({
   const panelRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   useFocusTrap(open, panelRef, onClose);
-
-  useEffect(() => {
-    if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const siblings = [...document.body.children].filter((node) => node !== rootRef.current);
-    siblings.forEach((node) => node.setAttribute("inert", ""));
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      siblings.forEach((node) => node.removeAttribute("inert"));
-    };
-  }, [open]);
+  useInertSiblings(open, rootRef);
 
   if (!open || typeof document === "undefined") return null;
 

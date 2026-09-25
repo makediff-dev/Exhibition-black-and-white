@@ -93,13 +93,13 @@
 
 .cardsGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cards-per-row, 5), minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 24px;
 }
 
 .cardsGridDense {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cards-per-row, 6), minmax(0, 1fr));
 }
 
 .cardsGrid .tileCard {
@@ -130,10 +130,6 @@
 }
 
 @media (min-width: 1800px) {
-  .cardsGrid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
   .scrollRow {
     --scroll-visible-cards: 6;
   }
@@ -1276,46 +1272,58 @@
 }
 
 .faqWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+  align-items: start;
+  gap: 48px 64px;
 }
 
 .faqTitle {
   margin: 0;
-  width: 100%;
-  font-size: 28px;
-  line-height: 1.1;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  text-align: center;
+  max-width: 360px;
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: left;
   color: #0c0a08;
 }
 
 .faqList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   width: 100%;
-  max-width: 750px;
+  min-width: 0;
 }
 
 .faqItem {
   border: 1px solid #d1d5dc;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #fff;
   overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.faqItem:hover,
+.faqItem[open] {
+  border-color: var(--color-primary);
+}
+
+.faqItem:hover .faqSummary,
+.faqItem[open] .faqSummary {
+  color: var(--color-primary);
 }
 
 .faqSummary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 20px;
+  gap: 16px;
+  min-height: 64px;
+  padding: 18px 22px;
+  font-size: 18px;
+  line-height: 1.35;
   font-weight: 500;
   color: #171717;
   cursor: pointer;
@@ -1327,11 +1335,11 @@
 }
 
 .faqSummaryIcon {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
-  color: #171717;
-  transition: transform 0.2s ease;
+  color: inherit;
+  transition: transform 0.2s ease, color 0.15s ease;
 }
 
 .faqItem[open] .faqSummaryIcon {
@@ -1339,10 +1347,15 @@
 }
 
 .faqContent {
-  padding: 0 12px 12px;
-  font-size: 14px;
-  line-height: 20px;
+  padding: 16px 22px 20px;
+  border-top: 1px solid transparent;
+  font-size: 16px;
+  line-height: 1.5;
   color: #4a5565;
+}
+
+.faqItem[open] .faqContent {
+  border-top-color: var(--color-primary);
 }
 
 .ctaSection {
@@ -1444,12 +1457,13 @@
 }
 
 @media (max-width: 1280px) {
-  .cardsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .container,
+  .containerInner {
+    min-width: 0;
   }
 
-  .cardsGridDense {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .container {
+    padding-inline: 24px;
   }
 
   .quickActionsGrid {
@@ -1542,6 +1556,29 @@
 
   .workFormatsRow {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1151px) {
+  .quickActionsGrid,
+  .howCardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .faqWrap {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .faqTitle {
+    max-width: none;
+    font-size: 32px;
+  }
+
+  .filterSelectWrap,
+  .filterSelect {
+    min-width: 0;
+    flex: 1 1 160px;
   }
 }
 
@@ -1705,14 +1742,12 @@
 
   .cardsGrid,
   .cardsGridDense {
-    grid-template-columns: 1fr;
     column-gap: 16px;
     row-gap: 16px;
   }
 
   .scrollRow,
   .scrollRow:has(.categoryCard) {
-    --scroll-visible-cards: 1;
     --scroll-card-gap: 16px;
   }
 
@@ -1776,7 +1811,18 @@
   }
 
   .faqTitle {
-    font-size: 22px;
+    font-size: 28px;
+  }
+
+  .faqSummary {
+    min-height: 56px;
+    padding: 16px 18px;
+    font-size: 16px;
+  }
+
+  .faqContent {
+    padding: 0 18px 16px;
+    font-size: 15px;
   }
 
   .ctaSection {

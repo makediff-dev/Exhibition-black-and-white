@@ -16,6 +16,7 @@ import { EmptyState, LoadingState } from "@/components/ui/states";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, EVENT_INDUSTRIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict, getDistrictByCity } from "@/constants/categories";
 import { SEED_EVENTS } from "@/data/mocks/seed";
+import { canBookEvent } from "@/lib/state/event-machine";
 import type { Event } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
@@ -292,7 +293,7 @@ function EventsPageContent() {
       if (industry && event.industry !== industry) return false;
       if (category && event.category !== category) return false;
       if (venue && event.venue !== venue) return false;
-      if (bookingOnly && !event.bookingAvailable) return false;
+      if (bookingOnly && !canBookEvent(event)) return false;
       if (recommendedOnly && !isRecommended(event)) return false;
       return true;
     });

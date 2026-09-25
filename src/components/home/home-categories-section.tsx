@@ -15,6 +15,7 @@ export function HomeCategoriesSection() {
       showFilters={false}
       showActions={false}
       variant="slider"
+      minCardWidth={190}
     >
       {categories.map((category, index) => (
         <Link

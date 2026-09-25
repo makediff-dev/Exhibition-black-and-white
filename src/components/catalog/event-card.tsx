@@ -12,6 +12,7 @@ import type { Event } from "@/data/types";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
 import { getEventCardSlides } from "@/lib/utils/catalog-card-images";
+import { getEventStatus } from "@/lib/state/event-machine";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
   exhibition: "Выставка",
@@ -46,6 +47,9 @@ export function EventCard({ event, recommended = false, imageIndex = 0 }: EventC
         <div className="flex flex-col flex-1 pointer-events-none">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
+            <Badge variant={getEventStatus(event).code === "completed" ? "dashed" : "muted"}>
+              {getEventStatus(event).label}
+            </Badge>
             {recommended ? (
               <Badge variant="dashed" icon={Sparkles}>
                 Рекомендуем

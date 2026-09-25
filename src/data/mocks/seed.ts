@@ -30,6 +30,9 @@ import type {
   HallGridFeature,
   FloorPlanPlot,
 } from "../types/index.ts";
+import { hydrateFinanceRecord } from "../../lib/domain/finance.ts";
+import { dateFromPrototypeNow } from "../../lib/time/relative-date.ts";
+import { hydrateDeal, hydrateDocument, hydrateEventOrder } from "./order-parties.ts";
 import { SEED_MESSAGES, SEED_NOTIFICATIONS } from "./seed-messages.ts";
 
 export { SEED_MESSAGES, SEED_NOTIFICATIONS };
@@ -78,7 +81,7 @@ export const DEMO_USERS: Record<string, CompanyProfile> = {
     moderationStatus: "approved",
     verified: true,
     cities: ["Москва", "Санкт-Петербург"],
-    categories: ["Комплексное строительство выставочных стендов", "Дизайн-проект выставочного стенда"],
+    categories: ["Комплексное строительство выставочных стендов", "Монтаж"],
     hasProduction: true,
     rating: 4.8,
     reviewCount: 42,
@@ -190,6 +193,8 @@ export const SEED_EVENTS: Event[] = [
   { id: "evt-12", title: "FoodTech Expo", city: "Москва", venue: "ЭкспоЦентр", venueId: "venue-1", startDate: "2026-03-25", endDate: "2026-03-27", category: "exhibition", industry: "Продукты питания", description: "Технологии пищевой индустрии", participationTerms: "Минимальная площадь 12 кв.м", bookingAvailable: true, okvedTags: ["10.", "питание"], organizerId: "user-organizer", relatedServiceIds: ["svc-5"] },
   { id: "evt-13", title: "ТОВАРЫ ДЛЯ ДОМА И САДА", city: "Москва", venue: "ЭкспоЦентр", venueId: "venue-1", startDate: "2026-04-02", endDate: "2026-04-05", category: "exhibition", industry: "Товары для дома и сада", description: "Крупнейшая выставка товаров для дома, интерьера и садоводства", participationTerms: "Регистрация до 20.03.2026", bookingAvailable: true, okvedTags: ["47.", "ритейл"], organizerId: "user-organizer", relatedServiceIds: ["svc-1", "svc-4"] },
   { id: "evt-14", title: "Garden & Home Expo", city: "Санкт-Петербург", venue: "ЭкспоФорум", venueId: "venue-2", startDate: "2026-05-08", endDate: "2026-05-10", category: "exhibition", industry: "Товары для дома и сада", description: "Садовая техника, декор и товары для дома", participationTerms: "Стандартный пакет участника", bookingAvailable: true, okvedTags: ["47.", "сад"], organizerId: "user-organizer", relatedServiceIds: ["svc-6"] },
+  { id: "evt-15", title: "Осенний контракт", city: "Москва", venue: "ЭкспоЦентр", venueId: "venue-1", startDate: dateFromPrototypeNow(20), endDate: dateFromPrototypeNow(23), category: "exhibition", industry: "Мебель и интерьер", description: "Будущая выставка относительно demo clock", participationTerms: "Регистрация за 14 дней", bookingAvailable: true, okvedTags: ["31.09", "мебель"], organizerId: "user-organizer", relatedServiceIds: ["svc-1"] },
+  { id: "evt-16", title: "Северный промышленный день", city: "Санкт-Петербург", venue: "ЭкспоФорум", venueId: "venue-2", startDate: dateFromPrototypeNow(40), endDate: dateFromPrototypeNow(42), category: "conference", industry: "Промышленность", description: "Конференция с датами от demo clock", participationTerms: "Онлайн и офлайн", bookingAvailable: true, okvedTags: ["28.", "промышленность"], organizerId: "user-organizer", relatedServiceIds: ["svc-3"] },
 ];
 
 export const SEED_CONTRACTORS: Contractor[] = [
@@ -251,8 +256,8 @@ export const SEED_DEALS: Deal[] = [
   { id: "deal-3", number: "СД-2026-003", title: "Аренда мебели", format: "safe_deal", customerId: "user-customer", customerName: "ООО «Вымышленная Мебель»", contractorId: "ctr-4", contractorName: "ООО «МебельЭкспо»", totalPrice: 15000, status: "negotiation", commission: 750, documents: [], stages: [{ id: "st5", title: "Доставка и установка", description: "Комплект мебели", price: 15000, deadline: "2026-02-01", status: "pending", files: [], comments: [] }], history: [] },
   { id: "deal-4", number: "СД-2025-098", title: "Флористика Мода и Стиль", format: "open_request", customerId: "user-customer", customerName: "ООО «Вымышленная Мебель»", contractorId: "ctr-6", contractorName: "ООО «ФлораДекор»", totalPrice: 48000, status: "completed", requestId: "req-6", commission: 2400, documents: ["doc-4"], stages: [{ id: "st6", title: "Оформление", description: "Флористика", price: 48000, deadline: "2025-07-10", status: "accepted", files: [], comments: [] }], history: [{ date: "2025-07-12", action: "Сделка завершена", actor: "Система" }] },
   { id: "deal-5", number: "СД-2025-097", title: "LED-экран ПромТех", format: "safe_deal", customerId: "user-customer", customerName: "ООО «Вымышленная Мебель»", contractorId: "ctr-3", contractorName: "ООО «МедиаРент»", totalPrice: 75000, status: "completed", commission: 3750, documents: ["doc-5"], stages: [{ id: "st7", title: "Аренда", description: "3 дня аренды", price: 75000, deadline: "2025-04-12", status: "accepted", files: [], comments: [] }], history: [{ date: "2025-04-15", action: "Сделка завершена", actor: "Система" }] },
-  { id: "deal-6", number: "СД-2025-095", title: "Стенд 48 кв.м на IT Forum 2025", format: "safe_deal", customerId: "user-customer", customerName: "ООО «ТехноВижн»", contractorId: "ctr-1", contractorName: "ООО «СтендПро»", totalPrice: 610000, status: "completed", commission: 30500, documents: ["doc-7", "doc-8"], stages: [{ id: "st8", title: "Дизайн-проект", description: "3D-визуализация и чертежи", price: 90000, deadline: "2025-09-05", status: "accepted", files: ["design-final.pdf"], comments: [] }, { id: "st9", title: "Производство", description: "Изготовление конструкций", price: 340000, deadline: "2025-09-20", status: "accepted", files: [], comments: [] }, { id: "st10", title: "Монтаж и сдача", description: "Монтаж на площадке", price: 180000, deadline: "2025-09-28", status: "accepted", result: "Стенд сдан заказчику, подписан акт", files: ["photo-report-final.pdf"], comments: [] }], history: [{ date: "2025-08-25", action: "Сделка создана", actor: "Система" }, { date: "2025-08-26", action: "Оплата зарезервирована", actor: "Заказчик" }, { date: "2025-09-29", action: "Работы приняты", actor: "Заказчик" }, { date: "2025-09-30", action: "Сделка завершена, отзыв 5.0", actor: "Система" }], review: { id: "dr-deal-6", author: "ООО «ТехноВижн»", rating: 5, text: "Делали стенд 48 кв.м на IT Forum. Дизайн согласовали быстро, производство без задержек. Отдельное спасибо за помощь с логистикой.", date: "2025-09-30", photos: ["IT Forum стенд", "Мультимедиа"], videos: ["Обход стенда"], status: "published" }, projectPhotos: ["IT Forum стенд", "Фасад стенда", "Мультимедиа"], reviewRequested: true, reviewRequestedAt: "2025-09-29" },
-];
+  { id: "deal-6", number: "СД-2025-095", title: "Стенд 48 кв.м на IT Forum 2025", format: "safe_deal", customerId: "user-customer", customerName: "ООО «ТехноВижн»", contractorId: "ctr-1", contractorName: "ООО «СтендПро»", totalPrice: 610000, status: "completed", commission: 30500, documents: ["doc-7", "doc-8"], stages: [{ id: "st8", title: "Дизайн-проект", description: "3D-визуализация и чертежи", price: 90000, deadline: "2025-09-05", status: "accepted", files: ["design-final.pdf"], comments: [] }, { id: "st9", title: "Производство", description: "Изготовление конструкций", price: 340000, deadline: "2025-09-20", status: "accepted", files: [], comments: [] }, { id: "st10", title: "Монтаж и сдача", description: "Монтаж на площадке", price: 180000, deadline: "2025-09-28", status: "accepted", result: "Стенд сдан заказчику, подписан акт", files: ["photo-report-final.pdf"], comments: [] }], history: [{ date: "2025-08-25", action: "Сделка создана", actor: "Система" }, { date: "2025-08-26", action: "Оплата зарезервирована", actor: "Заказчик" }, { date: "2025-09-29", action: "Работы приняты", actor: "Заказчик" }, { date: "2025-09-30", action: "Сделка завершена, отзыв 5.0", actor: "Система" }], review: { id: "dr-deal-6", author: "ООО «ТехноВижн»", rating: 5, text: "Делали стенд 48 кв.м на IT Forum. Дизайн согласовали быстро, производство без задержек. Отдельное спасибо за помощь с логистикой.", date: "2025-09-30", photos: ["IT Forum стенд", "Мультимедиа"], videos: ["Обход стенда"], status: "published" }, projectPhotos: ["IT Forum стенд", "Фасад стенда", "Мультимедиа"],     reviewRequested: true, reviewRequestedAt: "2025-09-29" },
+].map((deal) => hydrateDeal(deal, SEED_EVENTS.find((event) => event.id === deal.eventId)));
 
 export const SEED_EVENT_ORDERS: EventOrder[] = [
   {
@@ -415,7 +420,7 @@ export const SEED_EVENT_ORDERS: EventOrder[] = [
     requestId: "req-1",
     direction: "incoming",
   },
-];
+].map((order) => hydrateEventOrder(order, SEED_EVENTS.find((event) => event.id === order.eventId)));
 
 export const SEED_DOCUMENTS: Document[] = [
   { id: "doc-1", type: "Договор", number: "ДГ-001/2026", dealId: "deal-1", date: "2026-01-12", parties: "Заказчик — Исполнитель", status: "signed", direction: "incoming", eventId: "evt-1" },
@@ -431,7 +436,12 @@ export const SEED_DOCUMENTS: Document[] = [
   { id: "doc-11", type: "Счёт", number: "СЧ-ПР/2026", orderId: "eord-10", date: "2026-02-05", parties: "Застройщик — Площадка", status: "draft", direction: "incoming", eventId: "evt-1", venueId: "venue-1" },
   { id: "doc-13", type: "Счёт", number: "СЧ-ПЛ/2026", orderId: "eord-1", date: "2026-01-11", parties: "Организатор — Площадка", status: "sent", direction: "outgoing", eventId: "evt-1", organizerId: "user-organizer", organizerName: "ООО «МебельЭкспо Организатор»", venueId: "venue-1" },
   { id: "doc-14", type: "Счёт", number: "СЧ-ЭКС-002/2026", orderId: "eord-4", date: "2026-02-03", parties: "Экспонент — Организатор", status: "draft", direction: "incoming", eventId: "evt-1", organizerId: "user-organizer", organizerName: "ООО «МебельЭкспо Организатор»" },
-];
+].map((document) =>
+  hydrateDocument(
+    document,
+    document.dealId ? SEED_DEALS.find((deal) => deal.id === document.dealId) : undefined
+  )
+);
 
 export const SEED_PAYMENTS: Payment[] = [
   { id: "pay-1", number: "ПР-СД-001", dealId: "deal-1", type: "Резерв", amount: 520000, status: "reserved", date: "2026-01-13", description: "Резерв по сделке СД-2026-001", payerName: "ООО «Вымышленная Мебель»", payeeName: "Платформа" },
@@ -459,7 +469,7 @@ export const SEED_PAYMENTS: Payment[] = [
   { id: "opay-8", organizerId: "user-organizer", eventId: "evt-5", participantRole: "exhibitor", counterpartyName: "ООО «ТехноВижн»", type: "Счёт к оплате", amount: 32000, status: "refunded", date: "2026-05-10", description: "Возврат за отмену участия — Мода и Стиль", direction: "incoming" },
   { id: "opay-9", organizerId: "user-organizer", eventId: "evt-1", participantRole: "exhibitor", counterpartyName: "ООО «Вымышленная Мебель»", type: "Выплата", amount: 140000, status: "paid", date: "2026-01-25", description: "Предоплата 50% — Мебель-2026", direction: "incoming" },
   { id: "opay-10", organizerId: "user-organizer", eventId: "evt-5", participantRole: "venue", counterpartyName: "ЭкспоЦентр", type: "Счёт к оплате", amount: 450000, status: "pending", date: "2026-06-01", description: "Аренда зала — Мода и Стиль", direction: "outgoing" },
-];
+].map(hydrateFinanceRecord);
 
 export const SEED_PAVILIONS: VenuePavilion[] = [
   { id: "pav-1", venueId: "venue-1", name: "Павильон 1", description: "Основной выставочный корпус" },
@@ -472,16 +482,33 @@ export const SEED_HALLS: VenueHall[] = [
   { id: "hall-1b", venueId: "venue-1", pavilionId: "pav-1", name: "Зал 2 — галерея", area: 2500, capacity: 100, available: true, widthMeters: 40, lengthMeters: 62, planCoords: "Павильон 1, галерея", powerKw: 180, constraints: "Ограничение по нагрузке на перекрытие 400 кг/м²" },
   { id: "hall-2", venueId: "venue-1", pavilionId: "pav-2", name: "Зал 1", area: 1800, capacity: 80, available: true },
   { id: "hall-2b", venueId: "venue-1", pavilionId: "pav-2", name: "Зал 2", area: 1200, capacity: 40, available: true },
-  { id: "hall-3", venueId: "venue-2", pavilionId: "pav-3", name: "Зал А", area: 2000, capacity: 80, available: true },
+  { id: "hall-3", venueId: "venue-2", pavilionId: "pav-3", name: "Зал А", area: 2000, capacity: 80, available: true, widthMeters: 40, lengthMeters: 50, planCoords: "Корпус А, оси 1–8", powerKw: 220, constraints: "Высота 7 м, въезд 3.5×3.5 м" },
   { id: "hall-4", venueId: "venue-2", pavilionId: "pav-3", name: "Зал Б", area: 1500, capacity: 60, available: false },
 ];
 
-export const SEED_FLOOR_CELLS: FloorCell[] = Array.from({ length: 24 }, (_, i) => ({
-  id: `cell-${i + 1}`,
-  label: `${String.fromCharCode(65 + Math.floor(i / 6))}${(i % 6) + 1}`,
-  status: (i % 5 === 0 ? "booked" : i % 7 === 0 ? "unavailable" : "free") as FloorCell["status"],
-  hallId: "hall-1",
-}));
+function buildFloorCells(hallId: string, idPrefix: string, pricePerSqm: number): FloorCell[] {
+  return Array.from({ length: 24 }, (_, i) => {
+    const label = `${String.fromCharCode(65 + Math.floor(i / 6))}${(i % 6) + 1}`;
+    return {
+      id: `${idPrefix}${i + 1}`,
+      label,
+      status: (i % 5 === 0 ? "booked" : i % 7 === 0 ? "unavailable" : "free") as FloorCell["status"],
+      hallId,
+      areaSqm: 36,
+      widthMeters: 6,
+      lengthMeters: 6,
+      pricePerSqm,
+      powerKw: 8,
+      planCoords: `ряд ${label[0]}, место ${label.slice(1)}, оси ${label[0]}/${label.slice(1)}`,
+      taxNote: "НДС 20% включён в ставку",
+    };
+  });
+}
+
+export const SEED_FLOOR_CELLS: FloorCell[] = [
+  ...buildFloorCells("hall-1", "cell-", 4500),
+  ...buildFloorCells("hall-3", "cell-v2-", 3200),
+];
 
 export const SEED_BOOKINGS: Booking[] = [
   {
@@ -615,6 +642,63 @@ export const SEED_BOOKINGS: Booking[] = [
     periodType: "event",
     periodStart: "2026-04-20",
     periodEnd: "2026-04-24",
+  },
+  {
+    id: "book-12",
+    eventId: "evt-7",
+    venueId: "venue-1",
+    hallId: "hall-1",
+    bookedAreaSqm: 3200,
+    organizerId: "user-organizer",
+    organizerName: "ООО «МебельЭкспо Организатор»",
+    status: "confirmed",
+    date: "2026-08-01",
+    periodType: "event",
+    periodStart: "2026-09-10",
+    periodEnd: "2026-09-12",
+  },
+  {
+    id: "book-13",
+    eventId: "evt-7",
+    venueId: "venue-1",
+    hallId: "hall-2",
+    bookedAreaSqm: 1800,
+    organizerId: "user-organizer",
+    organizerName: "ООО «МебельЭкспо Организатор»",
+    status: "pending",
+    date: dateFromPrototypeNow(-4),
+    periodType: "event",
+    periodStart: "2026-09-20",
+    periodEnd: "2026-09-22",
+  },
+  {
+    id: "book-14",
+    eventId: "evt-8",
+    venueId: "venue-1",
+    hallId: "hall-1",
+    bookedAreaSqm: 2500,
+    organizerId: "user-organizer",
+    organizerName: "ООО «МебельЭкспо Организатор»",
+    status: "cancelled",
+    date: dateFromPrototypeNow(-10),
+    periodType: "event",
+    periodStart: "2026-09-08",
+    periodEnd: "2026-09-11",
+  },
+  {
+    id: "book-15",
+    eventId: "evt-8",
+    venueId: "venue-1",
+    hallId: "hall-1b",
+    bookedAreaSqm: 2500,
+    organizerId: "user-organizer",
+    organizerName: "ООО «МебельЭкспо Организатор»",
+    status: "rejected",
+    rejectReason: "Зал недоступен в эти даты",
+    date: dateFromPrototypeNow(-8),
+    periodType: "event",
+    periodStart: "2026-09-08",
+    periodEnd: "2026-09-11",
   },
 ];
 

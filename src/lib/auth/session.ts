@@ -9,9 +9,22 @@ export const REGISTER_ROLES: Exclude<UserRole, null>[] = [
 
 export function sanitizeReturnUrl(value: string | null | undefined): string | null {
   if (!value) return null;
-  if (!value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.startsWith("/login") || value.startsWith("/register")) return null;
-  return value;
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    decoded = value;
+  }
+  if (decoded.includes("\\") || decoded.includes("://")) return null;
+  if (!decoded.startsWith("/") || decoded.startsWith("//")) return null;
+  if (decoded.startsWith("/login") || decoded.startsWith("/register")) return null;
+  return decoded;
+}
+
+export function currentReturnPath(pathname: string, search = "", hash = ""): string {
+  const query = search && !search.startsWith("?") ? `?${search}` : search;
+  const fragment = hash && !hash.startsWith("#") && hash.length > 0 ? `#${hash}` : hash;
+  return sanitizeReturnUrl(`${pathname}${query}${fragment}`) ?? pathname;
 }
 
 export function parseRegisterRole(value: string | null | undefined): UserRole | undefined {

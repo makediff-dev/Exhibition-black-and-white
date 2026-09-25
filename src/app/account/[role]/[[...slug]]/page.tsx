@@ -10,7 +10,7 @@ import { ROLE_LABELS } from "@/constants/statuses";
 import { useAuthHydrated } from "@/lib/hooks/use-auth-hydrated";
 import { useAuthStore } from "@/lib/store";
 import { canAccessCabinetPath } from "@/lib/auth/authorization";
-import { loginHref } from "@/lib/auth/session";
+import { currentReturnPath, loginHref } from "@/lib/auth/session";
 
 export default function AccountPage({
   params,
@@ -27,7 +27,11 @@ export default function AccountPage({
   useEffect(() => {
     if (!hydrated) return;
     if (!isAuthenticated || !user) {
-      router.replace(loginHref(`/account/${role}${slug ? `/${slug}` : ""}`));
+      const dest =
+        typeof window !== "undefined"
+          ? currentReturnPath(window.location.pathname, window.location.search, window.location.hash)
+          : `/account/${role}${slug ? `/${slug}` : ""}`;
+      router.replace(loginHref(dest));
     }
   }, [hydrated, isAuthenticated, user, router, role, slug]);
 

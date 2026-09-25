@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { HOME_IMAGES } from "@/constants/home-images";
+import { PLATFORM_SEARCH_LABEL } from "@/constants/search";
 import styles from "./home-page.module.css";
 
 export function HomeHero() {
@@ -25,7 +26,7 @@ export function HomeHero() {
                 name="q"
                 className={styles.heroSearchInput}
                 placeholder="Поиск мероприятий, услуг, исполнителей..."
-                aria-label="Поиск"
+                aria-label={PLATFORM_SEARCH_LABEL}
               />
             </div>
             <button type="submit" className={styles.heroSearchButton}>

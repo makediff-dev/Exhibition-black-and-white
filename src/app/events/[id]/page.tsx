@@ -25,6 +25,7 @@ import {
 } from "@/data/mocks/seed";
 import type { Contractor, Event, UserRole } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { canBookEvent, getEventStatus } from "@/lib/state/event-machine";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getOrganizerDisplayName } from "@/lib/utils/organizer-names";
@@ -232,6 +233,9 @@ export default function EventDetailPage() {
 
   if (!event) notFound();
 
+  const eventLifecycle = getEventStatus(event);
+  const bookingOpen = canBookEvent(event);
+
   return (
     <CabinetAwareLayout>
       <BackButton fallbackHref={getCabinetBackHref(from, "/events", role)} className="mb-4" />
@@ -241,7 +245,10 @@ export default function EventDetailPage() {
             <div className="flex flex-wrap gap-2 mb-3">
               <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
               <Badge variant="dashed">{event.industry}</Badge>
-              {event.bookingAvailable && (
+              <Badge variant={eventLifecycle.code === "completed" ? "dashed" : "outline"}>
+                {eventLifecycle.label}
+              </Badge>
+              {bookingOpen && (
                 <Badge variant="outline">Можно запросить площадь</Badge>
               )}
             </div>
@@ -273,11 +280,15 @@ export default function EventDetailPage() {
                 <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
                   <Button variant="primary">Найти услуги</Button>
                 </Link>
-                {event.bookingAvailable && (
+                {bookingOpen ? (
                   <Link href={bookingHref}>
                     <Button variant="outline">Забронировать площадь</Button>
                   </Link>
-                )}
+                ) : eventLifecycle.code === "completed" ? (
+                  <p className="text-sm text-gray-600">
+                    Мероприятие завершено. Доступны архивные материалы, новое бронирование закрыто.
+                  </p>
+                ) : null}
               </div>
             </section>
 
@@ -327,7 +338,7 @@ export default function EventDetailPage() {
                   value={localCategory}
                   onChange={(e) => setLocalCategory(e.target.value)}
                   options={contractorCategoryOptions}
-                  className="min-w-[220px]"
+                  className="w-full min-w-0"
                 />
               </div>
               <ContractorsGrid
@@ -416,7 +427,7 @@ export default function EventDetailPage() {
             <section className="catalog-content-box p-4">
               <h2 className="text-base font-semibold mb-3">План площадки</h2>
               <FloorPlanPreview />
-              {event.bookingAvailable && (
+              {bookingOpen && (
                 <Link href={bookingHref} className="block mt-4">
                   <Button className="w-full" variant="primary" size="sm">
                     Забронировать площадь

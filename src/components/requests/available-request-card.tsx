@@ -92,6 +92,10 @@ export function AvailableRequestCard({ request, event }: Props) {
           <Link href={`/requests/${request.id}/respond`} className="flex-1 min-w-[120px]">
             <Button size="sm" className="w-full">Откликнуться</Button>
           </Link>
+        ) : lifecycle.recoveryActions.includes("expand_specialization") ? (
+          <Link href="/account/contractor/profile" className="flex-1 min-w-[120px]">
+            <Button size="sm" className="w-full">Расширить специализацию</Button>
+          </Link>
         ) : (
           <Button size="sm" className="flex-1 min-w-[120px]" disabled>
             Отклик закрыт

@@ -13,8 +13,9 @@ import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { getPaymentStatus, isOpenInvoice } from "@/lib/state/payment-machine";
+import { getEscrowLinkNote, isFinanceEscrow } from "@/lib/domain/finance";
 import {
-  PAYMENT_STATUS_LABELS,
   getLedgerPairNote,
   getPaymentOperationLabel,
   getPaymentTradeSideLabel,
@@ -85,7 +86,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
     [deals]
   );
 
-  const getStatus = (payment: Payment) => payment.status;
+  const getStatus = (payment: Payment) => getPaymentStatus(payment, user).code;
 
   const filteredPayments = useMemo(() => {
     return venuePayments
@@ -94,13 +95,13 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
         const matchesTab = (() => {
           switch (activeTab) {
             case "payable":
-              return status === "pending" && isViewerPayer(payment, user);
+              return isOpenInvoice(payment) && isViewerPayer(payment, user);
             case "receivable":
-              return status === "pending" && isViewerPayee(payment, user);
+              return isOpenInvoice(payment) && isViewerPayee(payment, user);
             case "history":
               return status === "paid";
             case "safe":
-              return payment.type === "Резерв" || payment.description.includes("Безопасная");
+              return isFinanceEscrow(payment);
             case "payouts":
               return payment.type === "Выплата";
             case "refunds":
@@ -127,13 +128,13 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
     const pendingIncoming = venuePayments.filter(
       (payment) =>
         payment.type.includes("Счёт") &&
-        getStatus(payment) === "pending" &&
+        isOpenInvoice(payment) &&
         (payment.direction ?? "incoming") === "incoming"
     );
     const pendingOutgoing = venuePayments.filter(
       (payment) =>
         payment.type.includes("Счёт") &&
-        getStatus(payment) === "pending" &&
+        isOpenInvoice(payment) &&
         payment.direction === "outgoing"
     );
     const paid = venuePayments.filter((payment) => getStatus(payment) === "paid");
@@ -216,10 +217,10 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
             return (
               <Card key={payment.id} className="h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
-                  <Badge variant={status === "pending" ? "solid" : "muted"}>
-                    {PAYMENT_STATUS_LABELS[status]}
+                  <Badge variant={isOpenInvoice(payment) ? "solid" : "muted"}>
+                    {getPaymentStatus(payment, user).label}
                   </Badge>
                   {payment.participantRole &&
                     payment.participantRole in VENUE_PAYMENT_ROLE_LABELS && (
@@ -242,6 +243,9 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                   Плательщик: {payment.payerName ?? "не указан"} · Получатель:{" "}
                   {payment.payeeName ?? "не указан"}
                 </p>
+                {getEscrowLinkNote(payment, venuePayments) && (
+                  <p className="text-xs text-gray-500 mb-[10px]">{getEscrowLinkNote(payment, venuePayments)}</p>
+                )}
                 {getLedgerPairNote(payment) && (
                   <p className="text-xs text-gray-500 mb-[10px]">{getLedgerPairNote(payment)}</p>
                 )}

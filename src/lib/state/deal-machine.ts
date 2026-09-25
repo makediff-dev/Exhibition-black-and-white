@@ -1,7 +1,12 @@
 import type { CompanyProfile, Deal, DealStatus } from "../../data/types/index.ts";
 import { DEAL_STATUS_LABELS, ROLE_LABELS } from "../../constants/statuses.ts";
 import { isDealForUser } from "../utils/user-entity-map.ts";
+import { isDeadlineReached } from "./clock.ts";
 import type { ActionCode, ActionableStatus, TransitionResult } from "./types.ts";
+
+export type DealLifecycleCode = DealStatus | "overdue";
+
+const FINAL_DEAL_STATUSES: DealStatus[] = ["completed", "dispute"];
 
 const CUSTOMER_TRANSITIONS: Partial<Record<DealStatus, Partial<Record<ActionCode, DealStatus>>>> = {
   negotiation: { confirm_terms: "awaiting_payment", open_dispute: "dispute" },
@@ -54,6 +59,22 @@ const NEXT_ACTOR: Record<DealStatus, ActionableStatus["nextActor"]> = {
   dispute: "platform",
 };
 
+export function getDealDeadline(deal: Deal): string | null {
+  const current = deal.stages.find(
+    (stage) => stage.status === "in_progress" || stage.status === "review" || stage.status === "revision"
+  );
+  if (current?.deadline) return current.deadline;
+  const pending = deal.stages.find((stage) => stage.status === "pending");
+  return pending?.deadline ?? deal.stages[deal.stages.length - 1]?.deadline ?? null;
+}
+
+export function getDealLifecycleCode(deal: Deal): DealLifecycleCode {
+  if (FINAL_DEAL_STATUSES.includes(deal.status)) return deal.status;
+  const deadline = getDealDeadline(deal);
+  if (deadline && isDeadlineReached(deadline)) return "overdue";
+  return deal.status;
+}
+
 function roleTransitions(deal: Deal, user: CompanyProfile | null | undefined) {
   if (!user || !isDealForUser(deal, user)) return {};
   if (user.role === "customer") {
@@ -74,18 +95,25 @@ export function getDealStatus(
   const transitions = roleTransitions(deal, user);
   const allowedActions = Object.keys(transitions) as ActionCode[];
   const nextActor = NEXT_ACTOR[deal.status];
+  const code = getDealLifecycleCode(deal);
+  const deadline = getDealDeadline(deal);
+  const overdue = code === "overdue";
 
   return {
-    code: deal.status,
+    code,
     storedCode: deal.status,
-    label: DEAL_STATUS_LABELS[deal.status],
-    explanation: EXPLANATIONS[deal.status],
+    label: overdue ? "Просрочена" : DEAL_STATUS_LABELS[deal.status],
+    explanation: overdue
+      ? `Срок этапа ${deadline} прошёл. Сделка не завершена. Действует ${EXPLANATIONS[deal.status]} Ответственный: ${
+          nextActor === "platform" ? "платформа" : nextActor ? ROLE_LABELS[nextActor] : "стороны"
+        }.`
+      : EXPLANATIONS[deal.status],
     nextActor,
     nextActorLabel: nextActor === "platform" ? "Платформа" : nextActor ? ROLE_LABELS[nextActor] : null,
-    deadline: deal.stages.find((stage) => stage.status === "in_progress" || stage.status === "review")
-      ?.deadline ?? null,
+    deadline,
     allowedActions,
-    recoveryActions: deal.status === "dispute" ? ["resolve_dispute"] : [],
+    recoveryActions: deal.status === "dispute" ? ["resolve_dispute"] : overdue ? allowedActions : [],
+    blockedReason: overdue ? `Срок ${deadline} истёк. Нужен следующий допустимый шаг, а не статус «В работе».` : undefined,
   };
 }
 

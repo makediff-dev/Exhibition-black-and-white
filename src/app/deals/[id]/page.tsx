@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   DEAL_STATUS_LABELS,
+  DOCUMENT_STATUS_LABELS,
   REQUEST_FORMAT_LABELS,
 } from "@/constants/statuses";
 import type { Deal, DealStage, DealStatus } from "@/data/types";
@@ -39,6 +40,7 @@ import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { PAYMENT_STATUS_LABELS } from "@/lib/utils/payment-presentation";
 import { cn } from "@/lib/utils/cn";
 import { useToast } from "@/components/ui/toast-provider";
 import { RequireAuth } from "@/components/auth/require-auth";
@@ -341,7 +343,12 @@ function DealPage() {
   );
   const dealPayments = payments.filter((p) => p.dealId === id && canReadPayment(p, user, deals));
   const dealAccess = canReadDeal(user, deal);
-  const messageThread = messages.find((m) => m.relatedId === id);
+  const messageThread = messages.find(
+    (m) => (m.contextId || m.relatedId) === id && (m.contextType || m.relatedType) === "deal"
+  );
+  const dealMessagesHref = messageThread
+    ? `/messages/${messageThread.id}`
+    : `/messages?contextType=deal&contextId=${encodeURIComponent(id)}`;
 
   const isCustomer = Boolean(user && deal && user.id === deal.customerId);
   const isContractor = Boolean(
@@ -533,14 +540,12 @@ function DealPage() {
       activeNavSlug={fromMessages ? "messages" : undefined}
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          {messageThread && (
-            <Link href={messageThread.relatedLink}>
-              <Button variant="outline" size="sm">
-                <MessageSquare className="h-4 w-4" />
-                Сообщения
-              </Button>
-            </Link>
-          )}
+          <Link href={dealMessagesHref}>
+            <Button variant="outline" size="sm">
+              <MessageSquare className="h-4 w-4" />
+              Сообщения
+            </Button>
+          </Link>
           {actions.map((action) => (
             <Button
               key={action.id}
@@ -615,12 +620,12 @@ function DealPage() {
       />
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <Badge>{lifecycle?.label ?? DEAL_STATUS_LABELS[deal.status]}</Badge>
-        <Badge variant="outline">{REQUEST_FORMAT_LABELS[deal.format]}</Badge>
-        <Badge variant="outline">{formatPrice(deal.totalPrice)}</Badge>
+        <Badge variant="solid">{lifecycle?.label ?? DEAL_STATUS_LABELS[deal.status]}</Badge>
         <Badge variant="outline">
           {user?.role === "contractor" ? "Вы продаёте" : "Вы покупаете"}
         </Badge>
+        <Badge variant="muted">{REQUEST_FORMAT_LABELS[deal.format]}</Badge>
+        <Badge variant="muted">{formatPrice(deal.totalPrice)}</Badge>
       </div>
       {lifecycle && <div className="mb-4"><StatusSummary status={lifecycle} /></div>}
 
@@ -807,7 +812,7 @@ function DealPage() {
                         Отправить в ЭДО на подпись
                       </Button>
                     ) : (
-                      <Badge variant="outline">{doc.status}</Badge>
+                      <Badge variant="outline">{DOCUMENT_STATUS_LABELS[doc.status]}</Badge>
                     )}
                   </div>
                 </div>
@@ -831,7 +836,9 @@ function DealPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{formatPrice(payment.amount)}</p>
-                    <Badge variant="outline" className="mt-1">{payment.status}</Badge>
+                    <Badge variant="outline" className="mt-1">
+                      {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
+                    </Badge>
                   </div>
                 </div>
               </Card>

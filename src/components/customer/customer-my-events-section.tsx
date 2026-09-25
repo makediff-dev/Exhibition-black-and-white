@@ -104,7 +104,7 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {myEvents.map(({ event, reasons, action }) => (
           <Card key={event.id} className="h-full flex flex-col">
-            <Badge variant="outline" className="mb-2 w-fit">
+            <Badge variant="muted" className="mb-2 w-fit">
               {EVENT_CATEGORY_LABELS[event.category]}
             </Badge>
             <CardTitle className="text-base leading-snug mb-[10px]">{event.title}</CardTitle>

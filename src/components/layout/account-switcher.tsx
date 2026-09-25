@@ -62,7 +62,7 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
         onClick={() => setOpen((value) => !value)}
         className={cn(
           styles.trigger,
-          "inline-flex w-[220px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50",
+          "inline-flex w-auto max-w-[180px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50",
           fullWidth && "w-full max-w-none"
         )}
         aria-expanded={open}
@@ -77,7 +77,7 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
         <div
           className={cn(
             styles.menu,
-            "absolute right-0 top-full z-50 mt-1 min-w-[280px] overflow-hidden border border-gray-300 bg-white shadow-sm",
+            "absolute right-0 top-full z-50 mt-1 w-max max-w-[min(280px,calc(100vw-32px))] overflow-hidden border border-gray-300 bg-white shadow-sm",
             fullWidth && "left-0 right-0 min-w-0"
           )}
           role="listbox"

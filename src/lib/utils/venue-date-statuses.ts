@@ -43,7 +43,12 @@ export function buildVenueDateStatuses(
   const map: Record<string, VenueBookingDateStatus[]> = {};
 
   bookings
-    .filter((booking) => booking.venueId === venueId && booking.status !== "rejected")
+    .filter(
+      (booking) =>
+        booking.venueId === venueId &&
+        booking.status !== "rejected" &&
+        booking.status !== "cancelled"
+    )
     .forEach((booking) => {
       const start = booking.periodStart ?? booking.date;
       const end = booking.periodEnd ?? start;

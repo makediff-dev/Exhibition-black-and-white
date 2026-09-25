@@ -72,11 +72,11 @@ test("confirmed bookings are the schedule source of truth for evt-1", () => {
 });
 
 test("prototype clock is fixed and overridable", () => {
-  assert.equal(getPrototypeNowIso(), "2026-09-23");
+  assert.equal(getPrototypeNowIso(), "2026-09-24T12:00:00+03:00");
   setPrototypeNowIso("2026-03-01");
   assert.equal(getPrototypeNowIso(), "2026-03-01");
   setPrototypeNowIso(null);
-  assert.equal(getPrototypeNowIso(), "2026-09-23");
+  assert.equal(getPrototypeNowIso(), "2026-09-24T12:00:00+03:00");
 });
 
 test("persist overlay refreshes fixture relations and drops retired ids", () => {

@@ -22,7 +22,6 @@ import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import {
   DOCUMENT_STATUS_LABELS,
-  PAYMENT_STATUS_LABELS,
   REQUEST_FORMAT_LABELS,
   STAGE_STATUS_LABELS,
 } from "@/constants/statuses";
@@ -37,6 +36,7 @@ import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { addDaysIso } from "@/lib/state/clock";
+import { getPaymentStatus } from "@/lib/state/payment-machine";
 import { getRequestStatus } from "@/lib/state/request-machine";
 import { StatusSummary } from "@/components/ui/status-summary";
 import { getPrototypeNowDateIso } from "@/lib/time/now";
@@ -108,7 +108,7 @@ function RequestDetailContent() {
   }
 
   const isContractor = user?.role === "contractor";
-  const canSeeRequest = !isContractor || isRequestVisibleToContractor(request, user);
+  const canSeeRequest = !isContractor || isRequestVisibleToContractor(request, user, requestResponses, deals);
   const lifecycle = getRequestStatus(request, user, requestResponses, deals);
   const today = getPrototypeNowDateIso();
 
@@ -197,6 +197,13 @@ function RequestDetailContent() {
           </Button>
         </Link>
       )}
+      {canSeeRequest && lifecycle.recoveryActions.includes("expand_specialization") && (
+        <Link href="/account/contractor/profile">
+          <Button size="sm" variant="outline">
+            Расширить специализацию
+          </Button>
+        </Link>
+      )}
       {lifecycle.allowedActions.includes("open_deal") && relatedDeal && (
         <Link href={`/deals/${relatedDeal.id}`}>
           <Button size="sm">Открыть сделку</Button>
@@ -248,34 +255,30 @@ function RequestDetailContent() {
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardTitle className="text-sm mb-3">Основная информация</CardTitle>
-              <dl className="space-y-2 text-sm">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Город</dt>
-                  <dd>{request.city}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">География</dt>
-                  <dd>{request.cities.join(", ")}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Диапазон выполнения</dt>
-                  <dd>{formatRequestDeadline(request.deadline)}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Бюджет</dt>
-                  <dd>{formatBudget(request.budget)}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Откликов</dt>
-                  <dd>{request.responseCount}</dd>
-                </div>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <span className="font-medium">Город:</span> {request.city}
+                </p>
+                <p>
+                  <span className="font-medium">География:</span> {request.cities.join(", ")}
+                </p>
+                <p>
+                  <span className="font-medium">Диапазон выполнения:</span>{" "}
+                  {formatRequestDeadline(request.deadline)}
+                </p>
+                <p>
+                  <span className="font-medium">Бюджет:</span> {formatBudget(request.budget)}
+                </p>
+                <p>
+                  <span className="font-medium">Откликов:</span> {request.responseCount}
+                </p>
                 {request.publishedAt && (
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-gray-600">Опубликована</dt>
-                    <dd>{formatShortDate(request.publishedAt)}</dd>
-                  </div>
+                  <p>
+                    <span className="font-medium">Опубликована:</span>{" "}
+                    {formatShortDate(request.publishedAt)}
+                  </p>
                 )}
-              </dl>
+              </div>
             </Card>
 
             <Card>
@@ -483,7 +486,7 @@ function RequestDetailContent() {
                   <div className="text-right">
                     <p className="font-bold">{formatPrice(payment.amount)}</p>
                     <Badge variant="outline" className="mt-1">
-                      {PAYMENT_STATUS_LABELS[payment.status]}
+                      {getPaymentStatus(payment, user).label}
                     </Badge>
                   </div>
                 </div>

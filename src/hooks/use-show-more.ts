@@ -29,13 +29,12 @@ function isValidElementLike(item: unknown): item is { key: string | number | nul
 }
 
 export function useShowMore<T>(items: readonly T[], options: UseShowMoreOptions = {}) {
-  const initialCount = options.initialCount ?? 5;
-  const step = options.step ?? 5;
+  const initialCount = Math.max(1, options.initialCount ?? 5);
+  const step = Math.max(1, options.step ?? 5);
   const hasMoreUniqueItems = items.length > initialCount;
   const maxCount = options.showAllCount ?? (hasMoreUniqueItems ? items.length : getDefaultShowAllCount(initialCount));
-  const [visibleCount, setVisibleCount] = useState(() =>
-    Math.min(initialCount, hasMoreUniqueItems ? items.length : initialCount),
-  );
+  const [extraRows, setExtraRows] = useState(0);
+  const visibleCount = Math.min(initialCount + extraRows * step, maxCount);
 
   const visibleItems = useMemo(() => {
     if (items.length === 0) return [];
@@ -63,12 +62,13 @@ export function useShowMore<T>(items: readonly T[], options: UseShowMoreOptions 
   const isAllVisible = visibleCount >= effectiveMax;
 
   const showMore = useCallback(() => {
-    setVisibleCount((current) => Math.min(current + step, effectiveMax));
-  }, [effectiveMax, step]);
+    setExtraRows((current) => current + 1);
+  }, []);
 
   const showAll = useCallback(() => {
-    setVisibleCount(effectiveMax);
-  }, [effectiveMax]);
+    const remaining = Math.max(0, effectiveMax - initialCount);
+    setExtraRows(Math.ceil(remaining / step));
+  }, [effectiveMax, initialCount, step]);
 
   return { visibleItems, canShowMore, isAllVisible, showMore, showAll };
 }

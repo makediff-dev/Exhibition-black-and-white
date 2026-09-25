@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef, type CSSProperties } from "react";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
+import { useFitCardCount } from "@/hooks/use-fit-card-count";
 import { useShowMore } from "@/hooks/use-show-more";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { HomeTileCard } from "./home-tile-card";
@@ -11,9 +13,11 @@ import { HomeCardsFilters } from "./home-cards-filters";
 import styles from "./home-page.module.css";
 
 export function HomeEventsSection() {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const fitCount = useFitCardCount(gridRef);
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(SEED_EVENTS, {
-    initialCount: 12,
-    step: 6,
+    initialCount: fitCount,
+    step: fitCount,
   });
 
   return (
@@ -27,7 +31,11 @@ export function HomeEventsSection() {
 
           <HomeCardsFilters />
 
-          <div className={styles.cardsGrid}>
+          <div
+            ref={gridRef}
+            className={styles.cardsGrid}
+            style={{ "--cards-per-row": fitCount } as CSSProperties}
+          >
             {visibleItems.map(({ item: event, key, index }) => (
               <HomeTileCard
                 key={key}

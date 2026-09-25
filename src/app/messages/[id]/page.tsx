@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { Suspense, use } from "react";
 import { useRouter } from "next/navigation";
 import { MessagesInbox } from "@/components/messages/messages-inbox";
 import { BackButton } from "@/components/ui/back-button";
@@ -36,7 +36,9 @@ export default function MessageThreadPage({
       <div className="mb-2 md:hidden">
         <BackButton fallbackHref="/messages" />
       </div>
-      <MessagesInbox selectedThreadId={id} />
+      <Suspense fallback={null}>
+        <MessagesInbox selectedThreadId={id} />
+      </Suspense>
     </>
   );
 }

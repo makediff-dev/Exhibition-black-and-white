@@ -7,6 +7,7 @@ export type ActionCode =
   | "edit"
   | "delete"
   | "submit_proposal"
+  | "expand_specialization"
   | "view_responses"
   | "compare"
   | "open_deal"

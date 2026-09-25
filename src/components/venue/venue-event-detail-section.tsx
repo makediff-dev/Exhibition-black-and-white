@@ -154,12 +154,12 @@ export function VenueEventDetailSection({
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Link href={`/account/venue/bookings/event/${event.id}`}>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="soft-outline" className="text-gray-900">
                 Бронирования · {eventBookings.length}
               </Button>
             </Link>
             <Link href={`/account/venue/orders/${event.id}`}>
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="soft-outline" className="text-gray-900">
                 Заказы · {eventOrdersCount}
               </Button>
             </Link>

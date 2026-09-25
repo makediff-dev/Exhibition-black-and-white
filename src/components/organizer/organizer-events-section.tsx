@@ -201,19 +201,32 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
               >
                 <Card hoverable className="cabinet-card h-full">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <Badge variant="outline">
+                    <Badge variant="muted">
                       {event.category === "exhibition"
                         ? "Выставка"
                         : event.category === "forum"
                           ? "Форум"
                           : "Конференция"}
                     </Badge>
-                    {statuses.map((status) => (
-                      <Badge key={`${event.id}-${status}`} variant="solid">
+                    {statuses.map((status, index) => (
+                      <Badge
+                        key={`${event.id}-${status}`}
+                        variant={
+                          pendingBookings > 0
+                            ? index === 0
+                              ? "outline"
+                              : "muted"
+                            : index === 0
+                              ? "solid"
+                              : index === 1
+                                ? "outline"
+                                : "muted"
+                        }
+                      >
                         {VENUE_BOOKING_DATE_STATUS_META[status].label}
                       </Badge>
                     ))}
-                    {lowAvailability && <Badge variant="outline">Мало свободной площади</Badge>}
+                    {lowAvailability && <Badge variant="muted">Мало свободной площади</Badge>}
                     {pendingBookings > 0 && (
                       <Badge variant="solid">
                         {pendingBookings} нов{pendingBookings === 1 ? "ое" : "ых"} бронирован

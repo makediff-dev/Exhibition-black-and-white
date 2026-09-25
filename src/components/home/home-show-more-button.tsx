@@ -13,22 +13,15 @@ interface HomeShowMoreActionsProps {
 
 export function HomeShowMoreActions({
   onShowMore,
-  canShowMore = true,
   showMoreLabel = "Показать больше",
   allLinkHref,
   allLinkLabel = "Показать все",
 }: HomeShowMoreActionsProps) {
-  if (!canShowMore && !allLinkHref) {
-    return null;
-  }
-
   return (
     <div className={styles.showMoreWrap}>
-      {canShowMore ? (
-        <button type="button" className={styles.showMoreButton} onClick={onShowMore}>
-          {showMoreLabel}
-        </button>
-      ) : null}
+      <button type="button" className={styles.showMoreButton} onClick={onShowMore}>
+        {showMoreLabel}
+      </button>
       {allLinkHref ? <HomeSectionLink href={allLinkHref}>{allLinkLabel}</HomeSectionLink> : null}
     </div>
   );

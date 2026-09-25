@@ -106,7 +106,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
 
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge variant="outline">
+                      <Badge variant="muted">
                         {event.category === "exhibition"
                           ? "Выставка"
                           : event.category === "forum"

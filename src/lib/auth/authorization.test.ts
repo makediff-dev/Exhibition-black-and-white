@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { afterEach, test } from "node:test";
+import { setPrototypeNowIso } from "../time/now.ts";
 import {
   DEMO_USERS,
   SEED_DEALS,
@@ -9,6 +10,7 @@ import {
 import {
   canAccessCabinet,
   canAccessCabinetPath,
+  canContactVenue,
   canCreateRequest,
   canManageEmployees,
   canMutateDeal,
@@ -19,6 +21,10 @@ import {
   canSubmitProposal,
   isRequestVisibleToContractor,
 } from "./authorization.ts";
+
+afterEach(() => {
+  setPrototypeNowIso(null);
+});
 
 const roles = ["customer", "contractor", "venue", "organizer"] as const;
 
@@ -94,7 +100,8 @@ test("organizer-owned payments are hidden from customer and contractor", () => {
   assert.equal(canReadPayment(payment, DEMO_USERS.contractor, SEED_DEALS), false);
 });
 
-test("catering request is hidden from stand contractor; invited closed request is visible", () => {
+test("catering request is hidden from stand contractor; invited design request is visible but not submittable", () => {
+  setPrototypeNowIso("2026-03-14T12:00:00+03:00");
   const catering = SEED_REQUESTS.find((item) => item.id === "req-4");
   const invited = SEED_REQUESTS.find((item) => item.id === "req-2");
   assert.ok(catering);
@@ -103,6 +110,22 @@ test("catering request is hidden from stand contractor; invited closed request i
   assert.equal(isRequestVisibleToContractor(catering, DEMO_USERS.contractor), false);
   assert.equal(isRequestVisibleToContractor(invited, DEMO_USERS.contractor), true);
   assert.equal(canSubmitProposal(DEMO_USERS.contractor, catering).allowed, false);
+  assert.equal(canSubmitProposal(DEMO_USERS.contractor, invited).allowed, false);
+});
+
+test("expired invited request is hidden from contractor marketplace after deadline", () => {
+  setPrototypeNowIso("2026-09-24T12:00:00+03:00");
+  const invited = SEED_REQUESTS.find((item) => item.id === "req-2");
+  assert.ok(invited);
+  assert.equal(isRequestVisibleToContractor(invited, DEMO_USERS.contractor), false);
+  assert.equal(canSubmitProposal(DEMO_USERS.contractor, invited).allowed, false);
+});
+
+test("venue contact uses one venue identity for public and catalog ids", () => {
+  assert.equal(canContactVenue(DEMO_USERS.customer, "v-1").allowed, true);
+  assert.equal(canContactVenue(DEMO_USERS.organizer, "venue-1").allowed, true);
+  assert.equal(canContactVenue(DEMO_USERS.venue, "v-1").allowed, false);
+  assert.equal(canContactVenue(DEMO_USERS.venue, "venue-1").allowed, false);
 });
 
 test("only customer can create a request; only matching org can manage employees", () => {

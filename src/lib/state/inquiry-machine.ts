@@ -1,8 +1,9 @@
 import type { CompanyProfile, VenueInquiry } from "../../data/types/index.ts";
 import { ROLE_LABELS } from "../../constants/statuses.ts";
+import { isDeadlineReached } from "./clock.ts";
 import type { ActionableStatus, TransitionResult } from "./types.ts";
 
-export type InquiryLifecycleCode = VenueInquiry["status"];
+export type InquiryLifecycleCode = VenueInquiry["status"] | "expired";
 
 const LABELS: Record<InquiryLifecycleCode, string> = {
   pending: "Ждём площадку",
@@ -10,7 +11,14 @@ const LABELS: Record<InquiryLifecycleCode, string> = {
   changes_proposed: "Ждём организатора",
   selected: "Площадка закреплена",
   declined: "Запрос отклонён",
+  expired: "Срок запроса истёк",
 };
+
+export function getInquiryLifecycleCode(inquiry: VenueInquiry): InquiryLifecycleCode {
+  if (inquiry.status === "selected" || inquiry.status === "declined") return inquiry.status;
+  if (isDeadlineReached(inquiry.dateTo) || isDeadlineReached(inquiry.holdUntil)) return "expired";
+  return inquiry.status;
+}
 
 export function getInquiryStatus(
   inquiry: VenueInquiry,
@@ -22,6 +30,22 @@ export function getInquiryStatus(
   let nextActor: ActionableStatus["nextActor"] = null;
   let explanation = "";
   let blockedReason: string | undefined;
+  const code = getInquiryLifecycleCode(inquiry);
+
+  if (code === "expired") {
+    return {
+      code,
+      storedCode: inquiry.status,
+      label: LABELS.expired,
+      explanation: "Период или удержание уже прошли. Ответить на этот запрос нельзя.",
+      nextActor: "organizer",
+      nextActorLabel: ROLE_LABELS.organizer,
+      deadline: inquiry.holdUntil ?? inquiry.dateTo,
+      allowedActions: [],
+      recoveryActions: ["cancel"],
+      blockedReason: "Просроченный запрос площадке закрыт. Создайте новый запрос.",
+    };
+  }
 
   switch (inquiry.status) {
     case "pending":
@@ -61,9 +85,9 @@ export function getInquiryStatus(
   }
 
   return {
-    code: inquiry.status,
+    code,
     storedCode: inquiry.status,
-    label: LABELS[inquiry.status],
+    label: LABELS[code],
     explanation,
     nextActor,
     nextActorLabel: nextActor ? ROLE_LABELS[nextActor] : null,

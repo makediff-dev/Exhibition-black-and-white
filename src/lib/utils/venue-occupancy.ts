@@ -17,6 +17,94 @@ function dateInBooking(date: string, booking: Booking): boolean {
   return date >= start && date <= end;
 }
 
+function bookingArea(booking: Booking, halls: VenueHall[]): number {
+  if (booking.bookedAreaSqm && booking.bookedAreaSqm > 0) return booking.bookedAreaSqm;
+  const hall = halls.find((item) => item.id === booking.hallId);
+  return hall?.area ?? 0;
+}
+
+function isInventoryBlocking(booking: Booking) {
+  return booking.status === "confirmed";
+}
+
+function isPreliminary(booking: Booking) {
+  return booking.status === "pending";
+}
+
+function areaDaysForStatus(
+  venueId: string,
+  halls: VenueHall[],
+  bookings: Booking[],
+  dates: string[],
+  match: (booking: Booking) => boolean
+) {
+  const venueHalls = halls.filter((hall) => hall.venueId === venueId);
+  const totalArea = venueHalls.reduce((sum, hall) => sum + hall.area, 0);
+  let areaDays = 0;
+
+  for (const date of dates) {
+    const dayArea = bookings
+      .filter(
+        (booking) =>
+          booking.venueId === venueId &&
+          match(booking) &&
+          dateInBooking(date, booking)
+      )
+      .reduce((sum, booking) => sum + bookingArea(booking, venueHalls), 0);
+    areaDays += Math.min(totalArea, dayArea);
+  }
+
+  return { totalArea, areaDays };
+}
+
+export function getVenueOccupancyBreakdown(
+  venueId: string,
+  halls: VenueHall[],
+  bookings: Booking[],
+  periodStart: string,
+  periodEnd: string
+) {
+  const dates = expandIsoDateRange(periodStart, periodEnd);
+  const venueHalls = halls.filter((hall) => hall.venueId === venueId);
+  const totalArea = venueHalls.reduce((sum, hall) => sum + hall.area, 0);
+  const availableAreaDays = totalArea * dates.length;
+
+  if (!totalArea || dates.length === 0) {
+    return {
+      percent: 0,
+      preliminaryPercent: 0,
+      periodStart,
+      periodEnd,
+      occupiedArea: 0,
+      freeArea: 0,
+      totalArea,
+      bookedAreaDays: 0,
+      pendingAreaDays: 0,
+      availableAreaDays: 0,
+    };
+  }
+
+  const confirmed = areaDaysForStatus(venueId, halls, bookings, dates, isInventoryBlocking);
+  const pending = areaDaysForStatus(venueId, halls, bookings, dates, isPreliminary);
+  const percent = Math.round((confirmed.areaDays / availableAreaDays) * 100);
+  const preliminaryPercent = Math.round((pending.areaDays / availableAreaDays) * 100);
+  const occupiedArea = Math.round(confirmed.areaDays / dates.length);
+  const freeArea = Math.max(0, totalArea - occupiedArea);
+
+  return {
+    percent,
+    preliminaryPercent,
+    periodStart,
+    periodEnd,
+    occupiedArea,
+    freeArea,
+    totalArea,
+    bookedAreaDays: confirmed.areaDays,
+    pendingAreaDays: pending.areaDays,
+    availableAreaDays,
+  };
+}
+
 export function getVenueOccupancyPercent(
   venueId: string,
   halls: VenueHall[],
@@ -24,35 +112,7 @@ export function getVenueOccupancyPercent(
   periodStart: string,
   periodEnd: string
 ) {
-  const venueHalls = halls.filter((hall) => hall.venueId === venueId);
-  const totalArea = venueHalls.reduce((sum, hall) => sum + hall.area, 0);
-  const dates = expandIsoDateRange(periodStart, periodEnd);
-
-  if (!totalArea || dates.length === 0) {
-    return { percent: 0, periodStart, periodEnd, occupiedArea: 0, totalArea };
-  }
-
-  let occupiedAreaDays = 0;
-  for (const date of dates) {
-    const bookedHallIds = new Set(
-      bookings
-        .filter(
-          (booking) =>
-            booking.venueId === venueId &&
-            booking.status === "confirmed" &&
-            booking.hallId &&
-            dateInBooking(date, booking)
-        )
-        .map((booking) => booking.hallId as string)
-    );
-    occupiedAreaDays += venueHalls
-      .filter((hall) => bookedHallIds.has(hall.id))
-      .reduce((sum, hall) => sum + hall.area, 0);
-  }
-
-  const percent = Math.round((occupiedAreaDays / (totalArea * dates.length)) * 100);
-  const occupiedArea = Math.round((totalArea * percent) / 100);
-  return { percent, periodStart, periodEnd, occupiedArea, totalArea };
+  return getVenueOccupancyBreakdown(venueId, halls, bookings, periodStart, periodEnd);
 }
 
 export function getVenueOccupancyByDate(
@@ -66,7 +126,10 @@ export function getVenueOccupancyByDate(
   return Object.fromEntries(
     dates.map((date) => [
       date,
-      getVenueOccupancyPercent(venueId, halls, bookings, date, date).percent,
+      getVenueOccupancyBreakdown(venueId, halls, bookings, date, date).percent,
     ])
   );
 }
+
+export const VENUE_OCCUPANCY_EXPLANATION =
+  "Загрузка = арендованные кв.м × дни периода / доступные кв.м × дни. Считаются только подтверждённые брони, которые блокируют инвентарь. Отменённые и отклонённые не входят. Ожидающие — отдельная предварительная загрузка.";

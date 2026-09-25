@@ -88,6 +88,7 @@ export function RequestDescriptionForm({
   return (
     <div className="space-y-8">
       <Input
+        id="wizard-field-title"
         label="Название заявки *"
         value={title}
         onChange={(event) => onTitleChange(event.target.value)}
@@ -95,6 +96,7 @@ export function RequestDescriptionForm({
       />
 
       <Textarea
+        id="wizard-field-description"
         label="Краткое описание *"
         value={summary}
         onChange={(event) => onSummaryChange(event.target.value)}
@@ -102,6 +104,7 @@ export function RequestDescriptionForm({
       />
 
       <Textarea
+        id="wizard-field-expectedResult"
         label="Ожидаемый результат *"
         value={expectedResult}
         onChange={(event) => onExpectedResultChange(event.target.value)}
@@ -180,10 +183,12 @@ export function RequestDescriptionForm({
                     return (
                       <Input
                         key={field.id}
+                        id={`wizard-field-${field.id}`}
+                        type={field.type === "date" ? "date" : "text"}
                         label={`${field.label}${field.required ? " *" : ""}`}
                         value={fieldValue}
                         onChange={(event) => updateField(section.id, field.id, event.target.value)}
-                        placeholder={field.placeholder}
+                        placeholder={field.type === "date" ? undefined : field.placeholder}
                       />
                     );
                   })}

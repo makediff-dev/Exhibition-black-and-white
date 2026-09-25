@@ -8,8 +8,10 @@ import type {
   Notification,
   Payment,
   Request,
+  Response,
   UserRole,
 } from "@/data/types";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
 import {
   canReadDocument,
   canReadPayment,
@@ -50,7 +52,9 @@ export function getThreadInboxCategory(
   thread: MessageThread,
   role: UserRole | null | undefined
 ): MessageCategory {
-  if (thread.category === "system" || thread.relatedType === "support") return "system";
+  if (thread.category === "system" || thread.contextType === "support" || thread.relatedType === "support") {
+    return "system";
+  }
   if (role && thread.participantRoles?.includes(role)) {
     const counterpart = thread.participantRoles.find((item) => item !== role);
     if (counterpart === "customer") return "customer";
@@ -72,9 +76,11 @@ export function isNotificationForUser(
 
 export function isRequestVisibleToContractor(
   request: Request,
-  user: CompanyProfile | null | undefined
+  user: CompanyProfile | null | undefined,
+  responses: Response[] = [],
+  deals: Deal[] = []
 ): boolean {
-  return isRequestVisibleToContractorFromAuth(request, user);
+  return isRequestVisibleToContractorFromAuth(request, user, responses, deals);
 }
 
 export function getContractorPayoutBalance(
@@ -112,7 +118,7 @@ export function buildBookingInvoice(booking: Booking, amount: number): Payment {
     type: "Счёт к оплате",
     amount,
     status: "pending",
-    date: new Date().toISOString().slice(0, 10),
+    date: getPrototypeNowDateIso(),
     description: `Аренда зала — бронирование ${booking.id}`,
     direction: "incoming",
   };

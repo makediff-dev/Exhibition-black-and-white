@@ -98,6 +98,7 @@ export function SearchableSelect({
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder={searchPlaceholder}
+              aria-label={label ? `${label}: поиск` : searchPlaceholder}
               className="w-full rounded-[10px] border border-[#d4d4d4] px-2 py-1.5 text-sm focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]"
             />
           </div>

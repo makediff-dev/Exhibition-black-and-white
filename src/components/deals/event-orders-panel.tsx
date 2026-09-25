@@ -2,27 +2,23 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { EventOrderStatusBadges } from "@/components/orders/event-order-status-badges";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
-import { EVENT_ORDER_PRIORITY_LABELS, EVENT_ORDER_TYPE_LABELS } from "@/constants/statuses";
+import { EVENT_ORDER_PRIORITY_LABELS } from "@/constants/statuses";
 import { SEED_EVENT_ORDERS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { EventOrder, EventOrderPriority } from "@/data/types";
-import { useAuthStore } from "@/lib/store";
+import { canReadEventOrder } from "@/lib/auth/authorization";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { getEventOrderHref } from "@/lib/utils/entity-links";
 import { formatPrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import {
-  COMMERCIAL_ORDER_KIND_LABELS,
-  getCommercialOrderKind,
-  getEventOrderStatusLabel,
   getOrderCounterparty,
   getOrderDeadlineLabel,
   getOrderNextStep,
-  getOrderTradeSide,
-  getOrderTradeSideLabel,
 } from "@/lib/utils/order-presentation";
 
 const PRIORITY_ORDER: EventOrderPriority[] = ["high", "medium", "normal"];
@@ -45,27 +41,23 @@ interface EventOrderCardProps {
 }
 
 function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps) {
-  const role = useAuthStore((state) => state.user?.role);
+  const user = useAuthStore((state) => state.user);
   const href = getOrderHref(order);
   const event = SEED_EVENTS.find((item) => item.id === order.eventId);
-  const side = getOrderTradeSide(order, role);
   const content = (
     <Card
       hoverable={Boolean(href)}
       className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
     >
-      <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-        <Badge variant="muted">{COMMERCIAL_ORDER_KIND_LABELS[getCommercialOrderKind(order.type)]}</Badge>
-        <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
-        <Badge variant="solid">{getEventOrderStatusLabel(order.status)}</Badge>
-        <Badge variant="outline">{getOrderTradeSideLabel(side)}</Badge>
+      <div className="mb-[10px]">
+        <EventOrderStatusBadges order={order} event={event} viewer={user} />
       </div>
       <CardTitle className="text-sm mb-[10px]">{order.title}</CardTitle>
       <CardDescription className="mt-0 space-y-[10px]">
         {eventTitle && <CardField label="Мероприятие">{eventTitle}</CardField>}
-        <CardField label="Контрагент">{getOrderCounterparty(order, event?.venue)}</CardField>
+        <CardField label="Контрагент">{getOrderCounterparty(order, user, event?.venue)}</CardField>
         <CardField label="Предмет">{order.title}</CardField>
-        <CardField label="Следующий шаг">{getOrderNextStep(order, role)}</CardField>
+        <CardField label="Следующий шаг">{getOrderNextStep(order, user?.role, event)}</CardField>
         {getOrderDeadlineLabel(event) && (
           <CardField label="Срок">{getOrderDeadlineLabel(event)?.replace(/^Срок:\s*/, "")}</CardField>
         )}
@@ -114,6 +106,8 @@ export function EventOrdersPanel({
   title,
   unboxed = false,
 }: Props) {
+  const user = useAuthStore((state) => state.user);
+  const deals = usePrototypeStore((state) => state.deals);
   const [priorityFilter, setPriorityFilter] =
     useState<(typeof PRIORITY_FILTERS)[number]["id"]>("all");
   const [directionFilter, setDirectionFilter] =
@@ -130,9 +124,10 @@ export function EventOrdersPanel({
           const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
           if (orderEvent?.organizerId !== organizerId) return false;
         }
-        return !venueId || order.venueId === venueId;
+        if (venueId && order.venueId !== venueId) return false;
+        return canReadEventOrder(user, order, deals, SEED_EVENTS).allowed;
       }),
-    [eventId, organizerId, venueId, currentDealId]
+    [eventId, organizerId, venueId, currentDealId, user, deals]
   );
 
   const filteredOrders = useMemo(

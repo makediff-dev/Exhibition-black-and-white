@@ -9,7 +9,6 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
-import { DEAL_STATUS_LABELS } from "@/constants/statuses";
 import type { Deal } from "@/data/types";
 import { getDealStatus } from "@/lib/state/deal-machine";
 import { useAuthStore } from "@/lib/store";
@@ -73,7 +72,7 @@ export function CustomerProjectsSection({
               <Link href={`/deals/${deal.id}`} className="flex-1 block">
                 <CardTitle>{deal.title}</CardTitle>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <Badge>{DEAL_STATUS_LABELS[deal.status]}</Badge>
+                  <Badge variant="solid">{getDealStatus(deal, user).label}</Badge>
                   <Badge variant="outline">
                     {user?.role === "contractor" ? "Вы продаёте" : "Вы покупаете"}
                   </Badge>

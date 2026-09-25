@@ -1,5 +1,6 @@
 import { getNavForRole } from "@/constants/nav-menus";
 import type { MessageThread, UserRole } from "@/data/types";
+import { getPublicEntityHref, getThreadContextRef } from "@/lib/domain/entity-ref";
 
 const ACCOUNT_ROLES: UserRole[] = ["customer", "contractor", "venue", "organizer"];
 
@@ -40,29 +41,36 @@ export function getCabinetBackHref(from: string | null, fallback: string, role?:
 }
 
 function eventIdFromThread(
-  thread: Pick<MessageThread, "relatedId" | "relatedLink">
+  thread: Pick<MessageThread, "relatedId" | "relatedLink" | "contextId">
 ) {
-  if (thread.relatedId && thread.relatedId.startsWith("evt-")) return thread.relatedId;
+  const contextId = thread.contextId || thread.relatedId;
+  if (contextId && contextId.startsWith("evt-")) return contextId;
   const match = thread.relatedLink.match(/\/events\/([^/?#]+)/);
   return match?.[1];
 }
 
 function bookingIdFromThread(
-  thread: Pick<MessageThread, "relatedId" | "relatedLink">
+  thread: Pick<MessageThread, "relatedId" | "relatedLink" | "contextId">
 ) {
-  if (thread.relatedId && thread.relatedId.startsWith("book-")) return thread.relatedId;
+  const contextId = thread.contextId || thread.relatedId;
+  if (contextId && contextId.startsWith("book-")) return contextId;
   const match = thread.relatedLink.match(/\/bookings\/([^/?#]+)/);
   const id = match?.[1];
   if (id && id !== "event") return id;
-  if (thread.relatedId) return thread.relatedId;
+  if (contextId) return contextId;
   return undefined;
 }
 
 export function resolveMessageRelatedHref(
-  thread: Pick<MessageThread, "relatedType" | "relatedId" | "relatedLink">,
+  thread: Pick<MessageThread, "relatedType" | "relatedId" | "relatedLink"> &
+    Partial<Pick<MessageThread, "contextType" | "contextId">>,
   role?: UserRole | null
 ) {
-  if (thread.relatedType === "event") {
+  const context = getThreadContextRef(thread);
+  const type = context?.type ?? thread.relatedType;
+  const id = context?.id ?? thread.relatedId;
+
+  if (type === "event") {
     const eventId = eventIdFromThread(thread);
     if (eventId && role === "organizer") {
       return `/account/organizer/edit-event?id=${encodeURIComponent(eventId)}`;
@@ -72,12 +80,14 @@ export function resolveMessageRelatedHref(
     }
   }
 
-  if (thread.relatedType === "booking" && role && ACCOUNT_ROLES.includes(role)) {
+  if (type === "booking" && role && ACCOUNT_ROLES.includes(role)) {
     const bookingId = bookingIdFromThread(thread);
     if (bookingId) {
       return `/account/${role}/bookings/${encodeURIComponent(bookingId)}`;
     }
   }
 
+  if (context) return getPublicEntityHref(context);
+  if (type && id) return thread.relatedLink;
   return thread.relatedLink;
 }

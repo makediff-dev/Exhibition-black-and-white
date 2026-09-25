@@ -22,20 +22,35 @@ assert.ok(req2);
 
 test("before response deadline a matching contractor can submit a proposal", () => {
   setPrototypeNowIso("2026-03-14");
-  const status = getRequestStatus(req2, DEMO_USERS.contractor, SEED_RESPONSES, SEED_DEALS);
-  assert.equal(getRequestLifecycleCode(req2, SEED_RESPONSES, SEED_DEALS), "collecting_proposals");
+  const matching = {
+    ...req2,
+    category: "Комплексное строительство выставочных стендов",
+  };
+  const status = getRequestStatus(matching, DEMO_USERS.contractor, SEED_RESPONSES, SEED_DEALS);
+  assert.equal(getRequestLifecycleCode(matching, SEED_RESPONSES, SEED_DEALS), "collecting_proposals");
   assert.equal(status.allowedActions.includes("submit_proposal"), true);
   assert.equal(
-    canPerformRequestAction(req2, DEMO_USERS.contractor, "submit_proposal", SEED_RESPONSES, SEED_DEALS)
+    canPerformRequestAction(matching, DEMO_USERS.contractor, "submit_proposal", SEED_RESPONSES, SEED_DEALS)
       .allowed,
     true
   );
 });
 
-test("exactly on the response deadline a proposal can still be submitted", () => {
-  setPrototypeNowIso("2026-03-15T12:00:00.000Z");
+test("design request stays visible to invited builder but submit requires specialization", () => {
+  setPrototypeNowIso("2026-03-14");
+  const status = getRequestStatus(req2, DEMO_USERS.contractor, SEED_RESPONSES, SEED_DEALS);
+  assert.equal(status.allowedActions.includes("submit_proposal"), false);
+  assert.equal(status.recoveryActions.includes("expand_specialization"), true);
+});
+
+test("exactly on the response deadline a matching proposal can still be submitted", () => {
+  setPrototypeNowIso("2026-03-15T12:00:00+03:00");
+  const matching = {
+    ...req2,
+    category: "Комплексное строительство выставочных стендов",
+  };
   assert.equal(
-    canPerformRequestAction(req2, DEMO_USERS.contractor, "submit_proposal", SEED_RESPONSES, SEED_DEALS)
+    canPerformRequestAction(matching, DEMO_USERS.contractor, "submit_proposal", SEED_RESPONSES, SEED_DEALS)
       .allowed,
     true
   );
@@ -71,7 +86,7 @@ test("past pending booking cannot be confirmed", () => {
   const rejectWithReason = canTransitionBooking(booking, DEMO_USERS.venue, "rejected", {
     rejectReason: "Период бронирования уже прошёл",
   });
-  assert.equal(rejectWithReason.allowed, true);
+  assert.equal(rejectWithReason.allowed, false);
 });
 
 test("forbidden deal transition is rejected; legal payout path stays open", () => {
@@ -82,7 +97,8 @@ test("forbidden deal transition is rejected; legal payout path stays open", () =
   assert.equal(canTransitionDeal(deal, DEMO_USERS.contractor, "stage_review").allowed, true);
 
   const customerView = getDealStatus(deal, DEMO_USERS.customer);
-  assert.equal(customerView.label, "В работе");
+  assert.equal(customerView.code, "overdue");
+  assert.equal(customerView.label, "Просрочена");
   assert.equal(customerView.allowedActions.includes("open_dispute"), true);
 });
 

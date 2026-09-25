@@ -33,15 +33,20 @@ export function findContractorForUser(user: CompanyProfile | null | undefined) {
 
 export function isDealForUser(deal: Deal, user: CompanyProfile | null | undefined): boolean {
   if (!user) return false;
-  if (user.role === "customer") return deal.customerId === user.id;
+  const viewerIds = [user.id];
   if (user.role === "contractor") {
     const contractorId = getContractorIdForUser(user);
-    return (
-      (contractorId !== null && deal.contractorId === contractorId) ||
-      deal.contractorName === user.name
-    );
+    if (contractorId) viewerIds.push(contractorId);
   }
-  return false;
+  const partyIds = [
+    deal.buyerOrgId,
+    deal.sellerOrgId,
+    deal.serviceProviderOrgId,
+    deal.customerOrgId,
+    deal.customerId,
+    deal.contractorId,
+  ];
+  return viewerIds.some((id) => partyIds.includes(id));
 }
 
 export function isResponseForUser(response: Response, user: CompanyProfile | null | undefined): boolean {

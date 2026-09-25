@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ORGANIZER_EVENT_SERVICE_AUDIENCES } from "@/constants/statuses";
-import type { OrganizerEventService, OrganizerServiceAudience } from "@/data/types";
+import type { OrganizerServiceAudience } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 
 const SERVICE_TEMPLATES: Array<{
@@ -41,7 +41,6 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [audiences, setAudiences] = useState<OrganizerServiceAudience[]>(["exhibitor"]);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const services = useMemo(
     () => organizerEventServices.filter((service) => service.eventId === eventId),
@@ -58,14 +57,12 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
     setTitle("");
     setPrice("");
     setAudiences(["exhibitor"]);
-    setEditingId(null);
   };
 
   const applyTemplate = (template: (typeof SERVICE_TEMPLATES)[number]) => {
     setTitle(template.title);
     setAudiences([...template.audiences]);
     setPrice("");
-    setEditingId(null);
   };
 
   const handleSubmit = () => {
@@ -82,33 +79,16 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
       return;
     }
 
-    if (editingId) {
-      updateOrganizerEventService(editingId, {
-        title: title.trim(),
-        price: price.trim(),
-        audiences,
-      });
-      showToast("Услуга обновлена");
-    } else {
-      addOrganizerEventService({
-        id: `osvc-${Date.now()}`,
-        eventId,
-        title: title.trim(),
-        price: price.trim(),
-        active: true,
-        audiences,
-      });
-      showToast("Услуга добавлена");
-    }
-
+    addOrganizerEventService({
+      id: `osvc-${Date.now()}`,
+      eventId,
+      title: title.trim(),
+      price: price.trim(),
+      active: true,
+      audiences,
+    });
+    showToast("Услуга добавлена");
     resetForm();
-  };
-
-  const startEdit = (service: OrganizerEventService) => {
-    setEditingId(service.id);
-    setTitle(service.title);
-    setPrice(service.price);
-    setAudiences(service.audiences);
   };
 
   return (
@@ -123,30 +103,26 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
 
       <Card className="space-y-4">
         <div>
-          <CardTitle className="text-base mb-1">
-            {editingId ? "Редактировать услугу" : "Добавить услугу"}
-          </CardTitle>
+          <CardTitle className="text-base mb-1">Добавить услугу</CardTitle>
           <CardDescription>Укажите название, цену и категорию покупателей</CardDescription>
         </div>
 
-        {!editingId && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-600">Быстрые шаблоны</p>
-            <div className="flex flex-wrap gap-2">
-              {SERVICE_TEMPLATES.map((template) => (
-                <Button
-                  key={template.title}
-                  size="sm"
-                  variant="outline"
-                  type="button"
-                  onClick={() => applyTemplate(template)}
-                >
-                  {template.title}
-                </Button>
-              ))}
-            </div>
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-600">Быстрые шаблоны</p>
+          <div className="flex flex-wrap gap-2">
+            {SERVICE_TEMPLATES.map((template) => (
+              <Button
+                key={template.title}
+                size="sm"
+                variant="outline"
+                type="button"
+                onClick={() => applyTemplate(template)}
+              >
+                {template.title}
+              </Button>
+            ))}
           </div>
-        )}
+        </div>
 
         <Input
           label="Услуга"
@@ -181,12 +157,7 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handleSubmit}>{editingId ? "Сохранить" : "Добавить услугу"}</Button>
-          {editingId && (
-            <Button variant="outline" onClick={resetForm}>
-              Отмена
-            </Button>
-          )}
+          <Button onClick={handleSubmit}>Добавить услугу</Button>
         </div>
       </Card>
 
@@ -224,27 +195,24 @@ export function OrganizerEventServicesPanel({ eventId, showToast }: Props) {
                 <div className="flex flex-wrap gap-2 shrink-0">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="px-2 text-gray-900"
                     onClick={() =>
                       updateOrganizerEventService(service.id, { active: !service.active })
                     }
                   >
                     {service.active ? "Скрыть" : "Активировать"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => startEdit(service)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Изменить
-                  </Button>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="px-2 text-gray-900"
                     onClick={() => {
                       removeOrganizerEventService(service.id);
-                      if (editingId === service.id) resetForm();
                       showToast("Услуга удалена", "info");
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5 text-red-600" />
                     Удалить
                   </Button>
                 </div>

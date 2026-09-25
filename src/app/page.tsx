@@ -46,14 +46,6 @@ export default function HomePage() {
             linkLabel="Все заказы"
           />
           <HomeRecommendedServicesSection />
-          <HomeCategoryOrdersSection
-            categoryIndex={0}
-            linkHref="/services"
-            linkLabel="Все услуги"
-            idSuffix="-repeat"
-            buttonVariant="primary"
-            buttonLabel="Подробнее"
-          />
           <HomeRecommendedContractorsSection />
           <HomeContractorsCategorySection
             title="Комплексное строительство выставочных стендов"

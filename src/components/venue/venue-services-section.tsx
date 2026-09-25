@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { VENUE_SERVICE_AUDIENCES } from "@/constants/statuses";
-import type { VenueService, VenueServiceAudience } from "@/data/types";
+import type { VenueServiceAudience } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 
 interface Props {
@@ -28,7 +28,6 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [audiences, setAudiences] = useState<VenueServiceAudience[]>([...ALL_AUDIENCES]);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const services = useMemo(
     () => venueServices.filter((service) => service.venueId === venueId),
@@ -45,7 +44,6 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
     setTitle("");
     setPrice("");
     setAudiences([...ALL_AUDIENCES]);
-    setEditingId(null);
   };
 
   const handleSubmit = () => {
@@ -62,42 +60,23 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
       return;
     }
 
-    if (editingId) {
-      updateVenueService(editingId, {
-        title: title.trim(),
-        price: price.trim(),
-        audiences,
-      });
-      showToast("Услуга обновлена");
-    } else {
-      addVenueService({
-        id: `vs-${Date.now()}`,
-        venueId,
-        title: title.trim(),
-        price: price.trim(),
-        active: true,
-        audiences,
-      });
-      showToast("Услуга добавлена");
-    }
-
+    addVenueService({
+      id: `vs-${Date.now()}`,
+      venueId,
+      title: title.trim(),
+      price: price.trim(),
+      active: true,
+      audiences,
+    });
+    showToast("Услуга добавлена");
     resetForm();
-  };
-
-  const startEdit = (service: VenueService) => {
-    setEditingId(service.id);
-    setTitle(service.title);
-    setPrice(service.price);
-    setAudiences(service.audiences);
   };
 
   return (
     <div className="space-y-6 max-w-3xl">
       <Card className="space-y-4">
         <div>
-          <CardTitle className="text-base mb-1">
-            {editingId ? "Редактировать услугу" : "Конструктор услуги"}
-          </CardTitle>
+          <CardTitle className="text-base mb-1">Конструктор услуги</CardTitle>
           <CardDescription>
             Укажите название, цену и выберите, для каких категорий участников услуга доступна
           </CardDescription>
@@ -140,12 +119,7 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handleSubmit}>{editingId ? "Сохранить" : "Добавить"}</Button>
-          {editingId && (
-            <Button variant="outline" onClick={resetForm}>
-              Отмена
-            </Button>
-          )}
+          <Button onClick={handleSubmit}>Добавить</Button>
         </div>
       </Card>
 
@@ -181,27 +155,24 @@ export function VenueServicesSection({ venueId = "venue-1", showToast }: Props) 
                 <div className="flex flex-wrap gap-2 shrink-0">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="px-2 text-gray-900"
                     onClick={() =>
                       updateVenueService(service.id, { active: !service.active })
                     }
                   >
                     {service.active ? "Скрыть" : "Активировать"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => startEdit(service)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                    Изменить
-                  </Button>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="px-2 text-gray-900"
                     onClick={() => {
                       removeVenueService(service.id);
-                      if (editingId === service.id) resetForm();
                       showToast("Услуга удалена", "info");
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5 text-red-600" />
                     Удалить
                   </Button>
                 </div>

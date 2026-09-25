@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Paperclip, Send } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
 import { useAccountTheme } from "@/components/account/account-theme-provider";
@@ -8,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
 import type { MessageThread } from "@/data/types";
+import { getContextBackLabel, getThreadContextRef } from "@/lib/domain/entity-ref";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { formatDate } from "@/lib/utils/formatters";
+import { resolveMessageRelatedHref, withFromMessages } from "@/lib/utils/message-related-links";
 import { cn } from "@/lib/utils/cn";
 
 interface MessageThreadPanelProps {
@@ -31,7 +35,13 @@ export function MessageThreadPanel({
   onSend,
 }: MessageThreadPanelProps) {
   const accountTheme = useAccountTheme();
+  const { accountRole } = useCabinetSession();
   const messagesRef = useRef<HTMLDivElement>(null);
+  const context = getThreadContextRef(thread);
+  const contextHref =
+    context && context.type !== "support"
+      ? withFromMessages(resolveMessageRelatedHref(thread, accountRole))
+      : null;
 
   useLayoutEffect(() => {
     const node = messagesRef.current;
@@ -41,6 +51,14 @@ export function MessageThreadPanel({
 
   return (
     <div className={cn(styles.threadPanel, !accountTheme && "rounded-[14px]")}>
+      <div className={styles.threadContext}>
+        <p className={styles.threadContextTitle}>{thread.title}</p>
+        {contextHref ? (
+          <Link href={contextHref} className={styles.messageCardLink}>
+            {getContextBackLabel(context?.type ?? thread.relatedType)}
+          </Link>
+        ) : null}
+      </div>
       <div ref={messagesRef} className={styles.threadMessages}>
         {thread.messages.map((msg) => {
           const isOwn = msg.sender === senderName;

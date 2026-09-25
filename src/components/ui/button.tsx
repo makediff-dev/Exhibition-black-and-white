@@ -35,10 +35,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ? accountTheme.buttonVariant
           : variant;
 
-    const outlineClass = catalogAccent
-      ? "bg-white text-[var(--catalog-accent)] hover:bg-[var(--catalog-accent-soft)] border border-[var(--catalog-accent)]"
-      : accountTheme
-        ? "bg-white text-[var(--account-accent)] hover:bg-[var(--account-accent-soft)] border border-[var(--account-accent)]"
+    const outlineClass =
+      catalogAccent || accountTheme
+        ? "bg-white !text-[#171717] hover:bg-gray-50 border border-[#d4d4d4] hover:border-[#171717]"
         : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900";
 
     const variants: Record<ButtonVariant, string> = {
@@ -64,7 +63,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
           variants[resolvedVariant],
           sizes[size],
           className,

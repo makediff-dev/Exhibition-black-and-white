@@ -5,8 +5,8 @@ import type { AccountRole } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
 import { X } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
-import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
+import { useId, useRef, type ReactNode } from "react";
+import { useFocusTrap, useInertSiblings } from "@/lib/hooks/use-focus-trap";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
 import styles from "./modal.module.css";
@@ -24,16 +24,11 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, footer, wide, accent = "role" }: ModalProps) {
   const role = useAuthStore((state) => state.user?.role) as AccountRole | undefined;
   const useTealAccent = accent === "teal";
+  const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   useFocusTrap(open, panelRef, onClose);
-
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  useInertSiblings(open, rootRef);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -41,7 +36,7 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
   const panel = (
     <div className={styles.panel} ref={panelRef}>
       <div className={styles.header}>
-        <h2 id="modal-title" className={styles.title}>
+        <h2 id={titleId} className={styles.title}>
           {title}
         </h2>
         <button
@@ -62,10 +57,11 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
 
   return createPortal(
     <div
+      ref={rootRef}
       className={cn(styles.overlay, useTealAccent && "register-accent")}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       {role && !useTealAccent ? (

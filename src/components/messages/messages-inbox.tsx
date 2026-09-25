@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { MessageThreadPanel } from "@/components/messages/message-thread-panel";
 import styles from "@/components/messages/messages.module.css";
@@ -9,8 +10,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
+import { getPublicVenueByCatalogId, getPublicVenueById } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import type { Deal, MessageCategory, MessageThread, Request } from "@/data/types";
+import type { Deal, MessageCategory, MessageThread, Request, UserRole } from "@/data/types";
+import { canContactVenue } from "@/lib/auth/authorization";
+import { loginHref } from "@/lib/auth/session";
+import {
+  buildContextThread,
+  buildMessagesContextHref,
+  findThreadByContext,
+  getContextBackLabel,
+  getContextTypeLabel,
+  getThreadContextRef,
+  parseContextSearchParams,
+} from "@/lib/domain/entity-ref";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
@@ -20,14 +33,6 @@ import {
 } from "@/lib/utils/message-related-links";
 import { getThreadInboxCategory, isThreadForUser } from "@/lib/utils/cabinet-scope";
 import { cn } from "@/lib/utils/cn";
-
-const RELATED_TYPE_LABELS: Record<string, string> = {
-  deal: "Сделка",
-  request: "Заявка",
-  support: "Поддержка",
-  booking: "Бронирование",
-  event: "Мероприятие",
-};
 
 const MESSAGE_TABS: { id: MessageCategory | "all"; label: string }[] = [
   { id: "all", label: "Все" },
@@ -54,8 +59,12 @@ function getThreadDetails(
   deals: Deal[],
   requests: Request[]
 ) {
-  if (thread.relatedType === "deal") {
-    const deal = deals.find((item) => item.id === thread.relatedId);
+  const context = getThreadContextRef(thread);
+  const relatedType = context?.type ?? thread.relatedType;
+  const relatedId = context?.id ?? thread.relatedId;
+
+  if (relatedType === "deal") {
+    const deal = deals.find((item) => item.id === relatedId);
     if (!deal) return null;
 
     const request = deal.requestId ? requests.find((item) => item.id === deal.requestId) : undefined;
@@ -71,8 +80,8 @@ function getThreadDetails(
     };
   }
 
-  if (thread.relatedType === "request") {
-    const request = requests.find((item) => item.id === thread.relatedId);
+  if (relatedType === "request") {
+    const request = requests.find((item) => item.id === relatedId);
     if (!request) return null;
 
     const event = request.eventId
@@ -87,8 +96,8 @@ function getThreadDetails(
     };
   }
 
-  if (thread.relatedType === "event") {
-    const event = SEED_EVENTS.find((item) => item.id === thread.relatedId);
+  if (relatedType === "event") {
+    const event = SEED_EVENTS.find((item) => item.id === relatedId);
     return {
       customer: "—",
       event: event?.title ?? thread.title,
@@ -97,7 +106,7 @@ function getThreadDetails(
     };
   }
 
-  if (thread.relatedType === "booking") {
+  if (relatedType === "booking") {
     const event = SEED_EVENTS.find((item) => item.id === "evt-1");
     return {
       customer: "—",
@@ -107,15 +116,21 @@ function getThreadDetails(
     };
   }
 
+  if (relatedType === "venue") {
+    const venue = getPublicVenueById(relatedId) ?? getPublicVenueByCatalogId(relatedId);
+    return {
+      customer: "—",
+      event: "—",
+      venue: venue?.name ?? thread.title,
+      cost: "—",
+    };
+  }
+
   return null;
 }
 
 function getRelatedLinkLabel(thread: MessageThread) {
-  if (thread.relatedType === "deal") return "Открыть сделку →";
-  if (thread.relatedType === "request") return "Открыть заявку →";
-  if (thread.relatedType === "booking") return "Открыть бронирование →";
-  if (thread.relatedType === "event") return "Открыть мероприятие →";
-  return "Открыть →";
+  return getContextBackLabel(getThreadContextRef(thread)?.type ?? thread.relatedType);
 }
 
 function useFillToViewportBottom<T extends HTMLElement>() {
@@ -162,12 +177,66 @@ interface MessagesInboxProps {
 
 export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
   const pageRef = useFillToViewportBottom<HTMLDivElement>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { accountRole } = useCabinetSession();
   const user = useAuthStore((state) => state.user);
-  const { messages, deals, requests, addMessage } = usePrototypeStore();
+  const { messages, deals, requests, addMessage, addThread } = usePrototypeStore();
   const [activeCategory, setActiveCategory] = useState<MessageCategory | "all">("all");
   const [text, setText] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [contextError, setContextError] = useState<string | null>(null);
+  const contextRef = useMemo(() => parseContextSearchParams(searchParams), [searchParams]);
+
+  useEffect(() => {
+    if (!contextRef || selectedThreadId) return;
+
+    const existing = findThreadByContext(messages, contextRef);
+    if (existing) {
+      router.replace(`/messages/${existing.id}`);
+      return;
+    }
+
+    if (!user?.role) {
+      router.replace(loginHref(buildMessagesContextHref(contextRef)));
+      return;
+    }
+
+    if (contextRef.type === "venue") {
+      const contact = canContactVenue(user, contextRef.id);
+      if (!contact.allowed) {
+        setContextError(contact.reason);
+        return;
+      }
+      const venue = getPublicVenueById(contextRef.id) ?? getPublicVenueByCatalogId(contextRef.id);
+      const roles = [user.role, "venue"].filter(
+        (role, index, list) => role && list.indexOf(role) === index
+      ) as Exclude<UserRole, null>[];
+      const thread = buildContextThread({
+        ref: contextRef,
+        title: venue?.name ?? "Площадка",
+        category: "venue",
+        participantRoles: roles,
+        lastMessage: "Диалог с площадкой",
+      });
+      addThread(thread);
+      router.replace(`/messages/${thread.id}`);
+      return;
+    }
+
+    if (contextRef.type === "deal") {
+      const deal = deals.find((item) => item.id === contextRef.id);
+      const thread = buildContextThread({
+        ref: contextRef,
+        title: deal ? `Сделка ${deal.number}` : "Сделка",
+        category: "customer",
+        participantRoles: ["customer", "contractor"],
+        lastMessage: "Диалог по сделке",
+      });
+      addThread(thread);
+      router.replace(`/messages/${thread.id}`);
+    }
+  }, [addThread, contextRef, deals, messages, router, selectedThreadId, user]);
 
   const sortedThreads = useMemo(
     () => [...messages].sort((a, b) => b.lastDate.localeCompare(a.lastDate)),
@@ -224,6 +293,9 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
   return (
     <div ref={pageRef} className={styles.page}>
       <h1 className="text-xl font-bold text-gray-900 mb-4">Сообщения</h1>
+      {contextError ? (
+        <p className="mb-4 text-sm text-gray-600">{contextError}</p>
+      ) : null}
       <Tabs
         tabs={visibleTabs}
         activeTab={activeCategory}
@@ -257,7 +329,7 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
                     <Link href={`/messages/${thread.id}`} className={styles.threadCardBody}>
                       <div className={styles.threadCardMeta}>
                         <Badge variant="muted">
-                          {RELATED_TYPE_LABELS[thread.relatedType] || thread.relatedType}
+                          {getContextTypeLabel(getThreadContextRef(thread)?.type ?? thread.relatedType)}
                         </Badge>
                         {thread.unread > 0 ? (
                           <Badge variant="solid">{thread.unread} новых</Badge>
@@ -276,7 +348,7 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
                         </p>
                       ) : null}
                     </Link>
-                    {thread.relatedLink && thread.relatedType !== "support" ? (
+                    {thread.relatedLink && (getThreadContextRef(thread)?.type ?? thread.relatedType) !== "support" ? (
                       <Link
                         href={withFromMessages(resolveMessageRelatedHref(thread, accountRole))}
                         className={styles.messageCardLink}

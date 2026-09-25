@@ -7,6 +7,7 @@ import {
   STAND_DESCRIPTION_SECTIONS,
   type RequestDescriptionSectionTemplate,
 } from "./request-description-sections.ts";
+import { collectCategoryDateIssues } from "../lib/domain/form-validation.ts";
 import type { Request, TorSection } from "../data/types/index.ts";
 
 export type RequestSchemaKind = "stand" | "rental" | "logistics" | "service";
@@ -102,6 +103,7 @@ export function createRequestSections(category: string): TorSection[] {
 
 export interface RequestWizardIssue {
   step: number;
+  field?: string;
   message: string;
 }
 
@@ -147,23 +149,27 @@ export function collectRequestWizardIssues(
   const schema = getRequestSchema(data.category);
 
   if (!data.format) {
-    issues.push({ step: 0, message: "Выберите формат заявки" });
+    issues.push({ step: 0, field: "format", message: "Выберите формат заявки" });
   } else if (data.format === "closed_request" && data.invitedContractorIds.length === 0) {
-    issues.push({ step: 0, message: "Для закрытой заявки пригласите хотя бы одного исполнителя" });
+    issues.push({
+      step: 0,
+      field: "invited",
+      message: "Для закрытой заявки пригласите хотя бы одного исполнителя",
+    });
   }
 
   if (!data.category) {
-    issues.push({ step: 1, message: "Выберите категорию услуги" });
+    issues.push({ step: 1, field: "category", message: "Выберите категорию услуги" });
   }
 
   if (!data.title.trim()) {
-    issues.push({ step: 3, message: "Укажите название заявки" });
+    issues.push({ step: 3, field: "title", message: "Укажите название заявки" });
   }
   if (!data.description.trim()) {
-    issues.push({ step: 3, message: "Добавьте краткое описание" });
+    issues.push({ step: 3, field: "description", message: "Добавьте краткое описание" });
   }
   if (!data.expectedResult.trim()) {
-    issues.push({ step: 3, message: "Опишите ожидаемый результат" });
+    issues.push({ step: 3, field: "expectedResult", message: "Опишите ожидаемый результат" });
   }
   if (data.descriptionMode === "freeform") {
     if (!data.freeformDescription.trim()) {
@@ -182,25 +188,38 @@ export function collectRequestWizardIssues(
   }
 
   if (!data.executionStart || !data.executionEnd) {
-    issues.push({ step: 4, message: "Выберите диапазон выполнения" });
+    issues.push({ step: 4, field: "executionStart", message: "Выберите диапазон выполнения" });
   } else {
     if (data.executionStart < today) {
-      issues.push({ step: 4, message: "Дата начала не может быть в прошлом" });
+      issues.push({ step: 4, field: "executionStart", message: "Дата начала не может быть в прошлом" });
     }
     if (data.executionEnd < data.executionStart) {
-      issues.push({ step: 4, message: "Дата окончания не может быть раньше начала" });
+      issues.push({
+        step: 4,
+        field: "executionEnd",
+        message: "Дата окончания не может быть раньше начала",
+      });
+    }
+    if (data.descriptionMode === "structured") {
+      issues.push(
+        ...collectCategoryDateIssues(data.torSections, data.executionStart, data.executionEnd, 3)
+      );
     }
   }
 
   if (!data.budget.type) {
-    issues.push({ step: 5, message: "Выберите тип бюджета" });
+    issues.push({ step: 5, field: "budget", message: "Выберите тип бюджета" });
   } else if (!isBudgetValueValid(data.budget)) {
     if (data.budget.type === "range") {
-      issues.push({ step: 5, message: "Укажите диапазон бюджета: «от» больше 0 и не больше «до»" });
+      issues.push({
+        step: 5,
+        field: "budget",
+        message: "Укажите диапазон бюджета: «от» больше 0 и не больше «до»",
+      });
     } else if (data.budget.type === "fixed") {
-      issues.push({ step: 5, message: "Укажите фиксированную сумму больше 0" });
+      issues.push({ step: 5, field: "budget", message: "Укажите фиксированную сумму больше 0" });
     } else {
-      issues.push({ step: 5, message: "Проверьте значения бюджета" });
+      issues.push({ step: 5, field: "budget", message: "Проверьте значения бюджета" });
     }
   }
 

@@ -8,6 +8,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { getNavForRole, isNavItemActive, resolveActiveNavSlug } from "@/constants/nav-menus";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { PublicHeader } from "./public-header";
+import { currentReturnPath, loginHref } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
@@ -103,8 +104,13 @@ export function AppShell({
   }, [resolvedActiveNavSlug, pathname, sidebarOpen, nav.length]);
 
   const handleLogout = () => {
+    const dest = currentReturnPath(
+      typeof window !== "undefined" ? window.location.pathname : pathname,
+      typeof window !== "undefined" ? window.location.search : searchParams.toString(),
+      typeof window !== "undefined" ? window.location.hash : "",
+    );
     logout();
-    router.replace("/login");
+    router.replace(loginHref(dest));
   };
 
   const renderNavLink = (item: (typeof nav)[number], onNavigate?: () => void) => {

@@ -164,9 +164,11 @@ export function VenueBookingsSection({
 
   const handleReject = (booking: Booking) => {
     const lifecycle = getBookingStatus(booking, user);
-    const reason =
-      lifecycle.code === "expired" ? "Период бронирования уже прошёл" : "Отклонено площадкой";
-    updateBooking(booking.id, { status: "rejected", rejectReason: reason });
+    if (!lifecycle.allowedActions.includes("reject_booking")) {
+      showToast(lifecycle.blockedReason ?? "Отклонить нельзя", "error");
+      return;
+    }
+    updateBooking(booking.id, { status: "rejected", rejectReason: "Отклонено площадкой" });
     showToast("Бронирование отклонено", "success");
   };
 

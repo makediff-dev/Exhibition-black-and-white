@@ -1,8 +1,18 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { Children, cloneElement, isValidElement, useCallback, useMemo, useRef } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils/cn";
+import { useFitCardCount } from "@/hooks/use-fit-card-count";
 import { useShowMore } from "@/hooks/use-show-more";
 import { HomeSectionLink } from "./home-section-link";
 import { HomeShowMoreActions } from "./home-show-more-button";
@@ -13,13 +23,11 @@ interface HomeScrollSectionProps {
   title?: string;
   linkHref?: string;
   linkLabel?: string;
-  children: React.ReactNode;
-  initialVisibleCount?: number;
-  incrementCount?: number;
-  showAllCount?: number;
+  children: ReactNode;
   showFilters?: boolean;
   showActions?: boolean;
   denseGrid?: boolean;
+  minCardWidth?: number;
   variant?: "grid" | "slider";
 }
 
@@ -28,32 +36,31 @@ export function HomeScrollSection({
   linkHref,
   linkLabel = "Все",
   children,
-  initialVisibleCount = 6,
-  incrementCount = 6,
-  showAllCount,
   showFilters = true,
   showActions = true,
   denseGrid = false,
+  minCardWidth,
   variant = "grid",
 }: HomeScrollSectionProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const baseChildren = useMemo(() => Children.toArray(children), [children]);
   const isSlider = variant === "slider";
+  const cardMinWidth = minCardWidth ?? (denseGrid ? 190 : 220);
+  const fitCount = useFitCardCount(isSlider ? trackRef : gridRef, {
+    minCardWidth: cardMinWidth,
+    fallback: denseGrid ? 6 : 5,
+  });
 
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(baseChildren, {
-    initialCount: initialVisibleCount,
-    step: incrementCount,
-    showAllCount,
+    initialCount: fitCount,
+    step: fitCount,
   });
 
   const visibleChildren = useMemo(() => {
-    if (isSlider) {
-      return baseChildren;
-    }
-
-    const items = showActions
-      ? visibleItems
-      : baseChildren.map((item, index) => ({ item, key: `static-${index}`, index }));
+    const items = isSlider
+      ? baseChildren.map((item, index) => ({ item, key: `slider-${index}` }))
+      : visibleItems;
 
     return items.map(({ item, key }) => {
       if (isValidElement(item)) {
@@ -62,7 +69,12 @@ export function HomeScrollSection({
 
       return item;
     });
-  }, [baseChildren, isSlider, showActions, visibleItems]);
+  }, [baseChildren, isSlider, visibleItems]);
+
+  const rowStyle = {
+    "--cards-per-row": fitCount,
+    "--scroll-visible-cards": fitCount,
+  } as CSSProperties;
 
   const scrollNext = useCallback(() => {
     const track = trackRef.current;
@@ -85,7 +97,7 @@ export function HomeScrollSection({
           ) : null}
           {showFilters ? <HomeCardsFilters /> : null}
           {isSlider ? (
-            <div className={styles.scrollRow}>
+            <div className={styles.scrollRow} style={rowStyle}>
               <div ref={trackRef} className={styles.scrollTrack}>
                 {visibleChildren}
               </div>
@@ -99,11 +111,15 @@ export function HomeScrollSection({
               </button>
             </div>
           ) : (
-            <div className={cn(styles.cardsGrid, denseGrid && styles.cardsGridDense)}>
+            <div
+              ref={gridRef}
+              className={cn(styles.cardsGrid, denseGrid && styles.cardsGridDense)}
+              style={rowStyle}
+            >
               {visibleChildren}
             </div>
           )}
-          {!isSlider && showActions && (canShowMore || linkHref) ? (
+          {!isSlider && showActions ? (
             <HomeShowMoreActions
               onShowMore={showMore}
               canShowMore={canShowMore && !isAllVisible}

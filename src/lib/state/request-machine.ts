@@ -1,5 +1,6 @@
 import type { CompanyProfile, Deal, Request, Response } from "../../data/types/index.ts";
 import { ROLE_LABELS } from "../../constants/statuses.ts";
+import { contractorMatchesRequestCategory } from "../auth/contractor-fit.ts";
 import { isDeadlineReached } from "./clock.ts";
 import type { ActionCode, ActionableStatus, TransitionResult } from "./types.ts";
 
@@ -94,7 +95,13 @@ export function getRequestStatus(
       explanation = "Идёт сбор откликов.";
       nextActor = "contractor";
       if (isOwner) allowedActions.push("view_responses", "compare", "cancel");
-      if (isContractor && !alreadyResponded) allowedActions.push("submit_proposal");
+      if (isContractor && !alreadyResponded && contractorMatchesRequestCategory(request, user)) {
+        allowedActions.push("submit_proposal");
+      } else if (isContractor && !alreadyResponded) {
+        recoveryActions.push("expand_specialization");
+        blockedReason =
+          "Категория заявки не входит в подтверждённую специализацию. Сначала добавьте категорию в профиле.";
+      }
       if (isContractor && alreadyResponded) {
         blockedReason = "Вы уже отправили отклик по этой заявке.";
       }

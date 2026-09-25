@@ -921,9 +921,10 @@ function RegisterPageContent() {
               <p className="text-sm font-medium mb-2">Города проведения</p>
               {errors.cities && <p className="text-xs text-gray-700 mb-1">{errors.cities}</p>}
               <Input
+                label="Поиск города"
                 value={citySearch}
                 onChange={(e) => setCitySearch(e.target.value)}
-                placeholder="Поиск города"
+                placeholder="Начните вводить название"
                 className="mb-3"
               />
               <div className="flex flex-wrap gap-2 mb-3">

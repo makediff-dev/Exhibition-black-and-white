@@ -14,7 +14,8 @@ import {
   SEED_HALLS,
 } from "@/data/mocks/seed";
 import type { Booking } from "@/data/types";
-import { usePrototypeStore } from "@/lib/store";
+import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getBookingLifecycleCode, getBookingStatus } from "@/lib/state/booking-machine";
 import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 
 const PERIOD_LABELS: Record<NonNullable<Booking["periodType"]>, string> = {
@@ -23,18 +24,13 @@ const PERIOD_LABELS: Record<NonNullable<Booking["periodType"]>, string> = {
   teardown: "Демонтаж",
 };
 
-const STATUS_LABELS: Record<Booking["status"], string> = {
-  pending: "Ожидает подтверждения",
-  confirmed: "Подтверждено",
-  rejected: "Отклонено",
-};
-
 interface Props {
   eventId: string;
 }
 
 export function OrganizerEventBookingsPanel({ eventId }: Props) {
   const bookings = usePrototypeStore((state) => state.bookings);
+  const user = useAuthStore((state) => state.user);
 
   const event = SEED_EVENTS.find((item) => item.id === eventId);
   const eventBookings = useMemo(
@@ -90,7 +86,9 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
     };
   }, [plots]);
 
-  const pendingCount = eventBookings.filter((booking) => booking.status === "pending").length;
+  const pendingCount = eventBookings.filter(
+    (booking) => getBookingLifecycleCode(booking) === "pending"
+  ).length;
 
   if (!event) {
     return null;
@@ -124,7 +122,7 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
                   {booking.periodType && (
                     <Badge variant="muted">{PERIOD_LABELS[booking.periodType]}</Badge>
                   )}
-                  <Badge variant="solid">{STATUS_LABELS[booking.status]}</Badge>
+                  <Badge variant="solid">{getBookingStatus(booking, user).label}</Badge>
                 </div>
 
                 <CardTitle className="text-base mb-2">
@@ -149,7 +147,7 @@ export function OrganizerEventBookingsPanel({ eventId }: Props) {
                   )}
                 </CardDescription>
 
-                {booking.status === "pending" && (
+                {getBookingLifecycleCode(booking) === "pending" && (
                   <p className="text-xs text-gray-900 font-medium mt-3 border-t border-gray-200 pt-3">
                     Новое бронирование — ожидает ответа площадки
                   </p>

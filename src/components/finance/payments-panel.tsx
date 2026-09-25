@@ -16,8 +16,14 @@ import { isDealForUser } from "@/lib/utils/user-entity-map";
 import { isPaymentForUser } from "@/lib/utils/cabinet-scope";
 import { DisputesTab } from "@/components/finance/disputes-tab";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { getPaymentStatus, isOpenInvoice } from "@/lib/state/payment-machine";
 import {
-  PAYMENT_STATUS_LABELS,
+  getEscrowLinkNote,
+  getFinanceBasisLabel,
+  getFinanceBreakdown,
+  isFinanceEscrow,
+} from "@/lib/domain/finance";
+import {
   getLedgerPairNote,
   getPaymentOperationLabel,
   getPaymentTradeSideLabel,
@@ -27,7 +33,7 @@ import {
   paymentMatchesRoleLedger,
 } from "@/lib/utils/payment-presentation";
 
-const PENDING_PAYMENT_ORDER = ["pay-4", "pay-8", "pay-9"];
+const PENDING_PAYMENT_ORDER = ["pay-4", "pay-8"];
 
 function mergePayments(storedPayments: Payment[]): Payment[] {
   const ids = new Set(storedPayments.map((payment) => payment.id));
@@ -74,13 +80,13 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
     const filtered = scopedPayments.filter((p) => {
       switch (activeTab) {
         case "payable":
-          return p.status === "pending" && isViewerPayer(p, user);
+          return isOpenInvoice(p) && isViewerPayer(p, user);
         case "receivable":
-          return p.status === "pending" && isViewerPayee(p, user);
+          return isOpenInvoice(p) && isViewerPayee(p, user);
         case "history":
           return p.status === "paid";
         case "safe":
-          return p.type === "Резерв" || p.status === "reserved" || p.description.includes("Безопасная");
+          return isFinanceEscrow(p);
         case "payouts":
           return p.type === "Выплата";
         case "refunds":
@@ -105,18 +111,14 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
   const breakdown = useMemo(() => {
     const myDeals = deals.filter((deal) => isDealForUser(deal, user));
     const orderAmount = myDeals.reduce((sum, d) => sum + d.totalPrice, 0);
-    const reserve = scopedPayments
-      .filter((p) => p.status === "reserved")
-      .reduce((sum, p) => sum + p.amount, 0);
-    const paid = scopedPayments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + p.amount, 0);
-    const refunded = scopedPayments
-      .filter((p) => p.status === "refunded")
-      .reduce((sum, p) => sum + p.amount, 0);
-    const available = reserve - paid;
-
-    return { orderAmount, reserve, paid, available: Math.max(0, available), refunded };
+    const finance = getFinanceBreakdown(scopedPayments);
+    return {
+      orderAmount,
+      reserve: finance.reserve,
+      paid: finance.payouts,
+      available: finance.available,
+      refunded: finance.refunded,
+    };
   }, [deals, scopedPayments, user]);
 
   return (
@@ -179,10 +181,10 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
             return (
               <Card key={payment.id} className="flex flex-col h-full">
                 <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
-                  <Badge variant={payment.status === "pending" ? "solid" : "muted"}>
-                    {PAYMENT_STATUS_LABELS[payment.status]}
+                  <Badge variant={isOpenInvoice(payment) ? "solid" : "muted"}>
+                    {getPaymentStatus(payment, user).label}
                   </Badge>
                 </div>
                 <p className="text-lg font-semibold mb-[10px]">{formatPrice(payment.amount)}</p>
@@ -190,13 +192,21 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
                   <CardField label="Счёт">
                     {payment.number ?? "будет присвоен после выставления"}
                   </CardField>
+                  <CardField label="Валюта">{payment.currency ?? "RUB"}</CardField>
                   <CardField label="Описание">{payment.description}</CardField>
                   <CardField label="Плательщик">{payment.payerName ?? "не указан"}</CardField>
                   <CardField label="Получатель">{payment.payeeName ?? "не указан"}</CardField>
+                  {getFinanceBasisLabel(payment) && (
+                    <CardField label="Основание">{getFinanceBasisLabel(payment)}</CardField>
+                  )}
+                  {payment.dueAt && <CardField label="Срок оплаты">{formatDate(payment.dueAt)}</CardField>}
+                  {getEscrowLinkNote(payment, scopedPayments) && (
+                    <CardField label="Резерв">{getEscrowLinkNote(payment, scopedPayments)}</CardField>
+                  )}
                   {getLedgerPairNote(payment) && (
                     <CardField label="Проводка">{getLedgerPairNote(payment)}</CardField>
                   )}
-                  <CardField label="Дата">{formatDate(payment.date)}</CardField>
+                  <CardField label="Дата">{formatDate(payment.issuedAt ?? payment.date)}</CardField>
                   {payment.orderId && !deal && (
                     <CardField label="Заказ">
                       <Link href={`/orders/${payment.orderId}`} className="underline hover:text-gray-700">

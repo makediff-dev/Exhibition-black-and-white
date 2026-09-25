@@ -16,8 +16,9 @@ import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
+import { canPayInvoice, getPaymentStatus, isOpenInvoice } from "@/lib/state/payment-machine";
+import { getEscrowLinkNote, getFinanceBasisLabel, isFinanceEscrow } from "@/lib/domain/finance";
 import {
-  PAYMENT_STATUS_LABELS,
   getLedgerPairNote,
   getPaymentOperationLabel,
   getPaymentTradeSideLabel,
@@ -111,13 +112,13 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
         const matchesTab = (() => {
           switch (activeTab) {
             case "payable":
-              return status === "pending" && isViewerPayer(payment, user);
+              return isOpenInvoice({ ...payment, status }) && isViewerPayer(payment, user);
             case "receivable":
-              return status === "pending" && isViewerPayee(payment, user);
+              return isOpenInvoice({ ...payment, status }) && isViewerPayee(payment, user);
             case "history":
               return status === "paid";
             case "safe":
-              return payment.type === "Резерв" || payment.description.includes("Безопасная");
+              return isFinanceEscrow(payment);
             case "payouts":
               return payment.type === "Выплата";
             case "refunds":
@@ -144,13 +145,13 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
     const pendingIncoming = organizerPayments.filter(
       (payment) =>
         payment.type.includes("Счёт") &&
-        getStatus(payment) === "pending" &&
+        isOpenInvoice({ ...payment, status: getStatus(payment) }) &&
         (payment.direction ?? "incoming") === "incoming"
     );
     const pendingOutgoing = organizerPayments.filter(
       (payment) =>
         payment.type.includes("Счёт") &&
-        getStatus(payment) === "pending" &&
+        isOpenInvoice({ ...payment, status: getStatus(payment) }) &&
         payment.direction === "outgoing"
     );
     const paid = organizerPayments.filter((payment) => getStatus(payment) === "paid");
@@ -278,10 +279,10 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
             return (
               <Card key={payment.id} className="cabinet-card h-full flex flex-col">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="muted">{getPaymentOperationLabel(payment.type)}</Badge>
+                  <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
-                  <Badge variant={status === "pending" ? "solid" : "muted"}>
-                    {PAYMENT_STATUS_LABELS[status]}
+                  <Badge variant={isOpenInvoice({ ...payment, status }) ? "solid" : "muted"}>
+                    {getPaymentStatus({ ...payment, status }, user).label}
                   </Badge>
                   {roleLabel && <Badge variant="muted">{roleLabel}</Badge>}
                 </div>
@@ -294,10 +295,16 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   <CardField label="Описание">{payment.description}</CardField>
                   <CardField label="Плательщик">{payment.payerName ?? "не указан"}</CardField>
                   <CardField label="Получатель">{payment.payeeName ?? "не указан"}</CardField>
+                  {getFinanceBasisLabel(payment) && (
+                    <CardField label="Основание">{getFinanceBasisLabel(payment)}</CardField>
+                  )}
+                  {getEscrowLinkNote(payment, organizerPayments) && (
+                    <CardField label="Резерв">{getEscrowLinkNote(payment, organizerPayments)}</CardField>
+                  )}
                   {getLedgerPairNote(payment) && (
                     <CardField label="Проводка">{getLedgerPairNote(payment)}</CardField>
                   )}
-                  <CardField label="Дата">{formatDate(payment.date)}</CardField>
+                  <CardField label="Дата">{formatDate(payment.issuedAt ?? payment.date)}</CardField>
                   {payment.counterpartyName && (
                     <CardField label="Контрагент">{payment.counterpartyName}</CardField>
                   )}
@@ -330,7 +337,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   )}
                 </div>
 
-                {status === "pending" && (
+                {canPayInvoice({ ...payment, status }, user) && (
                   <div className="mt-[10px] pt-[10px]">
                     <Button className="w-full" onClick={() => handlePay(payment)}>
                       <CreditCard className="h-4 w-4" />

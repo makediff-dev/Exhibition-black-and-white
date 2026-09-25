@@ -43,6 +43,8 @@ function seedThread(
     id,
     title,
     category,
+    contextType: relatedType as MessageThread["contextType"],
+    contextId: relatedId,
     relatedType,
     relatedId,
     relatedLink,

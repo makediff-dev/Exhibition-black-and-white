@@ -313,6 +313,12 @@ export interface Deal {
   reviewRequested?: boolean;
   reviewRequestedAt?: string;
   eventId?: string;
+  buyerOrgId?: string;
+  sellerOrgId?: string;
+  serviceProviderOrgId?: string;
+  customerOrgId?: string;
+  eventOrganizerOrgId?: string;
+  venueOrgId?: string;
 }
 
 export type EventOrderType =
@@ -347,6 +353,12 @@ export interface EventOrder {
   requestId?: string;
   bookingId?: string;
   direction?: "incoming" | "outgoing";
+  buyerOrgId?: string;
+  sellerOrgId?: string;
+  serviceProviderOrgId?: string;
+  customerOrgId?: string;
+  eventOrganizerOrgId?: string;
+  venueOrgId?: string;
 }
 
 export interface Document {
@@ -364,7 +376,12 @@ export interface Document {
   organizerId?: string;
   organizerName?: string;
   venueId?: string;
+  buyerOrgId?: string;
+  sellerOrgId?: string;
 }
+
+export type FinanceKind = "invoice" | "payment" | "escrow" | "payout" | "refund";
+export type FinanceBasisType = "order" | "deal" | "event";
 
 export interface Payment {
   id: string;
@@ -373,10 +390,17 @@ export interface Payment {
   orderId?: string;
   bookingId?: string;
   ledgerPairId?: string;
+  invoiceId?: string;
+  escrowId?: string;
+  paymentId?: string;
+  kind?: FinanceKind;
+  currency?: string;
   type: string;
   amount: number;
   status: "pending" | "paid" | "reserved" | "refunded";
   date: string;
+  issuedAt?: string;
+  dueAt?: string;
   description: string;
   direction?: "incoming" | "outgoing";
   venueId?: string;
@@ -387,6 +411,10 @@ export interface Payment {
   counterpartyName?: string;
   payerName?: string;
   payeeName?: string;
+  payerOrgId?: string;
+  payeeOrgId?: string;
+  basisType?: FinanceBasisType;
+  basisId?: string;
 }
 
 export interface Notification {
@@ -404,10 +432,28 @@ export interface Notification {
 
 export type MessageCategory = "system" | "customer" | "contractor" | "venue" | "organizer";
 
+export type EntityType =
+  | "event"
+  | "venue"
+  | "request"
+  | "order"
+  | "deal"
+  | "invoice"
+  | "document"
+  | "booking"
+  | "support";
+
+export interface EntityRef {
+  type: EntityType;
+  id: string;
+}
+
 export interface MessageThread {
   id: string;
   title: string;
   category: MessageCategory;
+  contextType: EntityType;
+  contextId: string;
   relatedType: string;
   relatedId: string;
   relatedLink: string;
@@ -445,6 +491,13 @@ export interface FloorCell {
   label: string;
   status: FloorCellStatus;
   hallId: string;
+  areaSqm?: number;
+  widthMeters?: number;
+  lengthMeters?: number;
+  pricePerSqm?: number;
+  powerKw?: number;
+  planCoords?: string;
+  taxNote?: string;
 }
 
 export interface Booking {
@@ -453,10 +506,11 @@ export interface Booking {
   venueId: string;
   cellId?: string;
   hallId?: string;
+  bookedAreaSqm?: number;
   customerId?: string;
   organizerId?: string;
   organizerName?: string;
-  status: "pending" | "confirmed" | "rejected";
+  status: "pending" | "confirmed" | "rejected" | "cancelled";
   rejectReason?: string;
   date: string;
   periodType?: "setup" | "event" | "teardown";
@@ -720,14 +774,22 @@ export interface OrganizerEventDraft {
   city: string;
   startDate: string;
   endDate: string;
+  assemblyStart?: string;
+  assemblyEnd?: string;
+  dismantlingStart?: string;
+  dismantlingEnd?: string;
   participationTerms?: string;
   selectedVenueId?: string;
   selectedVenueName?: string;
+  updatedAt?: string;
+  revision?: number;
 }
 
 export interface VenueInquiry {
   id: string;
   eventDraftId: string;
+  eventId?: string;
+  eventRequestId?: string;
   eventTitle?: string;
   organizerName?: string;
   venueId: string;

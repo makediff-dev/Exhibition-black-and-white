@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PLATFORM_SEARCH_LABEL } from "@/constants/search";
 import { getSearchSuggestions } from "@/lib/utils/global-search";
 import { cn } from "@/lib/utils/cn";
 import styles from "./header-search.module.css";
@@ -14,6 +15,7 @@ interface HeaderSearchProps {
 export function HeaderSearch({ className, onNavigate }: HeaderSearchProps) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
+  const inputId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -59,7 +61,11 @@ export function HeaderSearch({ className, onNavigate }: HeaderSearchProps) {
         <div className={styles.searchBar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/home/header-search-icon.svg" alt="" className={styles.icon} aria-hidden="true" />
+          <label className="sr-only" htmlFor={inputId}>
+            {PLATFORM_SEARCH_LABEL}
+          </label>
           <input
+            id={inputId}
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
@@ -68,6 +74,7 @@ export function HeaderSearch({ className, onNavigate }: HeaderSearchProps) {
             onFocus={() => setOpen(true)}
             placeholder="Поиск..."
             autoComplete="off"
+            aria-label={PLATFORM_SEARCH_LABEL}
             aria-expanded={showDropdown}
             aria-autocomplete="list"
             className={styles.input}

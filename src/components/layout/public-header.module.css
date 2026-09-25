@@ -10,13 +10,16 @@
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 48px;
+  min-width: 0;
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: 24px;
-  height: 62px;
+  gap: 16px;
+  min-height: 62px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -72,15 +75,34 @@
 
 .searchWrap {
   display: none;
-  width: 280px;
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 280px;
   margin-left: auto;
+}
+
+.cityButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 120px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  color: #404040;
+  cursor: pointer;
 }
 
 .actions {
   display: none;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .requestButton {
@@ -117,12 +139,17 @@
 }
 
 @media (min-width: 1024px) {
-  .nav {
-    display: flex;
-  }
-
   .searchWrap {
     display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .nav {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
   }
 
   .actions {
@@ -140,7 +167,7 @@
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
   .inner {
     padding: 0 16px;
   }

@@ -164,6 +164,7 @@ export function resolveActiveNavSlug(pathname: string, role: string): string | u
     case "venue": {
       if (path.startsWith("/events")) return pickNavSlug(role, "events");
       if (path.startsWith("/venues")) return pickNavSlug(role, "halls");
+      if (path === "/orders" || path.startsWith("/orders/")) return pickNavSlug(role, "orders");
       if (path.startsWith("/payments")) return pickNavSlug(role, "payments");
 
       const accountSlug = matchAccountSlug(path, role);
@@ -176,6 +177,7 @@ export function resolveActiveNavSlug(pathname: string, role: string): string | u
     case "organizer": {
       if (path.startsWith("/events")) return pickNavSlug(role, "events");
       if (path.startsWith("/venues")) return pickNavSlug(role, "venues");
+      if (path === "/orders" || path.startsWith("/orders/")) return pickNavSlug(role, "orders");
       if (path.startsWith("/payments")) return pickNavSlug(role, "payments");
       if (path.startsWith("/account/organizer/contractors")) return pickNavSlug(role, "events");
 

@@ -11,37 +11,38 @@ import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { RequestOrderCard } from "@/components/requests/request-order-card";
 import { RequestRecommendationsSection } from "@/components/requests/request-recommendations-section";
-import type { RequestStatus } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { requestListTab } from "@/lib/state/lifecycle-metrics";
 import { isRequestVisibleToContractor } from "@/lib/utils/cabinet-scope";
 
-const TAB_STATUSES: { id: RequestStatus; label: string }[] = [
+const TAB_STATUSES: { id: string; label: string }[] = [
   { id: "draft", label: "Черновики" },
   { id: "published", label: "Опубликованные" },
+  { id: "expired", label: "Просроченные" },
   { id: "in_progress", label: "В работе" },
   { id: "completed", label: "Завершённые" },
 ];
 
 function RequestsContent() {
   const { user, isAuthenticated } = useAuthStore();
-  const { requests, deals } = usePrototypeStore();
-  const [activeTab, setActiveTab] = useState<RequestStatus>("published");
+  const { requests, deals, responses } = usePrototypeStore();
+  const [activeTab, setActiveTab] = useState<string>("published");
 
   const filtered = useMemo(() => {
-    let list = requests.filter((request) => request.status === activeTab);
+    let list = requests.filter((request) => requestListTab(request, responses, deals) === activeTab);
     if (isAuthenticated && user?.role === "customer") {
       list = list.filter((request) => request.customerId === user.id);
     }
     if (isAuthenticated && user?.role === "contractor") {
       list = requests.filter((request) => {
         if (activeTab === "published") {
-          return isRequestVisibleToContractor(request, user);
+          return isRequestVisibleToContractor(request, user, responses, deals);
         }
         return false;
       });
     }
     return list.sort((a, b) => (b.publishedAt ?? b.deadline).localeCompare(a.publishedAt ?? a.deadline));
-  }, [requests, activeTab, isAuthenticated, user]);
+  }, [requests, responses, deals, activeTab, isAuthenticated, user]);
 
   const tabCounts = useMemo(() => {
     const base =
@@ -49,9 +50,12 @@ function RequestsContent() {
         ? requests.filter((request) => request.customerId === user.id)
         : requests;
     return Object.fromEntries(
-      TAB_STATUSES.map((tab) => [tab.id, base.filter((request) => request.status === tab.id).length]),
-    ) as Record<RequestStatus, number>;
-  }, [requests, isAuthenticated, user]);
+      TAB_STATUSES.map((tab) => [
+        tab.id,
+        base.filter((request) => requestListTab(request, responses, deals) === tab.id).length,
+      ]),
+    ) as Record<string, number>;
+  }, [requests, responses, deals, isAuthenticated, user]);
 
   const tabs = TAB_STATUSES.map((tab) => ({
     id: tab.id,
@@ -62,7 +66,7 @@ function RequestsContent() {
 
   return (
     <>
-      <Tabs tabs={tabs} activeTab={activeTab} onChange={(id) => setActiveTab(id as RequestStatus)} />
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -77,7 +81,7 @@ function RequestsContent() {
         />
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
             {filtered.map((request) => (
               <RequestOrderCard
                 key={request.id}

@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import type { PublicVenue } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import { getVenueStats } from "@/lib/utils/venue-stats";
-import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
+import { formatShortDate } from "@/lib/utils/formatters";
+import { formatVenuePriceRange, getVenueStats } from "@/lib/utils/venue-stats";
 import { useAuthStore } from "@/lib/store";
 import { canContactVenue } from "@/lib/auth/authorization";
+import { buildMessagesContextHref, canonicalizeEntityId } from "@/lib/domain/entity-ref";
 
 interface VenueDetailSectionProps {
   venue: PublicVenue;
@@ -19,7 +20,7 @@ interface VenueDetailSectionProps {
 
 export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
   const user = useAuthStore((state) => state.user);
-  const venueKey = venue.catalogId ?? venue.id;
+  const venueKey = canonicalizeEntityId("venue", venue.id);
   const contact = canContactVenue(user, venueKey);
   const returnUrl = `/venues/${venue.id}`;
   const stats = venue.catalogId ? getVenueStats(venue.catalogId) : null;
@@ -87,17 +88,22 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
                     <Maximize2 className="h-4 w-4 mt-0.5 shrink-0" />
                     <span>{stats.totalArea.toLocaleString("ru-RU")} кв. м суммарно</span>
                   </p>
-                  {stats.priceMin > 0 ? (
-                    <p>
-                      Аренда: {formatPrice(stats.priceMin)}
-                      {stats.priceMax > stats.priceMin ? ` – ${formatPrice(stats.priceMax)}` : ""} / кв. м
-                    </p>
-                  ) : null}
+                  <p>Аренда: {formatVenuePriceRange(stats.priceMin, stats.priceMax)}</p>
                   <p>Свободных залов: {stats.freeHalls}</p>
                   <p>
                     Загрузка {stats.occupancyPercent}% за{" "}
                     {formatShortDate(stats.occupancyPeriodStart)} —{" "}
                     {formatShortDate(stats.occupancyPeriodEnd)}
+                    {stats.preliminaryOccupancyPercent > 0
+                      ? ` · предварительно ${stats.preliminaryOccupancyPercent}%`
+                      : ""}
+                  </p>
+                  <p>
+                    Занято {stats.occupiedArea.toLocaleString("ru-RU")} кв.м · свободно{" "}
+                    {stats.freeArea.toLocaleString("ru-RU")} кв.м
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    {stats.occupancyExplanation}
                   </p>
                 </>
               ) : null}
@@ -113,7 +119,7 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
                   </Button>
                 </Link>
               ) : contact.allowed ? (
-                <Link href={`/messages?related=venue&venueId=${encodeURIComponent(venueKey)}`}>
+                <Link href={buildMessagesContextHref({ type: "venue", id: venueKey })}>
                   <Button variant="outline" className="w-full">
                     Связаться с площадкой
                   </Button>

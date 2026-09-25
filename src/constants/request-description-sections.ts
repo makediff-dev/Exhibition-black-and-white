@@ -1,9 +1,10 @@
 import type { TorSection } from "../data/types/index.ts";
+import { formatDate } from "../lib/utils/formatters.ts";
 
 export interface RequestDescriptionField {
   id: string;
   label: string;
-  type: "input" | "textarea";
+  type: "input" | "textarea" | "date";
   required?: boolean;
   placeholder?: string;
 }
@@ -67,11 +68,16 @@ export const STAND_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = [
         placeholder: "Город, павильон, зал",
       },
       {
-        id: "exhibitionDates",
-        label: "Сроки проведения и монтажа",
-        type: "input",
+        id: "exhibitionStart",
+        label: "Начало выставки",
+        type: "date",
         required: true,
-        placeholder: "31 марта — 03 апреля 2026, монтаж",
+      },
+      {
+        id: "exhibitionEnd",
+        label: "Окончание выставки",
+        type: "date",
+        required: true,
       },
       {
         id: "pavilionLayout",
@@ -262,7 +268,8 @@ export const RENTAL_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = 
     fields: [
       { id: "exhibitionName", label: "Мероприятие или площадка", type: "input", required: true, placeholder: "MosBuild 2026" },
       { id: "deliveryAddress", label: "Адрес подачи", type: "textarea", required: true, placeholder: "Город, павильон, стенд" },
-      { id: "rentalPeriod", label: "Период аренды", type: "input", required: true, placeholder: "31 марта — 03 апреля 2026" },
+      { id: "rentalStart", label: "Начало аренды", type: "date", required: true },
+      { id: "rentalEnd", label: "Окончание аренды", type: "date", required: true },
     ],
   },
   {
@@ -278,7 +285,7 @@ export const RENTAL_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] = 
     title: "Логистика и монтаж",
     required: false,
     fields: [
-      { id: "deliveryWindow", label: "Окно доставки", type: "input", placeholder: "30 марта, 10:00–14:00" },
+      { id: "deliveryDate", label: "Дата доставки", type: "date" },
       { id: "installationNotes", label: "Монтаж / демонтаж", type: "textarea", placeholder: "Нужен монтаж экрана и вывоз после выставки" },
     ],
   },
@@ -292,7 +299,8 @@ export const LOGISTICS_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[]
     fields: [
       { id: "pickupAddress", label: "Откуда", type: "textarea", required: true, placeholder: "Склад / производство" },
       { id: "deliveryAddress", label: "Куда", type: "textarea", required: true, placeholder: "Площадка, павильон, стенд" },
-      { id: "transportDates", label: "Даты перевозки и монтажа", type: "input", required: true, placeholder: "28–30 марта 2026" },
+      { id: "transportStart", label: "Начало перевозки", type: "date", required: true },
+      { id: "transportEnd", label: "Окончание перевозки", type: "date", required: true },
     ],
   },
   {
@@ -313,7 +321,8 @@ export const SERVICE_DESCRIPTION_SECTIONS: RequestDescriptionSectionTemplate[] =
     required: true,
     fields: [
       { id: "serviceLocation", label: "Место оказания", type: "textarea", required: true, placeholder: "Павильон, стенд, офис" },
-      { id: "serviceDates", label: "Дата и время", type: "input", required: true, placeholder: "1 апреля, 10:00–18:00" },
+      { id: "serviceStart", label: "Начало услуги", type: "date", required: true },
+      { id: "serviceEnd", label: "Окончание услуги", type: "date", required: true },
       { id: "serviceFormat", label: "Формат", type: "textarea", required: true, placeholder: "Фуршет, ежедневная уборка, хостес на смену" },
     ],
   },
@@ -383,7 +392,9 @@ export function formatSectionContentForDisplay(title: string, content: string): 
     .map((field) => {
       const value = values[field.id]?.trim();
       if (!value) return "";
-      return `${field.label}:\n${value}`;
+      const display =
+        field.type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? formatDate(value) : value;
+      return `${field.label}:\n${display}`;
     })
     .filter(Boolean)
     .join("\n\n");

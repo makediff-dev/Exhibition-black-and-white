@@ -2,18 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AlertCircle, Building2, CalendarDays, User } from "lucide-react";
+import { Building2, CalendarDays, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { EventOrderStatusBadges } from "@/components/orders/event-order-status-badges";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { CardField } from "@/components/ui/card-field";
 import { Select } from "@/components/ui/select";
-import {
-  BOOKING_PERIOD_LABELS,
-  BOOKING_STATUS_LABELS,
-  EVENT_ORDER_TYPE_LABELS,
-  VENUE_INQUIRY_STATUS_LABELS,
-} from "@/constants/statuses";
+import { BOOKING_PERIOD_LABELS } from "@/constants/statuses";
 import {
   SEED_BOOKINGS,
   SEED_EVENT_ORDERS,
@@ -22,18 +18,16 @@ import {
   SEED_VENUE_INQUIRIES,
 } from "@/data/mocks/seed";
 import type { Booking, EventOrder, VenueInquiry } from "@/data/types";
+import { canReadEventOrder } from "@/lib/auth/authorization";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast-provider";
+import { getBookingLifecycleCode, getBookingStatus } from "@/lib/state/booking-machine";
+import { getInquiryLifecycleCode, getInquiryStatus } from "@/lib/state/inquiry-machine";
 import { formatPrice, formatShortDate } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import {
-  COMMERCIAL_ORDER_KIND_LABELS,
-  getCommercialOrderKind,
-  getEventOrderStatusLabel,
   getOrderCounterparty,
   getOrderNextStep,
-  getOrderTradeSide,
-  getOrderTradeSideLabel,
 } from "@/lib/utils/order-presentation";
 
 const ACTION_ORDER_STATUSES = new Set([
@@ -76,7 +70,9 @@ interface VenueDashboardServiceAlertsProps {
 
 export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAlertsProps) {
   const notifications = usePrototypeStore((state) => state.notifications);
-  const role = useAuthStore((state) => state.user?.role);
+  const deals = usePrototypeStore((state) => state.deals);
+  const user = useAuthStore((state) => state.user);
+  const role = user?.role;
 
   const serviceOrders = useMemo(
     () =>
@@ -84,12 +80,13 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
         (order) =>
           order.venueId === venueId &&
           SERVICE_ORDER_TYPES.has(order.type) &&
-          ACTION_ORDER_STATUSES.has(order.status)
+          ACTION_ORDER_STATUSES.has(order.status) &&
+          canReadEventOrder(user, order, deals, SEED_EVENTS).allowed
       ).sort((a, b) => {
         const priorityWeight = { high: 0, medium: 1, normal: 2 };
         return priorityWeight[a.priority] - priorityWeight[b.priority];
       }),
-    [venueId]
+    [venueId, user, deals]
   );
 
   const actionNotifications = useMemo(
@@ -133,29 +130,31 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
                   highlighted && "bg-gray-50",
                 )}
               >
-                <div className="flex flex-wrap items-center gap-2 mb-[10px]">
-                  <Badge variant="muted">
-                    {COMMERCIAL_ORDER_KIND_LABELS[getCommercialOrderKind(order.type)]}
-                  </Badge>
-                  <Badge variant="outline">{EVENT_ORDER_TYPE_LABELS[order.type]}</Badge>
-                  <Badge variant="solid">{getEventOrderStatusLabel(order.status)}</Badge>
-                  <Badge variant="outline">
-                    {getOrderTradeSideLabel(getOrderTradeSide(order, role))}
-                  </Badge>
-                  {highlighted ? (
-                    <Badge variant="solid" className="inline-flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Действие
-                    </Badge>
-                  ) : null}
+                <div className="mb-[10px]">
+                  <EventOrderStatusBadges
+                    order={order}
+                    event={SEED_EVENTS.find((item) => item.id === order.eventId)}
+                    viewer={user}
+                    actionRequired={highlighted}
+                  />
                 </div>
                 <CardTitle className="text-sm leading-snug mb-[10px]">{order.title}</CardTitle>
                 <CardDescription className="mt-0 space-y-[10px]">
                   <CardField label="Мероприятие">{eventTitle}</CardField>
                   <CardField label="Контрагент">
-                    {getOrderCounterparty(order, SEED_EVENTS.find((item) => item.id === order.eventId)?.venue)}
+                    {getOrderCounterparty(
+                      order,
+                      user,
+                      SEED_EVENTS.find((item) => item.id === order.eventId)?.venue
+                    )}
                   </CardField>
-                  <CardField label="Следующий шаг">{getOrderNextStep(order, role)}</CardField>
+                  <CardField label="Следующий шаг">
+                    {getOrderNextStep(
+                      order,
+                      role,
+                      SEED_EVENTS.find((item) => item.id === order.eventId)
+                    )}
+                  </CardField>
                   {order.amount != null ? (
                     <span className="block pt-1 text-lg font-semibold text-gray-900">
                       {formatPrice(order.amount)}
@@ -179,11 +178,13 @@ interface VenueDashboardBookingQueueProps {
 
 export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQueueProps) {
   const storeBookings = usePrototypeStore((state) => state.bookings);
+  const user = useAuthStore((state) => state.user);
   const [sortBy, setSortBy] = useState<BookingSort>("date");
 
   const bookings = useMemo(() => {
     const merged = mergeBookings(storeBookings).filter(
-      (booking) => booking.venueId === venueId && booking.status === "pending"
+      (booking) =>
+        booking.venueId === venueId && getBookingLifecycleCode(booking) === "pending"
     );
 
     return [...merged].sort((a, b) => {
@@ -243,7 +244,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
                       ? BOOKING_PERIOD_LABELS[booking.periodType]
                       : "Период"}
                   </Badge>
-                  <Badge variant="solid">{BOOKING_STATUS_LABELS[booking.status]}</Badge>
+                  <Badge variant="solid">{getBookingStatus(booking, user).label}</Badge>
                 </div>
                 <CardTitle className="text-sm leading-snug">{eventTitle}</CardTitle>
                 <CardDescription className="mt-2 space-y-1.5">
@@ -283,15 +284,16 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
   const storeInquiries = usePrototypeStore((state) => state.venueInquiries);
   const updateVenueInquiry = usePrototypeStore((state) => state.updateVenueInquiry);
   const addBooking = usePrototypeStore((state) => state.addBooking);
+  const user = useAuthStore((state) => state.user);
   const { showToast } = useToast();
   const [sortBy, setSortBy] = useState<InquirySort>("sent");
 
   const inquiries = useMemo(() => {
-    const merged = mergeInquiries(storeInquiries).filter(
-      (item) =>
-        item.venueId === venueId &&
-        (item.status === "pending" || item.status === "proposal_received")
-    );
+    const merged = mergeInquiries(storeInquiries).filter((item) => {
+      if (item.venueId !== venueId) return false;
+      const code = getInquiryLifecycleCode(item);
+      return code === "pending" || code === "proposal_received" || code === "changes_proposed";
+    });
 
     return [...merged].sort((a, b) => {
       if (sortBy === "start") return a.dateFrom.localeCompare(b.dateFrom);
@@ -333,7 +335,7 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
           <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <Badge variant="muted">Запрос площадки</Badge>
-              <Badge variant="solid">{VENUE_INQUIRY_STATUS_LABELS[inquiry.status]}</Badge>
+              <Badge variant="solid">{getInquiryStatus(inquiry, user).label}</Badge>
             </div>
             <CardTitle className="text-sm leading-snug">{inquiry.venueName}</CardTitle>
             <CardDescription className="mt-2 space-y-1.5">

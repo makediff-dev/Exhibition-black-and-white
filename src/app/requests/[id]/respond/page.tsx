@@ -67,7 +67,7 @@ export default function RespondPage() {
   const lifecycle = getRequestStatus(request, user, requestResponses, deals);
   const submitAccess = canSubmitProposal(user, request, requestResponses, deals);
 
-  if (!existing && !isRequestVisibleToContractor(request, user)) {
+  if (!existing && !isRequestVisibleToContractor(request, user, requestResponses, deals)) {
     return (
       <AppShell
         title="Отклик недоступен"
@@ -85,6 +85,23 @@ export default function RespondPage() {
             Города оказания услуг
           </Link>
         </p>
+      </AppShell>
+    );
+  }
+
+  if (!existing && !submitAccess.allowed) {
+    return (
+      <AppShell
+        title="Отклик недоступен"
+        showBack
+        backFallbackHref={`/requests/${id}`}
+      >
+        <EmptyState
+          title="Нужно расширить специализацию"
+          description={submitAccess.reason}
+          actionLabel="Категории в профиле"
+          actionHref="/account/contractor/profile"
+        />
       </AppShell>
     );
   }

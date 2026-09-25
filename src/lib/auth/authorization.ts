@@ -13,9 +13,15 @@ import type {
   Response,
   UserRole,
 } from "../../data/types/index.ts";
-import { canPerformRequestAction } from "../state/request-machine.ts";
+import { canPerformRequestAction, getRequestLifecycleCode } from "../state/request-machine.ts";
 import {
-  findContractorForUser,
+  contractorMatchesRequestCategory,
+  contractorMatchesRequestCity,
+  isContractorInvitedToRequest,
+} from "./contractor-fit.ts";
+import { canViewEntity, getViewerOrganizationIds, hydrateEventOrder, isViewerDealParty } from "./parties.ts";
+import { canonicalizeEntityId } from "../domain/entity-ref.ts";
+import {
   getContractorIdForUser,
   getVenueIdForUser,
   isDealForUser,
@@ -194,28 +200,31 @@ export function canReadEventOrder(
   if (!user?.role) return deny("unauthenticated", "Войдите, чтобы открыть заказ.");
   if (!order) return deny("forbidden_object", "Заказ не найден.");
 
-  if (order.dealId) {
-    const deal = deals.find((item) => item.id === order.dealId);
-    const dealAccess = canReadDeal(user, deal);
-    if (dealAccess.allowed) return ok();
+  const event = events.find((item) => item.id === order.eventId);
+  const hydrated = hydrateEventOrder(order, event);
+  if (canViewEntity({ type: "order", order: hydrated }, user)) return ok();
+
+  if (hydrated.dealId) {
+    const deal = deals.find((item) => item.id === hydrated.dealId);
+    if (deal && canReadDeal(user, deal).allowed && isViewerDealParty(deal, user)) {
+      return ok();
+    }
   }
 
-  if (user.role === "venue") {
-    return order.venueId === getVenueIdForUser(user)
-      ? ok()
-      : deny("forbidden_object", "Площадка видит только заказы своей площадки.");
+  return deny("forbidden_object", "Заказ доступен только организациям, которые являются его сторонами.");
+}
+
+export function canMutateEventOrder(
+  user: CompanyProfile | null | undefined,
+  order: EventOrder | undefined,
+  deals: Deal[],
+  events: Event[]
+): AccessDecision {
+  const readable = canReadEventOrder(user, order, deals, events);
+  if (!readable.allowed) {
+    return deny("forbidden_action", readable.reason || "Нельзя изменить чужой заказ.");
   }
-
-  if (user.role === "organizer") {
-    const event = events.find((item) => item.id === order.eventId);
-    return event?.organizerId === user.id
-      ? ok()
-      : deny("forbidden_object", "Организатор видит только заказы своих мероприятий.");
-  }
-
-  if (user.name === order.customerName) return ok();
-
-  return deny("forbidden_object", "Заказ доступен только его сторонам.");
+  return ok();
 }
 
 export function canReadDeal(
@@ -224,7 +233,7 @@ export function canReadDeal(
 ): AccessDecision {
   if (!user?.role) return deny("unauthenticated", "Войдите, чтобы открыть сделку.");
   if (!deal) return deny("forbidden_object", "Сделка не найдена.");
-  if (!isDealForUser(deal, user)) {
+  if (!isDealForUser(deal, user) && !isViewerDealParty(deal, user)) {
     return deny("forbidden_object", "Сделка доступна только её сторонам.");
   }
   return ok();
@@ -267,8 +276,12 @@ function inspectDocumentAccess(
     return deny("unauthenticated", "Войдите, чтобы работать с документами.");
   }
 
-  const sides = parsePartyRoles(document.parties);
   const deal = document.dealId ? deals.find((item) => item.id === document.dealId) : undefined;
+  if (canViewEntity({ type: "document", document, deal }, user)) {
+    return ok();
+  }
+
+  const sides = parsePartyRoles(document.parties);
   const dealParty = Boolean(deal && isDealForUser(deal, user));
 
   if (user.role === "customer") {
@@ -311,6 +324,14 @@ export function canReadPayment(
 ): boolean {
   if (!user?.role) return false;
 
+  const viewerOrgs = getViewerOrganizationIds(user);
+  if (
+    (payment.payerOrgId && viewerOrgs.includes(payment.payerOrgId)) ||
+    (payment.payeeOrgId && viewerOrgs.includes(payment.payeeOrgId))
+  ) {
+    return true;
+  }
+
   if (user.role === "venue") {
     return payment.venueId === getVenueIdForUser(user);
   }
@@ -338,38 +359,21 @@ export function canMutatePayment(
   return ok();
 }
 
-function categoryMatches(request: Request, user: CompanyProfile): boolean {
-  const contractor = findContractorForUser(user);
-  const categories = new Set(
-    [...(user.categories ?? []), ...(contractor?.categories ?? [])].map((item) => item.trim())
-  );
-  if (!request.category || categories.size === 0) return false;
-  return categories.has(request.category);
-}
-
-function cityMatches(request: Request, user: CompanyProfile): boolean {
-  const contractor = findContractorForUser(user);
-  const cities = new Set(
-    [...(user.cities ?? []), ...(contractor?.city ? [contractor.city] : [])]
-  );
-  if (cities.size === 0) return false;
-  const requestCities = [request.city, ...(request.cities ?? [])].filter(Boolean);
-  return requestCities.some((city) => cities.has(city));
-}
-
 export function isRequestVisibleToContractor(
   request: Request,
-  user: CompanyProfile | null | undefined
+  user: CompanyProfile | null | undefined,
+  responses: Response[] = [],
+  deals: Deal[] = []
 ): boolean {
   if (!user || user.role !== "contractor") return false;
   if (request.status !== "published") return false;
+  if (getRequestLifecycleCode(request, responses, deals) === "expired") return false;
 
-  const contractorId = getContractorIdForUser(user);
   if (request.format === "closed_request") {
-    return Boolean(contractorId && request.invitedContractorIds.includes(contractorId));
+    return isContractorInvitedToRequest(request, user);
   }
 
-  return categoryMatches(request, user) && cityMatches(request, user);
+  return contractorMatchesRequestCategory(request, user) && contractorMatchesRequestCity(request, user);
 }
 
 export function canCreateRequest(user: CompanyProfile | null | undefined): AccessDecision {
@@ -388,8 +392,14 @@ export function canSubmitProposal(
 ): AccessDecision {
   if (!user?.role) return deny("unauthenticated", "Войдите, чтобы отправить отклик.");
   if (!request) return deny("forbidden_object", "Заявка не найдена.");
-  if (!isRequestVisibleToContractor(request, user)) {
+  if (!isRequestVisibleToContractor(request, user, responses, deals)) {
     return deny("forbidden_action", "Эта заявка недоступна вашему профилю.");
+  }
+  if (!contractorMatchesRequestCategory(request, user)) {
+    return deny(
+      "forbidden_action",
+      "Категория заявки не входит в вашу специализацию. Сначала расширьте профиль."
+    );
   }
   const timeline = canPerformRequestAction(request, user, "submit_proposal", responses, deals);
   if (!timeline.allowed) {
@@ -416,7 +426,10 @@ export function canContactVenue(
   if (!user?.role) {
     return deny("unauthenticated", "Войдите, чтобы связаться с площадкой.");
   }
-  if (user.role === "venue" && getVenueIdForUser(user) === venueId) {
+  if (
+    user.role === "venue" &&
+    canonicalizeEntityId("venue", getVenueIdForUser(user)) === canonicalizeEntityId("venue", venueId)
+  ) {
     return deny("forbidden_role", "Это ваша площадка.");
   }
   if (user.role === "customer" || user.role === "organizer") {

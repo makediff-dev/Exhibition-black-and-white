@@ -2,51 +2,146 @@
 
 import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { cn } from "@/lib/utils/cn";
-import { Upload } from "lucide-react";
-import { useState } from "react";
+import { Upload, X } from "lucide-react";
+import { useId, useRef, useState } from "react";
+
+const DEFAULT_ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.zip";
+const DEFAULT_MAX_MB = 10;
 
 export function FileUpload({
   label = "Прикрепить файл",
   onUpload,
-  accept,
+  onRemove,
+  files,
+  accept = DEFAULT_ACCEPT,
+  maxSizeMb = DEFAULT_MAX_MB,
   fullWidth = false,
+  name,
 }: {
   label?: string;
   onUpload?: (fileName: string) => void;
+  onRemove?: (fileName: string) => void;
+  files?: string[];
   accept?: string;
+  maxSizeMb?: number;
   fullWidth?: boolean;
+  name?: string;
 }) {
   const accountTheme = useAccountTheme();
-  const [files, setFiles] = useState<string[]>([]);
+  const generatedId = useId();
+  const inputId = `file-upload-${generatedId}`;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalFiles, setInternalFiles] = useState<string[]>([]);
+  const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+  const visibleFiles = files ?? internalFiles;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFiles((prev) => [...prev, file.name]);
-      onUpload?.(file.name);
+  const applyFile = (file: File) => {
+    const allowed = accept
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+    const fileName = file.name.toLowerCase();
+    const matchesType =
+      allowed.length === 0 ||
+      allowed.some((rule) =>
+        rule.startsWith(".") ? fileName.endsWith(rule) : file.type.includes(rule.replace("*", ""))
+      );
+    if (!matchesType) {
+      setStatus("error");
+      setError(`Формат не подходит. Допустимо: ${accept}`);
+      return;
     }
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      setStatus("error");
+      setError(`Файл больше ${maxSizeMb} МБ`);
+      return;
+    }
+
+    setStatus("uploading");
+    setError(null);
+    window.setTimeout(() => {
+      setInternalFiles((prev) => (files ? prev : [...prev, file.name]));
+      onUpload?.(file.name);
+      setStatus("idle");
+    }, 250);
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) applyFile(file);
+  };
+
+  const handleRemove = (fileName: string) => {
+    if (files) {
+      onRemove?.(fileName);
+      return;
+    }
+    setInternalFiles((prev) => prev.filter((item) => item !== fileName));
+    onRemove?.(fileName);
   };
 
   return (
     <div className={fullWidth ? "w-full" : undefined}>
-      <label
+      <div
         className={cn(
-          "items-center gap-2 border border-dashed px-4 py-3 cursor-pointer text-sm rounded-button",
-          fullWidth ? "flex w-full" : "inline-flex",
+          "relative border border-dashed px-4 py-3 text-sm rounded-button focus-within:ring-2 focus-within:ring-gray-900",
+          fullWidth ? "w-full" : "inline-flex",
           accountTheme
             ? "border-gray-400 hover:border-[var(--account-accent)] text-gray-700"
             : "border-gray-400 hover:border-gray-900",
         )}
       >
-        <Upload className="h-4 w-4" />
-        {label}
-        <input type="file" className="hidden" onChange={handleChange} accept={accept} />
-      </label>
-      {files.length > 0 && (
+        <label htmlFor={inputId} className="flex w-full cursor-pointer items-center gap-2">
+          <Upload className="h-4 w-4" aria-hidden="true" />
+          <span>{status === "uploading" ? "Загрузка…" : label}</span>
+        </label>
+        <input
+          ref={inputRef}
+          id={inputId}
+          name={name ?? inputId}
+          type="file"
+          accept={accept}
+          className="absolute h-px w-px overflow-hidden opacity-0"
+          aria-label={label}
+          onChange={handleChange}
+        />
+      </div>
+      <p className="mt-1 text-xs text-gray-500">
+        До {maxSizeMb} МБ. Форматы: {accept}
+      </p>
+      {error ? (
+        <div className="mt-2 flex items-center gap-2 text-xs text-red-700">
+          <span>{error}</span>
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              setError(null);
+              setStatus("idle");
+              inputRef.current?.click();
+            }}
+          >
+            Повторить
+          </button>
+        </div>
+      ) : null}
+      {visibleFiles.length > 0 && (
         <ul className="mt-2 space-y-1">
-          {files.map((f) => (
-            <li key={f} className="text-xs text-gray-600 flex items-center gap-1">
-              <span className="border border-gray-300 px-1 rounded-button">📄</span> {f}
+          {visibleFiles.map((fileName) => (
+            <li key={fileName} className="text-xs text-gray-600 flex items-center gap-2">
+              <span className="border border-gray-300 px-1 rounded-button">файл</span>
+              <span>{fileName}</span>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 underline"
+                onClick={() => handleRemove(fileName)}
+                aria-label={`Удалить файл ${fileName}`}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+                Удалить
+              </button>
             </li>
           ))}
         </ul>

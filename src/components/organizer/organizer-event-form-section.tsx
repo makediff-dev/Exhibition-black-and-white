@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EmptyState } from "@/components/ui/states";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,8 @@ import { VENUE_CATALOG } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { Booking, Event } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
+import { collectEventFormIssues } from "@/lib/domain/form-validation";
+import { getPrototypeNowDateIso } from "@/lib/time/now";
 import { applyScheduleToEvent, getConfirmedEventSchedule } from "@/lib/utils/entity-links";
 
 const CATEGORY_OPTIONS = [
@@ -183,6 +186,13 @@ export function OrganizerEventFormSection({
   }, [eventParticipants, participantQuery]);
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const appliedDraftId = useRef<string | null>(null);
+  const today = getPrototypeNowDateIso();
+  const eventIssues = useMemo(
+    () => collectEventFormIssues(form, today, mode),
+    [form, today, mode]
+  );
 
   const ensureDraftEventId = (): string => {
     if (eventId) return eventId;
@@ -228,7 +238,8 @@ export function OrganizerEventFormSection({
       setForm(mapEventToForm(existingEvent, bookings));
       return;
     }
-    if (mode === "create" && organizerEventDraft) {
+    if (mode === "create" && organizerEventDraft && appliedDraftId.current !== organizerEventDraft.id) {
+      appliedDraftId.current = organizerEventDraft.id;
       const industryValue =
         INDUSTRY_OPTIONS.find((option) => option.label === organizerEventDraft.industry)?.value ??
         organizerEventDraft.industry;
@@ -242,14 +253,15 @@ export function OrganizerEventFormSection({
         venueId: organizerEventDraft.selectedVenueId ?? "",
         startDate: organizerEventDraft.startDate,
         endDate: organizerEventDraft.endDate,
-        assemblyStart: "",
-        assemblyEnd: "",
-        dismantlingStart: "",
-        dismantlingEnd: "",
+        assemblyStart: organizerEventDraft.assemblyStart ?? "",
+        assemblyEnd: organizerEventDraft.assemblyEnd ?? "",
+        dismantlingStart: organizerEventDraft.dismantlingStart ?? "",
+        dismantlingEnd: organizerEventDraft.dismantlingEnd ?? "",
         participationTerms: organizerEventDraft.participationTerms ?? "",
         participantInfo: "",
         participantMemo: "",
       });
+      setSaveStatus("saved");
     }
   }, [mode, existingEvent, organizerEventDraft, bookings]);
 
@@ -269,34 +281,57 @@ export function OrganizerEventFormSection({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const writeEventDraft = (silent: boolean) => {
+    if (!form.title.trim() && !form.description.trim()) return false;
+    setSaveStatus("saving");
+    try {
+      const industryLabel =
+        INDUSTRY_OPTIONS.find((option) => option.value === form.industry)?.label ?? form.industry;
+      const nextId = organizerEventDraft?.id ?? `event-draft-${Date.now()}`;
+      appliedDraftId.current = nextId;
+      setOrganizerEventDraft({
+        id: nextId,
+        title: form.title.trim() || "Черновик",
+        category: form.category,
+        industry: industryLabel,
+        description: form.description,
+        city: form.city,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        assemblyStart: form.assemblyStart,
+        assemblyEnd: form.assemblyEnd,
+        dismantlingStart: form.dismantlingStart,
+        dismantlingEnd: form.dismantlingEnd,
+        participationTerms: form.participationTerms,
+        selectedVenueId: organizerEventDraft?.selectedVenueId,
+        selectedVenueName: organizerEventDraft?.selectedVenueName,
+        updatedAt: new Date().toISOString(),
+        revision: (organizerEventDraft?.revision ?? 0) + 1,
+      });
+      setSaveStatus("saved");
+      if (!silent) showToast("Черновик сохранён. Теперь можно отправить запрос площадкам", "success");
+      return true;
+    } catch {
+      setSaveStatus("error");
+      if (!silent) showToast("Не удалось сохранить черновик", "error");
+      return false;
+    }
+  };
+
   const handleSaveDraft = () => {
     if (!form.title.trim()) {
       showToast("Укажите название мероприятия", "error");
       return;
     }
-
-    const industryLabel =
-      INDUSTRY_OPTIONS.find((option) => option.value === form.industry)?.label ?? form.industry;
-
-    setOrganizerEventDraft({
-      id: organizerEventDraft?.id ?? `event-draft-${Date.now()}`,
-      title: form.title.trim(),
-      category: form.category,
-      industry: industryLabel,
-      description: form.description,
-      city: form.city,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      participationTerms: form.participationTerms,
-      selectedVenueId: organizerEventDraft?.selectedVenueId,
-      selectedVenueName: organizerEventDraft?.selectedVenueName,
-    });
-
-    showToast("Черновик сохранён. Теперь можно отправить запрос площадкам", "success");
+    if (!writeEventDraft(false)) return;
     router.push("/account/organizer/venues");
   };
 
   const handlePublish = () => {
+    if (eventIssues.length > 0) {
+      showToast("Исправьте ошибки формы перед публикацией", "error");
+      return;
+    }
     showToast(
       mode === "edit"
         ? "Изменения отправлены на публикацию"
@@ -305,6 +340,46 @@ export function OrganizerEventFormSection({
     );
     router.push("/account/organizer/events");
   };
+
+  useEffect(() => {
+    if (mode !== "create") return;
+    if (!form.title.trim() && !form.description.trim()) return;
+    const timer = window.setTimeout(() => {
+      writeEventDraft(true);
+    }, 800);
+    return () => window.clearTimeout(timer);
+    // Persist latest form values only; writeEventDraft reads current closures.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    form.title,
+    form.description,
+    form.city,
+    form.startDate,
+    form.endDate,
+    form.assemblyStart,
+    form.assemblyEnd,
+    form.dismantlingStart,
+    form.dismantlingEnd,
+    mode,
+  ]);
+
+  if (mode === "edit" && !existingEvent) {
+    return (
+      <div className="space-y-6 w-full">
+        <BackButton fallbackHref="/account/organizer/events" />
+        <EmptyState
+          title="Мероприятие не выбрано"
+          description={
+            eventId
+              ? "Мероприятие не найдено или недоступно. Выберите его из списка."
+              : "Откройте мероприятие из списка или создайте новое."
+          }
+          actionLabel="К списку мероприятий"
+          actionHref="/account/organizer/events"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">
@@ -327,7 +402,16 @@ export function OrganizerEventFormSection({
               },
             ]}
             activeTab={activeTab}
-            onChange={(tabId) => setActiveTab(tabId as EventFormTab)}
+            onChange={(tabId) => {
+              const nextTab = tabId as EventFormTab;
+              setActiveTab(nextTab);
+              const params = new URLSearchParams(searchParams.toString());
+              if (eventId && !forcedEventId) params.set("id", eventId);
+              if (nextTab === "event") params.delete("tab");
+              else params.set("tab", nextTab);
+              const query = params.toString();
+              router.replace(query ? `?${query}` : "?", { scroll: false });
+            }}
             className="mt-2"
           />
         ) : null}
@@ -343,7 +427,8 @@ export function OrganizerEventFormSection({
             </CardDescription>
           </Card>
           <Input
-            placeholder="Поиск участника..."
+            label="Поиск участника"
+            placeholder="Имя, статус или стенд"
             value={participantQuery}
             onChange={(event) => setParticipantQuery(event.target.value)}
             className="w-full"
@@ -363,6 +448,7 @@ export function OrganizerEventFormSection({
       <div className="w-full max-w-3xl space-y-6">
         <Card className="space-y-4">
         <Input
+          id="event-field-title"
           label="Название"
           value={form.title}
           onChange={(event) => updateForm("title", event.target.value)}
@@ -385,6 +471,7 @@ export function OrganizerEventFormSection({
         />
 
         <Textarea
+          id="event-field-description"
           label="Описание"
           value={form.description}
           onChange={(event) => updateForm("description", event.target.value)}
@@ -435,6 +522,7 @@ export function OrganizerEventFormSection({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
+            id="event-field-startDate"
             label="Дата начала"
             type="date"
             value={form.startDate}
@@ -442,6 +530,7 @@ export function OrganizerEventFormSection({
             onChange={(event) => updateForm("startDate", event.target.value)}
           />
           <Input
+            id="event-field-endDate"
             label="Дата окончания"
             type="date"
             value={form.endDate}
@@ -459,6 +548,7 @@ export function OrganizerEventFormSection({
             onChange={(event) => updateForm("assemblyStart", event.target.value)}
           />
           <Input
+            id="event-field-assemblyEnd"
             label="Даты монтажа · по"
             type="date"
             value={form.assemblyEnd}
@@ -469,6 +559,7 @@ export function OrganizerEventFormSection({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
+            id="event-field-dismantlingStart"
             label="Даты демонтажа · с"
             type="date"
             disabled={scheduleLocked}
@@ -506,14 +597,54 @@ export function OrganizerEventFormSection({
 
         <FileUpload label="Прикрепить файлы" fullWidth />
 
-        <div className="flex gap-2 flex-wrap pt-2">
+        {eventIssues.length > 0 ? (
+          <div className="border border-red-300 bg-red-50 p-3 space-y-2 rounded-card">
+            <p className="text-sm font-medium text-red-800">Нельзя опубликовать, пока не исправлены поля:</p>
+            <ul className="space-y-1">
+              {eventIssues.map((issue) => (
+                <li key={`${issue.field}-${issue.message}`}>
+                  <button
+                    type="button"
+                    className="text-sm text-red-800 underline text-left"
+                    onClick={() => {
+                      if (issue.field) {
+                        document.getElementById(`event-field-${issue.field}`)?.focus();
+                      }
+                    }}
+                  >
+                    {issue.message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <p className="text-xs text-gray-600" aria-live="polite">
+          {saveStatus === "saving"
+            ? "Сохраняется…"
+            : saveStatus === "saved"
+              ? "Сохранено"
+              : saveStatus === "error"
+                ? "Не удалось сохранить"
+                : ""}
+        </p>
+
+        <div className="flex flex-wrap items-start gap-2 pt-2">
           <Button variant="outline" onClick={handleSaveDraft}>
             Сохранить черновик
           </Button>
           <Button variant="outline" onClick={() => showToast("Предпросмотр")}>
             Предпросмотр
           </Button>
-          <Button onClick={handlePublish}>Опубликовать</Button>
+          <div className="space-y-1">
+            <Button disabled={eventIssues.length > 0} onClick={handlePublish}>
+              Опубликовать
+            </Button>
+            {eventIssues.length > 0 ? (
+              <p className="text-xs text-gray-600">Исправьте ошибки в списке выше</p>
+            ) : null}
+          </div>
         </div>
       </Card>
 

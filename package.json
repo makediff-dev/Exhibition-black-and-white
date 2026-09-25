@@ -11,7 +11,8 @@
     "start": "next start -H 0.0.0.0 -p 3000",
     "preview": "npm run build && npm run start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test src/lib/auth/authorization.test.ts src/lib/auth/session.test.ts src/lib/data/entity-integrity.test.ts src/lib/state/state-machines.test.ts src/lib/state/proposal-payload.test.ts src/lib/state/inquiry-machine.test.ts src/constants/request-schemas.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/auth/authorization.test.ts src/lib/auth/party-acl.test.ts src/lib/auth/session.test.ts src/lib/data/entity-integrity.test.ts src/lib/domain/entity-ref.test.ts src/lib/domain/form-validation.test.ts src/lib/domain/finance.test.ts src/lib/domain/booking-quote.test.ts src/lib/state/state-machines.test.ts src/lib/state/proposal-payload.test.ts src/lib/state/inquiry-machine.test.ts src/lib/state/lifecycle-surfaces.test.ts src/lib/state/e2e-lifecycle-roles.test.ts src/lib/utils/venue-occupancy.test.ts src/lib/utils/organizer-venue-inquiry.test.ts src/lib/a11y/package-7.test.ts src/constants/request-schemas.test.ts src/constants/fixtures-copy.test.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -23,6 +24,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

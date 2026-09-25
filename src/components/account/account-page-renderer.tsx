@@ -80,6 +80,11 @@ import {
   isRequestVisibleToContractor,
 } from "@/lib/utils/cabinet-scope";
 import {
+  countDashboardDeals,
+  countDashboardRequests,
+  countOpenInvoices,
+} from "@/lib/state/lifecycle-metrics";
+import {
   findContractorForUser,
   getContractorIdForUser,
   getVenueIdForUser,
@@ -215,31 +220,26 @@ export function AccountPageRenderer({ role, slug }: Props) {
 }
 
 function DashboardWidgets({ role }: { role: string }) {
-  const { requests, deals, payments } = usePrototypeStore();
+  const { requests, deals, payments, responses } = usePrototypeStore();
   const user = useAuthStore((s) => s.user);
-  const activeDeals = deals.filter(
-    (d) => d.status !== "completed" && isDealForUser(d, user)
-  );
   const myPayments = payments.filter((p) => isPaymentForUser(p, user, deals));
-  const pendingIncoming = myPayments.filter(
-    (p) => p.status === "pending" && (p.direction === "incoming" || !p.direction)
-  ).length;
-  const pendingOutgoing = myPayments.filter(
-    (p) => p.status === "pending" && p.direction === "outgoing"
-  ).length;
+  const pendingIncoming = countOpenInvoices(
+    myPayments.map((payment) => ({
+      ...payment,
+      direction: payment.direction ?? "incoming",
+    })),
+    "incoming"
+  );
+  const pendingOutgoing = countOpenInvoices(myPayments, "outgoing");
 
   return (
     <div className="mb-6">
       <DashboardStatsGrid>
         <DashboardStatCard
-          value={
-            role === "contractor"
-              ? requests.filter((r) => isRequestVisibleToContractor(r, user)).length
-              : requests.filter((r) => r.status === "published" && r.customerId === user?.id).length
-          }
+          value={countDashboardRequests(requests, responses, deals, user)}
           label={role === "contractor" ? "Активные заказы" : "Активные заявки"}
         />
-        <DashboardStatCard value={activeDeals.length} label="Активные проекты" />
+        <DashboardStatCard value={countDashboardDeals(deals, user)} label="Активные проекты" />
         <DashboardStatCard
           value={pendingOutgoing}
           label={
@@ -746,7 +746,7 @@ function ContractorPages({ slug }: { slug: string }) {
             </div>
             <div className="space-y-2">
               {requests
-                .filter((r) => isRequestVisibleToContractor(r, user))
+                .filter((r) => isRequestVisibleToContractor(r, user, responses, deals))
                 .slice(0, 3)
                 .map((request) => {
                 const customerName = request.customerName ?? DEMO_USERS.customer.name;
@@ -906,7 +906,7 @@ function ContractorPages({ slug }: { slug: string }) {
 
   if (slug === "available-requests") {
     const available = requests.filter((r) =>
-      isRequestVisibleToContractor(r, user)
+      isRequestVisibleToContractor(r, user, responses, deals)
     );
 
     if (available.length === 0) {

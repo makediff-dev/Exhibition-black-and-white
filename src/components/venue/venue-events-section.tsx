@@ -197,8 +197,11 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
                           ? "Форум"
                           : "Конференция"}
                     </Badge>
-                    {statuses.map((status) => (
-                      <Badge key={`${event.id}-${status}`} variant="solid">
+                    {statuses.map((status, index) => (
+                      <Badge
+                        key={`${event.id}-${status}`}
+                        variant={index === 0 ? "solid" : index === 1 ? "outline" : "muted"}
+                      >
                         {VENUE_BOOKING_DATE_STATUS_META[status].label}
                       </Badge>
                     ))}

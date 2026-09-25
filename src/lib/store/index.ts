@@ -305,6 +305,7 @@ interface PrototypeState {
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   addMessage: (threadId: string, message: MessageThread["messages"][0]) => void;
+  addThread: (thread: MessageThread) => void;
   addBooking: (booking: Booking) => void;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   updateParticipant: (id: string, updates: Partial<Participant>) => void;
@@ -411,7 +412,13 @@ function mergeMessageThreads(
   });
 
   const seedIds = new Set(seedItems.map((thread) => thread.id));
-  const extras = stored.filter((thread) => !seedIds.has(thread.id));
+  const extras = stored
+    .filter((thread) => !seedIds.has(thread.id))
+    .map((thread) => ({
+      ...thread,
+      contextType: thread.contextType || (thread.relatedType as MessageThread["contextType"]),
+      contextId: thread.contextId || thread.relatedId,
+    }));
   return extras.length ? [...mergedSeed, ...extras] : mergedSeed;
 }
 
@@ -679,6 +686,11 @@ export const usePrototypeStore = create<PrototypeState>()(
               : t
           ),
         })),
+      addThread: (thread) =>
+        set((s) => {
+          if (s.messages.some((item) => item.id === thread.id)) return s;
+          return { messages: [thread, ...s.messages] };
+        }),
       addBooking: (booking) =>
         set((s) => {
           if (booking.status === "confirmed" && booking.hallId) {
@@ -1259,6 +1271,7 @@ export const usePrototypeStore = create<PrototypeState>()(
           payments: overlaySeedRecords(persisted.payments, fresh.payments, ["status"]),
           participants: mergeParticipantsById(persisted.participants, fresh.participants),
           bookings: mergeBookingsById(persisted.bookings, fresh.bookings),
+          floorCells: overlaySeedRecords(persisted.floorCells, fresh.floorCells, ["status"]),
           messages: mergeMessageThreads(persisted.messages, fresh.messages),
           notifications: mergeNotificationsById(persisted.notifications, fresh.notifications),
         };

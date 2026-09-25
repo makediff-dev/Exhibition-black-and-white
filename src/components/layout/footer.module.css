@@ -89,12 +89,23 @@
   }
 }
 
+@media (max-width: 1280px) {
+  .inner {
+    min-width: 0;
+    padding: 40px 24px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .inner {
     padding: 32px 16px;
   }
 
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

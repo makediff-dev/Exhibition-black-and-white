@@ -5,7 +5,14 @@ import {
   SEED_VENUE_PROFILE_MEDIA,
   SEED_VENUE_SPACE_BLOCKS,
 } from "@/data/mocks/seed";
-import { getPrototypeMonthRange, getVenueOccupancyPercent } from "./venue-occupancy";
+import {
+  getPrototypeMonthRange,
+  getVenueOccupancyBreakdown,
+  VENUE_OCCUPANCY_EXPLANATION,
+} from "./venue-occupancy";
+import { formatVenuePriceRange } from "./venue-price";
+
+export { formatVenuePriceRange };
 
 export function getVenueStats(venueId: string) {
   const halls = SEED_HALLS.filter((hall) => hall.venueId === venueId);
@@ -14,11 +21,9 @@ export function getVenueStats(venueId: string) {
   const photos = SEED_VENUE_PROFILE_MEDIA.filter(
     (item) => item.venueId === venueId && item.type === "photo",
   );
-  const prices = blocks.length
-    ? blocks.map((block) => block.pricePerSqm)
-    : halls.map((hall) => Math.round(1800 + hall.area / 10));
+  const priced = blocks.map((block) => block.pricePerSqm).filter((price) => price > 0);
   const period = getPrototypeMonthRange();
-  const occupancy = getVenueOccupancyPercent(
+  const occupancy = getVenueOccupancyBreakdown(
     venueId,
     halls,
     SEED_BOOKINGS,
@@ -30,12 +35,16 @@ export function getVenueStats(venueId: string) {
     halls,
     pavilions,
     photos,
-    totalArea: halls.reduce((sum, hall) => sum + hall.area, 0),
-    priceMin: prices.length ? Math.min(...prices) : 0,
-    priceMax: prices.length ? Math.max(...prices) : 0,
+    totalArea: occupancy.totalArea,
+    freeArea: occupancy.freeArea,
+    occupiedArea: occupancy.occupiedArea,
+    priceMin: priced.length ? Math.min(...priced) : 0,
+    priceMax: priced.length ? Math.max(...priced) : 0,
     freeHalls: halls.filter((hall) => hall.available).length,
     occupancyPeriodStart: occupancy.periodStart,
     occupancyPeriodEnd: occupancy.periodEnd,
     occupancyPercent: occupancy.percent,
+    preliminaryOccupancyPercent: occupancy.preliminaryPercent,
+    occupancyExplanation: VENUE_OCCUPANCY_EXPLANATION,
   };
 }

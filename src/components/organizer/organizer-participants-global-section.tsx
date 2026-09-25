@@ -53,7 +53,8 @@ export function OrganizerParticipantsGlobalSection({ organizerId = "user-organiz
 
       <div className="grid sm:grid-cols-2 gap-4 max-w-3xl">
         <Input
-          placeholder="Поиск участника..."
+          label="Поиск участника"
+          placeholder="Имя, статус или стенд"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/store";
 import { loginHref } from "@/lib/auth/session";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
+import { CityLocationButton } from "@/components/layout/city-location-button";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
@@ -63,6 +64,8 @@ export function PublicHeader() {
           <div className={styles.searchWrap}>
             <HeaderSearch />
           </div>
+
+          <CityLocationButton className={styles.cityButton} />
 
           <div className={styles.actions}>
             {isAuthenticated ? (
@@ -118,6 +121,7 @@ export function PublicHeader() {
             );
           })}
           <HeaderSearch className="mt-2" onNavigate={() => setMobileOpen(false)} />
+          <CityLocationButton className="mt-3 inline-flex min-h-10 items-center gap-2 text-sm" />
           <div className="flex flex-col gap-2 mt-4">
             {isAuthenticated ? (
               <>

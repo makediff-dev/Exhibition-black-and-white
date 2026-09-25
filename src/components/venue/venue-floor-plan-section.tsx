@@ -18,6 +18,7 @@ import {
   SEED_HALLS,
 } from "@/data/mocks/seed";
 import { formatPrice } from "@/lib/utils/formatters";
+import { canBookEvent } from "@/lib/state/event-machine";
 
 interface Props {
   venueId?: string;
@@ -64,7 +65,7 @@ export function VenueFloorPlanSection({
   );
 
   const events = useMemo(
-    () => SEED_EVENTS.filter((event) => event.venueId === venueId && event.bookingAvailable),
+    () => SEED_EVENTS.filter((event) => event.venueId === venueId && canBookEvent(event)),
     [venueId]
   );
 

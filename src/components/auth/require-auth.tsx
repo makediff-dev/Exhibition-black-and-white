@@ -18,8 +18,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     if (isAuthenticated && user) return;
-    const query = searchParams.toString();
-    const dest = `${pathname}${query ? `?${query}` : ""}`;
+    const dest =
+      typeof window !== "undefined"
+        ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+        : `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
     router.replace(loginHref(dest));
   }, [hydrated, isAuthenticated, user, router, pathname, searchParams]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { RequestDescriptionForm } from "@/components/forms/request-description-form";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ import {
   createRequestSections,
   getRequestSchema,
 } from "@/constants/request-schemas";
+import { isMeaningfulRequestDraft } from "@/lib/domain/form-validation";
+import { usePrototypeHydrated } from "@/lib/hooks/use-prototype-hydrated";
 import { getPrototypeNowDateIso } from "@/lib/time/now";
 import { REQUEST_FORMAT_DESCRIPTIONS, REQUEST_FORMAT_LABELS } from "@/constants/statuses";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
@@ -148,6 +150,47 @@ function applyInitialParams(
   return next;
 }
 
+interface WizardDraftEnvelope {
+  schemaVersion: 1;
+  updatedAt: string;
+  step: number;
+  revision: number;
+  tabId: string;
+  data: RequestWizardData;
+}
+
+function getWizardTabId() {
+  if (typeof sessionStorage === "undefined") return "ssr";
+  const key = "request-wizard-tab-id";
+  const existing = sessionStorage.getItem(key);
+  if (existing) return existing;
+  const next = `tab-${Date.now()}`;
+  sessionStorage.setItem(key, next);
+  return next;
+}
+
+function readDraftEnvelope(raw: Record<string, unknown> | null | undefined): WizardDraftEnvelope | null {
+  if (!raw || Object.keys(raw).length === 0) return null;
+  if (raw.schemaVersion === 1 && raw.data && typeof raw.data === "object") {
+    return raw as unknown as WizardDraftEnvelope;
+  }
+  return {
+    schemaVersion: 1,
+    updatedAt: "",
+    step: typeof raw.step === "number" ? raw.step : 0,
+    revision: 0,
+    tabId: "",
+    data: raw as unknown as RequestWizardData,
+  };
+}
+
+function draftStatusLabel(status: "idle" | "saving" | "saved" | "error") {
+  if (status === "saving") return "Сохраняется…";
+  if (status === "saved") return "Сохранено";
+  if (status === "error") return "Не удалось сохранить";
+  return "";
+}
+
 export function RequestWizard({
   initialFormat,
   initialEventId,
@@ -158,33 +201,76 @@ export function RequestWizard({
   onPublished,
 }: RequestWizardProps) {
   const { requestWizardDraft, setRequestWizardDraft } = usePrototypeStore();
+  const hydrated = usePrototypeHydrated();
   const user = useAuthStore((state) => state.user);
   const { showToast } = useToast();
+  const tabIdRef = useRef(getWizardTabId());
+  const revisionRef = useRef(0);
   const [step, setStep] = useState(0);
   const [eventIndustryFilter, setEventIndustryFilter] = useState("");
   const [eventCityFilter, setEventCityFilter] = useState("");
   const [eventMonthFilter, setEventMonthFilter] = useState("");
   const [eventSearch, setEventSearch] = useState("");
-  const [data, setData] = useState<RequestWizardData>(() => {
-    const draft = requestWizardDraft as Partial<RequestWizardData & { deadline?: string }>;
-    if (draft && Object.keys(draft).length > 0) {
-      const migratedDraft = { ...draft };
-      if (draft.deadline && !draft.executionStart && !draft.executionEnd) {
-        if (draft.deadline.includes("/")) {
-          const [executionStart, executionEnd] = draft.deadline.split("/");
-          migratedDraft.executionStart = executionStart;
-          migratedDraft.executionEnd = executionEnd;
-        } else {
-          migratedDraft.executionEnd = draft.deadline;
-        }
+  const [data, setData] = useState<RequestWizardData>(() =>
+    applyInitialParams(defaultData(initialFormat), {
+      initialFormat,
+      initialEventId,
+      initialContractorId,
+      initialCategory,
+      initialTitle,
+      initialDescription,
+    })
+  );
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify({ step: 0, data }));
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [restoredNotice, setRestoredNotice] = useState(false);
+  const [conflictNotice, setConflictNotice] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const update = useCallback((updates: Partial<RequestWizardData>) => {
+    setData((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const persistDraft = useCallback(
+    (next: RequestWizardData, nextStep: number, silent = false) => {
+      setSaveStatus("saving");
+      try {
+        revisionRef.current += 1;
+        const envelope: WizardDraftEnvelope = {
+          schemaVersion: 1,
+          updatedAt: new Date().toISOString(),
+          step: nextStep,
+          revision: revisionRef.current,
+          tabId: tabIdRef.current,
+          data: next,
+        };
+        setRequestWizardDraft(envelope as unknown as Record<string, unknown>);
+        setSavedSnapshot(JSON.stringify({ step: nextStep, data: next }));
+        setSaveStatus("saved");
+        if (!silent) showToast("Черновик заявки сохранён", "info");
+      } catch {
+        setSaveStatus("error");
+        if (!silent) showToast("Не удалось сохранить черновик", "error");
       }
-      return applyInitialParams(
+    },
+    [setRequestWizardDraft, showToast]
+  );
+
+  const saveDraft = useCallback(() => {
+    persistDraft(data, step);
+  }, [data, persistDraft, step]);
+
+  useEffect(() => {
+    if (!hydrated || ready) return;
+    const envelope = readDraftEnvelope(requestWizardDraft);
+    if (envelope && isMeaningfulRequestDraft(envelope as unknown as Record<string, unknown>)) {
+      const merged = applyInitialParams(
         {
           ...defaultData(initialFormat),
-          ...migratedDraft,
-          torSections: migratedDraft.torSections?.length
-            ? (migratedDraft.torSections as TorSection[])
-            : createRequestSections(migratedDraft.category ?? initialCategory ?? ""),
+          ...envelope.data,
+          torSections: envelope.data.torSections?.length
+            ? envelope.data.torSections
+            : createRequestSections(envelope.data.category ?? initialCategory ?? ""),
         },
         {
           initialFormat,
@@ -195,37 +281,39 @@ export function RequestWizard({
           initialDescription,
         }
       );
+      setData(merged);
+      setStep(envelope.step || 0);
+      revisionRef.current = envelope.revision || 0;
+      setSavedSnapshot(JSON.stringify({ step: envelope.step || 0, data: merged }));
+      setRestoredNotice(true);
+      setSaveStatus("saved");
     }
-    return applyInitialParams(defaultData(initialFormat), {
-      initialFormat,
-      initialEventId,
-      initialContractorId,
-      initialCategory,
-      initialTitle,
-      initialDescription,
-    });
-  });
-  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(data));
-
-  const update = useCallback((updates: Partial<RequestWizardData>) => {
-    setData((prev) => ({ ...prev, ...updates }));
-  }, []);
-
-  const persistDraft = useCallback(
-    (next: RequestWizardData, silent = false) => {
-      setRequestWizardDraft(next as unknown as Record<string, unknown>);
-      setSavedSnapshot(JSON.stringify(next));
-      if (!silent) showToast("Черновик заявки сохранён", "info");
-    },
-    [setRequestWizardDraft, showToast]
-  );
-
-  const saveDraft = useCallback(() => {
-    persistDraft(data);
-  }, [data, persistDraft]);
+    setReady(true);
+  }, [
+    hydrated,
+    ready,
+    requestWizardDraft,
+    initialFormat,
+    initialEventId,
+    initialContractorId,
+    initialCategory,
+    initialTitle,
+    initialDescription,
+  ]);
 
   useEffect(() => {
-    const dirty = JSON.stringify(data) !== savedSnapshot;
+    if (!ready) return;
+    if (!isMeaningfulRequestDraft({ data } as Record<string, unknown>) && revisionRef.current === 0) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      persistDraft(data, step, true);
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [data, persistDraft, ready, step]);
+
+  useEffect(() => {
+    const dirty = JSON.stringify({ step, data }) !== savedSnapshot;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!dirty) return;
       event.preventDefault();
@@ -233,7 +321,34 @@ export function RequestWizard({
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [data, savedSnapshot]);
+  }, [data, savedSnapshot, step]);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "prototype-storage" || !event.newValue) return;
+      try {
+        const parsed = JSON.parse(event.newValue) as {
+          state?: { requestWizardDraft?: Record<string, unknown> };
+        };
+        const remote = readDraftEnvelope(parsed.state?.requestWizardDraft);
+        if (!remote || remote.tabId === tabIdRef.current) return;
+        if (remote.revision <= revisionRef.current) return;
+        const dirty = JSON.stringify({ step, data }) !== savedSnapshot;
+        if (dirty) {
+          setConflictNotice(true);
+          return;
+        }
+        setData(remote.data);
+        setStep(remote.step);
+        revisionRef.current = remote.revision;
+        setSavedSnapshot(JSON.stringify({ step: remote.step, data: remote.data }));
+      } catch {
+        setSaveStatus("error");
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [data, savedSnapshot, step]);
 
   const selectedEvent = useMemo(
     () => SEED_EVENTS.find((e) => e.id === data.eventId),
@@ -280,6 +395,15 @@ export function RequestWizard({
     });
   };
 
+  const removeMandatoryFile = (itemId: string, fileName: string) => {
+    update({
+      mandatoryFiles: {
+        ...data.mandatoryFiles,
+        [itemId]: (data.mandatoryFiles[itemId] ?? []).filter((name) => name !== fileName),
+      },
+    });
+  };
+
   const toggleInvitedContractor = (contractorId: string) => {
     const exists = data.invitedContractorIds.includes(contractorId);
     update({
@@ -298,9 +422,14 @@ export function RequestWizard({
   const isPublishReady = publishIssues.length === 0;
   const dateIssue = publishIssues.find((issue) => issue.step === 4);
 
-  const goToStep = (nextStep: number) => {
-    persistDraft(data, true);
+  const goToStep = (nextStep: number, field?: string) => {
+    persistDraft(data, nextStep, true);
     setStep(nextStep);
+    if (field) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(`wizard-field-${field}`)?.focus();
+      });
+    }
   };
 
   const canProceed = useMemo(() => {
@@ -357,13 +486,51 @@ export function RequestWizard({
       history: [{ date: today, action: "Опубликована" }],
     };
     setRequestWizardDraft({});
-    setSavedSnapshot(JSON.stringify(defaultData(data.format)));
+    revisionRef.current = 0;
+    setSavedSnapshot(JSON.stringify({ step: 0, data: defaultData(data.format) }));
     onPublished(request);
   };
 
   return (
     <div className="space-y-6">
       <StepIndicator steps={STEPS} currentStep={step} />
+      {draftStatusLabel(saveStatus) ? (
+        <p className="text-xs text-gray-600" aria-live="polite">
+          {draftStatusLabel(saveStatus)}
+        </p>
+      ) : null}
+      {restoredNotice ? (
+        <p className="text-sm text-gray-700">
+          Черновик восстановлен.{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              const empty = applyInitialParams(defaultData(initialFormat), {
+                initialFormat,
+                initialEventId,
+                initialContractorId,
+                initialCategory,
+                initialTitle,
+                initialDescription,
+              });
+              setData(empty);
+              setStep(0);
+              setRequestWizardDraft({});
+              revisionRef.current = 0;
+              setRestoredNotice(false);
+              setSavedSnapshot(JSON.stringify({ step: 0, data: empty }));
+            }}
+          >
+            Отменить и начать заново
+          </button>
+        </p>
+      ) : null}
+      {conflictNotice ? (
+        <p className="text-sm text-red-700">
+          Черновик изменён в другой вкладке. Текущие несохранённые правки не перезаписаны.
+        </p>
+      ) : null}
 
       {step === 0 && (
         <div className="space-y-4">
@@ -423,6 +590,7 @@ export function RequestWizard({
 
       {step === 1 && (
         <Select
+          id="wizard-field-category"
           label="Категория услуги *"
           value={data.category}
           onChange={(e) => {
@@ -537,7 +705,7 @@ export function RequestWizard({
       )}
 
       {step === 4 && (
-        <div className="space-y-2">
+        <div className="space-y-2" id="wizard-field-executionStart">
           <DateRangePicker
             label="Диапазон выполнения *"
             start={data.executionStart}
@@ -553,6 +721,7 @@ export function RequestWizard({
       {step === 5 && (
         <div className="space-y-4">
           <Select
+            id="wizard-field-budget"
             label="Тип бюджета"
             value={data.budget.type}
             onChange={(e) => update({ budget: { ...data.budget, type: e.target.value } })}
@@ -603,15 +772,11 @@ export function RequestWizard({
         <div className="space-y-4">
           <p className="text-sm text-gray-700">{schema.filesIntro}</p>
           <FileUpload
+            label="Дополнительные файлы"
+            files={data.files}
             onUpload={(name) => update({ files: [...data.files, name] })}
+            onRemove={(name) => update({ files: data.files.filter((item) => item !== name) })}
           />
-          {data.files.length > 0 && (
-            <ul className="text-xs text-gray-600 space-y-1">
-              {data.files.map((f) => (
-                <li key={f}>📄 {f}</li>
-              ))}
-            </ul>
-          )}
 
           <div className="space-y-4">
             <p className="text-sm font-medium">
@@ -631,17 +796,12 @@ export function RequestWizard({
                   </p>
                   <div className="mt-2">
                     <FileUpload
-                      label="Загрузить"
+                      label={`Загрузить: ${item.label}`}
+                      files={data.mandatoryFiles[item.id] ?? []}
                       onUpload={(name) => addMandatoryFile(item.id, name)}
+                      onRemove={(name) => removeMandatoryFile(item.id, name)}
                     />
                   </div>
-                  {(data.mandatoryFiles[item.id] ?? []).length > 0 && (
-                    <ul className="mt-2 text-xs text-gray-600 space-y-1">
-                      {(data.mandatoryFiles[item.id] ?? []).map((fileName) => (
-                        <li key={fileName}>📄 {fileName}</li>
-                      ))}
-                    </ul>
-                  )}
                 </li>
               ))}
             </ol>
@@ -672,7 +832,7 @@ export function RequestWizard({
                     <button
                       type="button"
                       className="text-sm text-red-800 underline text-left"
-                      onClick={() => goToStep(issue.step)}
+                      onClick={() => goToStep(issue.step, issue.field)}
                     >
                       Шаг «{STEPS[issue.step]}»: {issue.message}
                     </button>
@@ -764,8 +924,8 @@ export function RequestWizard({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 justify-between border-t border-gray-300 pt-4">
-        <div className="flex gap-2">
+      <div className="grid w-full grid-cols-[1fr_auto] items-start gap-3 border-t border-gray-300 pt-4">
+        <div className="flex flex-wrap gap-2">
           {step > 0 && (
             <Button variant="outline" onClick={() => goToStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" />
@@ -776,17 +936,31 @@ export function RequestWizard({
             Сохранить черновик
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-1">
           {step < STEPS.length - 1 ? (
-            <Button disabled={!canProceed} onClick={() => goToStep(step + 1)}>
-              Далее
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <>
+              <Button disabled={!canProceed} onClick={() => goToStep(step + 1)}>
+                Далее
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              {!canProceed ? (
+                <p className="max-w-[260px] text-right text-xs text-gray-600">
+                  Заполните обязательные поля этого шага, чтобы продолжить
+                </p>
+              ) : null}
+            </>
           ) : (
-            <Button onClick={publish}>
-              <Check className="h-4 w-4" />
-              Опубликовать
-            </Button>
+            <>
+              <Button disabled={!isPublishReady} onClick={publish}>
+                <Check className="h-4 w-4" />
+                Опубликовать
+              </Button>
+              {!isPublishReady ? (
+                <p className="max-w-[260px] text-right text-xs text-gray-600">
+                  Исправьте ошибки в списке выше — публикация закрыта
+                </p>
+              ) : null}
+            </>
           )}
         </div>
       </div>

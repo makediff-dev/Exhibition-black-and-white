@@ -376,7 +376,13 @@ export function DocumentsPanel({
         </div>
       )}
 
-      <Tabs tabs={DOC_TABS} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
+      <Tabs
+        tabs={DOC_TABS}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        variant="pills"
+        className="mb-6"
+      />
 
       {filterMode === "event-top-level" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -500,7 +506,7 @@ export function DocumentsPanel({
                   {deal && (
                     <CardField label="Сделка">
                       <Link
-                        href={`/deals/${deal.id}`}
+                        href={`/deals/${deal.id}?from=${user?.role === "customer" ? "edo" : "documents"}`}
                         className="underline hover:text-gray-700"
                       >
                         {deal.number} — {deal.title}
@@ -510,7 +516,7 @@ export function DocumentsPanel({
                   {doc.orderId && !deal && (
                     <CardField label="Заказ">
                       <Link
-                        href={`/orders/${doc.orderId}`}
+                        href={`/orders/${doc.orderId}?from=${user?.role === "customer" ? "edo" : "documents"}`}
                         className="underline hover:text-gray-700"
                       >
                         Открыть заказ
