@@ -108,7 +108,7 @@ function EventOrderPage() {
         <Card className="space-y-3">
           <CardTitle className="text-base">{order.title}</CardTitle>
           <div className="space-y-[10px]">
-            <CardField label="Контрагент">{getOrderCounterparty(order, user, event?.venue)}</CardField>
+            <CardField label="Контрагент">{getOrderCounterparty(order, user ?? undefined, event?.venue)}</CardField>
             <CardField label="Следующий шаг">{getOrderNextStep(order, user?.role, event)}</CardField>
             {getOrderDeadlineLabel(event) && (
               <CardField label="Срок">{getOrderDeadlineLabel(event)?.replace(/^Срок:\s*/, "")}</CardField>

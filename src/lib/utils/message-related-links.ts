@@ -41,7 +41,8 @@ export function getCabinetBackHref(from: string | null, fallback: string, role?:
 }
 
 function eventIdFromThread(
-  thread: Pick<MessageThread, "relatedId" | "relatedLink" | "contextId">
+  thread: Pick<MessageThread, "relatedId" | "relatedLink"> &
+    Partial<Pick<MessageThread, "contextId">>
 ) {
   const contextId = thread.contextId || thread.relatedId;
   if (contextId && contextId.startsWith("evt-")) return contextId;
@@ -50,7 +51,8 @@ function eventIdFromThread(
 }
 
 function bookingIdFromThread(
-  thread: Pick<MessageThread, "relatedId" | "relatedLink" | "contextId">
+  thread: Pick<MessageThread, "relatedId" | "relatedLink"> &
+    Partial<Pick<MessageThread, "contextId">>
 ) {
   const contextId = thread.contextId || thread.relatedId;
   if (contextId && contextId.startsWith("book-")) return contextId;

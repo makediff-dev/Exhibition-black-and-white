@@ -74,7 +74,7 @@ export function getOrderTradeSideLabel(side: "buy" | "sell") {
 
 export function getOrderCounterparty(
   order: EventOrder,
-  viewerOrVenueName?: CompanyProfile | string,
+  viewerOrVenueName?: CompanyProfile | string | null,
   venueName?: string
 ) {
   const user = typeof viewerOrVenueName === "object" ? viewerOrVenueName : null;

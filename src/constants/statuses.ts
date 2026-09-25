@@ -174,4 +174,5 @@ export const BOOKING_STATUS_LABELS = {
   pending: "Ожидает площадку",
   confirmed: "Площадка согласилась",
   rejected: "Отклонено",
+  cancelled: "Отменено",
 } as const;
