@@ -55,7 +55,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
 
     const list = (matched.length > 0 ? matched : [...SEED_CONTRACTORS].sort((a, b) => b.rating - a.rating)).slice(
       0,
-      4,
+      5,
     );
     return list;
   }, [user]);
@@ -66,7 +66,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
       .filter((service) => userCategories.has(service.category))
       .sort((a, b) => b.rating - a.rating);
 
-    const list = (matched.length > 0 ? matched : [...services].sort((a, b) => b.rating - a.rating)).slice(0, 4);
+    const list = (matched.length > 0 ? matched : [...services].sort((a, b) => b.rating - a.rating)).slice(0, 5);
     return list;
   }, [services, user]);
 
@@ -93,7 +93,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
             Все исполнители
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {recommendedContractors.map((contractor) => (
             <RecommendedContractorCard key={contractor.id} contractor={contractor} />
           ))}
@@ -107,7 +107,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
             Все услуги
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {recommendedServices.map((service) => (
             <ServiceCard
               key={service.id}

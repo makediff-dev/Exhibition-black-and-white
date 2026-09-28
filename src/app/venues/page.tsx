@@ -172,11 +172,18 @@ function VenuesPageContent() {
           </section>
         </div>
 
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Фильтры"
+        closeLabel="Закрыть фильтры"
+        footer={
+          <Button variant={VENUES_ACCENT} className="w-full" onClick={() => setDrawerOpen(false)}>
+            Применить
+          </Button>
+        }
+      >
         {filterPanel}
-        <Button variant={VENUES_ACCENT} className="w-full mt-4" onClick={() => setDrawerOpen(false)}>
-          Применить
-        </Button>
       </Drawer>
     </CabinetAwareLayout>
   );

@@ -3,6 +3,7 @@ import {
   HOME_TILE_BUTTON_VARIANTS,
   type HomeTileButtonVariant,
 } from "@/constants/home-button-variants";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import styles from "./home-page.module.css";
 
 export interface HomeTileCardMetaItem {
@@ -47,8 +48,13 @@ export function HomeTileCard({
       <div className={styles.tileImageWrap}>
         <div className={styles.tileImage}>
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className={styles.tileImagePhoto} />
+            <ResponsiveImage
+              src={imageUrl}
+              alt=""
+              fill
+              className={styles.tileImagePhoto}
+              sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 25vw"
+            />
           ) : null}
           <div className={styles.tileImageDots} aria-hidden="true">
             <span className={`${styles.tileImageDot} ${styles.tileImageDotActive}`} />

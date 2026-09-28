@@ -212,9 +212,18 @@ function ServicesPageContent() {
           </section>
         </div>
 
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Фильтры"
+        closeLabel="Закрыть фильтры"
+        footer={
+          <Button variant={SERVICES_ACCENT} className="w-full" onClick={() => setDrawerOpen(false)}>
+            Применить
+          </Button>
+        }
+      >
         {filterPanel}
-        <Button variant={SERVICES_ACCENT} className="w-full mt-4" onClick={() => setDrawerOpen(false)}>Применить</Button>
       </Drawer>
     </CabinetAwareLayout>
   );

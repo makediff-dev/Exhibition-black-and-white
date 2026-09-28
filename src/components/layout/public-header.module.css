@@ -1,4 +1,5 @@
 .header {
+  --header-height: 62px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -82,7 +83,7 @@
 }
 
 .cityButton {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 4px;
   max-width: 120px;
@@ -99,10 +100,22 @@
   display: none;
   align-items: center;
   gap: 8px;
-  flex-shrink: 1;
+  flex-shrink: 0;
   min-width: 0;
-  flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.messagesButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.desktopActions {
+  display: none;
+  align-items: center;
+  gap: 8px;
 }
 
 .requestButton {
@@ -130,6 +143,38 @@
   border-color: #1f9696;
 }
 
+.drawerNav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawerLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawerUtility {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.drawerFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawerFooter > a button,
+.drawerFooter > div > button {
+  min-height: 38px;
+  height: 38px;
+}
+
 .menuButton {
   margin-left: auto;
   padding: 8px;
@@ -138,9 +183,27 @@
   cursor: pointer;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .searchWrap {
     display: block;
+    flex: 1 1 160px;
+    max-width: 240px;
+  }
+
+  .cityButton {
+    display: inline-flex;
+  }
+
+  .actions {
+    display: flex;
+  }
+
+  .menuButton {
+    margin-left: 0;
+  }
+
+  .drawerPhoneOnly {
+    display: none;
   }
 }
 
@@ -152,7 +215,11 @@
     flex-wrap: wrap;
   }
 
-  .actions {
+  .searchWrap {
+    max-width: 280px;
+  }
+
+  .desktopActions {
     display: flex;
   }
 

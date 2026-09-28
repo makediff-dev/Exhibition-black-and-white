@@ -21,8 +21,15 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
+  padding-bottom: calc(1.5rem + var(--demo-offset, 0px));
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-bottom: 1.5rem;
+  }
 }
 
 .sidebarNav {
@@ -40,4 +47,17 @@
 .sidebarNavLink {
   padding: 8px 12px;
   border-radius: 10px;
+}
+
+.mobileCabinetDrawerBody {
+  padding: 8px 16px 16px;
+}
+
+.mobileCabinetNav {
+  padding: 0;
+}
+
+.mobileCabinetNav .sidebarNavLink {
+  padding-left: 12px;
+  padding-right: 12px;
 }

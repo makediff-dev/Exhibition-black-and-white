@@ -221,9 +221,9 @@ export function OrganizerVenuesSection() {
               </p>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/account/organizer/create-event">
-              <Button size="sm" variant="outline">
+          <div className="flex w-full flex-wrap gap-2">
+            <Link href="/account/organizer/create-event" className="w-full sm:w-auto">
+              <Button size="sm" variant="outline" className="w-full sm:w-auto">
                 Создать мероприятие
               </Button>
             </Link>
@@ -287,7 +287,7 @@ export function OrganizerVenuesSection() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {venues.map(({ venue, stats }) => {
           const photo = stats.photos[0];
           const isSelected = selectedVenueIds.includes(venue.id);

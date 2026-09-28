@@ -13,6 +13,7 @@ import {
 import type { Notification } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { HorizontalChipScroller } from "@/components/ui/horizontal-chip-scroller";
 
 interface Props {
   venueId?: string;
@@ -93,7 +94,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <HorizontalChipScroller>
         {monthKeys.map((key) => (
           <button
             key={key}
@@ -108,9 +109,9 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
             {getMonthLabel(key)}
           </button>
         ))}
-      </div>
+      </HorizontalChipScroller>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {monthEvents.map(({ event, meta, halls, eventNotifications }, index) => {
           const photo = venuePhotos[index % venuePhotos.length];
 

@@ -126,7 +126,7 @@ export function AppShell({
         data-nav-active={isActive ? "true" : undefined}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "block w-full py-2 text-sm",
+          "block w-full py-2.5 text-base md:py-2 md:text-sm",
           shellStyles.sidebarNavLink,
           isActive && shellStyles.sidebarNavLinkActive,
           resolvedAccountRole
@@ -171,12 +171,12 @@ export function AppShell({
             onClose={() => setSidebarOpen(false)}
             title="Меню кабинета"
             side="left"
-          >
-            <nav ref={mobileNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
-              {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
-            </nav>
-            {user && (
-              <div className="mt-4 pt-4 border-t border-gray-300">
+            closeLabel="Закрыть меню"
+            belowHeader
+            hideChrome
+            bodyClassName={shellStyles.mobileCabinetDrawerBody}
+            footer={
+              user ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -189,7 +189,25 @@ export function AppShell({
                   <LogOut className="h-4 w-4" />
                   Выйти
                 </Button>
-              </div>
+              ) : null
+            }
+          >
+            {resolvedAccountRole ? (
+              <AccountThemeProvider role={resolvedAccountRole} tokensOnly>
+                <nav
+                  ref={mobileNavRef}
+                  className={cn("space-y-1", shellStyles.sidebarNav, shellStyles.mobileCabinetNav)}
+                >
+                  {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
+                </nav>
+              </AccountThemeProvider>
+            ) : (
+              <nav
+                ref={mobileNavRef}
+                className={cn("space-y-1", shellStyles.sidebarNav, shellStyles.mobileCabinetNav)}
+              >
+                {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
+              </nav>
             )}
           </Drawer>
         </div>
@@ -239,9 +257,9 @@ export function AppShell({
               <BackButton fallbackHref={backFallbackHref} className="mb-2" />
             )}
             {(title || actions) && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                {title && <h1 className="text-xl font-bold text-gray-900">{title}</h1>}
-                {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
+              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                {title && <h1 className="w-full min-w-0 text-xl font-bold text-gray-900 lg:flex-1">{title}</h1>}
+                {actions && <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>}
               </div>
             )}
             {children}

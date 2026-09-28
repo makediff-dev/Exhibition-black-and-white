@@ -303,23 +303,26 @@ function CustomerPages({ slug }: { slug: string }) {
     return (
       <>
         {edoModal && user?.edoStatus === "not_connected" && (
-          <Modal
-            open
-            title="Подключите ЭДО"
-            onClose={() => {
-              setEdoModal(false);
-              setShowEdoPrompt(false);
-            }}
-            footer={
+          <div className="edo-prompt-banner mb-4 border border-[#d4d4d4] bg-white p-4">
+            <p className="font-semibold mb-1">Подключите ЭДО</p>
+            <p className="text-sm text-gray-700 mb-3">
+              Для подписания документов рекомендуем подключить электронный документооборот.
+            </p>
+            <div className="flex flex-wrap gap-2">
               <Link href="/account/customer/edo">
                 <Button onClick={() => setEdoModal(false)}>Подключить</Button>
               </Link>
-            }
-          >
-            <p className="text-sm">
-              Для подписания документов рекомендуем подключить электронный документооборот.
-            </p>
-          </Modal>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEdoModal(false);
+                  setShowEdoPrompt(false);
+                }}
+              >
+                Позже
+              </Button>
+            </div>
+          </div>
         )}
         <DashboardWidgets role="customer" />
         <div className="grid md:grid-cols-2 gap-4">
@@ -362,8 +365,12 @@ function CustomerPages({ slug }: { slug: string }) {
                 isDealForUser(d, user)
             )
             .map((d) => (
-            <Link key={d.id} href={`/deals/${d.id}`} className="flex justify-between py-2 border-b border-gray-200 text-sm">
-              <span>{d.title}</span>
+            <Link
+              key={d.id}
+              href={`/deals/${d.id}`}
+              className="flex flex-col items-start gap-2 py-2 border-b border-gray-200 text-sm last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <span className="min-w-0">{d.title}</span>
               <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
             </Link>
           ))}

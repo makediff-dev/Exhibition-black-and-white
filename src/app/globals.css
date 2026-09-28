@@ -15,6 +15,10 @@
   --color-pink-dark: #e00086;
   --radius-card: 14px;
   --radius-button: 10px;
+  --demo-fab-size: 48px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --demo-offset: calc(var(--demo-fab-size) + 16px + var(--safe-bottom));
 }
 
 @theme inline {
@@ -27,6 +31,7 @@
 
 html {
   overflow-x: clip;
+  color-scheme: light;
 }
 
 body {
@@ -35,6 +40,14 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   overflow-x: clip;
   min-width: 0;
+  padding-bottom: var(--demo-offset);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 1024px) {
+  body {
+    padding-bottom: 0;
+  }
 }
 
 img,
@@ -89,10 +102,10 @@ canvas {
   }
 }
 
-/* 4 cards per row, 24px gutters, leftover items stay left-aligned. */
+/* 5 cards per row on desktop, 24px gutters, leftover items stay left-aligned. */
 .catalog-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 24px;
   justify-content: start;

@@ -4,6 +4,7 @@ import { useRef, type CSSProperties } from "react";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
 import { useFitCardCount } from "@/hooks/use-fit-card-count";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useShowMore } from "@/hooks/use-show-more";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { HomeTileCard } from "./home-tile-card";
@@ -15,9 +16,11 @@ import styles from "./home-page.module.css";
 export function HomeEventsSection() {
   const gridRef = useRef<HTMLDivElement>(null);
   const fitCount = useFitCardCount(gridRef);
+  const isMobile = useIsMobile();
+  const pageSize = isMobile ? 3 : fitCount;
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(SEED_EVENTS, {
-    initialCount: fitCount,
-    step: fitCount,
+    initialCount: pageSize,
+    step: pageSize,
   });
 
   return (
@@ -25,7 +28,10 @@ export function HomeEventsSection() {
       <div className={styles.container}>
         <div className={styles.containerInner}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Ближайшие выставки и мероприятия</h2>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionTitleDesktop}>Ближайшие выставки и мероприятия</span>
+              <span className={styles.sectionTitleMobile}>Ближайшие выставки</span>
+            </h2>
             <HomeSectionLink href="/events">Все мероприятия</HomeSectionLink>
           </div>
 

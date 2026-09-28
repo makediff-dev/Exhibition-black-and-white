@@ -26,6 +26,7 @@ import {
   VENUE_BOOKING_DATE_STATUS_META,
 } from "@/lib/utils/venue-date-statuses";
 import { cn } from "@/lib/utils/cn";
+import { HorizontalChipScroller } from "@/components/ui/horizontal-chip-scroller";
 
 const ORGANIZER_ACCOUNTS = [
   DEMO_USERS.organizer,
@@ -134,7 +135,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
 
       <div className="space-y-3">
         <p className="text-sm font-medium">Календарь</p>
-        <div className="flex flex-wrap gap-2">
+        <HorizontalChipScroller>
           <button
             type="button"
             onClick={() => setActiveMonth("all")}
@@ -165,10 +166,10 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
                 )}
               >
                 {getMonthLabel(key)}
-              </button>
-            );
-          })}
-        </div>
+            </button>
+          );
+        })}
+        </HorizontalChipScroller>
         <p className="text-sm text-gray-600">
           {activeMonth === "all"
             ? `Показано ${filteredEvents.length} из ${events.length} мероприятий`
@@ -182,7 +183,7 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
           description="Измените месяц или статус, чтобы увидеть другие события на площадке"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredEvents.map(({ event, meta, halls, statuses }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 

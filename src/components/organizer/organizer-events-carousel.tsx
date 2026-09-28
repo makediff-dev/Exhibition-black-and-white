@@ -9,6 +9,7 @@ import { SEED_EVENTS, SEED_VENUE_PROFILE_MEDIA } from "@/data/mocks/seed";
 import type { Notification } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
+import { HorizontalChipScroller } from "@/components/ui/horizontal-chip-scroller";
 
 interface Props {
   organizerId?: string;
@@ -71,7 +72,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <HorizontalChipScroller>
         {monthKeys.map((key) => (
           <button
             key={key}
@@ -86,9 +87,9 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
             {getMonthLabel(key)}
           </button>
         ))}
-      </div>
+      </HorizontalChipScroller>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {monthEvents.map(({ event, eventNotifications }, index) => {
           const photo = photos[index % photos.length];
 

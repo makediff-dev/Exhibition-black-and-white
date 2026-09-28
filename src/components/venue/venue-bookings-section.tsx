@@ -210,7 +210,7 @@ export function VenueBookingsSection({
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredBookings.map((booking) => {
             const event = eventMap[booking.eventId];
             const hall = booking.hallId ? hallMap[booking.hallId] : undefined;

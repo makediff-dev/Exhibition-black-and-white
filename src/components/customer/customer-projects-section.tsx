@@ -66,7 +66,7 @@ export function CustomerProjectsSection({
           />
         )
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleDeals.map((deal) => (
             <Card key={deal.id} borderHover className="flex h-full flex-col">
               <Link href={`/deals/${deal.id}`} className="flex-1 block">

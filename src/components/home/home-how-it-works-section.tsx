@@ -1,4 +1,5 @@
 import { HOME_HOW_IT_WORKS_STEPS } from "@/constants/home-content";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import styles from "./home-page.module.css";
 
 export function HomeHowItWorksSection() {
@@ -17,8 +18,13 @@ export function HomeHowItWorksSection() {
                   <p className={styles.howCardText}>{registrationStep.text}</p>
                 </div>
                 <div className={styles.howFeaturedImage}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={registrationStep.imageUrl} alt="" />
+                  <ResponsiveImage
+                    src={registrationStep.imageUrl}
+                    alt=""
+                    width={800}
+                    height={600}
+                    sizes="(max-width: 767px) 100vw, 50vw"
+                  />
                 </div>
               </article>
 
@@ -30,8 +36,13 @@ export function HomeHowItWorksSection() {
                       <p className={styles.howCardText}>{step.text}</p>
                     </div>
                     <div className={`${styles.howCardImage} ${styles[`howCardImage${index + 1}`]}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={step.imageUrl} alt="" />
+                      <ResponsiveImage
+                        src={step.imageUrl}
+                        alt=""
+                        width={640}
+                        height={480}
+                        sizes="(max-width: 767px) 100vw, 33vw"
+                      />
                     </div>
                   </article>
                 ))}

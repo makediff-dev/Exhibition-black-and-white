@@ -353,10 +353,10 @@ export function ContractorServicesListSection({
                         <p className="text-xs text-gray-500 mt-1">Сроки: {service.deadline}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-5 flex-wrap">
+                    <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-5 self-end md:flex-col md:flex-nowrap md:items-end md:gap-1 xl:flex-row xl:items-center xl:gap-5">
                       <button
                         type="button"
-                        className="text-sm text-gray-900 hover:text-gray-600"
+                        className="whitespace-nowrap text-sm text-gray-900 hover:text-gray-600"
                         onClick={(event) => {
                           event.stopPropagation();
                           onEditService(service);

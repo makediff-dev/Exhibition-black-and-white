@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HOME_WORK_FORMATS } from "@/constants/home-content";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import styles from "./home-page.module.css";
 
 export function HomeWorkFormatsSection() {
@@ -12,8 +13,14 @@ export function HomeWorkFormatsSection() {
               {HOME_WORK_FORMATS.slice(0, 2).map((format) => (
                 <article key={format.title} className={styles.workFormatCard}>
                   <div className={styles.workFormatImageWrap}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={format.imageUrl} alt="" className={styles.workFormatImage} />
+                    <ResponsiveImage
+                      src={format.imageUrl}
+                      alt=""
+                      className={styles.workFormatImage}
+                      width={800}
+                      height={520}
+                      sizes="(max-width: 767px) 100vw, 50vw"
+                    />
                   </div>
                   <div className={styles.workFormatBody}>
                     <div className={styles.workFormatCopy}>
@@ -31,8 +38,14 @@ export function HomeWorkFormatsSection() {
               {HOME_WORK_FORMATS.slice(2).map((format) => (
                 <article key={format.title} className={styles.workFormatCard}>
                   <div className={styles.workFormatImageWrap}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={format.imageUrl} alt="" className={styles.workFormatImage} />
+                    <ResponsiveImage
+                      src={format.imageUrl}
+                      alt=""
+                      className={styles.workFormatImage}
+                      width={800}
+                      height={520}
+                      sizes="(max-width: 767px) 100vw, 50vw"
+                    />
                   </div>
                   <div className={styles.workFormatBody}>
                     <div className={styles.workFormatCopy}>

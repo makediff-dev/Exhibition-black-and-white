@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { HOME_IMAGES } from "@/constants/home-images";
 import { PLATFORM_SEARCH_LABEL } from "@/constants/search";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import styles from "./home-page.module.css";
 
 export function HomeHero() {
@@ -10,9 +11,12 @@ export function HomeHero() {
       <div className={styles.container}>
         <div className={styles.heroInner}>
           <h1 className={styles.heroTitle}>
-            Маркетплейс выставочной
-            <br />
-            индустрии и не только
+            <span className={styles.heroTitleDesktop}>
+              Маркетплейс выставочной
+              <br />
+              индустрии и не только
+            </span>
+            <span className={styles.heroTitleMobile}>Маркетплейс выставочной индустрии</span>
           </h1>
           <p className={styles.heroSubtitle}>
             Все мероприятия России, выставки, исполнители и сопутствующие услуги на одном сайте.
@@ -24,6 +28,10 @@ export function HomeHero() {
               <img src="/home/hero-search-icon.svg" alt="" className={styles.heroSearchIcon} aria-hidden="true" />
               <input
                 name="q"
+                type="search"
+                inputMode="search"
+                enterKeyHint="search"
+                autoComplete="off"
                 className={styles.heroSearchInput}
                 placeholder="Поиск мероприятий, услуг, исполнителей..."
                 aria-label={PLATFORM_SEARCH_LABEL}
@@ -37,8 +45,14 @@ export function HomeHero() {
 
         <div className={styles.heroBannerWrap}>
           <div className={styles.heroBanner}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={HOME_IMAGES.heroBanner} alt="" className={styles.heroBannerPhoto} />
+            <ResponsiveImage
+              src={HOME_IMAGES.heroBanner}
+              alt=""
+              fill
+              priority
+              className={styles.heroBannerPhoto}
+              sizes="(max-width: 767px) 100vw, 1060px"
+            />
           </div>
           <Link href="/events" className={styles.heroBannerArrow} aria-label="К мероприятиям">
             <span className={styles.heroBannerArrowButton}>

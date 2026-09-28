@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Children,
   cloneElement,
@@ -13,6 +13,7 @@ import {
 } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useFitCardCount } from "@/hooks/use-fit-card-count";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useShowMore } from "@/hooks/use-show-more";
 import { HomeSectionLink } from "./home-section-link";
 import { HomeShowMoreActions } from "./home-show-more-button";
@@ -21,6 +22,7 @@ import styles from "./home-page.module.css";
 
 interface HomeScrollSectionProps {
   title?: string;
+  mobileTitle?: string;
   linkHref?: string;
   linkLabel?: string;
   children: ReactNode;
@@ -33,6 +35,7 @@ interface HomeScrollSectionProps {
 
 export function HomeScrollSection({
   title,
+  mobileTitle,
   linkHref,
   linkLabel = "Все",
   children,
@@ -46,15 +49,21 @@ export function HomeScrollSection({
   const gridRef = useRef<HTMLDivElement>(null);
   const baseChildren = useMemo(() => Children.toArray(children), [children]);
   const isSlider = variant === "slider";
-  const cardMinWidth = minCardWidth ?? (denseGrid ? 190 : 220);
+  const cardMinWidth = minCardWidth ?? (denseGrid ? 190 : 200);
   const fitCount = useFitCardCount(isSlider ? trackRef : gridRef, {
     minCardWidth: cardMinWidth,
     fallback: denseGrid ? 6 : 5,
   });
 
+  const resolvedMobileTitle =
+    mobileTitle ??
+    (title && title.length > 28 ? title.split(/\s+/).slice(0, 2).join(" ") : undefined);
+
+  const isMobile = useIsMobile();
+  const pageSize = isMobile ? 3 : fitCount;
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(baseChildren, {
-    initialCount: fitCount,
-    step: fitCount,
+    initialCount: pageSize,
+    step: pageSize,
   });
 
   const visibleChildren = useMemo(() => {
@@ -76,13 +85,13 @@ export function HomeScrollSection({
     "--scroll-visible-cards": fitCount,
   } as CSSProperties;
 
-  const scrollNext = useCallback(() => {
+  const scrollByCard = useCallback((direction: -1 | 1) => {
     const track = trackRef.current;
     if (!track) return;
     const card = track.firstElementChild as HTMLElement | null;
     const gapValue = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 24;
     const step = card ? card.offsetWidth + gapValue : 284;
-    track.scrollBy({ left: step, behavior: "smooth" });
+    track.scrollBy({ left: direction * step, behavior: "smooth" });
   }, []);
 
   return (
@@ -91,7 +100,16 @@ export function HomeScrollSection({
         <div className={styles.containerInner}>
           {title ? (
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>{title}</h2>
+              <h2 className={styles.sectionTitle}>
+                {resolvedMobileTitle ? (
+                  <>
+                    <span className={styles.sectionTitleDesktop}>{title}</span>
+                    <span className={styles.sectionTitleMobile}>{resolvedMobileTitle}</span>
+                  </>
+                ) : (
+                  title
+                )}
+              </h2>
               {linkHref ? <HomeSectionLink href={linkHref}>{linkLabel}</HomeSectionLink> : null}
             </div>
           ) : null}
@@ -103,9 +121,17 @@ export function HomeScrollSection({
               </div>
               <button
                 type="button"
-                className={styles.scrollArrow}
+                className={`${styles.scrollArrow} ${styles.scrollArrowPrev}`}
+                aria-label="Прокрутить влево"
+                onClick={() => scrollByCard(-1)}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                className={`${styles.scrollArrow} ${styles.scrollArrowNext}`}
                 aria-label="Прокрутить вправо"
-                onClick={scrollNext}
+                onClick={() => scrollByCard(1)}
               >
                 <ChevronRight className="h-5 w-5" />
               </button>

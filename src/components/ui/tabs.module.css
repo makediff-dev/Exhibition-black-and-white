@@ -1,0 +1,49 @@
+.underlineWrap {
+  position: relative;
+}
+
+.underlineWrap::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 100%;
+  background: linear-gradient(to left, #fff, rgb(255 255 255 / 0));
+}
+
+.underline {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border-bottom: 1px solid #d4d4d4;
+  scrollbar-width: thin;
+  scroll-padding-inline: 16px;
+}
+
+.pillsWrap {
+  position: relative;
+}
+
+.pillsWrap::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 100%;
+  background: linear-gradient(to left, #fff, rgb(255 255 255 / 0));
+}
+
+.pills {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scroll-padding-inline: 16px;
+}

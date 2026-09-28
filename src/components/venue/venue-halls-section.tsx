@@ -370,7 +370,7 @@ export function VenueHallsSection({
 
         {hallTab === "sale" ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <VenueSpaceBlockCard
                 title={saleBlock?.name ?? selectedHall.name}
                 description={
@@ -468,7 +468,7 @@ export function VenueHallsSection({
                 В павильоне пока нет залов. Добавьте первый зал и настройте его на миллиметровке.
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {pavilionHalls.map((hall) => (
                   <VenueSpaceBlockCard
                     key={hall.id}
@@ -488,7 +488,7 @@ export function VenueHallsSection({
       {outdoorBlocks.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-base font-semibold">Другие площади</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {outdoorBlocks.map((block) => (
               <VenueSpaceBlockCard
                 key={block.id}

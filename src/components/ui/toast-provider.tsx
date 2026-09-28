@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/ui/modal";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
+import styles from "./toast-provider.module.css";
 
 interface Toast {
   id: string;
@@ -19,15 +19,8 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-const TOAST_TITLES: Record<Toast["type"], string> = {
-  success: "Готово",
-  error: "Ошибка",
-  info: "Уведомление",
-};
-
 export function ToastProvider({ children }: { children: ReactNode }) {
   const role = useAuthStore((state) => state.user?.role);
-  const useRoleAccent = Boolean(role);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: Toast["type"] = "success") => {
@@ -41,26 +34,33 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const current = toasts[0];
 
-  const handleClose = () => {
-    if (current) removeToast(current.id);
-  };
+  useEffect(() => {
+    if (!current) return;
+    const timer = window.setTimeout(() => removeToast(current.id), 5000);
+    return () => window.clearTimeout(timer);
+  }, [current, removeToast]);
 
   return (
     <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
       {children}
-      <Modal
-        open={Boolean(current)}
-        onClose={handleClose}
-        title={current ? TOAST_TITLES[current.type] : "Уведомление"}
-        accent={useRoleAccent ? "role" : "teal"}
-        footer={
-          <Button type="button" variant={useRoleAccent ? "primary" : "teal"} onClick={handleClose}>
-            Закрыть
-          </Button>
-        }
-      >
-        <p className="text-sm text-gray-700">{current?.message}</p>
-      </Modal>
+      {current ? (
+        <div
+          className={styles.region}
+          role="status"
+          aria-live="polite"
+          data-role={role || "guest"}
+        >
+          <p className={styles.message}>{current.message}</p>
+          <button
+            type="button"
+            className={styles.close}
+            onClick={() => removeToast(current.id)}
+            aria-label="Закрыть уведомление"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
     </ToastContext.Provider>
   );
 }

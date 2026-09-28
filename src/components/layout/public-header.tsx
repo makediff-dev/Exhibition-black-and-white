@@ -71,17 +71,19 @@ export function PublicHeader() {
             {isAuthenticated ? (
               <>
                 <NotificationsPopover />
-                <Link href="/messages" className="p-2 hover:bg-gray-100" aria-label="Сообщения">
+                <Link href="/messages" className={styles.messagesButton} aria-label="Сообщения">
                   <MessageSquare className="h-4 w-4" />
                 </Link>
-                {user?.role === "customer" ? (
-                  <Link href="/requests/new" className="shrink-0">
-                    <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
-                      Разместить заявку
-                    </Button>
-                  </Link>
-                ) : null}
-                <AccountSwitcher />
+                <div className={styles.desktopActions}>
+                  {user?.role === "customer" ? (
+                    <Link href="/requests/new" className="shrink-0">
+                      <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
+                        Разместить заявку
+                      </Button>
+                    </Link>
+                  ) : null}
+                  <AccountSwitcher />
+                </div>
               </>
             ) : (
               <Link href={loginHref(pathname)} className={styles.loginButton}>
@@ -101,54 +103,78 @@ export function PublicHeader() {
         </div>
       </div>
 
-      <Drawer open={mobileOpen} onClose={() => setMobileOpen(false)} title="Меню" side="right">
-        <nav className="flex flex-col gap-2">
-          {NAV_LINKS.map((link) => {
-            const active = isActiveNavLink(pathname, link.href);
-            return (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={cn(
-                  "text-sm py-2 border-b border-gray-200",
-                  active && "font-semibold text-[#28b5b3]",
-                )}
-                aria-current={active ? "page" : undefined}
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-          <HeaderSearch className="mt-2" onNavigate={() => setMobileOpen(false)} />
-          <CityLocationButton className="mt-3 inline-flex min-h-10 items-center gap-2 text-sm" />
-          <div className="flex flex-col gap-2 mt-4">
+      <Drawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        title="Меню"
+        side="right"
+        closeLabel="Закрыть меню"
+        footer={
+          <div className={styles.drawerFooter}>
             {isAuthenticated ? (
-              <>
-                <NotificationsPopover
-                  compactLabel
-                  onNavigate={() => setMobileOpen(false)}
-                />
-                <Link href="/messages" onClick={() => setMobileOpen(false)}>
-                  Сообщения
-                </Link>
-                <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
-                {user?.role === "customer" ? (
-                  <Link href="/requests/new" onClick={() => setMobileOpen(false)}>
-                    <Button className="w-full" variant={requestButtonVariant}>
-                      Разместить заявку
-                    </Button>
-                  </Link>
-                ) : null}
-              </>
+              <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
+            ) : null}
+            {isAuthenticated && user?.role ? (
+              <Link href={`/account/${user.role}`} className="w-full" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full" variant="teal">
+                  Личный кабинет
+                </Button>
+              </Link>
             ) : (
-              <Link href={loginHref(pathname)} onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full">
-                  Вход
+              <Link href={loginHref(pathname)} className="w-full" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full" variant="teal">
+                  Войти в личный кабинет
                 </Button>
               </Link>
             )}
+            {isAuthenticated && user?.role === "customer" ? (
+              <Link href="/requests/new" className="w-full" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full" variant={requestButtonVariant}>
+                  Разместить заявку
+                </Button>
+              </Link>
+            ) : null}
           </div>
+        }
+      >
+        <nav className={styles.drawerNav}>
+          <HeaderSearch className={styles.drawerPhoneOnly} onNavigate={() => setMobileOpen(false)} />
+          <div className={styles.drawerLinks}>
+            {NAV_LINKS.map((link) => {
+              const active = isActiveNavLink(pathname, link.href);
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={cn(
+                    "text-sm py-2 border-b border-gray-200",
+                    active && "font-semibold text-[#28b5b3]",
+                  )}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+          <CityLocationButton
+            className={cn(styles.drawerPhoneOnly, styles.drawerUtility)}
+          />
+          {isAuthenticated ? (
+            <>
+              <div className={styles.drawerPhoneOnly}>
+                <NotificationsPopover compactLabel onNavigate={() => setMobileOpen(false)} />
+              </div>
+              <Link
+                href="/messages"
+                className={cn(styles.drawerPhoneOnly, styles.drawerUtility)}
+                onClick={() => setMobileOpen(false)}
+              >
+                Сообщения
+              </Link>
+            </>
+          ) : null}
         </nav>
       </Drawer>
     </header>

@@ -25,6 +25,7 @@ import {
   VENUE_BOOKING_DATE_STATUS_META,
 } from "@/lib/utils/venue-date-statuses";
 import { cn } from "@/lib/utils/cn";
+import { HorizontalChipScroller } from "@/components/ui/horizontal-chip-scroller";
 
 const STATUS_FILTER_OPTIONS: Array<{ value: "" | VenueBookingDateStatus; label: string }> = [
   { value: "", label: "Все статусы" },
@@ -112,15 +113,17 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
             бронирования или переговоров.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
+        <div className="flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Link
             href="/account/organizer/venues"
-            className="text-sm underline hover:text-gray-900"
+            className="text-sm underline hover:text-gray-900 inline-flex items-center"
           >
             Площадки проведения
           </Link>
-          <Link href="/account/organizer/create-event">
-            <Button size="sm">Создать мероприятие</Button>
+          <Link href="/account/organizer/create-event" className="w-full min-w-0 sm:w-auto">
+            <Button size="sm" className="w-full min-w-0 whitespace-normal sm:w-auto">
+              Создать мероприятие
+            </Button>
           </Link>
         </div>
       </div>
@@ -137,7 +140,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
 
       <div className="space-y-3">
         <p className="text-sm font-medium">Календарь</p>
-        <div className="flex flex-wrap gap-2">
+        <HorizontalChipScroller>
           <button
             type="button"
             onClick={() => setActiveMonth("all")}
@@ -171,7 +174,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
               </button>
             );
           })}
-        </div>
+        </HorizontalChipScroller>
         <p className="text-sm text-gray-600">
           {activeMonth === "all"
             ? `Показано ${filteredEvents.length} из ${events.length} мероприятий`
@@ -185,7 +188,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
           description="Измените месяц или статус, чтобы увидеть другие события"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredEvents.map(({ event, meta, halls, statuses, pendingBookings }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 

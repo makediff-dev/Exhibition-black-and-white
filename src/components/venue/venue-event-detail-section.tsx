@@ -211,7 +211,7 @@ export function VenueEventDetailSection({
         {eventBookings.length === 0 ? (
           <p className="text-sm text-gray-600">Бронирований по этому мероприятию пока нет</p>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {eventBookings.map((booking) => {
               const hall = booking.hallId
                 ? SEED_HALLS.find((item) => item.id === booking.hallId)

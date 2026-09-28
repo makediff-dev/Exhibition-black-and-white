@@ -79,8 +79,8 @@ export function OrganizerDashboardSection({ organizerId = "user-organizer" }: Pr
       </DashboardStatsGrid>
 
       <div className="flex flex-wrap gap-2">
-        <Link href="/account/organizer/create-event">
-          <Button size="sm">Создать мероприятие</Button>
+        <Link href="/account/organizer/create-event" className="w-full sm:w-auto">
+          <Button size="sm" className="w-full sm:w-auto">Создать мероприятие</Button>
         </Link>
       </div>
 

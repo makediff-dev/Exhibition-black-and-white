@@ -62,6 +62,9 @@ export function CatalogCardImageSlider({
           src={currentSlide.imageUrl}
           alt={currentSlide.title || "Фото карточки"}
           className="h-full w-full object-cover transition-opacity duration-150"
+          loading="lazy"
+          decoding="async"
+          sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 25vw"
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
@@ -78,7 +81,7 @@ export function CatalogCardImageSlider({
             event.stopPropagation();
             onToggleFavorite();
           }}
-          className="pointer-events-auto absolute top-2 right-2 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-gray-500 shadow-sm transition-colors hover:text-gray-900"
+          className="pointer-events-auto absolute top-2 right-2 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-gray-500 shadow-sm transition-colors hover:text-gray-900"
           aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
         >
           <Heart className={`h-4 w-4 ${isFavorite ? "fill-gray-900 text-gray-900" : ""}`} />

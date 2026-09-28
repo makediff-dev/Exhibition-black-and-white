@@ -213,7 +213,7 @@ export function EventOrdersPanel({
                   {EVENT_ORDER_PRIORITY_LABELS[group.priority]}
                 </h3>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {group.items.map((order) => {
                   const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
                   const showEventTitle = Boolean(organizerId || (venueId && !eventId));

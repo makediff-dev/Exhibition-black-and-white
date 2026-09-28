@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/cn";
 import { X } from "lucide-react";
 import { useId, useRef, type ReactNode } from "react";
 import { useFocusTrap, useInertSiblings } from "@/lib/hooks/use-focus-trap";
+import { useDialogLayer } from "@/components/ui/dialog-layer";
 import { createPortal } from "react-dom";
 import { Button } from "./button";
 import styles from "./modal.module.css";
@@ -27,10 +28,12 @@ export function Modal({ open, onClose, title, children, footer, wide, accent = "
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(open, panelRef, onClose);
-  useInertSiblings(open, rootRef);
+  const { isForeground } = useDialogLayer(open);
+  const active = open && isForeground;
+  useFocusTrap(active, panelRef, onClose);
+  useInertSiblings(active, rootRef);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!active || typeof document === "undefined") return null;
 
   const sizeClass = wide ? styles.panelWide : styles.panelDefault;
   const panel = (

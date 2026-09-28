@@ -12,7 +12,7 @@ export function useFitCardCount(
   ref: RefObject<HTMLElement | null>,
   options: UseFitCardCountOptions = {},
 ) {
-  const minCardWidth = options.minCardWidth ?? 220;
+  const minCardWidth = options.minCardWidth ?? 200;
   const fallback = options.fallback ?? 5;
   const max = options.max ?? 8;
   const [count, setCount] = useState(fallback);

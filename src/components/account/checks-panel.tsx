@@ -198,14 +198,15 @@ export function ChecksPanel({ role = "customer" }: ChecksPanelProps) {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-gray-200 p-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <FileText className="h-4 w-4 shrink-0" />
-                    <span>{check.reportFile}</span>
+                <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-card border border-gray-200 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-2 text-sm text-gray-700">
+                    <FileText className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="min-w-0 break-all [overflow-wrap:anywhere]">{check.reportFile}</span>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
+                    className="w-full shrink-0 sm:w-auto"
                     onClick={() => downloadReportFile(check)}
                   >
                     <Download className="h-4 w-4" />

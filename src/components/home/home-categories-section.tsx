@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { POPULAR_SERVICE_CATEGORIES } from "@/constants/categories";
 import { HOME_IMAGES, pickHomeImage } from "@/constants/home-images";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { HomeScrollSection } from "./home-scroll-section";
 import styles from "./home-page.module.css";
 
@@ -10,6 +11,7 @@ export function HomeCategoriesSection() {
   return (
     <HomeScrollSection
       title="Популярные категории услуг"
+      mobileTitle="Категории услуг"
       linkHref="/services"
       linkLabel="Все услуги"
       showFilters={false}
@@ -24,11 +26,12 @@ export function HomeCategoriesSection() {
           className={styles.categoryCard}
         >
           <div className={styles.categoryImage}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <ResponsiveImage
               src={pickHomeImage(HOME_IMAGES.categories, index)}
               alt=""
+              fill
               className={styles.categoryImagePhoto}
+              sizes="(max-width: 767px) 70vw, 190px"
             />
           </div>
           <p className={styles.categoryLabel}>{category}</p>
@@ -36,8 +39,13 @@ export function HomeCategoriesSection() {
       ))}
       <Link href="/services" className={styles.categoryCard}>
         <div className={styles.categoryImage}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={HOME_IMAGES.categoryMore} alt="" className={styles.categoryImagePhoto} />
+          <ResponsiveImage
+            src={HOME_IMAGES.categoryMore}
+            alt=""
+            fill
+            className={styles.categoryImagePhoto}
+            sizes="(max-width: 767px) 70vw, 190px"
+          />
         </div>
         <p className={styles.categoryLabel}>Больше услуг</p>
       </Link>

@@ -829,12 +829,12 @@ function DealPage() {
           ) : (
             dealPayments.map((payment) => (
               <Card key={payment.id} className="text-sm">
-                <div className="flex flex-wrap justify-between items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium">{payment.type}</p>
                     <p className="text-gray-600 text-xs">{payment.description}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="font-bold">{formatPrice(payment.amount)}</p>
                     <Badge variant="outline" className="mt-1">
                       {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}

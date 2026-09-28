@@ -12,6 +12,7 @@ export function HomeRecommendedContractorsSection() {
   return (
     <HomeScrollSection
       title="Рекомендованные исполнители услуг"
+      mobileTitle="Рекомендованные исполнители"
       linkHref="/contractors"
       linkLabel="Все исполнители"
     >

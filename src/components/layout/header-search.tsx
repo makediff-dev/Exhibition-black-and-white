@@ -73,6 +73,9 @@ export function HeaderSearch({ className, onNavigate }: HeaderSearchProps) {
             }}
             onFocus={() => setOpen(true)}
             placeholder="Поиск..."
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
             autoComplete="off"
             aria-label={PLATFORM_SEARCH_LABEL}
             aria-expanded={showDropdown}

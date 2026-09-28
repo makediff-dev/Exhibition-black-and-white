@@ -117,7 +117,7 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {serviceOrders.map((order) => {
           const highlighted = actionNotifications.some((item) => item.eventId === order.eventId);
           const eventTitle = getEventTitle(order.eventId);
@@ -228,7 +228,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
         className="max-w-xs"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {bookings.map((booking) => {
           const eventTitle = getEventTitle(booking.eventId);
           const hallName = getHallName(booking.hallId);
@@ -330,7 +330,7 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
         className="max-w-xs"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {inquiries.map((inquiry) => (
           <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">

@@ -34,7 +34,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex w-full min-h-[280px] flex-col items-center justify-center border border-dashed py-16 text-center",
+        "box-border flex w-full flex-col items-center justify-center border border-dashed px-[10px] py-[20px] text-center",
         catalogAccent
           ? "rounded-[14px] border-[var(--catalog-accent)]/40"
           : accountTheme

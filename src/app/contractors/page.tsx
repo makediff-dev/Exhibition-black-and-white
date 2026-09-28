@@ -45,6 +45,7 @@ function FilterPanel({
   sort,
   setSort,
   onApply,
+  hideApply = false,
 }: {
   search: string;
   setSearch: (v: string) => void;
@@ -65,6 +66,7 @@ function FilterPanel({
   sort: string;
   setSort: (v: string) => void;
   onApply?: () => void;
+  hideApply?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -115,9 +117,11 @@ function FilterPanel({
         <input type="checkbox" checked={urgentOnly} onChange={(e) => setUrgentOnly(e.target.checked)} />
         Срочный заказ
       </label>
-      <Button type="button" variant={CONTRACTORS_ACCENT} className="w-full" onClick={onApply}>
-        Применить
-      </Button>
+      {hideApply ? null : (
+        <Button type="button" variant={CONTRACTORS_ACCENT} className="w-full" onClick={onApply}>
+          Применить
+        </Button>
+      )}
     </div>
   );
 }
@@ -265,7 +269,17 @@ function ContractorsPageContent() {
           </section>
         </div>
 
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Фильтры">
+      <Drawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Фильтры"
+        closeLabel="Закрыть фильтры"
+        footer={
+          <Button type="button" variant={CONTRACTORS_ACCENT} className="w-full" onClick={() => setDrawerOpen(false)}>
+            Применить
+          </Button>
+        }
+      >
         <FilterPanel
           search={search}
           setSearch={setSearch}
@@ -285,7 +299,7 @@ function ContractorsPageContent() {
           setUrgentOnly={setUrgentOnly}
           sort={sort}
           setSort={setSort}
-          onApply={() => setDrawerOpen(false)}
+          hideApply
         />
       </Drawer>
 

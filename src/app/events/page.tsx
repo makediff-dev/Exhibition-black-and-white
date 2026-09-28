@@ -470,7 +470,17 @@ function EventsPageContent() {
           </section>
         </div>
 
-      <Drawer open={filterDrawerOpen} onClose={() => setFilterDrawerOpen(false)} title="Фильтры">
+      <Drawer
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        title="Фильтры"
+        closeLabel="Закрыть фильтры"
+        footer={
+          <Button variant={EVENTS_ACCENT} className="w-full" onClick={() => setFilterDrawerOpen(false)}>
+            Применить
+          </Button>
+        }
+      >
         <FilterFields
           city={city}
           setCity={setCity}
@@ -494,7 +504,6 @@ function EventsPageContent() {
           onToggleDay={toggleDay}
           onClearPeriod={clearPeriod}
         />
-        <Button variant={EVENTS_ACCENT} className="w-full mt-4" onClick={() => setFilterDrawerOpen(false)}>Применить</Button>
       </Drawer>
     </CabinetAwareLayout>
   );
