@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/states";
-import { ReviewCard } from "@/components/contractors/review-card";
+import { ReviewsList } from "@/components/contractors/reviews-list";
 import type { CompanyProfile, ContractorReview } from "@/data/types";
 import { findContractorForUser } from "@/lib/utils/user-entity-map";
 import { formatShortDate } from "@/lib/utils/formatters";
@@ -39,11 +39,7 @@ export function ContractorReviewsSection({ user }: Props) {
           description="Отзывы появятся после завершённых сделок"
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-          {reviews.map((rv) => (
-            <ReviewCard key={rv.id} review={rv} onClick={() => setReviewModal(rv)} />
-          ))}
-        </div>
+        <ReviewsList reviews={reviews} onSelect={setReviewModal} />
       )}
 
       <Modal

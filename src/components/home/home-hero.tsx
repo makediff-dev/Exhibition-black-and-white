@@ -11,12 +11,7 @@ export function HomeHero() {
       <div className={styles.container}>
         <div className={styles.heroInner}>
           <h1 className={styles.heroTitle}>
-            <span className={styles.heroTitleDesktop}>
-              Маркетплейс выставочной
-              <br />
-              индустрии и не только
-            </span>
-            <span className={styles.heroTitleMobile}>Маркетплейс выставочной индустрии</span>
+            Маркетплейс выставочной индустрии
           </h1>
           <p className={styles.heroSubtitle}>
             Все мероприятия России, выставки, исполнители и сопутствующие услуги на одном сайте.
@@ -47,7 +42,7 @@ export function HomeHero() {
           <div className={styles.heroBanner}>
             <ResponsiveImage
               src={HOME_IMAGES.heroBanner}
-              alt=""
+              alt="Общий вид выставочного зала"
               fill
               priority
               className={styles.heroBannerPhoto}

@@ -1,24 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #fcfcfc;
   --foreground: #171717;
-  --color-primary: #28b5b3;
-  --color-primary-dark: #1f9696;
-  --color-blue: #2939eb;
-  --color-blue-dark: #2230c7;
-  --color-green: #00b23d;
-  --color-green-dark: #009a35;
-  --color-purple: #0aaee4;
-  --color-purple-dark: #0893c2;
-  --color-pink: #ff0096;
-  --color-pink-dark: #e00086;
+  --surface-page: #fcfcfc;
+  --surface-panel: #ffffff;
+  --surface-border: #dddddd;
+  --surface-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --platform-accent: #37bd85;
+  --platform-accent-hover: #2ea573;
+  --role-customer: #28b5b3;
+  --role-customer-hover: #1f9696;
+  --role-customer-soft: #eaf8f7;
+  --role-contractor: #0aaee4;
+  --role-contractor-hover: #0893c2;
+  --role-contractor-soft: #e8f7fd;
+  --role-organizer: #2939eb;
+  --role-organizer-hover: #2230c7;
+  --role-organizer-soft: #eef0fe;
+  --role-venue: #683bd9;
+  --role-venue-hover: #5730c0;
+  --role-venue-soft: #f3effc;
+  --color-primary: var(--platform-accent);
+  --color-primary-dark: var(--platform-accent-hover);
+  --color-blue: var(--role-organizer);
+  --color-blue-dark: var(--role-organizer-hover);
+  --color-green: var(--platform-accent);
+  --color-green-dark: var(--platform-accent-hover);
+  --color-purple: var(--role-contractor);
+  --color-purple-dark: var(--role-contractor-hover);
   --radius-card: 14px;
   --radius-button: 10px;
-  --demo-fab-size: 48px;
+  --demo-fab-size: 44px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
-  --demo-offset: calc(var(--demo-fab-size) + 16px + var(--safe-bottom));
+  --demo-offset: calc(var(--demo-fab-size) + 24px + var(--safe-bottom));
 }
 
 @theme inline {
@@ -65,6 +81,36 @@ canvas {
 :focus-visible {
   outline: 2px solid #171717;
   outline-offset: 2px;
+}
+
+a,
+button,
+[role="button"],
+summary,
+label[for],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+button:active:not(:disabled),
+a:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

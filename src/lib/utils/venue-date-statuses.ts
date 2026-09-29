@@ -1,4 +1,6 @@
-import type { Booking, Event, VenueBookingDateStatus, VenueInquiry } from "@/data/types";
+import type { Booking, Event, VenueBookingDateStatus, VenueInquiry } from "../../data/types/index.ts";
+import { getEventLifecycleCode } from "../state/event-machine.ts";
+import { getNow, getPrototypeNowDateIso } from "../time/now.ts";
 
 function toIsoDate(date: Date) {
   const year = date.getFullYear();
@@ -91,6 +93,10 @@ export function getEventVenueStatuses(
   inquiries: VenueInquiry[],
   hasVenueMeta = false
 ): VenueBookingDateStatus[] {
+  if (getEventLifecycleCode(event) === "completed") {
+    return [];
+  }
+
   const statuses = new Set<VenueBookingDateStatus>();
 
   bookings
@@ -117,6 +123,7 @@ export function getEventVenueStatuses(
 }
 
 export function getMonthKey(date: string) {
+  if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 7);
   const parsed = new Date(date);
   return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -133,4 +140,13 @@ export function getYearMonthKeys(year: number) {
     const month = String(index + 1).padStart(2, "0");
     return `${year}-${month}`;
   });
+}
+
+export function resolveDefaultMonthKey(eventDates: string[], now = getNow()): string {
+  const today = getPrototypeNowDateIso();
+  const nowKey = getMonthKey(now.toISOString().slice(0, 10));
+  const upcomingDates = eventDates.filter((date) => date.slice(0, 10) >= today);
+  const source = upcomingDates.length > 0 ? upcomingDates : eventDates.filter(Boolean);
+  const keys = [...new Set(source.map(getMonthKey))].sort();
+  return keys.find((key) => key >= nowKey) ?? keys[0] ?? nowKey;
 }

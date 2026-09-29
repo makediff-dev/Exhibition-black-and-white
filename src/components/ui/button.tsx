@@ -47,12 +47,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "teal-outline": "bg-white text-[#28b5b3] hover:bg-[#eaf8f7] border border-[#28b5b3]",
       "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#d4d4d4] hover:border-[#171717]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",
-      teal: "bg-[#28b5b3] text-white hover:bg-[#1f9696] border border-[#28b5b3]",
-      blue: "bg-[#2939eb] text-white hover:bg-[#2230c7] border border-[#2939eb]",
-      green: "bg-[#00b23d] text-white hover:bg-[#009a35] border border-[#00b23d]",
-      purple: "bg-[#0AAEE4] text-white hover:bg-[#0893C2] border border-[#0AAEE4]",
-      violet: "bg-[#683BD9] text-white hover:bg-[#5730C0] border border-[#683BD9]",
-      pink: "bg-[#ff0096] text-white hover:bg-[#e00086] border border-[#ff0096]",
+      teal: "bg-[var(--role-customer)] text-white hover:bg-[var(--role-customer-hover)] border border-[var(--role-customer)]",
+      blue: "bg-[var(--role-organizer)] text-white hover:bg-[var(--role-organizer-hover)] border border-[var(--role-organizer)]",
+      green: "bg-[var(--platform-accent)] text-white hover:bg-[var(--platform-accent-hover)] border border-[var(--platform-accent)]",
+      purple: "bg-[var(--role-contractor)] text-white hover:bg-[var(--role-contractor-hover)] border border-[var(--role-contractor)]",
+      violet: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)]",
+      pink: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)]",
     };
     const sizes = {
       sm: "px-3 py-1.5 text-xs",
@@ -63,7 +63,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-button font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
           variants[resolvedVariant],
           sizes[size],
           className,

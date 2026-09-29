@@ -16,7 +16,6 @@ import { formatDate, formatPrice, formatShortDate } from "@/lib/utils/formatters
 import { getPaymentStatus, isOpenInvoice } from "@/lib/state/payment-machine";
 import { getEscrowLinkNote, isFinanceEscrow } from "@/lib/domain/finance";
 import {
-  getLedgerPairNote,
   getPaymentOperationLabel,
   getPaymentTradeSideLabel,
   isViewerPayer,
@@ -174,6 +173,9 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
       </div>
 
       <Tabs tabs={PAYMENT_TABS} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
+      <p className="text-xs text-gray-500 mb-6">
+        Зеркальные записи контрагента скрыты: в списке один счёт, а не два начисления.
+      </p>
 
       {(activeTab === "payable" || activeTab === "receivable") && (
         <div className="grid sm:grid-cols-2 gap-4 mb-6 max-w-2xl">
@@ -239,15 +241,24 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                   {payment.number ? `Счёт ${payment.number}` : "Номер счёта будет присвоен после выставления"}
                 </p>
                 <p className="text-sm text-gray-600 mb-[10px]">{payment.description}</p>
-                <p className="text-xs text-gray-600 mb-[10px]">
-                  Плательщик: {payment.payerName ?? "не указан"} · Получатель:{" "}
-                  {payment.payeeName ?? "не указан"}
-                </p>
+                {payment.payerName && payment.payeeName ? (
+                  <p className="text-xs text-gray-600 mb-[10px]">
+                    Плательщик: {payment.payerName} · Получатель: {payment.payeeName}
+                  </p>
+                ) : (
+                  <div className="mb-[10px] rounded-[10px] border border-[var(--surface-border)] bg-[var(--surface-page)] p-2">
+                    <p className="text-xs font-medium text-gray-900">Требуются реквизиты</p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {!payment.payerName ? "Плательщик не заполнен. " : ""}
+                      {!payment.payeeName ? "Получатель не заполнен. " : ""}
+                    </p>
+                    <Link href="/account/venue/profile" className="text-xs underline">
+                      Открыть профиль и реквизиты
+                    </Link>
+                  </div>
+                )}
                 {getEscrowLinkNote(payment, venuePayments) && (
                   <p className="text-xs text-gray-500 mb-[10px]">{getEscrowLinkNote(payment, venuePayments)}</p>
-                )}
-                {getLedgerPairNote(payment) && (
-                  <p className="text-xs text-gray-500 mb-[10px]">{getLedgerPairNote(payment)}</p>
                 )}
 
                 <div className="space-y-[10px] text-sm flex-1">

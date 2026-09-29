@@ -48,6 +48,7 @@ export function formatShortDate(date: string): string {
   return formatWithDate(date, {
     day: "numeric",
     month: "short",
+    year: "numeric",
   });
 }
 

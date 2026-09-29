@@ -117,6 +117,12 @@ export function ServiceCard({
 
           <div className="mt-auto pt-4 pointer-events-auto relative z-[3]">
             <div className="flex w-full flex-col gap-2">
+              {role === "contractor" ? (
+                <p className="text-xs text-gray-600">
+                  В контексте исполнителя покупка недоступна. Просматривайте рынок и конкурентов без
+                  добавления в корзину.
+                </p>
+              ) : (
               <Button
                 size="sm"
                 variant={addToCartVariant}
@@ -129,6 +135,7 @@ export function ServiceCard({
               >
                 В корзину
               </Button>
+              )}
               <Link
                 href={`${getContractorProfileHref(service.contractorId, {
                   role: from ? role : undefined,

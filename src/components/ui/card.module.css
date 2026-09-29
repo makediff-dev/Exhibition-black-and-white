@@ -1,5 +1,7 @@
 .root {
   padding: 16px !important;
+  box-shadow: var(--surface-shadow);
+  border: 1px solid transparent;
 }
 
 .flush {
@@ -13,7 +15,7 @@
 
 .borderHover:hover,
 .hoverable:hover {
-  border-color: var(--account-accent, #2939eb) !important;
+  border-color: var(--account-accent, var(--role-organizer)) !important;
 }
 
 .hoverable {

@@ -26,7 +26,7 @@ export function Card({ children, className, onClick, hoverable, borderHover, flu
       className={cn(
         styles.root,
         flush && styles.flush,
-        "border border-gray-300 bg-white",
+        "bg-[var(--surface-panel)]",
         accountTheme ? "rounded-card" : "rounded-[10px]",
         isHoverable && styles.hoverable,
         borderHover && styles.borderHover,

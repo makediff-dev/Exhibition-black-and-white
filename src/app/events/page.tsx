@@ -16,7 +16,8 @@ import { EmptyState, LoadingState } from "@/components/ui/states";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, EVENT_INDUSTRIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict, getDistrictByCity } from "@/constants/categories";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import { canBookEvent } from "@/lib/state/event-machine";
+import { canBookEvent, listUpcomingEvents } from "@/lib/state/event-machine";
+import { resolveDefaultMonthKey } from "@/lib/utils/venue-date-statuses";
 import type { Event } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
@@ -252,16 +253,19 @@ function EventsPageFallback() {
 function EventsPageContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
-  const { selectedCity, setSelectedCity } = usePrototypeStore();
+  const { selectedCity, cityChoiceConfirmed, setSelectedCity } = usePrototypeStore();
 
   const [loading, setLoading] = useState(true);
   const detectedCity = "Санкт-Петербург";
-  const [cityModalOpen, setCityModalOpen] = useState(true);
-  const [cityDraft, setCityDraft] = useState(detectedCity);
-  const [districtDraft, setDistrictDraft] = useState(getDistrictByCity(detectedCity));
+  const [cityModalOpen, setCityModalOpen] = useState(
+    () => !cityChoiceConfirmed && !selectedCity
+  );
+  const [cityDraft, setCityDraft] = useState(selectedCity || detectedCity);
+  const [districtDraft, setDistrictDraft] = useState(getDistrictByCity(selectedCity || detectedCity));
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [viewYear, setViewYear] = useState(2026);
-  const [viewMonth, setViewMonth] = useState(2);
+  const defaultMonth = resolveDefaultMonthKey(SEED_EVENTS.map((event) => event.startDate));
+  const [viewYear, setViewYear] = useState(() => Number(defaultMonth.slice(0, 4)));
+  const [viewMonth, setViewMonth] = useState(() => Number(defaultMonth.slice(5, 7)) - 1);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [city, setCity] = useState("");
   const [industry, setIndustry] = useState("");
@@ -327,7 +331,7 @@ function EventsPageContent() {
 
   const recommendedEvents = useMemo(() => {
     if (!isAuthenticated || !user) return [];
-    return SEED_EVENTS.filter((e) => isRecommended(e)).slice(0, 3);
+    return listUpcomingEvents(SEED_EVENTS.filter((e) => isRecommended(e))).slice(0, 3);
   }, [isAuthenticated, user, isRecommended]);
 
   const shiftViewMonth = (delta: number) => {
@@ -372,6 +376,11 @@ function EventsPageContent() {
     setCityModalOpen(false);
   };
 
+  const skipCity = () => {
+    setSelectedCity(selectedCity || cityDraft);
+    setCityModalOpen(false);
+  };
+
   return (
     <CabinetAwareLayout
       title="Выставки и мероприятия"
@@ -380,7 +389,7 @@ function EventsPageContent() {
     >
       <CityPickerModal
         open={cityModalOpen}
-        onClose={() => setCityModalOpen(false)}
+        onClose={skipCity}
         detectedCity={detectedCity}
         cityDraft={cityDraft}
         setCityDraft={setCityDraft}

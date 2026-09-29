@@ -2,6 +2,7 @@
 
 import { useRef, type CSSProperties } from "react";
 import { SEED_EVENTS } from "@/data/mocks/seed";
+import { listUpcomingEvents } from "@/lib/state/event-machine";
 import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
 import { useFitCardCount } from "@/hooks/use-fit-card-count";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -18,7 +19,9 @@ export function HomeEventsSection() {
   const fitCount = useFitCardCount(gridRef);
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 3 : fitCount;
-  const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(SEED_EVENTS, {
+  const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(
+    listUpcomingEvents(SEED_EVENTS),
+    {
     initialCount: pageSize,
     step: pageSize,
   });
@@ -47,6 +50,7 @@ export function HomeEventsSection() {
                 key={key}
                 title={event.title}
                 imageUrl={pickHomeImage(HOME_IMAGES.events, index)}
+                imageAlt="Фотография выставочного мероприятия"
                 meta={[
                   { label: "Место", value: event.city },
                   {

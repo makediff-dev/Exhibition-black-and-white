@@ -1,5 +1,6 @@
 "use client";
 
+/** TASK-16: pin, edit, unsend, forward stay post-MVP until product confirms scope. */
 import Link from "next/link";
 import { Paperclip, Send } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";

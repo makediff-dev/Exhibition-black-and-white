@@ -23,6 +23,7 @@ import {
   getMonthKey,
   getMonthLabel,
   getYearMonthKeys,
+  resolveDefaultMonthKey,
   VENUE_BOOKING_DATE_STATUS_META,
 } from "@/lib/utils/venue-date-statuses";
 import { cn } from "@/lib/utils/cn";
@@ -66,7 +67,11 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
   const storeInquiries = usePrototypeStore((state) => state.venueInquiries);
 
   const [statusFilter, setStatusFilter] = useState<"" | VenueBookingDateStatus>("");
-  const [activeMonth, setActiveMonth] = useState("all");
+  const [activeMonth, setActiveMonth] = useState(() =>
+    resolveDefaultMonthKey(
+      SEED_EVENTS.filter((event) => event.venueId === venueId).map((event) => event.startDate)
+    )
+  );
 
   const bookings = useMemo(() => mergeBookings(storeBookings), [storeBookings]);
   const inquiries = useMemo(() => mergeInquiries(storeInquiries), [storeInquiries]);

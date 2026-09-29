@@ -28,6 +28,7 @@ interface HomeTileCardProps {
   onButtonClick?: () => void;
   buttonVariant?: HomeTileButtonVariant;
   imageUrl?: string;
+  imageAlt?: string;
 }
 
 export function HomeTileCard({
@@ -38,6 +39,7 @@ export function HomeTileCard({
   onButtonClick,
   buttonVariant = "primary",
   imageUrl,
+  imageAlt = "",
 }: HomeTileCardProps) {
   const buttonClass = BUTTON_CLASS_MAP[buttonVariant];
   const buttonColors = HOME_TILE_BUTTON_VARIANTS[buttonVariant];
@@ -50,7 +52,7 @@ export function HomeTileCard({
           {imageUrl ? (
             <ResponsiveImage
               src={imageUrl}
-              alt=""
+              alt={imageAlt}
               fill
               className={styles.tileImagePhoto}
               sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 25vw"

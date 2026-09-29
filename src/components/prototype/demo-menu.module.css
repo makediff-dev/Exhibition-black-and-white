@@ -1,12 +1,19 @@
 .root {
   position: fixed;
-  right: max(16px, env(safe-area-inset-right, 0px));
-  bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  z-index: 30;
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: auto;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  z-index: 20;
   display: flex;
   flex-direction: column-reverse;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 8px;
+  pointer-events: none;
+}
+
+.fab,
+.panel {
+  pointer-events: auto;
 }
 
 .fab {

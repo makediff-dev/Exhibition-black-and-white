@@ -279,6 +279,7 @@ interface PrototypeState {
   venueEventMeta: VenueEventMeta[];
   venueProfileMedia: VenueProfileMedia[];
   selectedCity: string;
+  cityChoiceConfirmed: boolean;
   compareResponseIds: string[];
   registrationDraft: Record<string, unknown>;
   requestWizardDraft: Record<string, unknown>;
@@ -339,6 +340,7 @@ interface PrototypeState {
   addVenueProfileMedia: (item: VenueProfileMedia) => void;
   removeVenueProfileMedia: (id: string) => void;
   setSelectedCity: (city: string) => void;
+  setCityChoiceConfirmed: (confirmed: boolean) => void;
   toggleCompareResponse: (id: string) => void;
   clearCompare: () => void;
   setRegistrationDraft: (draft: Record<string, unknown>) => void;
@@ -544,6 +546,7 @@ export const usePrototypeStore = create<PrototypeState>()(
       venueEventMeta: seed.venueEventMeta,
       venueProfileMedia: seed.venueProfileMedia,
       selectedCity: "Москва",
+      cityChoiceConfirmed: true,
       compareResponseIds: [],
       registrationDraft: {},
       requestWizardDraft: {},
@@ -1059,7 +1062,8 @@ export const usePrototypeStore = create<PrototypeState>()(
         set((s) => ({
           venueProfileMedia: s.venueProfileMedia.filter((item) => item.id !== id),
         })),
-      setSelectedCity: (city) => set({ selectedCity: city }),
+      setSelectedCity: (city) => set({ selectedCity: city, cityChoiceConfirmed: true }),
+      setCityChoiceConfirmed: (confirmed) => set({ cityChoiceConfirmed: confirmed }),
       toggleCompareResponse: (id) =>
         set((s) => ({
           compareResponseIds: s.compareResponseIds.includes(id)
@@ -1230,6 +1234,8 @@ export const usePrototypeStore = create<PrototypeState>()(
           contractorPortfolios: {},
           serviceCatalogs: [],
           projectTimelineRows: [],
+          selectedCity: "Москва",
+          cityChoiceConfirmed: true,
         });
       },
     }),

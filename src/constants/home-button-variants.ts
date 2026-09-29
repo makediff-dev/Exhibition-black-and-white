@@ -22,8 +22,8 @@ export const HOME_TILE_BUTTON_VARIANTS = {
     hover: "#5730C0",
   },
   pink: {
-    background: "#ff0096",
-    hover: "#e00086",
+    background: "var(--role-venue)",
+    hover: "var(--role-venue-hover)",
   },
 } as const satisfies Record<
   HomeTileButtonVariant,

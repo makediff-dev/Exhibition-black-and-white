@@ -20,8 +20,25 @@ export function getEventLifecycleCode(event: Event): EventLifecycleCode {
   return "upcoming";
 }
 
+export function isEventCompleted(event: Event): boolean {
+  const code = getEventLifecycleCode(event);
+  return code === "completed" || code === "cancelled" || code === "archived";
+}
+
+export function isEventUpcomingOrActive(event: Event): boolean {
+  const code = getEventLifecycleCode(event);
+  return code === "upcoming" || code === "active";
+}
+
+export function listUpcomingEvents(events: Event[]): Event[] {
+  return events
+    .filter(isEventUpcomingOrActive)
+    .slice()
+    .sort((left, right) => left.startDate.localeCompare(right.startDate));
+}
+
 export function canBookEvent(event: Event): boolean {
-  return event.bookingAvailable && getEventLifecycleCode(event) !== "completed";
+  return event.bookingAvailable && !isEventCompleted(event);
 }
 
 export function getEventStatus(event: Event): ActionableStatus {

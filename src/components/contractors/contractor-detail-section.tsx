@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ContractorRegistryBadges } from "@/components/contractors/contractor-registry-badges";
 import { PortfolioCard } from "@/components/contractors/portfolio-card";
-import { ReviewCard } from "@/components/contractors/review-card";
+import { ReviewsList } from "@/components/contractors/reviews-list";
 import { Card, CardTitle } from "@/components/ui/card";
 import { SEED_CONTRACTORS, SEED_SERVICES } from "@/data/mocks/seed";
 import type { UserRole } from "@/data/types";
@@ -202,11 +202,7 @@ export function ContractorDetailSection({
               {contractor.reviews.length === 0 ? (
                 <p className="text-sm text-gray-600">Отзывов пока нет</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contractor.reviews.map((review) => (
-                    <ReviewCard key={review.id} review={review} />
-                  ))}
-                </div>
+                <ReviewsList reviews={contractor.reviews} />
               )}
             </section>
 

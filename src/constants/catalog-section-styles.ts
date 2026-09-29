@@ -6,7 +6,7 @@ export const CATALOG_SECTION_ACCENT: Record<CatalogSection, CatalogAccentVariant
   events: "teal",
   services: "blue",
   contractors: "violet",
-  venues: "pink",
+  venues: "violet",
 };
 
 export interface CatalogAccentTokens {
@@ -30,8 +30,8 @@ export const CATALOG_ACCENT_TOKENS: Record<CatalogAccentVariant, CatalogAccentTo
     buttonVariant: "blue",
   },
   green: {
-    accent: "#00b23d",
-    accentHover: "#009a35",
+    accent: "var(--platform-accent)",
+    accentHover: "var(--platform-accent-hover)",
     accentSoft: "#e8f8ee",
     buttonVariant: "green",
   },
@@ -48,10 +48,10 @@ export const CATALOG_ACCENT_TOKENS: Record<CatalogAccentVariant, CatalogAccentTo
     buttonVariant: "violet",
   },
   pink: {
-    accent: "#ff0096",
-    accentHover: "#e00086",
-    accentSoft: "#fff0f8",
-    buttonVariant: "pink",
+    accent: "var(--role-venue)",
+    accentHover: "var(--role-venue-hover)",
+    accentSoft: "var(--role-venue-soft)",
+    buttonVariant: "violet",
   },
 };
 

@@ -265,9 +265,17 @@ export default function EventDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">
-            <Button type="button" variant="outline" onClick={() => setRemindersModalOpen(true)}>
-              Подключить напоминания
-            </Button>
+            {eventLifecycle.code === "completed" ? (
+              <Link href="/events">
+                <Button type="button" variant="outline">
+                  Следить за следующим мероприятием
+                </Button>
+              </Link>
+            ) : (
+              <Button type="button" variant="outline" onClick={() => setRemindersModalOpen(true)}>
+                Подключить напоминания
+              </Button>
+            )}
           </div>
         </div>
 
@@ -405,20 +413,26 @@ export default function EventDetailPage() {
 
           <aside className="space-y-6">
             <section className="catalog-content-box p-4">
-              <h2 className="text-base font-semibold mb-3">Доступные площади</h2>
+              <h2 className="text-base font-semibold mb-3">
+                {eventLifecycle.code === "completed" ? "Площади (архив)" : "Доступные площади"}
+              </h2>
               <div className="space-y-2">
                 {halls.map((hall) => (
                   <div key={hall.id} className="text-sm border-b border-gray-200 pb-2 last:border-0">
                     <p className="font-medium">{hall.name}</p>
                     <p className="text-gray-600">{hall.area} м² · до {hall.capacity} участников</p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <Badge variant={hall.available ? "outline" : "dashed"}>
-                        {hall.available ? "Доступен" : "Занят"}
-                      </Badge>
-                      {hall.available && HALL_REMAINING_SPOTS[hall.id] && (
-                        <span className="text-xs text-gray-600">{HALL_REMAINING_SPOTS[hall.id]}</span>
-                      )}
-                    </div>
+                    {eventLifecycle.code === "completed" ? (
+                      <p className="text-xs text-gray-600 mt-1">Архивная информация о зале</p>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <Badge variant={hall.available ? "outline" : "dashed"}>
+                          {hall.available ? "Доступен" : "Занят"}
+                        </Badge>
+                        {hall.available && HALL_REMAINING_SPOTS[hall.id] && (
+                          <span className="text-xs text-gray-600">{HALL_REMAINING_SPOTS[hall.id]}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -447,11 +461,13 @@ export default function EventDetailPage() {
           </aside>
         </div>
 
-      <EventRemindersModal
-        open={remindersModalOpen}
-        onClose={() => setRemindersModalOpen(false)}
-        event={event}
-      />
+      {eventLifecycle.code !== "completed" ? (
+        <EventRemindersModal
+          open={remindersModalOpen}
+          onClose={() => setRemindersModalOpen(false)}
+          event={event}
+        />
+      ) : null}
     </CabinetAwareLayout>
   );
 }

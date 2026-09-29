@@ -51,8 +51,10 @@ export function DashboardStatCard({
 
   if (!href) return card;
 
+  const accessibleName = typeof label === "string" ? `${label}: ${value}` : `Показатель: ${value}`;
+
   return (
-    <Link href={href} className="block h-full">
+    <Link href={href} className="block h-full cursor-pointer" aria-label={accessibleName}>
       {card}
     </Link>
   );

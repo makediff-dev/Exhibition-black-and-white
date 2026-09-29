@@ -7,8 +7,8 @@
   --color-green-dark: #009a35;
   --color-purple: #0aaee4;
   --color-purple-dark: #0893c2;
-  --color-pink: #ff0096;
-  --color-pink-dark: #e00086;
+  --color-pink: var(--role-venue);
+  --color-pink-dark: var(--role-venue-hover);
   --color-footer: #1a8f8f;
   --radius-card: 14px;
   --radius-button: 10px;
@@ -353,7 +353,7 @@
 }
 
 .quickActionRegisterButton5 {
-  background: #ff0096;
+  background: var(--role-venue);
 }
 
 .quickActionsTitle {
@@ -395,7 +395,7 @@
 }
 
 .quickActionCard5 {
-  background: linear-gradient(160deg, #ff3db4 0%, #ff0096 100%);
+  background: linear-gradient(160deg, var(--role-venue-hover) 0%, var(--role-venue) 100%);
 }
 
 .quickActionTop {
@@ -622,11 +622,11 @@
 }
 
 .tileButtonPink {
-  background: #ff0096;
+  background: var(--role-venue);
 }
 
 .tileButtonPink:hover {
-  background: #e00086;
+  background: var(--role-venue-hover);
 }
 
 .filters {
@@ -788,7 +788,7 @@
   outline: none;
   padding: 0;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   line-height: normal;
   color: #171717;
 }
@@ -799,7 +799,8 @@
 
 .heroSearchButton {
   flex-shrink: 0;
-  height: 38px;
+  min-height: 44px;
+  height: 44px;
   padding: 10px 18px;
   border: 1px solid transparent;
   background: #28b5b3;
@@ -898,7 +899,7 @@
 }
 
 .audienceRow:nth-child(4) .audienceMedia {
-  background: #ff0096;
+  background: var(--role-venue);
 }
 
 .audienceMediaPhoto {
@@ -1753,7 +1754,8 @@
   }
 
   .heroSearchButton {
-    height: 36px;
+    min-height: 44px;
+    height: 44px;
     padding: 8px 14px;
   }
 

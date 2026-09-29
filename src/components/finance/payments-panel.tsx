@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { HelpCircle, Shield, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -52,12 +53,13 @@ const PAYMENT_TABS = [
 ];
 
 export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string }) {
+  const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const storePayments = usePrototypeStore((state) => state.payments);
   const deals = usePrototypeStore((state) => state.deals);
   const payments = useMemo(() => mergePayments(storePayments), [storePayments]);
 
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || defaultTab);
 
   const dealMap = useMemo(
     () => Object.fromEntries(deals.map((d) => [d.id, d])),

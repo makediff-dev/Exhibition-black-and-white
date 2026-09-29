@@ -21,6 +21,7 @@ export function HomeRecommendedContractorsSection() {
           key={contractor.id}
           title={contractor.name}
           imageUrl={pickHomeImage(HOME_IMAGES.stand, index)}
+          imageAlt="Фотография стенда исполнителя"
           meta={[
             { label: "Город", value: contractor.city },
             { label: "Рейтинг", value: `★ ${contractor.rating} · ${contractor.reviewCount} отзывов` },

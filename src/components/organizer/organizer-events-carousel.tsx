@@ -10,21 +10,10 @@ import type { Notification } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { HorizontalChipScroller } from "@/components/ui/horizontal-chip-scroller";
+import { getMonthKey, getMonthLabel, resolveDefaultMonthKey } from "@/lib/utils/venue-date-statuses";
 
 interface Props {
   organizerId?: string;
-}
-
-function getMonthKey(date: string) {
-  const parsed = new Date(date);
-  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getMonthLabel(key: string) {
-  const [year, month] = key.split("-").map(Number);
-  return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(
-    new Date(year, month - 1, 1)
-  );
 }
 
 export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Props) {
@@ -48,7 +37,9 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
     return Array.from(keys).sort();
   }, [events]);
 
-  const [activeMonth, setActiveMonth] = useState(() => monthKeys[0] ?? "2026-03");
+  const [activeMonth, setActiveMonth] = useState(() =>
+    resolveDefaultMonthKey(events.map(({ event }) => event.startDate))
+  );
 
   const monthEvents = useMemo(
     () => events.filter(({ event }) => getMonthKey(event.startDate) === activeMonth),

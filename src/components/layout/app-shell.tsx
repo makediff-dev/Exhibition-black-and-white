@@ -147,7 +147,7 @@ export function AppShell({
     <div className={shellStyles.cabinetLayout}>
         <aside
           className={cn(
-            "hidden md:flex w-60 shrink-0 border-r border-gray-300 flex-col",
+            "hidden lg:flex w-60 shrink-0 border-r border-[var(--surface-border)] flex-col",
             shellStyles.sidebar,
             resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
           )}
@@ -165,7 +165,7 @@ export function AppShell({
           )}
         </aside>
 
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Drawer
             open={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
@@ -216,7 +216,7 @@ export function AppShell({
           <button
             type="button"
             className={cn(
-              "md:hidden mb-3 flex min-h-10 items-center gap-2 text-sm",
+              "lg:hidden mb-3 inline-flex min-h-11 min-w-11 items-center gap-2 px-2 text-sm",
               resolvedAccountRole && styles.accountMenuButton,
             )}
             aria-expanded={sidebarOpen}

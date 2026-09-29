@@ -7,6 +7,7 @@ import { CheckCircle, Clock, RefreshCw } from "lucide-react";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
+import { PhoneField } from "@/components/forms/phone-field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Select } from "@/components/ui/select";
@@ -459,12 +460,6 @@ function RegisterPageContent() {
       case 5:
         if (!form.termsAccepted) nextErrors.terms = "Примите условия использования";
         if (!form.privacyAccepted) nextErrors.privacy = "Примите политику конфиденциальности";
-        if (!form.serviceNotificationsAccepted) {
-          nextErrors.serviceNotifications = "Подключите важные уведомления";
-        }
-        if (!form.messengerNotificationsAccepted) {
-          nextErrors.messengerNotifications = "Подключите дублирование в мессенджер";
-        }
         break;
     }
 
@@ -523,9 +518,6 @@ function RegisterPageContent() {
     if (!form.privacyAccepted) {
       nextErrors.privacy = "Необходимо согласие на обработку персональных данных";
     }
-    if (!form.serviceNotificationsAccepted) {
-      nextErrors.serviceNotifications = "Необходимо согласие на получение уведомлений";
-    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -553,18 +545,11 @@ function RegisterPageContent() {
               ? "Создайте аккаунт компании на маркетплейсе"
               : "Сначала создайте личный аккаунт физического лица"}
           </p>
-          {form.role && (
-            <p className="mt-3 rounded-button border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-800">
-              Вы регистрируетесь как{" "}
-              <strong>{ROLE_LABELS[form.role as keyof typeof ROLE_LABELS]}</strong>.
-              Роль сохранится после подтверждения email. Её можно изменить до создания компании.
+          {form.role && showCompanyFlow ? (
+            <p className="mt-3 text-sm text-gray-700">
+              Роль: <strong>{ROLE_LABELS[form.role as keyof typeof ROLE_LABELS]}</strong>
             </p>
-          )}
-          {!form.role && !showCompanyFlow && (
-            <p className="mt-3 text-sm text-gray-600">
-              Роль на платформе выбирается после подтверждения email, перед созданием компании.
-            </p>
-          )}
+          ) : null}
         </div>
 
         {showCompanyFlow && (
@@ -577,11 +562,6 @@ function RegisterPageContent() {
 
         {!showCompanyFlow && !individualEmailSent && !awaitingEmailConfirmation && (
           <div className="mx-auto max-w-lg space-y-4 text-left">
-            <div className="rounded-button border border-gray-300 bg-gray-50 p-4 text-sm text-gray-700">
-              Регистрацию компании и выбор роли на платформе можно пройти только после
-              подтверждения email личного аккаунта.
-            </div>
-
             <form onSubmit={handleIndividualSubmit} className="space-y-4" noValidate>
               <Input
                 label="ФИО"
@@ -600,13 +580,10 @@ function RegisterPageContent() {
                 autoComplete="email"
                 required
               />
-              <Input
-                label="Мобильный"
-                type="tel"
-                value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
+              <PhoneField
+                value={form.phone ?? ""}
+                onChange={(value) => updateField("phone", value)}
                 error={errors.phone}
-                autoComplete="tel"
                 required
               />
 
@@ -616,8 +593,14 @@ function RegisterPageContent() {
                   checked={form.privacyAccepted}
                   onChange={(e) => updateField("privacyAccepted", e.target.checked)}
                   className="mt-1"
+                  required
                 />
-                <span>Согласие на обработку персональных данных</span>
+                <span>
+                  Я даю обязательное согласие на{" "}
+                  <Link href="/legal/privacy" className="underline" target="_blank" rel="noreferrer">
+                    обработку персональных данных
+                  </Link>
+                </span>
               </label>
               {errors.privacy && <p className="text-xs text-gray-700">{errors.privacy}</p>}
 
@@ -628,11 +611,8 @@ function RegisterPageContent() {
                   onChange={(e) => updateField("serviceNotificationsAccepted", e.target.checked)}
                   className="mt-1"
                 />
-                <span>Согласие на получение уведомлений от сервиса</span>
+                <span>Получать уведомления от сервиса (необязательно)</span>
               </label>
-              {errors.serviceNotifications && (
-                <p className="text-xs text-gray-700">{errors.serviceNotifications}</p>
-              )}
 
               <Button type="submit" variant="teal" className="w-full">
                 Отправить
@@ -744,13 +724,11 @@ function RegisterPageContent() {
                   error={errors.website}
                   placeholder="https://company.ru"
                 />
-                <Input
+                <PhoneField
                   label="Телефон компании"
-                  type="tel"
                   value={form.companyPhone ?? ""}
-                  onChange={(e) => updateField("companyPhone", e.target.value)}
+                  onChange={(value) => updateField("companyPhone", value)}
                   error={errors.companyPhone}
-                  placeholder="+7 900 000-00-00"
                 />
               </div>
             )}
@@ -878,11 +856,9 @@ function RegisterPageContent() {
               onChange={(e) => updateField("position", e.target.value)}
               error={errors.position}
             />
-            <Input
-              label="Телефон"
-              type="tel"
-              value={form.phone}
-              onChange={(e) => updateField("phone", e.target.value)}
+            <PhoneField
+              value={form.phone ?? ""}
+              onChange={(value) => updateField("phone", value)}
               error={errors.phone}
             />
             <Input
@@ -1141,7 +1117,7 @@ function RegisterPageContent() {
               />
               <span>
                 Я принимаю{" "}
-                <Link href="/how-it-works" className="underline">
+                <Link href="/legal/terms" className="underline" target="_blank" rel="noreferrer">
                   условия использования
                 </Link>{" "}
                 сервиса
@@ -1158,7 +1134,7 @@ function RegisterPageContent() {
               />
               <span>
                 Я принимаю{" "}
-                <Link href="/how-it-works" className="underline">
+                <Link href="/legal/privacy" className="underline" target="_blank" rel="noreferrer">
                   политику конфиденциальности
                 </Link>
               </span>
@@ -1173,8 +1149,8 @@ function RegisterPageContent() {
                 className="mt-1"
               />
               <span>
-                Получать важные уведомления от организаторов, площадки проведения, исполнителей
-                и сервиса
+                Получать важные уведомления от организаторов, площадки, исполнителей и сервиса
+                (необязательно)
               </span>
             </label>
             {errors.serviceNotifications && (
@@ -1198,7 +1174,7 @@ function RegisterPageContent() {
                 onChange={(e) => updateField("messengerNotificationsAccepted", e.target.checked)}
                 className="mt-1"
               />
-              <span>Дублировать важные и срочные уведомления в мессенджер</span>
+              <span>Дублировать важные и срочные уведомления в мессенджер (необязательно)</span>
             </label>
             {errors.messengerNotifications && (
               <p className="text-xs text-gray-700">{errors.messengerNotifications}</p>

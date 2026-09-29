@@ -94,6 +94,7 @@ import { useToast } from "@/components/ui/toast-provider";
 import { getNavForRole } from "@/constants/nav-menus";
 import { DEMO_USERS, SEED_CONTRACTORS, SEED_EVENTS, SEED_SERVICES } from "@/data/mocks/seed";
 import { getInterestRecommendationReason, getOkvedRecommendationReason, matchInterests, matchOkved } from "@/lib/utils/okved";
+import { listUpcomingEvents } from "@/lib/state/event-machine";
 import { CUSTOMER_CART_HREF } from "@/lib/utils/cart-routes";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import { formatDate, formatDateTime, formatPrice } from "@/lib/utils/formatters";
@@ -238,10 +239,20 @@ function DashboardWidgets({ role }: { role: string }) {
         <DashboardStatCard
           value={countDashboardRequests(requests, responses, deals, user)}
           label={role === "contractor" ? "Активные заказы" : "Активные заявки"}
+          href={role === "contractor" ? "/account/contractor/available-requests" : "/requests"}
         />
-        <DashboardStatCard value={countDashboardDeals(deals, user)} label="Активные проекты" />
+        <DashboardStatCard
+          value={countDashboardDeals(deals, user)}
+          label="Активные проекты"
+          href={`/account/${role}/active-projects`}
+        />
         <DashboardStatCard
           value={pendingOutgoing}
+          href={
+            role === "contractor"
+              ? "/account/contractor/payouts?tab=payable"
+              : `/account/${role}/payments?tab=payable`
+          }
           label={
             <PaymentInvoicesLabel
               direction="исходящие"
@@ -251,6 +262,11 @@ function DashboardWidgets({ role }: { role: string }) {
         />
         <DashboardStatCard
           value={pendingIncoming}
+          href={
+            role === "contractor"
+              ? "/account/contractor/payouts?tab=receivable"
+              : `/account/${role}/payments?tab=receivable`
+          }
           label={<PaymentInvoicesLabel direction="входящие" />}
         />
       </DashboardStatsGrid>
@@ -286,7 +302,9 @@ function CustomerPages({ slug }: { slug: string }) {
 
   const okvedRecommendedEvents = useMemo(() => {
     if (!user) return [];
-    return SEED_EVENTS.filter((event) => matchOkved(user.mainOkved, event.okvedTags));
+    return listUpcomingEvents(
+      SEED_EVENTS.filter((event) => matchOkved(user.mainOkved, event.okvedTags))
+    );
   }, [user]);
 
   const interestRecommendedEvents = useMemo(() => {
@@ -294,8 +312,10 @@ function CustomerPages({ slug }: { slug: string }) {
     const okvedIds = new Set(
       SEED_EVENTS.filter((event) => matchOkved(user.mainOkved, event.okvedTags)).map((event) => event.id),
     );
-    return SEED_EVENTS.filter(
-      (event) => !okvedIds.has(event.id) && matchInterests(user.industries, event.industry),
+    return listUpcomingEvents(
+      SEED_EVENTS.filter(
+        (event) => !okvedIds.has(event.id) && matchInterests(user.industries, event.industry),
+      )
     );
   }, [user]);
 
@@ -365,14 +385,17 @@ function CustomerPages({ slug }: { slug: string }) {
                 isDealForUser(d, user)
             )
             .map((d) => (
-            <Link
+            <div
               key={d.id}
-              href={`/deals/${d.id}`}
               className="flex flex-col items-start gap-2 py-2 border-b border-gray-200 text-sm last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
             >
-              <span className="min-w-0">{d.title}</span>
-              <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
-            </Link>
+              <Link href={`/deals/${d.id}`} className="min-w-0 underline-offset-2 hover:underline">
+                {d.title}
+              </Link>
+              <Link href={`/deals/${d.id}`} className="shrink-0">
+                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
+              </Link>
+            </div>
           ))}
         </Card>
         <CustomerDashboardRecommendations user={user} />

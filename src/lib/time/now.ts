@@ -1,6 +1,6 @@
 /** Injected prototype clock. Demo and tests freeze this instant — never the browser clock. */
 export const PROTOTYPE_TIMEZONE = "Europe/Moscow";
-export const PROTOTYPE_NOW_ISO = "2026-09-24T12:00:00+03:00";
+export const PROTOTYPE_NOW_ISO = "2026-09-29T12:00:00+03:00";
 
 let nowOverride: string | null = null;
 
