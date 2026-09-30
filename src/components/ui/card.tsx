@@ -13,9 +13,11 @@ export interface CardProps extends ComponentPropsWithoutRef<"div"> {
   borderHover?: boolean;
   /** Remove default padding so media can sit flush to the card edge. */
   flush?: boolean;
+  /** Border only, no elevation. Use for blocks nested inside another card. */
+  flat?: boolean;
 }
 
-export function Card({ children, className, onClick, hoverable, borderHover, flush, ...props }: CardProps) {
+export function Card({ children, className, onClick, hoverable, borderHover, flush, flat, ...props }: CardProps) {
   const accountTheme = useAccountTheme();
   const isHoverable = hoverable ?? Boolean(onClick);
 
@@ -26,7 +28,8 @@ export function Card({ children, className, onClick, hoverable, borderHover, flu
       className={cn(
         styles.root,
         flush && styles.flush,
-        "bg-[var(--surface-panel)]",
+        flat && styles.flat,
+        "bg-white",
         accountTheme ? "rounded-card" : "rounded-[10px]",
         isHoverable && styles.hoverable,
         borderHover && styles.borderHover,

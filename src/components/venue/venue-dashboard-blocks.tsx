@@ -112,19 +112,19 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
             Заказы на услуги площадки: лебёдка, пропуска, аккредитация и смежные позиции
           </p>
         </div>
-        <Link href="/account/venue/orders" className="text-sm underline hover:text-gray-900">
+        <Link href="/account/venue/orders" className="cabinet-section-link text-sm">
           Все заказы
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {serviceOrders.map((order) => {
           const highlighted = actionNotifications.some((item) => item.eventId === order.eventId);
           const eventTitle = getEventTitle(order.eventId);
 
           return (
             <Link key={order.id} href={`/account/venue/orders/${order.eventId}`} className="block h-full">
-              <Card hoverable
+              <Card
                 className={cn(
                   "cabinet-card h-full",
                   highlighted && "bg-gray-50",
@@ -211,7 +211,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
             Заявки организаторов на периоды монтажа, проведения и демонтажа мероприятий
           </p>
         </div>
-        <Link href="/account/venue/bookings" className="text-sm underline hover:text-gray-900 shrink-0">
+        <Link href="/account/venue/bookings" className="cabinet-section-link text-sm shrink-0">
           Все бронирования
         </Link>
       </div>
@@ -228,7 +228,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
         className="max-w-xs"
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {bookings.map((booking) => {
           const eventTitle = getEventTitle(booking.eventId);
           const hallName = getHallName(booking.hallId);
@@ -313,7 +313,7 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
             Запросы организаторов на свободные даты: от первого обращения до выбора площадки
           </p>
         </div>
-        <Link href="/account/venue/bookings" className="text-sm underline hover:text-gray-900 shrink-0">
+        <Link href="/account/venue/bookings" className="cabinet-section-link text-sm shrink-0">
           К бронированиям
         </Link>
       </div>
@@ -330,7 +330,7 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
         className="max-w-xs"
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {inquiries.map((inquiry) => (
           <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">

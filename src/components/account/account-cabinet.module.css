@@ -48,6 +48,18 @@
   color: var(--account-accent-hover);
 }
 
+.accountCabinet :global(.cabinet-section-link) {
+  color: #171717;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.accountCabinet :global(.cabinet-section-link:hover) {
+  color: var(--account-accent);
+  text-decoration: none;
+}
+
 .accountCabinet :global(.back-button) {
   color: #171717;
 }
@@ -62,18 +74,50 @@
 }
 
 .accountCabinet :global(.catalog-cards-grid) {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  --catalog-cards-per-row: 4;
 }
 
 @media (max-width: 1023px) {
   .accountCabinet :global(.catalog-cards-grid) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --catalog-cards-per-row: 2;
   }
 }
 
 @media (max-width: 767px) {
   .accountCabinet :global(.catalog-cards-grid) {
-    grid-template-columns: minmax(0, 1fr);
+    --catalog-cards-per-row: 1;
+  }
+}
+
+@media (min-width: 1920px) {
+  .accountCabinet :global(.catalog-cards-grid) {
+    --catalog-cards-per-row: 5;
+  }
+}
+
+.accountCabinet :global(.catalog-cards-grid.catalog-cards-grid--projects) {
+  --catalog-cards-per-row: 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+  .accountCabinet :global(.catalog-cards-grid.catalog-cards-grid--projects) {
+    --catalog-cards-per-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .accountCabinet :global(.catalog-cards-grid.catalog-cards-grid--projects) {
+    --catalog-cards-per-row: 1;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1441px) {
+  .accountCabinet :global(.catalog-cards-grid.catalog-cards-grid--projects) {
+    --catalog-cards-per-row: 4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -124,7 +168,7 @@
 
 .accountEmptyState {
   border-radius: var(--radius-card);
-  border-color: color-mix(in srgb, var(--account-accent) 35%, #d4d4d4);
+  border-color: color-mix(in srgb, var(--account-accent) 35%, #dddddd);
 }
 
 .accountErrorState {

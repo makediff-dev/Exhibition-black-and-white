@@ -171,7 +171,7 @@ export function OrganizerEventRecommendedPartnersPanel({
                             "cabinet-card border p-4 h-full flex flex-col",
                             partner.isRecommended
                               ? "border-gray-900 bg-[var(--account-accent-soft)]"
-                              : "border-gray-300 bg-white",
+                              : "border-gray-300 bg-transparent",
                           )}
                         >
                           <div className={styles.cardHeader}>

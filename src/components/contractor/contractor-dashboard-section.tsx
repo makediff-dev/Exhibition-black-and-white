@@ -40,11 +40,11 @@ export function ContractorDashboardSection({ user }: Props) {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold">Предложения на рынке</h2>
-          <Link href="/services" className="text-sm underline">
+          <Link href="/services" className="cabinet-section-link text-sm">
             Все услуги
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="catalog-cards-grid">
           {catalogServices.map((service) => (
             <ServiceCard
               key={service.id}
@@ -58,11 +58,11 @@ export function ContractorDashboardSection({ user }: Props) {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold">Мероприятия</h2>
-          <Link href="/events" className="text-sm underline">
+          <Link href="/events" className="cabinet-section-link text-sm">
             Все мероприятия
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="catalog-cards-grid">
           {upcomingEvents.map((event) => (
             <Link key={event.id} href={withFromParam(`/events/${event.id}`, "dashboard")}>
               <Card hoverable className="h-full">

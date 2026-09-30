@@ -1,10 +1,35 @@
-import type { Booking, Document, Event, EventOrder, Payment } from "../../data/types/index.ts";
+import type { Booking, Document, Event, EventOrder, Payment, UserRole } from "../../data/types/index.ts";
 
 export function getEventOrderHref(order: EventOrder): string {
   if (order.type === "stand_build" && order.dealId) {
     return `/deals/${order.dealId}`;
   }
   return `/orders/${order.id}`;
+}
+
+/** Cabinet sidebar destinations for order / project / invoice cards. */
+export function getCabinetOrdersHref(role?: UserRole | null, eventId?: string): string {
+  if (role === "venue") {
+    return eventId ? `/account/venue/orders/${eventId}` : "/account/venue/orders";
+  }
+  if (role === "organizer") return "/account/organizer/orders";
+  if (role === "contractor") return "/account/contractor/active-projects";
+  return "/account/customer/active-projects";
+}
+
+export function getCabinetPaymentsHref(role?: UserRole | null, tab?: string): string {
+  const suffix = tab ? `?tab=${tab}` : "";
+  if (role === "contractor") return `/account/contractor/payouts${suffix}`;
+  if (role === "venue") return `/account/venue/payments${suffix}`;
+  if (role === "organizer") return `/account/organizer/payments${suffix}`;
+  return `/account/customer/payments${suffix}`;
+}
+
+export function getCabinetAwareOrderHref(order: EventOrder, role?: UserRole | null): string {
+  if (role === "venue" || role === "organizer") {
+    return getCabinetOrdersHref(role, order.eventId);
+  }
+  return getEventOrderHref(order);
 }
 
 export function getRelatedObjectHref(entity: Pick<Document | Payment, "dealId" | "orderId" | "bookingId">): string | undefined {

@@ -37,7 +37,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const outlineClass =
       catalogAccent || accountTheme
-        ? "bg-white !text-[#171717] hover:bg-gray-50 border border-[#d4d4d4] hover:border-[#171717]"
+        ? "bg-white !text-[#171717] hover:bg-gray-50 border border-[#dddddd] hover:border-[#171717]"
         : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900";
 
     const variants: Record<ButtonVariant, string> = {
@@ -45,7 +45,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300",
       outline: outlineClass,
       "teal-outline": "bg-white text-[#28b5b3] hover:bg-[#eaf8f7] border border-[#28b5b3]",
-      "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#d4d4d4] hover:border-[#171717]",
+      "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#dddddd] hover:border-[#171717]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",
       teal: "bg-[var(--role-customer)] text-white hover:bg-[var(--role-customer-hover)] border border-[var(--role-customer)]",
       blue: "bg-[var(--role-organizer)] text-white hover:bg-[var(--role-organizer-hover)] border border-[var(--role-organizer)]",

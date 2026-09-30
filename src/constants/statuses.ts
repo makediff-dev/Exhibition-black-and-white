@@ -81,7 +81,7 @@ export const RESPONSE_FOLLOW_UP_ACTIONS = [
 ] as const;
 
 export const EXTENDED_CHECK_PLANS = [
-  { id: "plan-1", label: "1 проверка", price: 49, note: "одной" },
+  { id: "plan-1", label: "1 проверка", price: 49 },
   { id: "plan-10", label: "10 проверок", price: 299 },
   { id: "plan-50", label: "50 проверок", price: 1999 },
   { id: "plan-100", label: "100 проверок", price: 2999 },

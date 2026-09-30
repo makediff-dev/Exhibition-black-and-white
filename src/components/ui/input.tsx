@@ -38,8 +38,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className={cn(
             "border px-3 py-2 text-sm rounded-button",
             accountTheme
-              ? "border-[#d4d4d4] focus:border-[var(--account-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--account-accent)]"
-              : "border-[#d4d4d4] focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]",
+              ? "border-[#dddddd] focus:border-[var(--account-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--account-accent)]"
+              : "border-[#dddddd] focus:border-[#171717] focus:outline-none focus:ring-1 focus:ring-[#171717]",
             type === "number" &&
               "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             error && (accountTheme ? "border-[var(--account-accent)]" : "border-gray-900"),

@@ -13,7 +13,7 @@ import {
   VenueDashboardServiceAlerts,
 } from "@/components/venue/venue-dashboard-blocks";
 import { VenueEventsCarousel } from "@/components/venue/venue-events-carousel";
-import { SEED_BOOKINGS, SEED_HALLS } from "@/data/mocks/seed";
+import { SEED_BOOKINGS, SEED_EVENT_ORDERS } from "@/data/mocks/seed";
 import type { Booking, Payment } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 
@@ -43,8 +43,6 @@ interface Props {
 export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
   const { bookings, payments } = usePrototypeStore();
 
-  const hallCount = SEED_HALLS.filter((item) => item.venueId === venueId).length;
-
   const mergedBookings = useMemo(() => mergeBookings(bookings), [bookings]);
   const pendingBookings = mergedBookings.filter(
     (item) => item.venueId === venueId && item.status === "pending"
@@ -69,9 +67,9 @@ export function VenueDashboardSection({ venueId = "venue-1" }: Props) {
           href="/account/venue/bookings"
         />
         <DashboardStatCard
-          value={hallCount}
-          label="Залы"
-          href="/account/venue/halls"
+          value={SEED_EVENT_ORDERS.filter((order) => order.venueId === venueId).length}
+          label="Заказы"
+          href="/account/venue/orders"
         />
         <DashboardStatCard
           value={outgoingPending}

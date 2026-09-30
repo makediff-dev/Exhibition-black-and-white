@@ -42,15 +42,56 @@
   padding: 12px 14px;
 }
 
+.threadCardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .threadCardBody {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  flex: 1;
   color: inherit;
   text-decoration: none;
 }
 
+.inboxPinButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #737373;
+  cursor: pointer;
+}
+
+.inboxPinButton:hover {
+  border-color: #171717;
+  color: #171717;
+}
+
+.inboxPinButtonActive {
+  border-color: var(--account-accent, #2939eb);
+  color: var(--account-accent, #2939eb);
+  background: var(--account-accent-soft, #eef0fe);
+}
+
 .threadCardMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.threadCardBadges {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -61,7 +102,6 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-left: auto;
   font-size: 11px;
   color: #737373;
 }
@@ -99,7 +139,7 @@
   justify-content: center;
   min-height: 0;
   padding: 24px;
-  border: 1px dashed #d4d4d4;
+  border: 1px dashed #dddddd;
   border-radius: var(--radius-card, 14px);
   background: #fff;
   text-align: center;
@@ -139,7 +179,7 @@
 }
 
 .threadPanel {
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: var(--radius-card, 14px);
   display: flex;
   flex-direction: column;
@@ -153,7 +193,7 @@
 .threadContext {
   flex-shrink: 0;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #d4d4d4;
+  border-bottom: 1px solid #dddddd;
   background: #fafafa;
 }
 
@@ -162,6 +202,179 @@
   font-size: 14px;
   font-weight: 600;
   line-height: 1.35;
+}
+
+.pinBanner {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #dddddd;
+  background: #fafafa;
+}
+
+.pinBannerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pinBannerJump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pinBannerLabel {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #525252;
+}
+
+.pinBannerText {
+  overflow: hidden;
+  font-size: 12px;
+  color: #171717;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messageBubble {
+  position: relative;
+}
+
+.messageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.messageMenu {
+  position: relative;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  opacity: 1;
+  background: rgb(0 0 0 / 8%);
+}
+
+.messageMenuList {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  min-width: 228px;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background: #fff;
+  color: #171717;
+  box-shadow: 0 0 24px rgb(0 0 0 / 12%);
+}
+
+.messageMenuList button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #171717;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.messageMenuList button:hover,
+.messageMenuList button:focus-visible {
+  background: #f5f5f5;
+}
+
+.forwardMeta {
+  margin: 0 0 6px;
+  font-size: 11px;
+}
+
+.deletedText {
+  margin: 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.inlinePinHint {
+  font-weight: 500;
+}
+
+.forwardList {
+  display: flex;
+  max-height: 280px;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.forwardListButton {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.forwardListButton:hover,
+.forwardListButton:focus-visible {
+  border-color: #171717;
+}
+
+.forwardListTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.forwardListPreview {
+  overflow: hidden;
+  font-size: 12px;
+  color: #737373;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .threadMessages {
@@ -182,12 +395,12 @@
 
 .messageBubbleIncoming {
   background-color: #fff;
-  border-color: #d4d4d4;
+  border-color: #dddddd;
   color: #171717;
 }
 
 .threadComposer {
-  border-top: 1px solid #d4d4d4;
+  border-top: 1px solid #dddddd;
   padding: 1rem;
   display: flex;
   flex-direction: column;

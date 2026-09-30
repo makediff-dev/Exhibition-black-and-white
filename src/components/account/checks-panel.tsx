@@ -252,7 +252,7 @@ export function ChecksPanel({ role = "customer" }: ChecksPanelProps) {
             />
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="catalog-cards-grid">
             {EXTENDED_CHECK_PLANS.map((plan) => {
               const isSelected = selectedPlanId === plan.id;
               const priceLabel =

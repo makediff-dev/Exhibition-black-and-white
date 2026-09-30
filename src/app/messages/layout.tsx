@@ -19,7 +19,7 @@ export default function MessagesLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="public-site flex min-h-screen flex-col">
       <PublicHeader />
       <main className="mx-auto w-full max-w-site flex-1 px-4 py-6 md:px-6">{children}</main>
       <Footer />

@@ -2,11 +2,13 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CatalogCard } from "@/components/catalog/catalog-card";
 import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
 import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { CardTitle } from "@/components/ui/card";
+import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
 import { formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
@@ -24,6 +26,8 @@ interface ServiceCardProps {
   onToggleFavorite?: () => void;
   onAdd?: () => void;
   from?: string;
+  /** Text-only portfolio control. Used only on the public services catalog. */
+  plainPortfolio?: boolean;
 }
 
 function formatContractorServicesLabel(count: number): string {
@@ -45,14 +49,18 @@ export function ServiceCard({
   onToggleFavorite,
   onAdd,
   from,
+  plainPortfolio = false,
 }: ServiceCardProps) {
+  const router = useRouter();
   const allServices = usePrototypeStore((s) => s.services);
   const role = useAuthStore((s) => s.user?.role);
   const addItem = useCartStore((s) => s.addItem);
   const { showToast } = useToast();
   const accountTheme = useAccountTheme();
   const catalogAccent = useCatalogAccent();
-  const addToCartVariant = catalogAccent?.buttonVariant ?? accountTheme?.buttonVariant ?? "blue";
+  const roleTheme = getAccountRoleTheme(role ?? null);
+  const ctaVariant =
+    accountTheme?.buttonVariant ?? roleTheme?.buttonVariant ?? catalogAccent?.buttonVariant ?? "blue";
   const contractorServicesCount = allServices.filter(
     (item) => item.contractorId === service.contractorId,
   ).length;
@@ -125,7 +133,7 @@ export function ServiceCard({
               ) : (
               <Button
                 size="sm"
-                variant={addToCartVariant}
+                variant={ctaVariant}
                 className="w-full"
                 onClick={(event) => {
                   event.preventDefault();
@@ -136,18 +144,27 @@ export function ServiceCard({
                 В корзину
               </Button>
               )}
-              <Link
-                href={`${getContractorProfileHref(service.contractorId, {
-                  role: from ? role : undefined,
-                  from,
-                })}#portfolio`}
-                onClick={(event) => event.stopPropagation()}
-                className="block w-full"
+              <Button
+                size="sm"
+                variant={plainPortfolio ? "ghost" : ctaVariant}
+                className={
+                  plainPortfolio
+                    ? "w-full bg-transparent text-gray-900 hover:bg-transparent hover:text-gray-900 border-0 shadow-none"
+                    : "w-full"
+                }
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  router.push(
+                    `${getContractorProfileHref(service.contractorId, {
+                      role: from ? role : undefined,
+                      from,
+                    })}#portfolio`,
+                  );
+                }}
               >
-                <Button size="sm" variant="ghost" className="w-full">
-                  Портфолио
-                </Button>
-              </Link>
+                Портфолио
+              </Button>
             </div>
           </div>
         </div>

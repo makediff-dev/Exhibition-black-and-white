@@ -16,7 +16,7 @@ import styles from "./home-page.module.css";
 
 export function HomeEventsSection() {
   const gridRef = useRef<HTMLDivElement>(null);
-  const fitCount = useFitCardCount(gridRef);
+  const fitCount = useFitCardCount(gridRef, { max: 5, fallback: 5 });
   const isMobile = useIsMobile();
   const pageSize = isMobile ? 3 : fitCount;
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(

@@ -26,7 +26,7 @@ export function BookingSubjectCard({
   const cancel = inquiry?.cancellationTerms ?? booking?.cancellationTerms;
 
   return (
-    <Card className="space-y-3">
+    <Card flat className="space-y-3">
       <CardTitle className="text-sm">Предмет брони до подтверждения</CardTitle>
       <div className="space-y-[10px]">
         <CardField label="Мероприятие и стороны">

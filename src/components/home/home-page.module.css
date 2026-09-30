@@ -15,7 +15,7 @@
   --home-gutter: 64px;
   --arrow-from-screen: 5px;
   --arrow-edge: calc(var(--arrow-from-screen) - var(--home-gutter));
-  background: #fff;
+  background: #fcfcfc;
   color: #171717;
 }
 
@@ -142,9 +142,13 @@
   --scroll-visible-cards: 6;
 }
 
-@media (min-width: 1800px) {
-  .scrollRow {
-    --scroll-visible-cards: 6;
+@media (min-width: 1920px) {
+  .container {
+    max-width: none;
+  }
+
+  .containerInner {
+    max-width: none;
   }
 }
 
@@ -155,10 +159,6 @@
     );
   min-width: 0;
   scroll-snap-align: start;
-}
-
-.scrollRow:has(.categoryCard) .scrollArrow {
-  top: calc(var(--scroll-card-image-height) / 2);
 }
 
 .scrollTrack {
@@ -191,11 +191,16 @@
   position: absolute;
   left: auto;
   right: 10px;
-  top: calc(var(--scroll-card-image-height) / 2);
+  top: calc(
+    (
+        (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) /
+          var(--scroll-visible-cards)
+      ) * 10 / 16 / 2
+  );
   transform: translateY(-50%);
   width: var(--scroll-arrow-size);
   height: var(--scroll-arrow-size);
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: 999px;
   background: #fff;
   color: #101828;
@@ -204,6 +209,10 @@
   cursor: pointer;
   flex-shrink: 0;
   z-index: 2;
+}
+
+.scrollRow:has(.categoryCard) .scrollArrow {
+  top: calc(var(--scroll-card-image-height) / 2);
 }
 
 .scrollArrow:hover {
@@ -238,7 +247,7 @@
 .showMoreButton {
   min-width: 180px;
   padding: 10px 24px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: var(--radius-button);
   background: #fff;
   color: #101828;
@@ -336,24 +345,20 @@
   color: #fff;
 }
 
-.quickActionRegisterButton1 {
-  background: linear-gradient(159.44deg, #28b5b3 0%, #6ad7a8 100.01%);
+.quickActionToneCustomer {
+  background: linear-gradient(159.44deg, var(--role-customer) 0%, #6ad7a8 100.01%);
 }
 
-.quickActionRegisterButton2 {
-  background: linear-gradient(122.62deg, #612fff 0%, #d200a3 100%);
+.quickActionToneContractor {
+  background: linear-gradient(160deg, var(--role-contractor) 0%, var(--role-contractor-hover) 100%);
 }
 
-.quickActionRegisterButton3 {
-  background: linear-gradient(122.62deg, #072fff 0%, #8415f3 100%);
+.quickActionToneOrganizer {
+  background: linear-gradient(160deg, var(--role-organizer) 0%, var(--role-organizer-hover) 100%);
 }
 
-.quickActionRegisterButton4 {
-  background: linear-gradient(122.62deg, #0be2d6 7.47%, #0558fa 97.24%);
-}
-
-.quickActionRegisterButton5 {
-  background: var(--role-venue);
+.quickActionToneVenue {
+  background: linear-gradient(160deg, var(--role-venue) 0%, var(--role-venue-hover) 100%);
 }
 
 .quickActionsTitle {
@@ -378,25 +383,6 @@
   border-radius: 10px;
 }
 
-.quickActionCard1 {
-  background: linear-gradient(159.44deg, #28b5b3 0%, #6ad7a8 100.01%);
-}
-
-.quickActionCard2 {
-  background: linear-gradient(122.62deg, #612fff 0%, #d200a3 100%);
-}
-
-.quickActionCard3 {
-  background: linear-gradient(122.62deg, #072fff 0%, #8415f3 100%);
-}
-
-.quickActionCard4 {
-  background: linear-gradient(122.62deg, #0be2d6 7.47%, #0558fa 97.24%);
-}
-
-.quickActionCard5 {
-  background: linear-gradient(160deg, var(--role-venue-hover) 0%, var(--role-venue) 100%);
-}
 
 .quickActionTop {
   flex: 0 0 auto;
@@ -452,7 +438,7 @@
   display: flex;
   flex-direction: column;
   border: 0;
-  background: #fff;
+  background: transparent;
   border-radius: 14px;
   overflow: hidden;
   padding-bottom: 16px;
@@ -465,8 +451,9 @@
 
 .tileImage {
   position: relative;
-  height: 189px;
+  aspect-ratio: 16 / 10;
   width: 100%;
+  height: auto;
   overflow: hidden;
   border-radius: 14px 14px 0 0;
   background: linear-gradient(135deg, #f5f5f5 0%, #d4d4d4 100%);
@@ -678,7 +665,7 @@
   position: relative;
   display: inline-flex;
   min-width: 206px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: 10px;
   background: #fff;
   overflow: hidden;
@@ -810,7 +797,7 @@
   line-height: normal;
   cursor: pointer;
   border-radius: 10px;
-  box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 0 4px rgba(15, 23, 42, 0.06);
 }
 
 .heroBannerWrap {
@@ -845,7 +832,7 @@
 .heroBannerArrowButton {
   width: 48px;
   height: 48px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: 999px;
   background: #fff;
   display: grid;
@@ -1363,7 +1350,7 @@
 .faqItem {
   border: 1px solid #d1d5dc;
   border-radius: 12px;
-  background: #fff;
+  background: transparent;
   overflow: hidden;
   transition: border-color 0.15s ease;
 }
@@ -1909,7 +1896,7 @@
     width: 100%;
     height: 38px;
     padding: 0 16px;
-    border: 1px solid #d4d4d4;
+    border: 1px solid #dddddd;
     border-radius: 10px;
     background: #fff;
     color: #171717;
@@ -1931,10 +1918,10 @@
     right: 0;
     z-index: 20;
     padding: 12px;
-    border: 1px solid #d4d4d4;
+    border: 1px solid #dddddd;
     border-radius: 14px;
     background: #fff;
-    box-shadow: 0 8px 24px rgb(16 24 40 / 0.12);
+    box-shadow: 0 0 24px rgb(16 24 40 / 0.12);
   }
 
   .filtersPanelHeader {

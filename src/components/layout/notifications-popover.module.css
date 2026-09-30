@@ -74,10 +74,10 @@
   width: min(380px, calc(100vw - 32px));
   max-height: min(480px, calc(100vh - 80px));
   overflow: hidden;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #dddddd;
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 10px 24px rgb(0 0 0 / 0.12);
+  box-shadow: 0 0 24px rgb(0 0 0 / 0.12);
 }
 
 .header {

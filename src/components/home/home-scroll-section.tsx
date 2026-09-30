@@ -53,6 +53,7 @@ export function HomeScrollSection({
   const fitCount = useFitCardCount(isSlider ? trackRef : gridRef, {
     minCardWidth: cardMinWidth,
     fallback: denseGrid ? 6 : 5,
+    max: denseGrid ? 6 : 5,
   });
 
   const resolvedMobileTitle =

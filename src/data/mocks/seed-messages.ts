@@ -52,7 +52,12 @@ function seedThread(
     lastDate: last?.date ?? "",
     unread,
     participantRoles,
-    messages,
+    inboxPinnedBy: [],
+    pins: [],
+    messages: messages.map((message) => ({
+      ...message,
+      readAt: message.readAt ?? message.date,
+    })),
   };
 }
 

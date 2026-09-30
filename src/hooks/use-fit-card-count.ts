@@ -14,7 +14,7 @@ export function useFitCardCount(
 ) {
   const minCardWidth = options.minCardWidth ?? 200;
   const fallback = options.fallback ?? 5;
-  const max = options.max ?? 8;
+  const max = options.max ?? 5;
   const [count, setCount] = useState(fallback);
 
   useLayoutEffect(() => {

@@ -82,7 +82,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="register-accent flex flex-col min-h-screen">
+    <div className="register-accent public-site flex flex-col min-h-screen">
       <PublicHeader />
       <main id="main-content" className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="max-w-md mx-auto">

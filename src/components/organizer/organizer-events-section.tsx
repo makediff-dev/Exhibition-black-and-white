@@ -193,7 +193,7 @@ export function OrganizerEventsSection({ organizerId = "user-organizer" }: Props
           description="Измените месяц или статус, чтобы увидеть другие события"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="catalog-cards-grid">
           {filteredEvents.map(({ event, meta, halls, statuses, pendingBookings }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 

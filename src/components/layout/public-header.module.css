@@ -3,8 +3,8 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid #d4d4d4;
-  background: #fff;
+  border-bottom: 1px solid #dddddd;
+  background: #fcfcfc;
 }
 
 .inner {

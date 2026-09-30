@@ -12,7 +12,7 @@ import { SEED_EVENT_ORDERS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { EventOrder, EventOrderPriority } from "@/data/types";
 import { canReadEventOrder } from "@/lib/auth/authorization";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
-import { getEventOrderHref } from "@/lib/utils/entity-links";
+import { getCabinetAwareOrderHref } from "@/lib/utils/entity-links";
 import { formatPrice } from "@/lib/utils/formatters";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -30,10 +30,6 @@ const PRIORITY_FILTERS = [
   { id: "normal", label: "Обычный" },
 ] as const;
 
-function getOrderHref(order: EventOrder) {
-  return getEventOrderHref(order);
-}
-
 interface EventOrderCardProps {
   order: EventOrder;
   highlighted?: boolean;
@@ -42,13 +38,10 @@ interface EventOrderCardProps {
 
 function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps) {
   const user = useAuthStore((state) => state.user);
-  const href = getOrderHref(order);
+  const href = getCabinetAwareOrderHref(order, user?.role);
   const event = SEED_EVENTS.find((item) => item.id === order.eventId);
   const content = (
-    <Card
-      hoverable={Boolean(href)}
-      className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
-    >
+    <Card className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}>
       <div className="mb-[10px]">
         <EventOrderStatusBadges order={order} event={event} viewer={user} />
       </div>
@@ -70,10 +63,12 @@ function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps)
     </Card>
   );
 
-  if (!href) return content;
+  if (highlighted) {
+    return <div className="h-full">{content}</div>;
+  }
 
   return (
-    <Link href={href} className="block h-full hover:opacity-90">
+    <Link href={href} className="block h-full">
       {content}
     </Link>
   );
@@ -213,7 +208,7 @@ export function EventOrdersPanel({
                   {EVENT_ORDER_PRIORITY_LABELS[group.priority]}
                 </h3>
               )}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="catalog-cards-grid catalog-cards-grid--projects">
                 {group.items.map((order) => {
                   const orderEvent = SEED_EVENTS.find((item) => item.id === order.eventId);
                   const showEventTitle = Boolean(organizerId || (venueId && !eventId));

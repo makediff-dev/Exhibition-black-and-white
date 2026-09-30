@@ -3,7 +3,7 @@
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ContractorReview } from "@/data/types";
-import { formatShortDate } from "@/lib/utils/formatters";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface Props {
   review: ContractorReview;
@@ -51,7 +51,7 @@ export function ReviewCard({ review, onClick }: Props) {
             />
           ))}
         </div>
-        <span className="text-xs text-gray-500 shrink-0">{formatShortDate(review.date)}</span>
+        <span className="text-xs text-gray-500 shrink-0">{formatDate(review.date)}</span>
       </div>
     </Card>
   );

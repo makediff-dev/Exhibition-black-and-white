@@ -101,9 +101,13 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
         Здесь только те мероприятия, с которыми уже есть связь: заявка, сделка или заказ. На карточке
         указано основание и следующее действие.
       </p>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {myEvents.map(({ event, reasons, action }) => (
-          <Card key={event.id} className="h-full flex flex-col">
+          <Card key={event.id} hoverable className="h-full flex flex-col">
+            <Link
+              href={action?.href ?? withFromParam(`/events/${event.id}`, "my-events")}
+              className="block flex-1 cursor-pointer"
+            >
             <Badge variant="muted" className="mb-2 w-fit">
               {EVENT_CATEGORY_LABELS[event.category]}
             </Badge>
@@ -126,6 +130,7 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
                 )
               )}
             </div>
+            </Link>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href={withFromParam(`/events/${event.id}`, "my-events")}>
                 <Button size="sm" variant="outline">

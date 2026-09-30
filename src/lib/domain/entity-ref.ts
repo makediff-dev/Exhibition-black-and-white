@@ -155,6 +155,8 @@ export function buildContextThread(input: {
     lastDate,
     unread: 0,
     participantRoles: input.participantRoles,
+    inboxPinnedBy: [],
+    pins: [],
     messages: [
       {
         id: `m-${ref.type}-${ref.id}-start`,
@@ -162,6 +164,7 @@ export function buildContextThread(input: {
         text: lastMessage,
         date: lastDate,
         files: [],
+        readAt: lastDate,
       },
     ],
   };

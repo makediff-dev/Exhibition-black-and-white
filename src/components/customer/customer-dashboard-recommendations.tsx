@@ -89,11 +89,11 @@ export function CustomerDashboardRecommendations({ user }: Props) {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold">Рекомендованные исполнители</h2>
-          <Link href="/contractors" className="text-sm underline">
+          <Link href="/contractors" className="cabinet-section-link text-sm">
             Все исполнители
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="catalog-cards-grid">
           {recommendedContractors.map((contractor) => (
             <RecommendedContractorCard key={contractor.id} contractor={contractor} />
           ))}
@@ -103,11 +103,11 @@ export function CustomerDashboardRecommendations({ user }: Props) {
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold">Рекомендованные услуги</h2>
-          <Link href="/services" className="text-sm underline">
+          <Link href="/services" className="cabinet-section-link text-sm">
             Все услуги
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="catalog-cards-grid">
           {recommendedServices.map((service) => (
             <ServiceCard
               key={service.id}
@@ -116,6 +116,7 @@ export function CustomerDashboardRecommendations({ user }: Props) {
               isFavorite={isFavorite(service.id)}
               onToggleFavorite={() => handleToggleFavorite(service)}
               onAdd={() => handleAddToCart(service)}
+              plainPortfolio
             />
           ))}
         </div>

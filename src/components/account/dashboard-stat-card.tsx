@@ -21,8 +21,12 @@ export function PaymentInvoicesLabel({
           <Tooltip content={tooltip}>
             <button
               type="button"
-              className="shrink-0 text-gray-500 hover:text-gray-900"
+              className="shrink-0 cursor-help text-gray-500 hover:text-gray-900"
               aria-label="Подробнее о неоплаченных исходящих счетах"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
             >
               <HelpCircle className="h-4 w-4" />
             </button>
@@ -43,7 +47,7 @@ export function DashboardStatCard({
   href?: string;
 }) {
   const card = (
-    <Card hoverable={Boolean(href)} className={href ? "h-full" : undefined}>
+    <Card hoverable={Boolean(href)} className={href ? "h-full cursor-pointer" : undefined}>
       <CardTitle className="text-2xl">{value}</CardTitle>
       {typeof label === "string" ? <CardDescription>{label}</CardDescription> : label}
     </Card>
@@ -62,6 +66,6 @@ export function DashboardStatCard({
 
 export function DashboardStatsGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">{children}</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{children}</div>
   );
 }

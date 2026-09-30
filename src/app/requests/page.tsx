@@ -81,7 +81,7 @@ function RequestsContent() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="catalog-cards-grid">
             {filtered.map((request) => (
               <RequestOrderCard
                 key={request.id}
@@ -123,7 +123,7 @@ export default function RequestsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="public-site flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="flex justify-between items-center mb-6">

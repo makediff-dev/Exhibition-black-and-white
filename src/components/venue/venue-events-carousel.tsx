@@ -80,7 +80,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
             {parallelCount > 1 ? `, до ${parallelCount} параллельно в разных залах` : ""}
           </p>
         </div>
-        <Link href="/account/venue/events" className="text-sm underline hover:text-gray-900">
+        <Link href="/account/venue/events" className="cabinet-section-link text-sm">
           Все мероприятия
         </Link>
       </div>
@@ -102,7 +102,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
         ))}
       </HorizontalChipScroller>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {monthEvents.map(({ event, meta, halls, eventNotifications }, index) => {
           const photo = venuePhotos[index % venuePhotos.length];
 

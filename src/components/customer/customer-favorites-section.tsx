@@ -185,7 +185,7 @@ export function CustomerFavoritesSection() {
                 onAction={() => router.push(section.catalogHref)}
               />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="catalog-cards-grid">
                 {section.key === "services" &&
                   favoriteServices.map((service) => (
                     <ServiceCard
@@ -195,6 +195,7 @@ export function CustomerFavoritesSection() {
                       isFavorite={isFavorite(service.id)}
                       onToggleFavorite={() => handleToggleFavorite(service)}
                       onAdd={() => handleAddToCart(service)}
+                      plainPortfolio
                     />
                   ))}
 

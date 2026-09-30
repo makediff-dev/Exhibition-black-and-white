@@ -176,12 +176,18 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
           description="В этой вкладке пока нет финансовых операций"
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="catalog-cards-grid">
           {filteredPayments.map((payment) => {
             const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 
-            return (
-              <Card key={payment.id} className="flex flex-col h-full">
+            const cardHref = deal
+              ? `/deals/${deal.id}`
+              : payment.orderId
+                ? `/orders/${payment.orderId}`
+                : undefined;
+
+            const body = (
+              <>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
@@ -209,21 +215,27 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
                     <CardField label="Проводка">{getLedgerPairNote(payment)}</CardField>
                   )}
                   <CardField label="Дата">{formatDate(payment.issuedAt ?? payment.date)}</CardField>
-                  {payment.orderId && !deal && (
-                    <CardField label="Заказ">
-                      <Link href={`/orders/${payment.orderId}`} className="underline hover:text-gray-700">
-                        Открыть связанный заказ
-                      </Link>
-                    </CardField>
-                  )}
-                  {deal && payment.dealId && (
+                  {payment.orderId && !deal ? (
+                    <CardField label="Заказ">Связанный заказ</CardField>
+                  ) : null}
+                  {deal ? (
                     <CardField label="Сделка">
-                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-700">
-                        {deal.number} — {deal.title}
-                      </Link>
+                      {deal.number} — {deal.title}
                     </CardField>
-                  )}
+                  ) : null}
                 </div>
+              </>
+            );
+
+            return (
+              <Card key={payment.id} hoverable={Boolean(cardHref)} className="flex h-full flex-col">
+                {cardHref ? (
+                  <Link href={cardHref} className="flex flex-1 flex-col cursor-pointer">
+                    {body}
+                  </Link>
+                ) : (
+                  body
+                )}
               </Card>
             );
           })}

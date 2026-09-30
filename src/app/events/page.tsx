@@ -155,13 +155,13 @@ function FilterFields({
       <div className="grid grid-cols-1 gap-2 pt-2">
         <Link
           href="/contractors"
-          className="block rounded-[10px] border border-[#d4d4d4] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
+          className="block rounded-[10px] border border-[#dddddd] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
         >
           Найти исполнителя
         </Link>
         <Link
           href="/services"
-          className="block rounded-[10px] border border-[#d4d4d4] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
+          className="block rounded-[10px] border border-[#dddddd] bg-white px-3 py-2 text-sm text-center text-[#101828] transition-colors hover:border-[#171717] hover:text-[#171717]"
         >
           Найти услугу
         </Link>

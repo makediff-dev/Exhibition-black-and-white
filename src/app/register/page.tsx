@@ -535,7 +535,7 @@ function RegisterPageContent() {
   };
 
   return (
-    <div className="register-accent flex flex-col min-h-screen">
+    <div className="register-accent public-site flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="mx-auto mb-8 w-full max-w-3xl text-center">

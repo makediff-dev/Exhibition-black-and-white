@@ -47,7 +47,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
           <p className="text-sm text-gray-700 mt-2 line-clamp-2 flex-1">{contractor.description}</p>
           <div className="flex flex-wrap gap-1 mt-2">
             {contractor.categories.slice(0, 3).map((cat) => (
-              <span key={cat} className="text-xs border border-[#d4d4d4] rounded-[10px] px-1.5 py-0.5">
+              <span key={cat} className="text-xs border border-[#dddddd] rounded-[10px] px-1.5 py-0.5">
                 {cat}
               </span>
             ))}

@@ -68,7 +68,7 @@ export function CabinetAwareLayout({
   }
 
   return (
-    <div className="register-accent flex min-h-screen flex-col">
+    <div className="register-accent public-site flex min-h-screen flex-col">
       <PublicHeader />
       <main
         id="main-content"

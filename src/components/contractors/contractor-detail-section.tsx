@@ -173,7 +173,7 @@ export function ContractorDetailSection({
               <p className="text-sm text-gray-700">{contractor.description}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {contractor.categories.map((category) => (
-                  <span key={category} className="text-xs border border-[#d4d4d4] rounded-[10px] px-2 py-1">
+                  <span key={category} className="text-xs border border-[#dddddd] rounded-[10px] px-2 py-1">
                     {category}
                   </span>
                 ))}
@@ -185,7 +185,7 @@ export function ContractorDetailSection({
               {contractor.portfolio.length === 0 ? (
                 <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                <div className="catalog-cards-grid">
                   {contractor.portfolio.map((item) => (
                     <PortfolioCard
                       key={item.id}
@@ -237,7 +237,7 @@ export function ContractorDetailSection({
             />
           )}
 
-          <section className="rounded-[10px] border border-[#d4d4d4] bg-white p-4">
+          <section className="rounded-[10px] border border-[#dddddd] bg-transparent p-4">
             <h2 className="text-base font-semibold mb-3">Реквизиты</h2>
             <dl className="text-sm space-y-2">
               <div>

@@ -262,7 +262,7 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <div className="register-accent flex flex-col min-h-screen">
+    <div className="register-accent public-site flex flex-col min-h-screen">
       <PublicHeader />
       <Suspense fallback={<div className="flex-1 py-8 text-center text-sm text-gray-600">Загрузка...</div>}>
         <VerifyContent />

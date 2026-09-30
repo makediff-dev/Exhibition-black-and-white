@@ -462,7 +462,7 @@ export function DocumentsPanel({
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="catalog-cards-grid">
           {filteredDocs.map((doc) => {
             const status = getStatus(doc);
             const context = resolveDocumentContext(doc, dealMap, requestMap, eventMap);

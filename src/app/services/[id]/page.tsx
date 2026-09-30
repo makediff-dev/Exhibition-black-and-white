@@ -123,7 +123,7 @@ export default function ServiceDetailPage() {
             {photoCards.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
-                <div className="border border-[#d4d4d4] rounded-[14px] overflow-hidden">
+                <div className="border border-[#dddddd] rounded-[14px] overflow-hidden">
                   <div className="aspect-[16/10] bg-gray-50 relative">
                     {currentPhotoCard?.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -142,7 +142,7 @@ export default function ServiceDetailPage() {
                         <button
                           type="button"
                           onClick={() => setPhotoIndex((prev) => (prev === 0 ? photoCards.length - 1 : prev - 1))}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#d4d4d4] bg-white/95"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
                           aria-label="Предыдущая карточка"
                         >
                           <ChevronLeft className="h-4 w-4" />
@@ -150,7 +150,7 @@ export default function ServiceDetailPage() {
                         <button
                           type="button"
                           onClick={() => setPhotoIndex((prev) => (prev === photoCards.length - 1 ? 0 : prev + 1))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#d4d4d4] bg-white/95"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
                           aria-label="Следующая карточка"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -174,7 +174,7 @@ export default function ServiceDetailPage() {
                         key={card.id}
                         type="button"
                         onClick={() => setPhotoIndex(index)}
-                        className={`rounded-[10px] border p-3 text-left text-sm ${index === photoIndex ? "border-[#171717]" : "border-[#d4d4d4]"}`}
+                        className={`rounded-[10px] border p-3 text-left text-sm ${index === photoIndex ? "border-[#171717]" : "border-[#dddddd]"}`}
                       >
                         <p className="font-medium">{card.title || `Карточка ${index + 1}`}</p>
                         {card.caption && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{card.caption}</p>}
@@ -287,11 +287,13 @@ export default function ServiceDetailPage() {
                   Заказать услугу
                 </Button>
               )}
-              <Link href={`/requests/new?serviceId=${service.id}`} className="block">
-                <Button className="w-full" variant={canDirectOrder ? "ghost" : "primary"}>
-                  Запросить предложение
-                </Button>
-              </Link>
+              <Button
+                className="w-full cursor-pointer"
+                variant={canDirectOrder ? "ghost" : "primary"}
+                onClick={() => router.push(`/requests/new?serviceId=${service.id}`)}
+              >
+                Запросить предложение
+              </Button>
             </div>
           </aside>
         </div>

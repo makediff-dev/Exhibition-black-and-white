@@ -147,7 +147,7 @@ export function VenueDetailSection({ venue }: VenueDetailSectionProps) {
             </CardDescription>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="catalog-cards-grid">
             {relatedEvents.slice(0, 6).map((event) => (
               <Link key={event.id} href={`/events/${event.id}`}>
                 <Card hoverable className="h-full">

@@ -551,7 +551,7 @@ function RequestDetailContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="public-site flex flex-col min-h-screen">
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <BackButton fallbackHref="/requests" className="mb-4" />

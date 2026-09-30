@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/states";
 import { ReviewsList } from "@/components/contractors/reviews-list";
 import type { CompanyProfile, ContractorReview } from "@/data/types";
 import { findContractorForUser } from "@/lib/utils/user-entity-map";
-import { formatShortDate } from "@/lib/utils/formatters";
+import { formatDate } from "@/lib/utils/formatters";
 
 interface Props {
   user: CompanyProfile | null;
@@ -64,7 +64,7 @@ export function ContractorReviewsSection({ user }: Props) {
                 ))}
                 <span className="ml-1 font-medium">{reviewModal.rating}.0</span>
               </div>
-              <span className="text-xs text-gray-500">{formatShortDate(reviewModal.date)}</span>
+              <span className="text-xs text-gray-500">{formatDate(reviewModal.date)}</span>
             </div>
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{reviewModal.text}</p>
             {(reviewModal.photos?.length ?? 0) > 0 && (

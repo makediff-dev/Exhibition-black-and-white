@@ -58,7 +58,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
             {monthEvents.length} мероприятий с привязкой к площадкам и датам
           </p>
         </div>
-        <Link href="/account/organizer/events" className="text-sm underline hover:text-gray-900">
+        <Link href="/account/organizer/events" className="cabinet-section-link text-sm">
           Все мероприятия
         </Link>
       </div>
@@ -80,7 +80,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
         ))}
       </HorizontalChipScroller>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {monthEvents.map(({ event, eventNotifications }, index) => {
           const photo = photos[index % photos.length];
 

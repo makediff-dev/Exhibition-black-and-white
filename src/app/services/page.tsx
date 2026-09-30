@@ -204,6 +204,7 @@ function ServicesPageContent() {
                       onAdd={() => handleAdd(service)}
                       isFavorite={isFavorite(service.id)}
                       onToggleFavorite={() => handleToggleFavorite(service)}
+                      plainPortfolio
                     />
                   ))}
                 </div>

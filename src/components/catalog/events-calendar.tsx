@@ -111,7 +111,7 @@ export function EventsDateFilter({
         </div>
       )}
 
-      <div className="rounded-[10px] border border-[#d4d4d4] p-2">
+      <div className="rounded-[10px] border border-[#dddddd] p-2">
         <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
@@ -162,7 +162,7 @@ export function EventsDateFilter({
                     ? "border-gray-900 bg-gray-900 text-white"
                     : hasEvents
                       ? "border-gray-900 bg-gray-50 hover:bg-gray-100"
-                      : "border-transparent hover:border-[#d4d4d4]"
+                      : "border-transparent hover:border-[#dddddd]"
                 }`}
               >
                 {day.getDate()}

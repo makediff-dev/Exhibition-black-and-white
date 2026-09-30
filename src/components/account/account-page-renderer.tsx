@@ -234,7 +234,7 @@ function DashboardWidgets({ role }: { role: string }) {
   const pendingOutgoing = countOpenInvoices(myPayments, "outgoing");
 
   return (
-    <div className="mb-6">
+    <div>
       <DashboardStatsGrid>
         <DashboardStatCard
           value={countDashboardRequests(requests, responses, deals, user)}
@@ -322,8 +322,9 @@ function CustomerPages({ slug }: { slug: string }) {
   if (slug === "" || slug === "dashboard") {
     return (
       <>
+        <div className="flex flex-col gap-4">
         {edoModal && user?.edoStatus === "not_connected" && (
-          <div className="edo-prompt-banner mb-4 border border-[#d4d4d4] bg-white p-4">
+          <div className="edo-prompt-banner border border-[#dddddd] bg-transparent p-4">
             <p className="font-semibold mb-1">Подключите ЭДО</p>
             <p className="text-sm text-gray-700 mb-3">
               Для подписания документов рекомендуем подключить электронный документооборот.
@@ -376,28 +377,30 @@ function CustomerPages({ slug }: { slug: string }) {
             ))}
           </Card>
         </div>
-        <Card className="mt-4">
+        <Card>
           <CardTitle>Сделки, требующие действия</CardTitle>
-          {deals
-            .filter(
-              (d) =>
-                ["negotiation", "stage_review", "awaiting_payment"].includes(d.status) &&
-                isDealForUser(d, user)
-            )
-            .map((d) => (
-            <div
-              key={d.id}
-              className="flex flex-col items-start gap-2 py-2 border-b border-gray-200 text-sm last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <Link href={`/deals/${d.id}`} className="min-w-0 underline-offset-2 hover:underline">
-                {d.title}
-              </Link>
-              <Link href={`/deals/${d.id}`} className="shrink-0">
-                <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
-              </Link>
-            </div>
-          ))}
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {deals
+              .filter(
+                (d) =>
+                  ["negotiation", "stage_review", "awaiting_payment"].includes(d.status) &&
+                  isDealForUser(d, user)
+              )
+              .map((d) => (
+                <Card key={d.id} className="flex h-full flex-col items-start gap-3">
+                  <Badge>{DEAL_STATUS_LABELS[d.status]}</Badge>
+                  <p className="text-sm font-medium text-gray-900">{d.title}</p>
+                  <Link
+                    href={`/deals/${d.id}`}
+                    className="mt-auto inline-flex cursor-pointer items-center justify-center rounded-button border border-[#dddddd] bg-white px-3 py-1.5 text-xs font-medium text-gray-900 transition-colors hover:border-[#171717] hover:bg-gray-50"
+                  >
+                    Посмотреть сделку
+                  </Link>
+                </Card>
+              ))}
+          </div>
         </Card>
+        </div>
         <CustomerDashboardRecommendations user={user} />
       </>
     );
@@ -765,12 +768,13 @@ function ContractorPages({ slug }: { slug: string }) {
   if (slug === "" || slug === "dashboard") {
     return (
       <>
+        <div className="flex flex-col gap-4">
         <DashboardWidgets role="contractor" />
         <div className="grid md:grid-cols-2 gap-4">
           <Card>
             <div className="flex items-center justify-between gap-2 mb-2">
               <CardTitle>Доступные заявки</CardTitle>
-              <Link href="/account/contractor/available-requests" className="text-xs underline">
+              <Link href="/account/contractor/available-requests" className="cabinet-section-link text-xs">
                 Все
               </Link>
             </div>
@@ -802,12 +806,15 @@ function ContractorPages({ slug }: { slug: string }) {
               })}
             </div>
           </Card>
-          <Card>
-            <CardTitle>Доступно к выплате</CardTitle>
-            <p className="text-2xl font-bold mt-2">
-              {formatPrice(getContractorPayoutBalance(payments, deals, user))}
-            </p>
-          </Card>
+          <Link href="/account/contractor/payouts" className="block h-full cursor-pointer">
+            <Card hoverable className="h-full cursor-pointer">
+              <CardTitle>Доступно к выплате</CardTitle>
+              <p className="text-2xl font-bold mt-2">
+                {formatPrice(getContractorPayoutBalance(payments, deals, user))}
+              </p>
+            </Card>
+          </Link>
+        </div>
         </div>
         <ContractorDashboardSection user={user} />
       </>
@@ -949,7 +956,7 @@ function ContractorPages({ slug }: { slug: string }) {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+      <div className="catalog-cards-grid">
         {available.map((request) => {
           const event = request.eventId
             ? SEED_EVENTS.find((item) => item.id === request.eventId)

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Pin } from "lucide-react";
 import { MessageThreadPanel } from "@/components/messages/message-thread-panel";
 import styles from "@/components/messages/messages.module.css";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { getPublicVenueByCatalogId, getPublicVenueById } from "@/constants/venues";
 import { SEED_EVENTS } from "@/data/mocks/seed";
-import type { Deal, MessageCategory, MessageThread, Request, UserRole } from "@/data/types";
+import type { ChatMessage, Deal, MessageCategory, MessageThread, Request, UserRole } from "@/data/types";
 import { canContactVenue } from "@/lib/auth/authorization";
 import { loginHref } from "@/lib/auth/session";
 import {
@@ -32,6 +32,8 @@ import {
   withFromMessages,
 } from "@/lib/utils/message-related-links";
 import { getThreadInboxCategory, isThreadForUser } from "@/lib/utils/cabinet-scope";
+import { isThreadInboxPinned, sortInboxThreads } from "@/lib/utils/chat-actions";
+import { getPrototypeNowIso } from "@/lib/time/now";
 import { cn } from "@/lib/utils/cn";
 
 const MESSAGE_TABS: { id: MessageCategory | "all"; label: string }[] = [
@@ -181,10 +183,12 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
   const searchParams = useSearchParams();
   const { accountRole } = useCabinetSession();
   const user = useAuthStore((state) => state.user);
-  const { messages, deals, requests, addMessage, addThread } = usePrototypeStore();
+  const { messages, deals, requests, addMessage, addThread, updateChatMessage, markThreadRead, toggleInboxPin } =
+    usePrototypeStore();
   const [activeCategory, setActiveCategory] = useState<MessageCategory | "all">("all");
   const [text, setText] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [contextError, setContextError] = useState<string | null>(null);
   const contextRef = useMemo(() => parseContextSearchParams(searchParams), [searchParams]);
 
@@ -238,9 +242,11 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
     }
   }, [addThread, contextRef, deals, messages, router, selectedThreadId, user]);
 
+  const actorId = user?.id ?? user?.name ?? "guest";
+
   const sortedThreads = useMemo(
-    () => [...messages].sort((a, b) => b.lastDate.localeCompare(a.lastDate)),
-    [messages]
+    () => sortInboxThreads(messages, actorId),
+    [messages, actorId]
   );
 
   const scopedThreads = useMemo(
@@ -274,15 +280,49 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
 
   const senderName = user?.name || "Гость";
 
+  useEffect(() => {
+    if (!selectedThreadId || !senderName) return;
+    markThreadRead(selectedThreadId, senderName);
+  }, [markThreadRead, selectedThreadId, senderName]);
+
+  useEffect(() => {
+    setEditingMessageId(null);
+    setText("");
+    setAttachedFiles([]);
+  }, [selectedThreadId]);
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setText("");
+  };
+
+  const handleStartEdit = (message: ChatMessage) => {
+    setEditingMessageId(message.id);
+    setText(message.text);
+    setAttachedFiles([]);
+  };
+
   const handleSend = () => {
-    if (!text.trim() && attachedFiles.length === 0) return;
     if (!selectedThread) return;
+    const nextText = text.trim();
+
+    if (editingMessageId) {
+      if (!nextText) return;
+      updateChatMessage(selectedThread.id, editingMessageId, {
+        text: nextText,
+        editedAt: getPrototypeNowIso(),
+      });
+      handleCancelEdit();
+      return;
+    }
+
+    if (!nextText && attachedFiles.length === 0) return;
 
     addMessage(selectedThread.id, {
       id: `m-${Date.now()}`,
       sender: senderName,
-      text: text.trim() || "(файл без текста)",
-      date: new Date().toISOString().split("T")[0],
+      text: nextText || "(файл без текста)",
+      date: getPrototypeNowIso(),
       files: attachedFiles,
     });
 
@@ -319,6 +359,7 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
               {filteredThreads.map((thread) => {
                 const details = getThreadDetails(thread, deals, requests);
                 const isActive = thread.id === selectedThreadId;
+                const inboxPinned = isThreadInboxPinned(thread, actorId);
 
                 return (
                   <Card
@@ -326,19 +367,25 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
                     hoverable
                     className={cn(styles.threadCard, isActive && styles.threadCardActive)}
                   >
-                    <Link href={`/messages/${thread.id}`} className={styles.threadCardBody}>
-                      <div className={styles.threadCardMeta}>
-                        <Badge variant="muted">
-                          {getContextTypeLabel(getThreadContextRef(thread)?.type ?? thread.relatedType)}
-                        </Badge>
-                        {thread.unread > 0 ? (
-                          <Badge variant="solid">{thread.unread} новых</Badge>
-                        ) : null}
-                        <span className={styles.threadCardDate}>
-                          <MessageSquare className="h-3 w-3" />
-                          {formatShortDate(thread.lastDate)}
-                        </span>
-                      </div>
+                    <div className={styles.threadCardTop}>
+                      <Link href={`/messages/${thread.id}`} className={styles.threadCardBody}>
+                        <div className={styles.threadCardMeta}>
+                          <div className={styles.threadCardBadges}>
+                            <Badge variant="muted">
+                              {getContextTypeLabel(getThreadContextRef(thread)?.type ?? thread.relatedType)}
+                            </Badge>
+                            {inboxPinned ? (
+                              <Badge variant="outline">Закреплён</Badge>
+                            ) : null}
+                            {thread.unread > 0 ? (
+                              <Badge variant="solid">{thread.unread} новых</Badge>
+                            ) : null}
+                          </div>
+                          <span className={styles.threadCardDate}>
+                            <MessageSquare className="h-3 w-3" />
+                            {formatShortDate(thread.lastDate)}
+                          </span>
+                        </div>
                       <p className={styles.threadCardTitle}>{thread.title}</p>
                       <p className={styles.threadCardPreview}>{thread.lastMessage}</p>
                       {details ? (
@@ -347,7 +394,17 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
                           {details.cost !== "—" ? ` · ${details.cost}` : ""}
                         </p>
                       ) : null}
-                    </Link>
+                      </Link>
+                      <button
+                        type="button"
+                        className={cn(styles.inboxPinButton, inboxPinned && styles.inboxPinButtonActive)}
+                        aria-pressed={inboxPinned}
+                        aria-label={inboxPinned ? "Открепить чат" : "Закрепить чат"}
+                        onClick={() => toggleInboxPin(thread.id, actorId)}
+                      >
+                        <Pin className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     {thread.relatedLink && (getThreadContextRef(thread)?.type ?? thread.relatedType) !== "support" ? (
                       <Link
                         href={withFromMessages(resolveMessageRelatedHref(thread, accountRole))}
@@ -368,11 +425,16 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
             <MessageThreadPanel
               thread={selectedThread}
               senderName={senderName}
+              actorId={actorId}
+              forwardTargets={scopedThreads.filter((item) => item.id !== selectedThread.id)}
               text={text}
               attachedFiles={attachedFiles}
+              editingMessageId={editingMessageId}
               onTextChange={setText}
               onAttach={(fileName) => setAttachedFiles((prev) => [...prev, fileName])}
               onSend={handleSend}
+              onStartEdit={handleStartEdit}
+              onCancelEdit={handleCancelEdit}
             />
           ) : (
             <div className={styles.chatEmpty}>

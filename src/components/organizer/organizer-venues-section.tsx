@@ -287,7 +287,7 @@ export function OrganizerVenuesSection() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="catalog-cards-grid">
         {venues.map(({ venue, stats }) => {
           const photo = stats.photos[0];
           const isSelected = selectedVenueIds.includes(venue.id);

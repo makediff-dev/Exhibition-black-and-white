@@ -9,7 +9,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
 import type { Deal, DealReview } from "@/data/types";
-import { formatShortDate } from "@/lib/utils/formatters";
+import { formatDate, formatShortDate } from "@/lib/utils/formatters";
 import { useToast } from "@/components/ui/toast-provider";
 
 interface Props {
@@ -69,7 +69,7 @@ function ReviewDisplay({ review }: { review: DealReview }) {
             />
           ))}
         </div>
-        <span className="text-xs text-gray-500 shrink-0">{formatShortDate(review.date)}</span>
+        <span className="text-xs text-gray-500 shrink-0">{formatDate(review.date)}</span>
       </div>
     </Card>
   );

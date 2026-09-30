@@ -9,6 +9,8 @@ import type {
   Deal,
   Document,
   FloorCell,
+  ChatMessage,
+  ChatPinScope,
   MessageThread,
   Notification,
   OrganizerEventDraft,
@@ -47,6 +49,8 @@ import { validateProposalPayload } from "@/lib/state/proposal-payload";
 import { canPerformRequestAction } from "@/lib/state/request-machine";
 import { createBookingsFromInquiry } from "@/lib/utils/bookings-from-inquiry";
 import { isHallOccupied } from "@/lib/utils/hall-availability";
+import { getPrototypeNowIso } from "@/lib/time/now";
+import { mergeChatMessage, withSyncedPreview } from "@/lib/utils/chat-actions";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -305,8 +309,20 @@ interface PrototypeState {
   addNotification: (notification: Notification) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
-  addMessage: (threadId: string, message: MessageThread["messages"][0]) => void;
+  addMessage: (threadId: string, message: ChatMessage) => void;
   addThread: (thread: MessageThread) => void;
+  updateChatMessage: (threadId: string, messageId: string, updates: Partial<ChatMessage>) => void;
+  unsendChatMessage: (threadId: string, messageId: string, actorName: string) => boolean;
+  pinChatMessage: (threadId: string, messageId: string, scope: ChatPinScope, actorId: string) => void;
+  unpinChatMessage: (threadId: string, messageId: string, scope: ChatPinScope, actorId: string) => void;
+  toggleInboxPin: (threadId: string, actorId: string) => void;
+  markThreadRead: (threadId: string, readerName: string) => void;
+  forwardChatMessage: (
+    fromThreadId: string,
+    messageId: string,
+    toThreadId: string,
+    senderName: string,
+  ) => boolean;
   addBooking: (booking: Booking) => void;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   updateParticipant: (id: string, updates: Partial<Participant>) => void;
@@ -399,18 +415,21 @@ function mergeMessageThreads(
     const existing = storedMap.get(seed.id);
     if (!existing) return seed;
 
+    const storedById = new Map(existing.messages.map((message) => [message.id, message]));
     const seedMessageIds = new Set(seed.messages.map((message) => message.id));
+    const mergedSeedMessages = seed.messages.map((message) =>
+      mergeChatMessage(message, storedById.get(message.id)),
+    );
     const extraMessages = existing.messages.filter((message) => !seedMessageIds.has(message.id));
-    const messages = extraMessages.length ? [...seed.messages, ...extraMessages] : seed.messages;
-    const last = messages[messages.length - 1];
+    const messages = extraMessages.length ? [...mergedSeedMessages, ...extraMessages] : mergedSeedMessages;
 
-    return {
+    return withSyncedPreview({
       ...seed,
       unread: existing.unread,
+      inboxPinnedBy: existing.inboxPinnedBy ?? seed.inboxPinnedBy ?? [],
+      pins: existing.pins ?? seed.pins ?? [],
       messages,
-      lastMessage: last?.text ?? seed.lastMessage,
-      lastDate: last?.date ?? seed.lastDate,
-    };
+    });
   });
 
   const seedIds = new Set(seedItems.map((thread) => thread.id));
@@ -680,12 +699,10 @@ export const usePrototypeStore = create<PrototypeState>()(
         set((s) => ({
           messages: s.messages.map((t) =>
             t.id === threadId
-              ? {
+              ? withSyncedPreview({
                   ...t,
                   messages: [...t.messages, message],
-                  lastMessage: message.text,
-                  lastDate: message.date,
-                }
+                })
               : t
           ),
         })),
@@ -694,6 +711,153 @@ export const usePrototypeStore = create<PrototypeState>()(
           if (s.messages.some((item) => item.id === thread.id)) return s;
           return { messages: [thread, ...s.messages] };
         }),
+      updateChatMessage: (threadId, messageId, updates) =>
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== threadId) return thread;
+            return withSyncedPreview({
+              ...thread,
+              messages: thread.messages.map((message) =>
+                message.id === messageId ? { ...message, ...updates } : message,
+              ),
+            });
+          }),
+        })),
+      unsendChatMessage: (threadId, messageId, actorName) => {
+        const thread = get().messages.find((item) => item.id === threadId);
+        const message = thread?.messages.find((item) => item.id === messageId);
+        if (!thread || !message) return false;
+        if (message.sender !== actorName || message.deletedAt || message.readAt) return false;
+
+        set((s) => ({
+          messages: s.messages.map((item) => {
+            if (item.id !== threadId) return item;
+            return withSyncedPreview({
+              ...item,
+              pins: (item.pins ?? []).filter((pin) => pin.messageId !== messageId),
+              messages: item.messages.map((entry) =>
+                entry.id === messageId
+                  ? {
+                      ...entry,
+                      text: "",
+                      files: [],
+                      deletedAt: getPrototypeNowIso(),
+                    }
+                  : entry,
+              ),
+            });
+          }),
+        }));
+        return true;
+      },
+      pinChatMessage: (threadId, messageId, scope, actorId) =>
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== threadId) return thread;
+            if (!thread.messages.some((message) => message.id === messageId && !message.deletedAt)) {
+              return thread;
+            }
+            const pins = thread.pins ?? [];
+            const exists = pins.some(
+              (pin) =>
+                pin.messageId === messageId &&
+                pin.scope === scope &&
+                (scope === "everyone" || pin.pinnedBy === actorId),
+            );
+            if (exists) return thread;
+            return {
+              ...thread,
+              pins: [
+                ...pins,
+                {
+                  messageId,
+                  scope,
+                  pinnedBy: actorId,
+                  pinnedAt: getPrototypeNowIso(),
+                },
+              ],
+            };
+          }),
+        })),
+      unpinChatMessage: (threadId, messageId, scope, actorId) =>
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== threadId) return thread;
+            return {
+              ...thread,
+              pins: (thread.pins ?? []).filter(
+                (pin) =>
+                  !(
+                    pin.messageId === messageId &&
+                    pin.scope === scope &&
+                    (scope === "everyone" || pin.pinnedBy === actorId)
+                  ),
+              ),
+            };
+          }),
+        })),
+      toggleInboxPin: (threadId, actorId) =>
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== threadId) return thread;
+            const pinnedBy = thread.inboxPinnedBy ?? [];
+            return {
+              ...thread,
+              inboxPinnedBy: pinnedBy.includes(actorId)
+                ? pinnedBy.filter((id) => id !== actorId)
+                : [...pinnedBy, actorId],
+            };
+          }),
+        })),
+      markThreadRead: (threadId, readerName) =>
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== threadId) return thread;
+            const readAt = getPrototypeNowIso();
+            return {
+              ...thread,
+              unread: 0,
+              messages: thread.messages.map((message) =>
+                message.sender !== readerName && !message.readAt && !message.deletedAt
+                  ? { ...message, readAt }
+                  : message,
+              ),
+            };
+          }),
+        })),
+      forwardChatMessage: (fromThreadId, messageId, toThreadId, senderName) => {
+        const sourceThread = get().messages.find((item) => item.id === fromThreadId);
+        const source = sourceThread?.messages.find((item) => item.id === messageId);
+        const target = get().messages.find((item) => item.id === toThreadId);
+        if (!sourceThread || !source || !target || source.deletedAt || fromThreadId === toThreadId) {
+          return false;
+        }
+
+        const forwarded: ChatMessage = {
+          id: `m-fwd-${Date.now()}`,
+          sender: senderName,
+          text: source.text,
+          date: getPrototypeNowIso(),
+          files: [...source.files],
+          forwardedFrom: {
+            threadId: sourceThread.id,
+            threadTitle: sourceThread.title,
+            sender: source.sender,
+          },
+        };
+
+        set((s) => ({
+          messages: s.messages.map((thread) => {
+            if (thread.id !== toThreadId) return thread;
+            return withSyncedPreview({
+              ...thread,
+              unread: thread.unread + 1,
+              messages: [...thread.messages, forwarded],
+            });
+          }),
+        }));
+        return true;
+      },
       addBooking: (booking) =>
         set((s) => {
           if (booking.status === "confirmed" && booking.hallId) {

@@ -246,7 +246,7 @@ export function ContractorPortfolioListSection({ contractorId, hideTitle = false
           </p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+        <div className="catalog-cards-grid">
           {portfolio.map((item) => {
             const photoCount = countFilledPhotos(item);
             const thanksCount = item.thanksLetters?.length ?? 0;

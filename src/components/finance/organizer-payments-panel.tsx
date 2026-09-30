@@ -263,7 +263,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
           description="В этой вкладке пока нет финансовых операций по выбранным фильтрам"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="catalog-cards-grid">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const event = payment.eventId ? eventMap[payment.eventId] : undefined;
@@ -276,8 +276,15 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   ]
                 : undefined;
 
+            const cardHref = deal
+              ? `/deals/${deal.id}`
+              : payment.orderId
+                ? `/orders/${payment.orderId}`
+                : "/account/organizer/payments";
+
             return (
-              <Card key={payment.id} className="cabinet-card h-full flex flex-col">
+              <Card key={payment.id} hoverable className="cabinet-card h-full flex flex-col">
+                <Link href={cardHref} className="flex flex-1 flex-col cursor-pointer">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                   <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
@@ -308,34 +315,15 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   {payment.counterpartyName && (
                     <CardField label="Контрагент">{payment.counterpartyName}</CardField>
                   )}
-                  {event && (
-                    <CardField label="Мероприятие">
-                      <Link
-                        href={`/account/organizer/edit-event?id=${event.id}`}
-                        className="underline hover:text-gray-700"
-                      >
-                        {event.title}
-                      </Link>
-                    </CardField>
-                  )}
-                  {deal && (
+                  {event ? <CardField label="Мероприятие">{event.title}</CardField> : null}
+                  {deal ? (
                     <CardField label="Сделка">
-                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-700">
-                        {deal.number} — {deal.title}
-                      </Link>
+                      {deal.number} — {deal.title}
                     </CardField>
-                  )}
-                  {payment.orderId && !deal && (
-                    <CardField label="Заказ">
-                      <Link
-                        href={`/orders/${payment.orderId}`}
-                        className="underline hover:text-gray-700"
-                      >
-                        Открыть связанный заказ
-                      </Link>
-                    </CardField>
-                  )}
+                  ) : null}
+                  {payment.orderId && !deal ? <CardField label="Заказ">Связанный заказ</CardField> : null}
                 </div>
+                </Link>
 
                 {canPayInvoice({ ...payment, status }, user) && (
                   <div className="mt-[10px] pt-[10px]">

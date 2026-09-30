@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import { Tabs } from "@/components/ui/tabs";
@@ -210,14 +210,21 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
           description="В этой вкладке пока нет финансовых операций по выбранным фильтрам"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="catalog-cards-grid">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const event = payment.eventId ? eventMap[payment.eventId] : undefined;
             const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 
+            const cardHref = deal
+              ? `/deals/${deal.id}`
+              : payment.orderId
+                ? `/orders/${payment.orderId}`
+                : "/account/venue/payments";
+
             return (
-              <Card key={payment.id} className="h-full flex flex-col">
+              <Link key={payment.id} href={cardHref} className="block h-full cursor-pointer">
+              <Card hoverable className="h-full flex flex-col cursor-pointer">
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                   <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
@@ -237,83 +244,45 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
                 </div>
 
                 <p className="text-lg font-semibold mb-[10px]">{formatPrice(payment.amount)}</p>
-                <p className="text-xs text-gray-500 mb-[10px]">
-                  {payment.number ? `Счёт ${payment.number}` : "Номер счёта будет присвоен после выставления"}
-                </p>
-                <p className="text-sm text-gray-600 mb-[10px]">{payment.description}</p>
-                {payment.payerName && payment.payeeName ? (
-                  <p className="text-xs text-gray-600 mb-[10px]">
-                    Плательщик: {payment.payerName} · Получатель: {payment.payeeName}
-                  </p>
-                ) : (
-                  <div className="mb-[10px] rounded-[10px] border border-[var(--surface-border)] bg-[var(--surface-page)] p-2">
-                    <p className="text-xs font-medium text-gray-900">Требуются реквизиты</p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {!payment.payerName ? "Плательщик не заполнен. " : ""}
-                      {!payment.payeeName ? "Получатель не заполнен. " : ""}
-                    </p>
-                    <Link href="/account/venue/profile" className="text-xs underline">
-                      Открыть профиль и реквизиты
-                    </Link>
-                  </div>
-                )}
-                {getEscrowLinkNote(payment, venuePayments) && (
-                  <p className="text-xs text-gray-500 mb-[10px]">{getEscrowLinkNote(payment, venuePayments)}</p>
-                )}
-
-                <div className="space-y-[10px] text-sm flex-1">
-                  <p className="flex items-center gap-1 text-xs text-gray-500">
-                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                    {formatDate(payment.date)}
-                  </p>
-
+                <div className="space-y-[10px] flex-1">
+                  <CardField label="Счёт">
+                    {payment.number ?? "будет присвоен после выставления"}
+                  </CardField>
+                  <CardField label="Описание">{payment.description}</CardField>
+                  <CardField label="Плательщик">{payment.payerName ?? "не указан"}</CardField>
+                  <CardField label="Получатель">{payment.payeeName ?? "не указан"}</CardField>
+                  {(!payment.payerName || !payment.payeeName) && (
+                    <CardField label="Реквизиты">
+                      <span>Открыть профиль и реквизиты в меню «Профиль площадки»</span>
+                    </CardField>
+                  )}
+                  {getEscrowLinkNote(payment, venuePayments) && (
+                    <CardField label="Резерв">{getEscrowLinkNote(payment, venuePayments)}</CardField>
+                  )}
+                  <CardField label="Дата">{formatDate(payment.date)}</CardField>
                   {payment.counterpartyName && (
-                    <p className="flex items-center gap-1 text-gray-700">
-                      <Users className="h-3.5 w-3.5 shrink-0" />
-                      {payment.counterpartyName}
-                    </p>
+                    <CardField label="Контрагент">{payment.counterpartyName}</CardField>
                   )}
-
                   {payment.organizerName && (
-                    <p>
-                      Организатор:{" "}
-                      {payment.organizerName}
-                    </p>
+                    <CardField label="Организатор">{payment.organizerName}</CardField>
                   )}
-
                   {event && (
-                    <p className="flex items-start gap-1">
-                      <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      <span>
-                        <Link href={`/events/${event.id}`} className="underline hover:text-gray-900">
-                          {event.title}
-                        </Link>
-                        <span className="block text-xs text-gray-500 mt-0.5">
-                          {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                        </span>
-                      </span>
-                    </p>
+                    <CardField label="Мероприятие">
+                      <span>{event.title}</span>
+                      {` · ${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}`}
+                    </CardField>
                   )}
-
                   {deal && (
-                    <p>
-                      <Link href={`/deals/${deal.id}`} className="underline hover:text-gray-900">
+                    <CardField label="Сделка">
+                      <span>
                         {deal.number} — {deal.title}
-                      </Link>
-                    </p>
+                      </span>
+                    </CardField>
                   )}
-                  {payment.orderId && !deal && (
-                    <p>
-                      <Link
-                        href={`/orders/${payment.orderId}`}
-                        className="underline hover:text-gray-900"
-                      >
-                        Открыть связанный заказ
-                      </Link>
-                    </p>
-                  )}
+                  {payment.orderId && !deal ? <CardField label="Заказ">Связанный заказ</CardField> : null}
                 </div>
               </Card>
+              </Link>
             );
           })}
         </div>

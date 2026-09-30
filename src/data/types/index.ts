@@ -448,6 +448,33 @@ export interface EntityRef {
   id: string;
 }
 
+export type ChatPinScope = "self" | "everyone";
+
+export interface ChatMessageForwardMeta {
+  threadId: string;
+  threadTitle: string;
+  sender: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  date: string;
+  files: string[];
+  editedAt?: string;
+  deletedAt?: string;
+  readAt?: string;
+  forwardedFrom?: ChatMessageForwardMeta;
+}
+
+export interface ChatMessagePin {
+  messageId: string;
+  scope: ChatPinScope;
+  pinnedBy: string;
+  pinnedAt: string;
+}
+
 export interface MessageThread {
   id: string;
   title: string;
@@ -461,7 +488,9 @@ export interface MessageThread {
   lastDate: string;
   unread: number;
   participantRoles?: Exclude<UserRole, null>[];
-  messages: { id: string; sender: string; text: string; date: string; files: string[] }[];
+  inboxPinnedBy?: string[];
+  pins?: ChatMessagePin[];
+  messages: ChatMessage[];
 }
 
 export interface VenuePavilion {

@@ -110,7 +110,7 @@ function ContractorsGrid({
             <CardTitle>{contractor.name}</CardTitle>
             <div className="flex flex-wrap gap-1 mt-2">
               {contractor.categories.map((category) => (
-                <span key={category} className="text-xs border border-[#d4d4d4] rounded-[10px] px-2 py-0.5">
+                <span key={category} className="text-xs border border-[#dddddd] rounded-[10px] px-2 py-0.5">
                   {category}
                 </span>
               ))}

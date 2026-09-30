@@ -4,9 +4,9 @@
   --background: #fcfcfc;
   --foreground: #171717;
   --surface-page: #fcfcfc;
-  --surface-panel: #ffffff;
+  --surface-panel: transparent;
   --surface-border: #dddddd;
-  --surface-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --surface-shadow: 0 0 4px rgba(16, 24, 40, 0.06);
   --platform-accent: #37bd85;
   --platform-accent-hover: #2ea573;
   --role-customer: #28b5b3;
@@ -45,9 +45,18 @@
   --max-width-site: 1760px;
 }
 
+@layer utilities {
+  .shadow-sm,
+  .shadow,
+  .shadow-md {
+    box-shadow: 0 0 4px rgba(16, 24, 40, 0.06);
+  }
+}
+
 html {
   overflow-x: clip;
   color-scheme: light;
+  background: var(--background);
 }
 
 body {
@@ -124,6 +133,10 @@ a:active {
   }
 }
 
+.public-site {
+  background: #fcfcfc;
+}
+
 .catalog-list-layout {
   max-width: 1440px;
   padding-inline: 48px;
@@ -133,6 +146,12 @@ a:active {
 @media (min-width: 1800px) {
   .catalog-list-layout {
     max-width: 1760px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .catalog-list-layout {
+    max-width: none;
   }
 }
 
@@ -148,10 +167,11 @@ a:active {
   }
 }
 
-/* 5 cards per row on desktop, 24px gutters, leftover items stay left-aligned. */
+/* Catalog and cabinets: 4 cards through 1440 desktop, 5 cards at 1920. Home keeps its own counts. */
 .catalog-cards-grid {
+  --catalog-cards-per-row: 4;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--catalog-cards-per-row), minmax(0, 1fr));
   column-gap: 24px;
   row-gap: 24px;
   justify-content: start;
@@ -166,19 +186,46 @@ a:active {
 
 @media (max-width: 1023px) {
   .catalog-cards-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --catalog-cards-per-row: 2;
   }
 }
 
 @media (max-width: 767px) {
   .catalog-cards-grid {
-    grid-template-columns: minmax(0, 1fr);
+    --catalog-cards-per-row: 1;
   }
 }
 
-@media (min-width: 1800px) {
+@media (min-width: 1920px) {
   .catalog-cards-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    --catalog-cards-per-row: 5;
+  }
+}
+
+/* Projects: 3 cards through 1440 inclusive; 4 only when wider than 1440. */
+.catalog-cards-grid.catalog-cards-grid--projects {
+  --catalog-cards-per-row: 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+  .catalog-cards-grid.catalog-cards-grid--projects {
+    --catalog-cards-per-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .catalog-cards-grid.catalog-cards-grid--projects {
+    --catalog-cards-per-row: 1;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1441px) {
+  .catalog-cards-grid.catalog-cards-grid--projects {
+    --catalog-cards-per-row: 4;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -262,16 +309,12 @@ a:active {
     min-width: 0;
   }
 
-  .catalog-filters-box {
-    border: 1px solid #d4d4d4;
-    border-radius: 10px;
-    background: #fff;
-  }
-
+  .catalog-filters-box,
   .catalog-content-box {
-    border: 1px solid #d4d4d4;
+    border: 1px solid #dddddd;
     border-radius: 10px;
-    background: #fff;
+    background: transparent;
+    box-shadow: none;
   }
 
   .rounded-card {

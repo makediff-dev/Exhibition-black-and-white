@@ -3,9 +3,19 @@
 import { useCallback, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { HOME_QUICK_ACTIONS } from "@/constants/home-content";
+import {
+  HOME_QUICK_ACTIONS,
+  type HomeQuickActionRegisterRole,
+} from "@/constants/home-content";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
 import styles from "./home-page.module.css";
+
+const ROLE_TONE_CLASS: Record<HomeQuickActionRegisterRole, string> = {
+  customer: styles.quickActionToneCustomer,
+  contractor: styles.quickActionToneContractor,
+  organizer: styles.quickActionToneOrganizer,
+  venue: styles.quickActionToneVenue,
+};
 
 export function HomeQuickActionsSection() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -34,11 +44,11 @@ export function HomeQuickActionsSection() {
               <ChevronLeft className="h-5 w-5" />
             </button>
             <div ref={trackRef} className={styles.quickActionsGrid}>
-              {HOME_QUICK_ACTIONS.map((action, index) => (
+              {HOME_QUICK_ACTIONS.map((action) => (
                 <div key={action.title} className={styles.quickActionItem}>
                   <Link
                     href={action.href}
-                    className={`${styles.quickActionCard} ${styles[`quickActionCard${index + 1}`]}`}
+                    className={`${styles.quickActionCard} ${ROLE_TONE_CLASS[action.registerRole]}`}
                   >
                     <div className={styles.quickActionTop}>
                       <h3 className={styles.quickActionTitle}>{action.title}</h3>
@@ -57,7 +67,7 @@ export function HomeQuickActionsSection() {
                   </Link>
                   <Link
                     href={`/register?role=${action.registerRole}`}
-                    className={`${styles.quickActionRegisterButton} ${styles[`quickActionRegisterButton${index + 1}`]}`}
+                    className={`${styles.quickActionRegisterButton} ${ROLE_TONE_CLASS[action.registerRole]}`}
                   >
                     {action.registerLabel}
                   </Link>
