@@ -12,9 +12,10 @@ import { Select } from "@/components/ui/select";
 import { Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast-provider";
 import { ORGANIZER_PAYMENT_ROLE_LABELS } from "@/constants/statuses";
-import { SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
+import { SEED_EVENT_ORDERS, SEED_EVENTS, SEED_PAYMENTS } from "@/data/mocks/seed";
 import type { Payment } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { getPaymentRelatedOrderHref } from "@/lib/utils/entity-links";
 import { formatDate, formatPrice } from "@/lib/utils/formatters";
 import { canPayInvoice, getPaymentStatus, isOpenInvoice } from "@/lib/state/payment-machine";
 import { getEscrowLinkNote, getFinanceBasisLabel, isFinanceEscrow } from "@/lib/domain/finance";
@@ -263,7 +264,7 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
           description="В этой вкладке пока нет финансовых операций по выбранным фильтрам"
         />
       ) : (
-        <div className="catalog-cards-grid">
+        <div className="catalog-cards-grid catalog-cards-grid--projects">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const event = payment.eventId ? eventMap[payment.eventId] : undefined;
@@ -276,15 +277,10 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   ]
                 : undefined;
 
-            const cardHref = deal
-              ? `/deals/${deal.id}`
-              : payment.orderId
-                ? `/orders/${payment.orderId}`
-                : "/account/organizer/payments";
+            const cardHref = getPaymentRelatedOrderHref(payment, SEED_EVENT_ORDERS);
 
-            return (
-              <Card key={payment.id} hoverable className="cabinet-card h-full flex flex-col">
-                <Link href={cardHref} className="flex flex-1 flex-col cursor-pointer">
+            const body = (
+              <>
                 <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                   <Badge variant="muted">{getPaymentOperationLabel(payment.type, payment)}</Badge>
                   <Badge variant="outline">{getPaymentTradeSideLabel(payment, user)}</Badge>
@@ -323,7 +319,18 @@ export function OrganizerPaymentsPanel({ organizerId = "user-organizer" }: Props
                   ) : null}
                   {payment.orderId && !deal ? <CardField label="Заказ">Связанный заказ</CardField> : null}
                 </div>
-                </Link>
+              </>
+            );
+
+            return (
+              <Card key={payment.id} hoverable={Boolean(cardHref)} className="cabinet-card h-full flex flex-col">
+                {cardHref ? (
+                  <Link href={cardHref} className="flex flex-1 flex-col cursor-pointer">
+                    {body}
+                  </Link>
+                ) : (
+                  body
+                )}
 
                 {canPayInvoice({ ...payment, status }, user) && (
                   <div className="mt-[10px] pt-[10px]">

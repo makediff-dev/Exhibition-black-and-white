@@ -117,14 +117,15 @@ export function VenueDashboardServiceAlerts({ venueId }: VenueDashboardServiceAl
         </Link>
       </div>
 
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {serviceOrders.map((order) => {
           const highlighted = actionNotifications.some((item) => item.eventId === order.eventId);
           const eventTitle = getEventTitle(order.eventId);
 
           return (
-            <Link key={order.id} href={`/account/venue/orders/${order.eventId}`} className="block h-full">
+            <Link key={order.id} href="/account/venue/orders" className="block h-full">
               <Card
+                hoverable
                 className={cn(
                   "cabinet-card h-full",
                   highlighted && "bg-gray-50",
@@ -228,7 +229,7 @@ export function VenueDashboardBookingQueue({ venueId }: VenueDashboardBookingQue
         className="max-w-xs"
       />
 
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {bookings.map((booking) => {
           const eventTitle = getEventTitle(booking.eventId);
           const hallName = getHallName(booking.hallId);
@@ -330,7 +331,7 @@ export function VenueDashboardNegotiationQueue({ venueId }: VenueDashboardNegoti
         className="max-w-xs"
       />
 
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {inquiries.map((inquiry) => (
           <Card key={inquiry.id} className="cabinet-card h-full">
             <div className="flex flex-wrap items-center gap-2 mb-2">

@@ -8,9 +8,9 @@ export function getEventOrderHref(order: EventOrder): string {
 }
 
 /** Cabinet sidebar destinations for order / project / invoice cards. */
-export function getCabinetOrdersHref(role?: UserRole | null, eventId?: string): string {
+export function getCabinetOrdersHref(role?: UserRole | null, _eventId?: string): string {
   if (role === "venue") {
-    return eventId ? `/account/venue/orders/${eventId}` : "/account/venue/orders";
+    return "/account/venue/orders";
   }
   if (role === "organizer") return "/account/organizer/orders";
   if (role === "contractor") return "/account/contractor/active-projects";
@@ -35,6 +35,28 @@ export function getCabinetAwareOrderHref(order: EventOrder, role?: UserRole | nu
 export function getRelatedObjectHref(entity: Pick<Document | Payment, "dealId" | "orderId" | "bookingId">): string | undefined {
   if (entity.dealId) return `/deals/${entity.dealId}`;
   if (entity.orderId) return `/orders/${entity.orderId}`;
+  return undefined;
+}
+
+export function getPaymentRelatedOrderHref(
+  payment: Pick<Payment, "orderId" | "dealId" | "bookingId">,
+  orders: EventOrder[]
+): string | undefined {
+  if (payment.orderId) {
+    const order = orders.find((item) => item.id === payment.orderId);
+    return order ? getEventOrderHref(order) : `/orders/${payment.orderId}`;
+  }
+
+  if (payment.dealId) {
+    const order = orders.find((item) => item.dealId === payment.dealId);
+    return order ? getEventOrderHref(order) : `/deals/${payment.dealId}`;
+  }
+
+  if (payment.bookingId) {
+    const order = orders.find((item) => item.bookingId === payment.bookingId);
+    if (order) return getEventOrderHref(order);
+  }
+
   return undefined;
 }
 

@@ -158,7 +158,7 @@ export function VenueEventDetailSection({
                 Бронирования · {eventBookings.length}
               </Button>
             </Link>
-            <Link href={`/account/venue/orders/${event.id}`}>
+            <Link href="/account/venue/orders">
               <Button size="sm" variant="soft-outline" className="text-gray-900">
                 Заказы · {eventOrdersCount}
               </Button>

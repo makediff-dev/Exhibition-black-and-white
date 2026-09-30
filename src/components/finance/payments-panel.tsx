@@ -176,7 +176,7 @@ export function PaymentsPanel({ defaultTab = "payable" }: { defaultTab?: string 
           description="В этой вкладке пока нет финансовых операций"
         />
       ) : (
-        <div className="catalog-cards-grid">
+        <div className="catalog-cards-grid catalog-cards-grid--projects">
           {filteredPayments.map((payment) => {
             const deal = payment.dealId ? dealMap[payment.dealId] : undefined;
 

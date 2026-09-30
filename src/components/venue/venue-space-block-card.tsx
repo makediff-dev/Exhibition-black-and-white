@@ -1,12 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { useToast } from "@/components/ui/toast-provider";
+
+export interface SpaceBlockField {
+  label: string;
+  value: string;
+}
 
 interface Props {
   title: string;
-  description: string;
+  fields: SpaceBlockField[];
   open: boolean;
   onToggle: () => void;
   onOpen?: () => void;
@@ -14,7 +20,7 @@ interface Props {
 
 export function VenueSpaceBlockCard({
   title,
-  description,
+  fields,
   open,
   onToggle,
   onOpen,
@@ -33,7 +39,13 @@ export function VenueSpaceBlockCard({
       ) : null}
       <div className="relative z-[2] pointer-events-none flex flex-col flex-1">
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="mt-2 space-y-1">
+          {fields.map((field) => (
+            <CardField key={field.label} label={field.label}>
+              {field.value}
+            </CardField>
+          ))}
+        </div>
         <div className="mt-auto pt-4 pointer-events-auto">
           <Button
             size="sm"

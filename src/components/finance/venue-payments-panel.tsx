@@ -210,7 +210,7 @@ export function VenuePaymentsPanel({ venueId = "venue-1" }: Props) {
           description="В этой вкладке пока нет финансовых операций по выбранным фильтрам"
         />
       ) : (
-        <div className="catalog-cards-grid">
+        <div className="catalog-cards-grid catalog-cards-grid--projects">
           {filteredPayments.map((payment) => {
             const status = getStatus(payment);
             const event = payment.eventId ? eventMap[payment.eventId] : undefined;

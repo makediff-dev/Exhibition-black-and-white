@@ -101,7 +101,7 @@ export function CustomerMyEventsSection({ customerId = "user-customer" }: Props)
         Здесь только те мероприятия, с которыми уже есть связь: заявка, сделка или заказ. На карточке
         указано основание и следующее действие.
       </p>
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {myEvents.map(({ event, reasons, action }) => (
           <Card key={event.id} hoverable className="h-full flex flex-col">
             <Link

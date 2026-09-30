@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Select } from "@/components/ui/select";
 import {
@@ -188,14 +188,14 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
           description="Измените месяц или статус, чтобы увидеть другие события на площадке"
         />
       ) : (
-        <div className="catalog-cards-grid">
+        <div className="catalog-cards-grid catalog-cards-grid--projects">
           {filteredEvents.map(({ event, meta, halls, statuses }) => {
             const lowAvailability = meta && meta.freeAreaSqm > 0 && meta.freeAreaSqm < 500;
 
             return (
               <Link key={event.id} href={`/account/venue/events/${event.id}`} className="block h-full">
                 <Card hoverable className="cabinet-card h-full">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                     <Badge variant="muted">
                       {event.category === "exhibition"
                         ? "Выставка"
@@ -216,37 +216,26 @@ export function VenueEventsSection({ venueId = "venue-1" }: Props) {
                     )}
                   </div>
 
-                  <CardTitle className="mb-2">{event.title}</CardTitle>
+                  <CardTitle className="text-sm leading-snug mb-[10px]">{event.title}</CardTitle>
 
-                  <CardDescription className="space-y-2">
-                    <p className="flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                  <div className="space-y-[10px]">
+                    <CardField label="Даты">
                       {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                      <span className="text-gray-500">· {getMonthLabel(getMonthKey(event.startDate))}</span>
-                    </p>
-
-                    <p className="flex items-start gap-1.5">
-                      <User className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                      {getOrganizerName(event)}
-                    </p>
-
-                    {halls.length > 0 && (
-                      <p className="flex items-start gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                        <span>
-                          {halls.map((hall) => hall!.name).join(", ")}
-                          {meta && (
-                            <span className="block text-xs text-gray-500 mt-0.5">
-                              В аренде: {meta.rentedAreaSqm.toLocaleString("ru-RU")} кв.м
-                            </span>
-                          )}
-                        </span>
-                      </p>
-                    )}
-                  </CardDescription>
+                    </CardField>
+                    <CardField label="Период">{getMonthLabel(getMonthKey(event.startDate))}</CardField>
+                    <CardField label="Организатор">{getOrganizerName(event)}</CardField>
+                    {halls.length > 0 ? (
+                      <CardField label="Залы">{halls.map((hall) => hall!.name).join(", ")}</CardField>
+                    ) : null}
+                    {meta ? (
+                      <CardField label="В аренде">
+                        {meta.rentedAreaSqm.toLocaleString("ru-RU")} кв.м
+                      </CardField>
+                    ) : null}
+                  </div>
 
                   {meta && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+                    <div className="mt-[10px] pt-[10px] border-t border-gray-200 space-y-[10px]">
                       {meta.availabilityNotes.map((note) => (
                         <p
                           key={note}

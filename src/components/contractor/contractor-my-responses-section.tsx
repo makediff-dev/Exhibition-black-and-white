@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { EmptyState } from "@/components/ui/states";
 import { Input } from "@/components/ui/input";
+import { REQUEST_FORMAT_LABELS } from "@/constants/statuses";
+import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { CompanyProfile, Request, Response } from "@/data/types";
 import { formatPrice } from "@/lib/utils/formatters";
 import { isResponseForUser } from "@/lib/utils/user-entity-map";
@@ -209,28 +212,44 @@ export function ContractorMyResponsesSection({
           onAction={() => setFilters(EMPTY_FILTERS)}
         />
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="catalog-cards-grid catalog-cards-grid--projects">
           {visibleResponses.map((response) => {
             const request = requests.find((item) => item.id === response.requestId);
+            const event = request?.eventId
+              ? SEED_EVENTS.find((item) => item.id === request.eventId)
+              : undefined;
+            const venue = event ? `${event.venue}, ${event.city}` : request?.city;
 
             return (
               <Link
                 key={response.id}
                 href={`/requests/${response.requestId}/respond`}
-                className="block"
+                className="block h-full"
               >
-                <Card hoverable className="cabinet-card">
-                  <div className="flex justify-between items-start gap-3 flex-wrap">
-                    <div>
-                      <CardTitle>{request?.title ??"Заявка"}</CardTitle>
-                      <CardDescription>
-                        {formatPrice(response.price)} · {response.deadline} · Статус:{" "}
-                        {RESPONSE_STATUS_LABELS[response.status] ?? response.status}
-                      </CardDescription>
-                    </div>
+                <Card className="cabinet-card h-full flex flex-col">
+                  <div className="flex flex-wrap items-center gap-2 mb-[10px]">
+                    {request ? (
+                      <Badge variant="muted" className="bg-gray-100 text-gray-900 border-gray-200">
+                        {REQUEST_FORMAT_LABELS[request.format]}
+                      </Badge>
+                    ) : null}
                     <Badge variant="outline">
                       {RESPONSE_STATUS_LABELS[response.status] ?? response.status}
                     </Badge>
+                  </div>
+                  <CardTitle className="text-base leading-snug mb-[10px]">
+                    {request?.title ?? "Заявка"}
+                  </CardTitle>
+                  {request?.category ? (
+                    <CardDescription className="mb-[10px]">{request.category}</CardDescription>
+                  ) : null}
+                  <div className="space-y-[10px] flex-1">
+                    <CardField label="Предложение">{formatPrice(response.price)}</CardField>
+                    <CardField label="Срок">{response.deadline}</CardField>
+                    {venue ? <CardField label="Площадка">{venue}</CardField> : null}
+                    {request?.customerName ? (
+                      <CardField label="Заказчик">{request.customerName}</CardField>
+                    ) : null}
                   </div>
                 </Card>
               </Link>

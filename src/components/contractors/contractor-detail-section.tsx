@@ -168,7 +168,7 @@ export function ContractorDetailSection({
           </div>
 
           <div className="space-y-6">
-            <section>
+            <Card>
               <h2 className="text-lg font-semibold mb-2">О компании</h2>
               <p className="text-sm text-gray-700">{contractor.description}</p>
               <div className="flex flex-wrap gap-2 mt-3">
@@ -178,12 +178,14 @@ export function ContractorDetailSection({
                   </span>
                 ))}
               </div>
-            </section>
+            </Card>
 
             <section id="portfolio">
               <h2 className="text-lg font-semibold mb-3">Портфолио</h2>
               {contractor.portfolio.length === 0 ? (
-                <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
+                <Card>
+                  <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
+                </Card>
               ) : (
                 <div className="catalog-cards-grid">
                   {contractor.portfolio.map((item) => (
@@ -200,7 +202,9 @@ export function ContractorDetailSection({
             <section>
               <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
               {contractor.reviews.length === 0 ? (
-                <p className="text-sm text-gray-600">Отзывов пока нет</p>
+                <Card>
+                  <p className="text-sm text-gray-600">Отзывов пока нет</p>
+                </Card>
               ) : (
                 <ReviewsList reviews={contractor.reviews} />
               )}
@@ -237,7 +241,7 @@ export function ContractorDetailSection({
             />
           )}
 
-          <section className="rounded-[10px] border border-[#dddddd] bg-transparent p-4">
+          <Card>
             <h2 className="text-base font-semibold mb-3">Реквизиты</h2>
             <dl className="text-sm space-y-2">
               <div>
@@ -272,7 +276,7 @@ export function ContractorDetailSection({
                 Проверить контрагента
               </Button>
             </Link>
-          </section>
+          </Card>
         </aside>
       </div>
     </>

@@ -65,7 +65,10 @@ export default function AccountPage({
   }
 
   return (
-    <AppShell accountRole={role as AccountRole}>
+    <AppShell
+      accountRole={role as AccountRole}
+      activeNavSlug={role === "customer" && (slug === "cart" || slug === "checkout") ? "cart" : undefined}
+    >
       <AccountPageRenderer role={role as AccountRole} slug={slug} />
     </AppShell>
   );

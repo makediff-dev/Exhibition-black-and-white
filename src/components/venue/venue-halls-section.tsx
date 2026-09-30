@@ -191,16 +191,23 @@ export function VenueHallsSection({
     );
   };
 
-  const hallCardDescription = (hall: VenueHall) => {
+  const hallCardFields = (hall: VenueHall) => {
     const block = blockForHall(hall.id);
     const config = SEED_HALL_GRID_CONFIGS.find((item) => item.hallId === hall.id);
-    const parts = [
-      `${hall.area.toLocaleString("ru-RU")} кв.м`,
-      `до ${hall.capacity} мест`,
+    const fields = [
+      { label: "Площадь", value: `${hall.area.toLocaleString("ru-RU")} кв.м` },
+      { label: "Вместимость", value: `до ${hall.capacity} мест` },
     ];
-    if (config) parts.push(`${config.widthMeters}×${config.heightMeters} м`);
-    if (block) parts.push(`${formatPrice(block.pricePerSqm)}/кв.м`);
-    return parts.join(" · ");
+    if (config) {
+      fields.push({
+        label: "Размер",
+        value: `${config.widthMeters}×${config.heightMeters} м`,
+      });
+    }
+    if (block) {
+      fields.push({ label: "Цена", value: `${formatPrice(block.pricePerSqm)}/кв.м` });
+    }
+    return fields;
   };
 
   const openHall = (hall: VenueHall, tab: HallTab) => {
@@ -370,13 +377,19 @@ export function VenueHallsSection({
 
         {hallTab === "sale" ? (
           <div className="space-y-6">
-            <div className="catalog-cards-grid">
+            <div className="catalog-cards-grid catalog-cards-grid--projects">
               <VenueSpaceBlockCard
                 title={saleBlock?.name ?? selectedHall.name}
-                description={
+                fields={
                   saleBlock
-                    ? `${saleBlock.area.toLocaleString("ru-RU")} кв.м · ${formatPrice(saleBlock.pricePerSqm)}/кв.м`
-                    : hallCardDescription(selectedHall)
+                    ? [
+                        {
+                          label: "Площадь",
+                          value: `${saleBlock.area.toLocaleString("ru-RU")} кв.м`,
+                        },
+                        { label: "Цена", value: `${formatPrice(saleBlock.pricePerSqm)}/кв.м` },
+                      ]
+                    : hallCardFields(selectedHall)
                 }
                 open={isHallOpen(selectedHall)}
                 onToggle={() => toggleHallSale(selectedHall)}
@@ -468,12 +481,12 @@ export function VenueHallsSection({
                 В павильоне пока нет залов. Добавьте первый зал и настройте его на миллиметровке.
               </p>
             ) : (
-              <div className="catalog-cards-grid">
+              <div className="catalog-cards-grid catalog-cards-grid--projects">
                 {pavilionHalls.map((hall) => (
                   <VenueSpaceBlockCard
                     key={hall.id}
                     title={hall.name}
-                    description={hallCardDescription(hall)}
+                    fields={hallCardFields(hall)}
                     open={isHallOpen(hall)}
                     onOpen={() => openHall(hall, "card")}
                     onToggle={() => toggleHallSale(hall)}
@@ -488,12 +501,15 @@ export function VenueHallsSection({
       {outdoorBlocks.length > 0 ? (
         <section className="space-y-3">
           <h2 className="text-base font-semibold">Другие площади</h2>
-          <div className="catalog-cards-grid">
+          <div className="catalog-cards-grid catalog-cards-grid--projects">
             {outdoorBlocks.map((block) => (
               <VenueSpaceBlockCard
                 key={block.id}
                 title={block.name}
-                description={`${block.area.toLocaleString("ru-RU")} кв.м · ${formatPrice(block.pricePerSqm)}/кв.м`}
+                fields={[
+                  { label: "Площадь", value: `${block.area.toLocaleString("ru-RU")} кв.м` },
+                  { label: "Цена", value: `${formatPrice(block.pricePerSqm)}/кв.м` },
+                ]}
                 open={block.open}
                 onToggle={() => toggleBlock(block.id)}
               />

@@ -117,30 +117,32 @@ export function ContractorProductionSection({ user, showToast }: Props) {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={hasProduction}
-          onChange={(event) => setHasProduction(event.target.checked)}
+      <Card className="space-y-6">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={hasProduction}
+            onChange={(event) => setHasProduction(event.target.checked)}
+          />
+          Собственное производство
+        </label>
+
+        <Input label="Адрес производства" defaultValue="г. Москва, ул. Заводская, 15" />
+        <Input label="Площадь, кв.м" defaultValue="1200" />
+        <Textarea label="Оборудование" defaultValue="Фрезерный станок, лазерная резка" />
+
+        <PhotoUploadSection
+          title="Фотографии производства"
+          photos={productionPhotos}
+          onUpload={(fileName) => setProductionPhotos((prev) => [...prev, fileName])}
         />
-        Собственное производство
-      </label>
 
-      <Input label="Адрес производства" defaultValue="г. Москва, ул. Заводская, 15" />
-      <Input label="Площадь, кв.м" defaultValue="1200" />
-      <Textarea label="Оборудование" defaultValue="Фрезерный станок, лазерная резка" />
-
-      <PhotoUploadSection
-        title="Фотографии производства"
-        photos={productionPhotos}
-        onUpload={(fileName) => setProductionPhotos((prev) => [...prev, fileName])}
-      />
-
-      <PhotoUploadSection
-        title="Фотографии оборудования"
-        photos={equipmentPhotos}
-        onUpload={(fileName) => setEquipmentPhotos((prev) => [...prev, fileName])}
-      />
+        <PhotoUploadSection
+          title="Фотографии оборудования"
+          photos={equipmentPhotos}
+          onUpload={(fileName) => setEquipmentPhotos((prev) => [...prev, fileName])}
+        />
+      </Card>
 
       <Card className="space-y-4">
         <div className="flex items-start justify-between gap-3 flex-wrap">

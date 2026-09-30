@@ -60,7 +60,6 @@ import { VenueBookingDetailSection } from "@/components/venue/venue-booking-deta
 import { VenueEventBookingsSection } from "@/components/venue/venue-event-bookings-section";
 import { VenueProfileSection } from "@/components/venue/venue-profile-section";
 import { VenueEventDetailSection } from "@/components/venue/venue-event-detail-section";
-import { VenueEventOrdersSection } from "@/components/venue/venue-event-orders-section";
 import { PinLoginSettings } from "@/components/account/pin-login-settings";
 import { CompanyProfileSection } from "@/components/account/company-profile-section";
 import {
@@ -956,7 +955,7 @@ function ContractorPages({ slug }: { slug: string }) {
     }
 
     return (
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {available.map((request) => {
           const event = request.eventId
             ? SEED_EVENTS.find((item) => item.id === request.eventId)
@@ -1102,8 +1101,7 @@ function VenuePages({ slug }: { slug: string }) {
   }
 
   if (slug.startsWith("orders/")) {
-    const eventId = slug.split("/")[1];
-    return <VenueEventOrdersSection eventId={eventId} venueId={venueId} />;
+    return <OrganizerLegacyRedirect to="/account/venue/orders" />;
   }
 
   if (slug === "orders") {

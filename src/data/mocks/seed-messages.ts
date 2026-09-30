@@ -15,8 +15,8 @@ export const SEED_NOTIFICATIONS: Notification[] = [
   { id: "vnotif-1", title: "Подтвердите бронирование", message: "Мебель-2026: новая заявка на павильон 1", priority: "action_required", read: false, date: "2026-01-18", link: "/account/venue/bookings", category: "bookings", eventId: "evt-1", audience: "venue" },
   { id: "vnotif-2", title: "Счёт к оплате", message: "IT Forum Russia: входящий счёт от организатора", priority: "action_required", read: false, date: "2026-01-17", link: "/account/venue/payments", category: "payments", eventId: "evt-3", audience: "venue" },
   { id: "vnotif-3", title: "Документ на подпись", message: "Мода и Стиль: акт от экспонента", priority: "deadline", read: false, date: "2026-01-16", link: "/account/venue/documents", category: "documents", eventId: "evt-5", audience: "venue" },
-  { id: "vnotif-4", title: "Новый заказ услуги", message: "Мебель-2026: застройщик заказал пропуска", priority: "info", read: true, date: "2026-01-15", link: "/account/venue/orders/evt-1", category: "orders", eventId: "evt-1", audience: "venue" },
-  { id: "vnotif-5", title: "Требуется действие", message: "Мебель-2026: заявка на аренду лебёдки", priority: "action_required", read: false, date: "2026-01-19", link: "/account/venue/orders/evt-1", category: "orders", eventId: "evt-1", audience: "venue" },
+  { id: "vnotif-4", title: "Новый заказ услуги", message: "Мебель-2026: застройщик заказал пропуска", priority: "info", read: true, date: "2026-01-15", link: "/account/venue/orders", category: "orders", eventId: "evt-1", audience: "venue" },
+  { id: "vnotif-5", title: "Требуется действие", message: "Мебель-2026: заявка на аренду лебёдки", priority: "action_required", read: false, date: "2026-01-19", link: "/account/venue/orders", category: "orders", eventId: "evt-1", audience: "venue" },
   { id: "vnotif-6", title: "Сообщение от организатора", message: "Подтвердите дату монтажа на площадке", priority: "action_required", read: false, date: "2026-01-16", link: "/messages/msg-4", category: "messages", eventId: "evt-1", audience: "venue" },
   { id: "onotif-1", title: "Новый заказ от экспонента", message: "Мебель-2026: ООО «Вымышленная Мебель» — аренда 36 кв.м", priority: "action_required", read: false, date: "2026-01-19", link: "/account/organizer/orders", category: "orders", eventId: "evt-1", audience: "organizer" },
   { id: "onotif-2", title: "Счёт от площадки", message: "ЭкспоЦентр: счёт за аренду павильона 1", priority: "action_required", read: false, date: "2026-01-18", link: "/account/organizer/payments", category: "payments", eventId: "evt-1", audience: "organizer" },
@@ -96,7 +96,7 @@ export const SEED_MESSAGES: MessageThread[] = [
     { id: "m6-2", sender: "АО «ЭкспоЦентр Вымышленный»", text: "Список ФИО и номера авто пришлите в шаблоне. Пропуска будут на ресепшен павильона 1.", date: "2026-01-18", files: ["passes-template.xlsx"] },
     { id: "m6-3", sender: "ООО «Вымышленная Мебель»", text: "Заполненный список отправили. Подтвердите, что машины въезжают с 6:30.", date: "2026-01-19", files: ["passes-mebel-2026.xlsx"] },
   ]),
-  seedThread("msg-7", "Точки подвеса и лебёдка", "venue", "event", "evt-1", "/account/venue/orders/evt-1", ["venue", "contractor"], 1, [
+  seedThread("msg-7", "Точки подвеса и лебёдка", "venue", "event", "evt-1", "/account/venue/orders", ["venue", "contractor"], 1, [
     { id: "m7-1", sender: "ООО «СтендПро»", text: "Для стенда 36 кв.м нужны 4 точки подвеса и аренда лебёдки на 12 марта.", date: "2026-01-15", files: [] },
     { id: "m7-2", sender: "АО «ЭкспоЦентр Вымышленный»", text: "Схема ферм во вложении. Лебёдку подтверждаем, нужен техконтроль до 17:00 11 марта.", date: "2026-01-16", files: ["rigging-pavilion-1.pdf"] },
     { id: "m7-3", sender: "ООО «СтендПро»", text: "Принято. Инженера направим к 10:00, акт подпишем на площадке.", date: "2026-01-16", files: [] },

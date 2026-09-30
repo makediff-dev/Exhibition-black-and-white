@@ -216,7 +216,7 @@ export function VenueBookingDetailSection({
                     Бронирования по мероприятию
                   </Button>
                 </Link>
-                <Link href={`/account/venue/orders/${event.id}`}>
+                <Link href="/account/venue/orders">
                   <Button size="sm" variant="outline">
                     Заказы по мероприятию
                   </Button>

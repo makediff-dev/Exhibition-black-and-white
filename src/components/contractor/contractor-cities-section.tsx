@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict } from "@/constants/categories";
 import type { CompanyProfile } from "@/data/types";
@@ -32,7 +33,7 @@ export function ContractorCitiesSection({ user, showToast }: Props) {
   };
 
   return (
-    <div className="space-y-4">
+    <Card className="space-y-4">
       <p className="text-sm mb-1">Города оказания услуг:</p>
       <div className="flex flex-wrap gap-2">
         {user?.cities.map((city) => (
@@ -66,6 +67,6 @@ export function ContractorCitiesSection({ user, showToast }: Props) {
       <Button size="sm" onClick={handleAddCity} disabled={!selectedCity}>
         Добавить
       </Button>
-    </div>
+    </Card>
   );
 }

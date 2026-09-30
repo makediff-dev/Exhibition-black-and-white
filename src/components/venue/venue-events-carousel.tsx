@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import {
   SEED_EVENTS,
   SEED_HALLS,
@@ -102,7 +102,7 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
         ))}
       </HorizontalChipScroller>
 
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {monthEvents.map(({ event, meta, halls, eventNotifications }, index) => {
           const photo = venuePhotos[index % venuePhotos.length];
 
@@ -113,13 +113,12 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
               className="block h-full"
             >
               <Card hoverable className="cabinet-card h-full overflow-hidden">
-                <div className="space-y-3">
+                <div className="space-y-[10px]">
                   <div className="cabinet-card h-28 bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
                     {photo?.title ?? "Фото мероприятия"}
                   </div>
 
-                  <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="muted">
                       {event.category === "exhibition"
                         ? "Выставка"
@@ -134,34 +133,29 @@ export function VenueEventsCarousel({ venueId = "venue-1" }: Props) {
 
                   <CardTitle className="text-sm leading-snug">{event.title}</CardTitle>
 
-                  <CardDescription className="space-y-1.5">
-                    <span className="flex items-center gap-1.5">
-                      <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                  <div className="space-y-[10px]">
+                    <CardField label="Даты">
                       {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                    </span>
+                    </CardField>
                     {halls.length > 0 ? (
-                      <span className="flex items-start gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                        {halls.map((hall) => hall!.name).join(", ")}
-                      </span>
+                      <CardField label="Залы">{halls.map((hall) => hall!.name).join(", ")}</CardField>
                     ) : null}
                     {meta ? (
-                      <span className="block text-xs text-gray-500">
-                        Свободно: {meta.freeAreaSqm.toLocaleString("ru-RU")} кв.м
-                      </span>
+                      <CardField label="Свободно">
+                        {meta.freeAreaSqm.toLocaleString("ru-RU")} кв.м
+                      </CardField>
                     ) : null}
-                  </CardDescription>
+                  </div>
 
                   {eventNotifications.length > 0 ? (
-                    <div className="pt-2 border-t border-gray-200 space-y-1">
+                    <div className="pt-[10px] border-t border-gray-200 space-y-[10px]">
                       {eventNotifications.slice(0, 2).map((item: Notification) => (
-                        <p key={item.id} className="text-[11px] text-gray-700 leading-snug">
+                        <p key={item.id} className="text-sm text-gray-700 leading-snug">
                           {item.title}
                         </p>
                       ))}
                     </div>
                   ) : null}
-                  </div>
                 </div>
               </Card>
             </Link>

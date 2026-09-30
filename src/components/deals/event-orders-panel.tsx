@@ -39,9 +39,13 @@ interface EventOrderCardProps {
 function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps) {
   const user = useAuthStore((state) => state.user);
   const href = getCabinetAwareOrderHref(order, user?.role);
+  const staysOnOrdersList = user?.role === "venue" || user?.role === "organizer";
   const event = SEED_EVENTS.find((item) => item.id === order.eventId);
   const content = (
-    <Card className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}>
+    <Card
+      hoverable={!highlighted && !staysOnOrdersList}
+      className={cn("cabinet-card h-full", highlighted && "bg-gray-50")}
+    >
       <div className="mb-[10px]">
         <EventOrderStatusBadges order={order} event={event} viewer={user} />
       </div>
@@ -63,7 +67,7 @@ function EventOrderCard({ order, highlighted, eventTitle }: EventOrderCardProps)
     </Card>
   );
 
-  if (highlighted) {
+  if (highlighted || staysOnOrdersList) {
     return <div className="h-full">{content}</div>;
   }
 

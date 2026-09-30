@@ -162,7 +162,7 @@ export function CustomerCheckoutSection({ cartHref }: Props) {
         согласовывать условия и оплату с каждым подрядчиком.
       </p>
 
-      <div className="mb-6 rounded-card border border-gray-300 bg-gray-50 p-4 text-sm">
+      <Card className="mb-6 text-sm">
         <p className="font-medium mb-1">Как это работает</p>
         <ol className="list-decimal pl-5 space-y-1 text-gray-700">
           <li>Для каждого исполнителя создаётся отдельная сделка</li>
@@ -170,7 +170,7 @@ export function CustomerCheckoutSection({ cartHref }: Props) {
           <li>Оплата резервируется отдельно по каждой сделке</li>
           <li>Документы и коммуникация ведутся в рамках каждого заказа</li>
         </ol>
-      </div>
+      </Card>
 
       <div className="space-y-4 mb-6">
         {grouped.map((group) => (
@@ -192,7 +192,7 @@ export function CustomerCheckoutSection({ cartHref }: Props) {
         ))}
       </div>
 
-      <div className="rounded-card border border-gray-300 p-4 mb-6">
+      <Card className="mb-6">
         <div className="flex justify-between text-sm mb-1">
           <span>Количество заказов</span>
           <span>{grouped.length}</span>
@@ -201,7 +201,7 @@ export function CustomerCheckoutSection({ cartHref }: Props) {
           <span>Итого</span>
           <span>{formatPrice(total)}</span>
         </div>
-      </div>
+      </Card>
 
       {!isAuthenticated && (
         <p className="text-sm text-gray-700 border border-dashed border-gray-400 p-3 mb-4">

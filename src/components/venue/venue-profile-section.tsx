@@ -144,45 +144,47 @@ export function VenueProfileSection({ venueId = "venue-1", showToast }: Props) {
         />
       </Card>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-semibold">Основная информация</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Представьте площадку организаторам и участникам мероприятий
-          </p>
-        </div>
-        <Input label="Название площадки" value={name} onChange={(e) => setName(e.target.value)} />
-        <Textarea
-          label="Описание"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </section>
+      <Card className="space-y-8">
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold">Основная информация</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Представьте площадку организаторам и участникам мероприятий
+            </p>
+          </div>
+          <Input label="Название площадки" value={name} onChange={(e) => setName(e.target.value)} />
+          <Textarea
+            label="Описание"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-sm font-semibold">Данные для верификации</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Используются модерацией для проверки площадки
-          </p>
-        </div>
-        <Input
-          label="Фактический адрес"
-          value={actualAddress}
-          onChange={(e) => setActualAddress(e.target.value)}
-        />
-        <Input
-          label="Сайт"
-          value={website}
-          onChange={(e) => setWebsite(e.target.value)}
-        />
-        <Input
-          label="Телефон"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
-      </section>
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold">Данные для верификации</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Используются модерацией для проверки площадки
+            </p>
+          </div>
+          <Input
+            label="Фактический адрес"
+            value={actualAddress}
+            onChange={(e) => setActualAddress(e.target.value)}
+          />
+          <Input
+            label="Сайт"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+          />
+          <Input
+            label="Телефон"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </section>
+      </Card>
 
       <section className="space-y-4">
         <div>

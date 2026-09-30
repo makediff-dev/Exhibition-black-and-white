@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Building2, CalendarDays, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CardField } from "@/components/ui/card-field";
 import { SEED_EVENTS, SEED_VENUE_PROFILE_MEDIA } from "@/data/mocks/seed";
 import type { Notification } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
@@ -80,7 +80,7 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
         ))}
       </HorizontalChipScroller>
 
-      <div className="catalog-cards-grid">
+      <div className="catalog-cards-grid catalog-cards-grid--projects">
         {monthEvents.map(({ event, eventNotifications }, index) => {
           const photo = photos[index % photos.length];
 
@@ -91,52 +91,44 @@ export function OrganizerEventsCarousel({ organizerId = "user-organizer" }: Prop
               className="block h-full"
             >
               <Card hoverable className="cabinet-card h-full overflow-hidden">
-                <div className="space-y-3">
+                <div className="space-y-[10px]">
                   <div className="cabinet-card h-28 bg-gray-100 border border-gray-200 flex items-center justify-center text-xs text-gray-500 px-3 text-center">
                     {photo?.title ?? "Фото мероприятия"}
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge variant="muted">
-                        {event.category === "exhibition"
-                          ? "Выставка"
-                          : event.category === "forum"
-                            ? "Форум"
-                            : "Конференция"}
-                      </Badge>
-                      {eventNotifications.length > 0 ? (
-                        <Badge variant="solid">{eventNotifications.length} новых</Badge>
-                      ) : null}
-                    </div>
-
-                    <CardTitle className="text-sm leading-snug">{event.title}</CardTitle>
-
-                    <CardDescription className="space-y-1.5">
-                      <span className="flex items-center gap-1.5">
-                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                        {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        {event.city}
-                      </span>
-                      <span className="flex items-start gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                        {event.venue}
-                      </span>
-                    </CardDescription>
-
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="muted">
+                      {event.category === "exhibition"
+                        ? "Выставка"
+                        : event.category === "forum"
+                          ? "Форум"
+                          : "Конференция"}
+                    </Badge>
                     {eventNotifications.length > 0 ? (
-                      <div className="pt-2 border-t border-gray-200 space-y-1">
-                        {eventNotifications.slice(0, 2).map((item: Notification) => (
-                          <p key={item.id} className="text-[11px] text-gray-700 leading-snug">
-                            {item.title}
-                          </p>
-                        ))}
-                      </div>
+                      <Badge variant="solid">{eventNotifications.length} новых</Badge>
                     ) : null}
                   </div>
+
+                  <CardTitle className="text-sm leading-snug">{event.title}</CardTitle>
+
+                  <div className="space-y-[10px]">
+                    <CardField label="Даты">
+                      {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
+                    </CardField>
+                    <CardField label="Период">{getMonthLabel(getMonthKey(event.startDate))}</CardField>
+                    <CardField label="Площадка">{event.venue}</CardField>
+                    <CardField label="Город">{event.city}</CardField>
+                  </div>
+
+                  {eventNotifications.length > 0 ? (
+                    <div className="pt-[10px] border-t border-gray-200 space-y-[10px]">
+                      {eventNotifications.slice(0, 2).map((item: Notification) => (
+                        <p key={item.id} className="text-sm text-gray-700 leading-snug">
+                          {item.title}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </Card>
             </Link>

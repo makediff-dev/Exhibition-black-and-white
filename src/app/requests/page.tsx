@@ -81,7 +81,7 @@ function RequestsContent() {
         />
       ) : (
         <>
-          <div className="catalog-cards-grid">
+          <div className="catalog-cards-grid catalog-cards-grid--projects">
             {filtered.map((request) => (
               <RequestOrderCard
                 key={request.id}

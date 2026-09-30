@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Star, Heart } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
@@ -191,7 +192,7 @@ export default function ServiceDetailPage() {
             </section>
 
             <section className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div className="catalog-content-box p-4">
+              <Card>
                 <p className="font-medium mb-1">Условия</p>
                 <p className="text-gray-700">{service.terms}</p>
                 {service.guaranteeRefund && (
@@ -199,18 +200,18 @@ export default function ServiceDetailPage() {
                     Гарантия результата или возврат денежных средств
                   </p>
                 )}
-              </div>
-              <div className="catalog-content-box p-4">
+              </Card>
+              <Card>
                 <p className="font-medium mb-1">Срок выполнения</p>
                 <p className="text-gray-700">{service.deadline}</p>
-              </div>
+              </Card>
               {service.prepaymentPercent !== undefined && (
-                <div className="catalog-content-box p-4 sm:col-span-2">
+                <Card className="sm:col-span-2">
                   <p className="font-medium mb-1">Условия оплаты</p>
                   <p className="text-gray-700">
                     Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
                   </p>
-                </div>
+                </Card>
               )}
             </section>
 
@@ -218,21 +219,21 @@ export default function ServiceDetailPage() {
               <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
               <div className="space-y-3">
                 {MOCK_REVIEWS.map((review) => (
-                  <div key={review.id} className="catalog-content-box p-4">
+                  <Card key={review.id}>
                     <div className="flex justify-between">
                       <p className="text-sm font-medium">{review.author}</p>
                       <span className="text-xs text-gray-600">{review.date}</span>
                     </div>
                     <p className="text-xs mt-1">★ {review.rating}</p>
                     <p className="text-sm text-gray-700 mt-2">{review.text}</p>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </section>
           </div>
 
           <aside>
-            <div className="catalog-content-box p-4 sticky top-20 space-y-4">
+            <Card className="sticky top-20 space-y-4">
               <p className="text-2xl font-bold">
                 {formatServicePrice({
                   price: unitPrice,
@@ -294,7 +295,7 @@ export default function ServiceDetailPage() {
               >
                 Запросить предложение
               </Button>
-            </div>
+            </Card>
           </aside>
         </div>
     </CabinetAwareLayout>

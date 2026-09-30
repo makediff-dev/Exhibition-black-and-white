@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { Service } from "@/data/types";
 import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
 
@@ -50,7 +51,7 @@ export function ContractorServiceDetailSection({
         )}
       </div>
 
-      <div className="cabinet-card border border-gray-900 p-4 max-w-sm">
+      <Card className="max-w-sm">
         <p className="text-2xl font-bold">{formatServicePrice(service)}</p>
         {service.variants && service.variants.length > 0 && (
           <ul className="mt-3 space-y-1 text-sm text-gray-700">
@@ -67,7 +68,7 @@ export function ContractorServiceDetailSection({
         >
           Как видят заказчики в каталоге
         </Link>
-      </div>
+      </Card>
 
       {photoCards.length > 0 && (
         <section className="space-y-4">
@@ -125,7 +126,7 @@ export function ContractorServiceDetailSection({
       </section>
 
       <section className="grid sm:grid-cols-2 gap-4 text-sm max-w-2xl">
-        <div className="cabinet-card border border-gray-300 p-4">
+        <Card>
           <p className="font-medium mb-1">Условия</p>
           <p className="text-gray-700">{service.terms || "—"}</p>
           {service.guaranteeRefund && (
@@ -133,18 +134,18 @@ export function ContractorServiceDetailSection({
               Гарантия результата или возврат денежных средств
             </p>
           )}
-        </div>
-        <div className="cabinet-card border border-gray-300 p-4">
+        </Card>
+        <Card>
           <p className="font-medium mb-1">Срок выполнения</p>
           <p className="text-gray-700">{service.deadline}</p>
-        </div>
+        </Card>
         {service.prepaymentPercent !== undefined && (
-          <div className="cabinet-card border border-gray-300 p-4 sm:col-span-2">
+          <Card className="sm:col-span-2">
             <p className="font-medium mb-1">Условия оплаты</p>
             <p className="text-gray-700">
               Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
             </p>
-          </div>
+          </Card>
         )}
       </section>
 
@@ -152,14 +153,14 @@ export function ContractorServiceDetailSection({
         <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
         <div className="space-y-3 max-w-2xl">
           {MOCK_REVIEWS.map((review) => (
-            <div key={review.id} className="cabinet-card border border-gray-300 p-4">
+            <Card key={review.id}>
               <div className="flex justify-between">
                 <p className="text-sm font-medium">{review.author}</p>
                 <span className="text-xs text-gray-600">{review.date}</span>
               </div>
               <p className="text-xs mt-1">★ {review.rating}</p>
               <p className="text-sm text-gray-700 mt-2">{review.text}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>

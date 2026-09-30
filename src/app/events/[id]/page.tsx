@@ -302,7 +302,9 @@ export default function EventDetailPage() {
 
             <section>
               <h2 className="text-lg font-semibold mb-2">Условия участия</h2>
-              <p className="text-sm text-gray-700 catalog-content-box p-4">{event.participationTerms}</p>
+              <Card>
+                <p className="text-sm text-gray-700">{event.participationTerms}</p>
+              </Card>
             </section>
 
             <section>
@@ -412,7 +414,7 @@ export default function EventDetailPage() {
           </div>
 
           <aside className="space-y-6">
-            <section className="catalog-content-box p-4">
+            <Card>
               <h2 className="text-base font-semibold mb-3">
                 {eventLifecycle.code === "completed" ? "Площади (архив)" : "Доступные площади"}
               </h2>
@@ -436,9 +438,9 @@ export default function EventDetailPage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </Card>
 
-            <section className="catalog-content-box p-4">
+            <Card>
               <h2 className="text-base font-semibold mb-3">План площадки</h2>
               <FloorPlanPreview />
               {bookingOpen && (
@@ -448,16 +450,16 @@ export default function EventDetailPage() {
                   </Button>
                 </Link>
               )}
-            </section>
+            </Card>
 
-            <section className="catalog-content-box p-4 text-sm space-y-2">
+            <Card className="text-sm space-y-2">
               <p><span className="font-medium">Период:</span> {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}</p>
               <p>
                 <span className="font-medium">Организатор:</span>{" "}
                 {getOrganizerDisplayName(event.organizerId)}
               </p>
               <p><span className="font-medium">ОКВЭД-теги:</span> {event.okvedTags.join(", ")}</p>
-            </section>
+            </Card>
           </aside>
         </div>
 

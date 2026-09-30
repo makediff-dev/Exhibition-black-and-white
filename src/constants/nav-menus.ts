@@ -133,7 +133,9 @@ export function resolveActiveNavSlug(pathname: string, role: string): string | u
         }
         if (accountSlug === "legal") return pickNavSlug(role, "profile");
         if (accountSlug === "documents") return pickNavSlug(role, "edo");
-        if (accountSlug === "cart" || accountSlug === "checkout") return undefined;
+        if (accountSlug === "cart" || accountSlug === "checkout") {
+          return pickNavSlug(role, "cart");
+        }
         return pickNavSlug(role, accountSlug);
       }
       break;
