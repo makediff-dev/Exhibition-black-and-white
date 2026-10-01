@@ -49,14 +49,21 @@ export function RequestOrderCard({ request, deal }: Props) {
   };
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-card border border-gray-300 bg-transparent">
-      <div className="p-4 space-y-2 text-sm">
+    <article
+      data-card-hoverable="true"
+      className="relative flex h-full flex-col overflow-hidden rounded-card border border-transparent bg-white shadow"
+    >
+      <Link
+        href={`/requests/${request.id}`}
+        className="absolute inset-0 z-0"
+        aria-label={`Открыть заявку ${request.title}`}
+      />
+
+      <div className="relative z-10 p-4 space-y-2 text-sm pointer-events-none">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-2">
             <p className="font-semibold">{orderLabel}</p>
-            <Link href={`/requests/${request.id}`} className="text-base font-bold hover:underline">
-              {request.title}
-            </Link>
+            <p className="text-base font-bold">{request.title}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{REQUEST_FORMAT_LABELS[request.format]}</Badge>
@@ -74,7 +81,7 @@ export function RequestOrderCard({ request, deal }: Props) {
 
         <p className="font-semibold pt-1">Позиции в корзине по заказу:</p>
 
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-2 pointer-events-auto">
           {request.responseCount > 0 && request.status !== "draft" ? (
             <Link href={`/requests/${request.id}/responses`}>
               <Button size="sm" variant="outline">
@@ -101,11 +108,11 @@ export function RequestOrderCard({ request, deal }: Props) {
       </div>
 
       {orderLines.length === 0 ? (
-        <div className="px-4 py-6 text-sm text-gray-600 text-center">
+        <div className="relative z-10 px-4 py-6 text-sm text-gray-600 text-center pointer-events-none">
           Позиции не добавлены
         </div>
       ) : (
-        <div>
+        <div className="relative z-10">
           {orderLines.map((line, index) => {
             const row = (
               <div
@@ -130,7 +137,11 @@ export function RequestOrderCard({ request, deal }: Props) {
               );
             }
 
-            return <div key={line.id}>{row}</div>;
+            return (
+              <div key={line.id} className="pointer-events-none">
+                {row}
+              </div>
+            );
           })}
         </div>
       )}

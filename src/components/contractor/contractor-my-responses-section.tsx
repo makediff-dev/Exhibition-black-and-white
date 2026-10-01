@@ -226,7 +226,7 @@ export function ContractorMyResponsesSection({
                 href={`/requests/${response.requestId}/respond`}
                 className="block h-full"
               >
-                <Card className="cabinet-card h-full flex flex-col">
+                <Card hoverable className="cabinet-card h-full flex flex-col">
                   <div className="flex flex-wrap items-center gap-2 mb-[10px]">
                     {request ? (
                       <Badge variant="muted" className="bg-gray-100 text-gray-900 border-gray-200">

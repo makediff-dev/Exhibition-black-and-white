@@ -28,7 +28,7 @@ export function HomeRecommendedContractorsSection() {
           ]}
           buttonLabel="Подробнее"
           buttonHref={`/contractors/${contractor.id}`}
-          buttonVariant="violet"
+          buttonVariant="purple"
         />
       ))}
     </HomeScrollSection>

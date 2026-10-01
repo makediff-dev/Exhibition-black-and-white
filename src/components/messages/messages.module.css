@@ -126,9 +126,10 @@
   color: #737373;
 }
 
-.threadCardActive {
-  border-color: var(--account-accent, #2939eb);
-  background: var(--account-accent-soft, #eef0fe);
+.threadCard.threadCardActive {
+  border-color: var(--account-accent, #2939eb) !important;
+  background: var(--account-accent-soft, #eef0fe) !important;
+  box-shadow: none;
 }
 
 .chatEmpty {

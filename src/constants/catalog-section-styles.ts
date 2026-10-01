@@ -5,7 +5,7 @@ export type CatalogAccentVariant = "teal" | "blue" | "green" | "purple" | "viole
 export const CATALOG_SECTION_ACCENT: Record<CatalogSection, CatalogAccentVariant> = {
   events: "teal",
   services: "blue",
-  contractors: "violet",
+  contractors: "purple",
   venues: "violet",
 };
 

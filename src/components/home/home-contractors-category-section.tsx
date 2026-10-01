@@ -39,7 +39,7 @@ export function HomeContractorsCategorySection({
           ]}
           buttonLabel="Подробнее"
           buttonHref={`/contractors/${contractor.id}`}
-          buttonVariant="violet"
+          buttonVariant="purple"
         />
       ))}
     </HomeScrollSection>

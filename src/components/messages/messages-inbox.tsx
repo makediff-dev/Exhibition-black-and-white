@@ -365,6 +365,7 @@ export function MessagesInbox({ selectedThreadId }: MessagesInboxProps) {
                   <Card
                     key={thread.id}
                     hoverable
+                    aria-current={isActive ? "true" : undefined}
                     className={cn(styles.threadCard, isActive && styles.threadCardActive)}
                   >
                     <div className={styles.threadCardTop}>

@@ -4,14 +4,6 @@ export type HomeQuickActionRegisterRole = "contractor" | "customer" | "organizer
 
 export const HOME_QUICK_ACTIONS = [
   {
-    href: "/services",
-    title: "Найти услугу",
-    text: "Каталог услуг для выставок: строительство стендов, дизайн, логистика и сопутствующие работы.",
-    imageUrl: HOME_IMAGES.quickActions[0],
-    registerRole: "contractor",
-    registerLabel: "Зарегистрировать исполнителя",
-  },
-  {
     href: "/contractors",
     title: "Найти исполнителя",
     text: "Проверенные исполнители с портфолио, рейтингом и отзывами по категориям выставочных услуг.",
@@ -42,6 +34,14 @@ export const HOME_QUICK_ACTIONS = [
     imageUrl: HOME_IMAGES.quickActions[4],
     registerRole: "venue",
     registerLabel: "Зарегистрировать площадку",
+  },
+  {
+    href: "/services",
+    title: "Найти услугу",
+    text: "Каталог услуг для выставок: строительство стендов, дизайн, логистика и сопутствующие работы.",
+    imageUrl: HOME_IMAGES.quickActions[0],
+    registerRole: "contractor",
+    registerLabel: "Зарегистрировать исполнителя",
   },
 ] as const satisfies ReadonlyArray<{
   href: string;

@@ -479,14 +479,14 @@ function CustomerPages({ slug }: { slug: string }) {
         )}
 
         {edoTab === "closing" && (
-          <div>
+          <Card>
             <p className="text-sm mb-4">Запросите закрывающие документы у исполнителей.</p>
             <div className="flex flex-col gap-3">
               <Select label="Сделка" options={deals.map((d) => ({ value: d.id, label: d.title }))} />
               <Textarea label="Комментарий" />
               <Button onClick={() => showToast("Запрос отправлен")}>Запросить документы</Button>
             </div>
-          </div>
+          </Card>
         )}
         </div>
       </div>

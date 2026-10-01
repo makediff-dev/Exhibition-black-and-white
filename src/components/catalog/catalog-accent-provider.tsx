@@ -28,6 +28,10 @@ export function CatalogAccentProvider({
     "--catalog-accent": tokens.accent,
     "--catalog-accent-hover": tokens.accentHover,
     "--catalog-accent-soft": tokens.accentSoft,
+    "--account-accent": tokens.accent,
+    "--account-accent-hover": tokens.accentHover,
+    "--account-accent-soft": tokens.accentSoft,
+    "--account-accent-border": tokens.accent,
   } as CSSProperties;
 
   return (
