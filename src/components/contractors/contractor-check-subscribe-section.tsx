@@ -94,9 +94,6 @@ export function ContractorCheckSubscribeSection({
             >
               <p className="text-sm font-medium text-gray-900">{plan.label}</p>
               <p className="text-lg font-bold mt-1">{priceLabel}</p>
-              {"note" in plan && plan.note && (
-                <p className="text-xs text-gray-500 mt-1">{plan.note}</p>
-              )}
             </button>
           );
         })}
