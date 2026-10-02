@@ -24,7 +24,7 @@ function MediaTile({
 }) {
   return (
     <div className="space-y-2">
-      <div className="relative aspect-[4/3] cabinet-card border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+      <Card className="relative flex aspect-[4/3] items-center justify-center overflow-hidden !p-0">
         {item.type === "photo" ? (
           <Image className="h-8 w-8 text-gray-400" />
         ) : (
@@ -38,7 +38,7 @@ function MediaTile({
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
-      </div>
+      </Card>
       <p className="text-sm font-medium">{item.title}</p>
       {item.fileName && <p className="text-xs text-gray-500">{item.fileName}</p>}
     </div>

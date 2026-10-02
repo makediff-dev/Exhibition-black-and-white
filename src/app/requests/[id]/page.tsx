@@ -526,9 +526,11 @@ function RequestDetailContent() {
         ) : (
           <ul className="space-y-2">
             {request.history.map((entry, index) => (
-              <li key={index} className="text-sm flex gap-3 border border-gray-300 p-3 rounded-[10px]">
-                <span className="text-gray-500 shrink-0">{formatShortDate(entry.date)}</span>
-                <span>{entry.action}</span>
+              <li key={index}>
+                <Card className="flex gap-3 text-sm">
+                  <span className="text-gray-500 shrink-0">{formatShortDate(entry.date)}</span>
+                  <span>{entry.action}</span>
+                </Card>
               </li>
             ))}
           </ul>

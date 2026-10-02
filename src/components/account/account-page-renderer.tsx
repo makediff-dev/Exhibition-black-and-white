@@ -323,7 +323,7 @@ function CustomerPages({ slug }: { slug: string }) {
       <>
         <div className="flex flex-col gap-4">
         {edoModal && user?.edoStatus === "not_connected" && (
-          <div className="edo-prompt-banner border border-[#dddddd] bg-transparent p-4">
+          <Card className="edo-prompt-banner">
             <p className="font-semibold mb-1">Подключите ЭДО</p>
             <p className="text-sm text-gray-700 mb-3">
               Для подписания документов рекомендуем подключить электронный документооборот.
@@ -342,7 +342,7 @@ function CustomerPages({ slug }: { slug: string }) {
                 Позже
               </Button>
             </div>
-          </div>
+          </Card>
         )}
         <DashboardWidgets role="customer" />
         <div className="grid md:grid-cols-2 gap-4">
@@ -433,12 +433,12 @@ function CustomerPages({ slug }: { slug: string }) {
         <div className={isDocumentsTab ? undefined : "max-w-2xl"}>
 
         {edoTab === "connection" && (
-          <div className="space-y-4 max-w-lg">
+          <Card className="space-y-4 max-w-lg">
             {user?.edoStatus === "connected" ? (
               <div className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4" /> ЭДО подключено</div>
             ) : (
               <>
-                <div className="flex items-center gap-2 text-sm border border-dashed border-gray-400 p-3">
+                <div className="flex items-center gap-2 text-sm rounded-card border border-dashed border-gray-400 p-3">
                   <AlertCircle className="h-4 w-4" /> ЭДО не подключено. Документы можно скачать временно.
                 </div>
                 <Select label="Оператор ЭДО" options={[{ value: "sbis", label: "СБИС" }, { value: "kontur", label: "Контур" }, { value: "tensor", label: "Тензор" }, { value: "other", label: "Другой оператор" }]} />
@@ -460,7 +460,7 @@ function CustomerPages({ slug }: { slug: string }) {
                 Проверить и подключить
               </Button>
             )}
-          </div>
+          </Card>
         )}
 
         {edoTab === "documents" && <DocumentsPanel hideEdoPrompt />}

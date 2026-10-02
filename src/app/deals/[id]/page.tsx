@@ -930,10 +930,12 @@ function DealPage() {
             <EmptyState title="История пуста" />
           ) : (
             [...deal.history].reverse().map((h, i) => (
-              <li key={i} className="flex gap-3 text-sm border border-gray-300 p-3 rounded-[10px]">
-                <span className="text-gray-500 shrink-0">{formatShortDate(h.date)}</span>
-                <span>{h.action}</span>
-                <span className="text-gray-500 ml-auto">{h.actor}</span>
+              <li key={i}>
+                <Card className="flex gap-3 text-sm">
+                  <span className="text-gray-500 shrink-0">{formatShortDate(h.date)}</span>
+                  <span>{h.action}</span>
+                  <span className="text-gray-500 ml-auto">{h.actor}</span>
+                </Card>
               </li>
             ))
           )}

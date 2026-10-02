@@ -357,7 +357,7 @@ export function DocumentsPanel({
   return (
     <>
       {!hideEdoPrompt && !edoConnected && user && (
-        <div className="edo-prompt-banner mb-6 flex flex-col gap-3 border border-gray-300 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <Card className="edo-prompt-banner mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium">ЭДО не подключён</p>
             <p className="text-sm text-gray-600 mt-1">
@@ -373,7 +373,7 @@ export function DocumentsPanel({
               Подключение ЭДО доступно в кабинете заказчика
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       <Tabs

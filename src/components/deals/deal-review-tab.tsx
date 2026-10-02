@@ -246,7 +246,7 @@ export function DealReviewTab({
       {hasReview && deal.review && <ReviewDisplay review={deal.review} />}
 
       {isCustomer && !hasReview && (
-        <div>
+        <Card>
           <CardTitle className="text-sm mb-2">Оставить отзыв</CardTitle>
           <CardDescription className="mb-4">
             Оцените исполнителя, загрузите фото и видео, напишите текст. Максимум 5 звёзд. Отзыв
@@ -289,7 +289,7 @@ export function DealReviewTab({
           <Button className="mt-4" onClick={handleSubmitReview}>
             Отправить отзыв
           </Button>
-        </div>
+        </Card>
       )}
 
       <Modal
