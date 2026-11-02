@@ -26,7 +26,7 @@ import {
 import type { Contractor, Event, UserRole } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { canBookEvent, getEventStatus } from "@/lib/state/event-machine";
-import { formatDate, formatShortDate } from "@/lib/utils/formatters";
+import { formatDate, formatReviewCount, formatShortDate } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { getOrganizerDisplayName } from "@/lib/utils/organizer-names";
 import {
@@ -116,7 +116,7 @@ function ContractorsGrid({
               ))}
             </div>
             <p className="text-xs text-gray-600 mt-2">
-              ★ {contractor.rating} · {contractor.reviewCount} отзывов
+              ★ {contractor.rating} · {formatReviewCount(contractor.reviewCount)}
             </p>
           </Card>
         </Link>
@@ -286,7 +286,7 @@ export default function EventDetailPage() {
               <p className="text-sm text-gray-700">{event.description}</p>
               <div className="flex flex-wrap gap-2 mt-4">
                 <Link href={`/services?city=${encodeURIComponent(event.city)}`}>
-                  <Button variant="primary">Найти услуги</Button>
+                  <Button variant="blue">Найти услуги</Button>
                 </Link>
                 {bookingOpen ? (
                   <Link href={bookingHref}>
@@ -445,7 +445,7 @@ export default function EventDetailPage() {
               <FloorPlanPreview />
               {bookingOpen && (
                 <Link href={bookingHref} className="block mt-4">
-                  <Button className="w-full" variant="primary" size="sm">
+                  <Button className="w-full" variant="blue" size="sm">
                     Забронировать площадь
                   </Button>
                 </Link>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { HomeArrowIcon } from "./home-arrow-icon";
 import styles from "./home-page.module.css";
 
 interface HomeSectionLinkProps {
@@ -12,7 +12,7 @@ export function HomeSectionLink({ href, children, className }: HomeSectionLinkPr
   return (
     <Link href={href} className={`${styles.sectionLink} ${className ?? ""}`.trim()}>
       <span>{children}</span>
-      <ArrowRight className={styles.sectionLinkIcon} aria-hidden="true" />
+      <HomeArrowIcon className={styles.sectionLinkIcon} />
     </Link>
   );
 }

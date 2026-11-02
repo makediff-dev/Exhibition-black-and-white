@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Service } from "@/data/types";
-import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
+import { formatPrice, formatReviewCount, formatServicePrice } from "@/lib/utils/formatters";
 
 const MOCK_REVIEWS = [
   { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
@@ -41,7 +41,7 @@ export function ContractorServiceDetailSection({
           <p className="text-sm text-gray-600">{service.city}</p>
           <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
             <Star className="h-4 w-4 fill-gray-900" />
-            {service.rating} · {service.reviewCount} отзывов
+            {service.rating} · {formatReviewCount(service.reviewCount)}
           </p>
         </div>
         {onEdit && (

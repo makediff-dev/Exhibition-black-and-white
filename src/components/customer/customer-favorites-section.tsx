@@ -1,28 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calendar, MapPin, Star } from "lucide-react";
-import { ServiceCard } from "@/components/catalog/service-card";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CabinetHomeTile } from "@/components/account/cabinet-home-tile";
 import { EmptyState } from "@/components/ui/states";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { VENUE_CATALOG, getPublicVenueByCatalogId } from "@/constants/venues";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Contractor, Event, Service } from "@/data/types";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
-import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { useFavoritesStore, usePrototypeStore } from "@/lib/store";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
-import { formatShortDate } from "@/lib/utils/formatters";
-import { getCartHref } from "@/lib/utils/cart-routes";
+import { formatReviewCount, formatServicePrice, formatShortDate } from "@/lib/utils/formatters";
 import { withFromParam } from "@/lib/utils/message-related-links";
-import { useToast } from "@/components/ui/toast-provider";
-
-const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
-  exhibition: "Выставка",
-  forum: "Форум",
-  conference: "Конференция",
-};
 
 const FAVORITE_SECTIONS = [
   {
@@ -52,86 +41,21 @@ const FAVORITE_SECTIONS = [
   {
     key: "venues",
     label: "Площадки",
-    catalogHref: "/events",
+    catalogHref: "/venues",
     emptyDescription:
       "Добавляйте площадки в избранное из каталога — нажмите на сердечко на карточке площадки",
     actionLabel: "Перейти к площадкам",
   },
 ] as const;
 
-function FavoriteEventCard({ event }: { event: Event }) {
-  return (
-    <Link href={withFromParam(`/events/${event.id}`, "favorites")}>
-      <Card hoverable className="h-full">
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-        </div>
-        <CardTitle className="text-base leading-snug">{event.title}</CardTitle>
-        <CardDescription className="flex items-center gap-1 mt-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          {event.city} · {event.venue}
-        </CardDescription>
-        <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
-          <Calendar className="h-3.5 w-3.5" />
-          {formatShortDate(event.startDate)} — {formatShortDate(event.endDate)}
-        </p>
-      </Card>
-    </Link>
-  );
-}
-
-function FavoriteContractorCard({ contractor }: { contractor: Contractor }) {
-  return (
-    <Link href={getContractorProfileHref(contractor.id, { role: "customer" })}>
-      <Card hoverable className="h-full">
-        <CardTitle className="text-base leading-snug">{contractor.name}</CardTitle>
-        <CardDescription>
-          {contractor.city} · {contractor.geography}
-        </CardDescription>
-        <p className="text-sm text-gray-700 mt-2 line-clamp-2">{contractor.description}</p>
-        <p className="text-xs text-gray-600 mt-3 flex items-center gap-1">
-          <Star className="h-3.5 w-3.5 fill-gray-900" />
-          {contractor.rating} · {contractor.reviewCount} отзывов
-        </p>
-      </Card>
-    </Link>
-  );
-}
-
-function FavoriteVenueCard({ venueId }: { venueId: string }) {
-  const venue = VENUE_CATALOG.find((item) => item.id === venueId);
-  if (!venue) return null;
-
-  const publicVenue = getPublicVenueByCatalogId(venueId);
-  const href = withFromParam(publicVenue ? `/venues/${publicVenue.id}` : `/venues`, "favorites");
-
-  return (
-    <Link href={href}>
-      <Card hoverable className="h-full">
-        <CardTitle className="text-base leading-snug">{venue.shortName}</CardTitle>
-        <CardDescription className="flex items-center gap-1 mt-2">
-          <MapPin className="h-3.5 w-3.5 shrink-0" />
-          {venue.city}
-        </CardDescription>
-        <p className="text-sm text-gray-700 mt-2 line-clamp-3">{venue.description}</p>
-        <p className="text-xs text-gray-600 mt-3">{venue.address}</p>
-      </Card>
-    </Link>
-  );
-}
-
 export function CustomerFavoritesSection() {
   const router = useRouter();
   const { accountRole } = useCabinetSession();
-  const { showToast } = useToast();
   const services = usePrototypeStore((state) => state.services);
-  const addItem = useCartStore((state) => state.addItem);
   const favoriteServiceIds = useFavoritesStore((state) => state.serviceIds);
   const favoriteEventIds = useFavoritesStore((state) => state.eventIds ?? []);
   const favoriteContractorIds = useFavoritesStore((state) => state.contractorIds ?? []);
   const favoriteVenueIds = useFavoritesStore((state) => state.venueIds ?? []);
-  const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
-  const isFavorite = useFavoritesStore((state) => state.isFavorite);
 
   const favoriteServices = (favoriteServiceIds.length > 0 ? favoriteServiceIds : ["svc-2"])
     .map((id) => services.find((service) => service.id === id))
@@ -154,20 +78,6 @@ export function CustomerFavoritesSection() {
     venues: favoriteVenues,
   };
 
-  const handleToggleFavorite = (service: Service) => {
-    const added = toggleFavorite(service.id);
-    showToast(
-      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
-      added ? "success" : "info",
-    );
-  };
-
-  const handleAddToCart = (service: Service) => {
-    addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
-    showToast(`«${service.title}» добавлено в корзину`, "success");
-    router.push(getCartHref(accountRole));
-  };
-
   return (
     <div className="space-y-10">
       {FAVORITE_SECTIONS.map((section) => {
@@ -187,28 +97,85 @@ export function CustomerFavoritesSection() {
             ) : (
               <div className="catalog-cards-grid">
                 {section.key === "services" &&
-                  favoriteServices.map((service) => (
-                    <ServiceCard
+                  favoriteServices.map((service, index) => (
+                    <CabinetHomeTile
                       key={service.id}
-                      service={service}
-                      from="favorites"
-                      isFavorite={isFavorite(service.id)}
-                      onToggleFavorite={() => handleToggleFavorite(service)}
-                      onAdd={() => handleAddToCart(service)}
-                      plainPortfolio
+                      title={service.title}
+                      imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+                      imageAlt={service.title}
+                      meta={[
+                        { label: "Исполнитель", value: service.contractorName },
+                        { label: "Цена", value: formatServicePrice(service) },
+                      ]}
+                      buttonLabel="Подробнее"
+                      buttonHref={withFromParam(`/services/${service.id}`, "favorites")}
                     />
                   ))}
 
                 {section.key === "events" &&
-                  favoriteEvents.map((event) => <FavoriteEventCard key={event.id} event={event} />)}
+                  favoriteEvents.map((event, index) => (
+                    <CabinetHomeTile
+                      key={event.id}
+                      title={event.title}
+                      imageUrls={pickHomeImages(HOME_IMAGES.events, index)}
+                      imageAlt="Фотография выставочного мероприятия"
+                      meta={[
+                        { label: "Место", value: event.city },
+                        {
+                          label: "Срок",
+                          value: `${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}`,
+                        },
+                      ]}
+                      buttonLabel="Откликнуться"
+                      buttonHref={withFromParam(`/events/${event.id}`, "favorites")}
+                    />
+                  ))}
 
                 {section.key === "contractors" &&
-                  favoriteContractors.map((contractor) => (
-                    <FavoriteContractorCard key={contractor.id} contractor={contractor} />
+                  favoriteContractors.map((contractor, index) => (
+                    <CabinetHomeTile
+                      key={contractor.id}
+                      title={contractor.name}
+                      imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+                      imageAlt="Фотография стенда исполнителя"
+                      meta={[
+                        { label: "Город", value: contractor.city },
+                        {
+                          label: "Рейтинг",
+                          value: `★ ${contractor.rating} · ${formatReviewCount(contractor.reviewCount)}`,
+                        },
+                      ]}
+                      buttonLabel="Подробнее"
+                      buttonHref={getContractorProfileHref(contractor.id, {
+                        role: accountRole ?? "customer",
+                        from: "favorites",
+                      })}
+                    />
                   ))}
 
                 {section.key === "venues" &&
-                  favoriteVenues.map((venueId) => <FavoriteVenueCard key={venueId} venueId={venueId} />)}
+                  favoriteVenues.map((venueId, index) => {
+                    const venue = VENUE_CATALOG.find((item) => item.id === venueId);
+                    if (!venue) return null;
+                    const publicVenue = getPublicVenueByCatalogId(venueId);
+                    return (
+                      <CabinetHomeTile
+                        key={venueId}
+                        title={venue.shortName}
+                        imageUrls={pickHomeImages(HOME_IMAGES.venue, index)}
+                        imageAlt={venue.shortName}
+                        meta={[
+                          { label: "Место", value: venue.city },
+                          { label: "Адрес", value: venue.address },
+                        ]}
+                        buttonLabel="Подробнее"
+                        buttonHref={withFromParam(
+                          publicVenue ? `/venues/${publicVenue.id}` : "/venues",
+                          "favorites",
+                        )}
+                      />
+                    );
+                  })}
               </div>
             )}
           </section>

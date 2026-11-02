@@ -40,8 +40,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className={cn(
               "w-full appearance-none rounded-button border bg-white py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1",
               accountTheme
-                ? "border-[#dddddd] focus:border-[var(--account-accent)] focus:ring-[var(--account-accent)]"
-                : "border-[#dddddd] focus:border-[#171717] focus:ring-[#171717]",
+                ? "border-[#dddddd] hover:border-[var(--interactive-filter-hover)] focus:border-[var(--account-accent)] focus:ring-[var(--account-accent)]"
+                : "border-[#dddddd] hover:border-[var(--interactive-filter-hover)] focus:border-[#101828] focus:ring-[#101828]",
             )}
             {...props}
           >

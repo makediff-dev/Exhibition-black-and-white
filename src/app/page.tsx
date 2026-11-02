@@ -1,17 +1,8 @@
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { HomeHero } from "@/components/home/home-hero";
-import { HomeCategoriesSection } from "@/components/home/home-categories-section";
-import { HomeQuickActionsSection } from "@/components/home/home-quick-actions-section";
-import { HomeEventsSection } from "@/components/home/home-events-section";
-import { HomeOrdersProvider } from "@/components/home/home-orders-provider";
-import { HomeUrgentOrdersSection } from "@/components/home/home-urgent-orders-section";
-import { HomeCategoryOrdersSection } from "@/components/home/home-category-orders-section";
-import { HomeRecommendedServicesSection } from "@/components/home/home-recommended-services-section";
-import { HomeRecommendedContractorsSection } from "@/components/home/home-recommended-contractors-section";
-import { HomeContractorsCategorySection } from "@/components/home/home-contractors-category-section";
-import { HomeRecommendedVenuesSection } from "@/components/home/home-recommended-venues-section";
-import { HomeMoscowVenuesSection } from "@/components/home/home-moscow-venues-section";
+import { HomePromoSlider } from "@/components/home/home-promo-slider";
+import { HomeMain } from "@/components/home/home-main";
 import { HomeAudienceSection } from "@/components/home/home-audience-section";
 import { HomeHowItWorksSection } from "@/components/home/home-how-it-works-section";
 import { HomeFaqSection } from "@/components/home/home-faq-section";
@@ -24,43 +15,8 @@ export default function HomePage() {
       <PublicHeader />
       <main>
         <HomeHero />
-        <HomeCategoriesSection />
-        <HomeQuickActionsSection />
-        <HomeEventsSection />
-
-        <HomeOrdersProvider>
-          <HomeUrgentOrdersSection />
-          <HomeCategoryOrdersSection
-            categoryIndex={0}
-            linkHref="/requests"
-            linkLabel="Все заказы"
-          />
-          <HomeCategoryOrdersSection
-            categoryIndex={1}
-            linkHref="/requests"
-            linkLabel="Все заказы"
-          />
-          <HomeCategoryOrdersSection
-            categoryIndex={2}
-            linkHref="/requests"
-            linkLabel="Все заказы"
-          />
-          <HomeRecommendedServicesSection />
-          <HomeRecommendedContractorsSection />
-          <HomeContractorsCategorySection
-            title="Комплексное строительство выставочных стендов"
-            category="Комплексное строительство выставочных стендов"
-            idSuffix="build"
-          />
-          <HomeContractorsCategorySection
-            title="Дизайн-проект выставочного стенда"
-            category="Дизайн-проект выставочного стенда"
-            idSuffix="design"
-          />
-        </HomeOrdersProvider>
-
-        <HomeRecommendedVenuesSection />
-        <HomeMoscowVenuesSection />
+        <HomePromoSlider />
+        <HomeMain />
         <HomeAudienceSection />
         <HomeHowItWorksSection />
         <HomeFaqSection />

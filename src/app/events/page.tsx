@@ -5,21 +5,24 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventsDateFilter, isEventInSelectedPeriod } from "@/components/catalog/events-calendar";
-import { EventCard } from "@/components/catalog/event-card";
+import { HomeTileCard } from "@/components/home/home-tile-card";
 import { Filter } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
+import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, EVENT_INDUSTRIES, FEDERAL_DISTRICT_OPTIONS, getCitiesByDistrict, getDistrictByCity } from "@/constants/categories";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { canBookEvent, listUpcomingEvents } from "@/lib/state/event-machine";
 import { resolveDefaultMonthKey } from "@/lib/utils/venue-date-statuses";
 import type { Event } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
+import { matchesEventSearch } from "@/lib/utils/event-search";
+import { isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { getOkvedRecommendationReason, matchOkved } from "@/lib/utils/okved";
 import { Sparkles } from "lucide-react";
@@ -38,9 +41,10 @@ const SORT_OPTIONS = [
 ];
 
 const VENUES = [...new Set(SEED_EVENTS.map((e) => e.venue))];
-const EVENTS_ACCENT = CATALOG_SECTION_ACCENT.events;
 
 function FilterFields({
+  search,
+  setSearch,
   city,
   setCity,
   industry,
@@ -63,6 +67,8 @@ function FilterFields({
   onToggleDay,
   onClearPeriod,
 }: {
+  search: string;
+  setSearch: (v: string) => void;
   city: string;
   setCity: (v: string) => void;
   industry: string;
@@ -87,6 +93,12 @@ function FilterFields({
 }) {
   return (
     <div className="space-y-4">
+      <Input
+        label="Поиск"
+        placeholder="Название, площадка, отрасль..."
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+      />
       <EventsDateFilter
         events={SEED_EVENTS}
         viewYear={viewYear}
@@ -205,7 +217,7 @@ function CityPickerModal({
       footer={
         <>
           <Button variant="soft-outline" onClick={onClose}>Пропустить</Button>
-          <Button variant={EVENTS_ACCENT} onClick={onConfirm}>Подтвердить</Button>
+          <Button variant="primary" onClick={onConfirm}>Подтвердить</Button>
         </>
       }
     >
@@ -267,6 +279,7 @@ function EventsPageContent() {
   const [viewYear, setViewYear] = useState(() => Number(defaultMonth.slice(0, 4)));
   const [viewMonth, setViewMonth] = useState(() => Number(defaultMonth.slice(5, 7)) - 1);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [city, setCity] = useState("");
   const [industry, setIndustry] = useState("");
   const [category, setCategory] = useState("");
@@ -292,7 +305,9 @@ function EventsPageContent() {
 
   const filteredEvents = useMemo(() => {
     let list = SEED_EVENTS.filter((event) => {
-      if (!isEventInSelectedPeriod(event, activeMonthKey, selectedDays)) return false;
+      if (search.trim() ? !matchesEventSearch(event, search) : !isEventInSelectedPeriod(event, activeMonthKey, selectedDays)) {
+        return false;
+      }
       if (city && event.city !== city) return false;
       if (industry && event.industry !== industry) return false;
       if (category && event.category !== category) return false;
@@ -319,6 +334,7 @@ function EventsPageContent() {
   }, [
     activeMonthKey,
     selectedDays,
+    search,
     city,
     industry,
     category,
@@ -360,6 +376,7 @@ function EventsPageContent() {
   };
 
   const resetFilters = () => {
+    setSearch("");
     setCity("");
     setIndustry("");
     setCategory("");
@@ -431,6 +448,8 @@ function EventsPageContent() {
                 <button type="button" onClick={resetFilters} className="text-xs underline">Сбросить</button>
               </div>
               <FilterFields
+                search={search}
+                setSearch={setSearch}
                 city={city}
                 setCity={setCity}
                 industry={industry}
@@ -471,7 +490,23 @@ function EventsPageContent() {
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filteredEvents.length}</p>
                 <div className="catalog-cards-grid">
                   {filteredEvents.map((event, index) => (
-                    <EventCard key={event.id} event={event} recommended={isRecommended(event)} imageIndex={index} />
+                    <HomeTileCard
+                      key={event.id}
+                      title={event.title}
+                      imageUrls={pickHomeImages(HOME_IMAGES.events, index)}
+                      imageAlt="Фотография выставочного мероприятия"
+                      sponsored={isSponsoredCatalogIndex(index)}
+                      meta={[
+                        { label: "Место", value: event.city },
+                        {
+                          label: "Срок",
+                          value: `${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}`,
+                        },
+                      ]}
+                      buttonLabel="Откликнуться"
+                      buttonHref={`/events/${event.id}`}
+                      buttonVariant="blue"
+                    />
                   ))}
                 </div>
               </>
@@ -485,12 +520,14 @@ function EventsPageContent() {
         title="Фильтры"
         closeLabel="Закрыть фильтры"
         footer={
-          <Button variant={EVENTS_ACCENT} className="w-full" onClick={() => setFilterDrawerOpen(false)}>
+          <Button variant="primary" className="w-full" onClick={() => setFilterDrawerOpen(false)}>
             Применить
           </Button>
         }
       >
         <FilterFields
+          search={search}
+          setSearch={setSearch}
           city={city}
           setCity={setCity}
           industry={industry}

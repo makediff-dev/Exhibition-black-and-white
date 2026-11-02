@@ -44,7 +44,6 @@ export function CabinetAwareLayout({
     inCabinet &&
     accountRole &&
     keepsCabinetSidebar(from, accountRole);
-
   const publicContent = catalogAccent ? (
     <CatalogAccentProvider accent={catalogAccent}>{children}</CatalogAccentProvider>
   ) : (

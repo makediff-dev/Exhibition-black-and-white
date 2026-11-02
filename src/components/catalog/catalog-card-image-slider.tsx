@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Heart, ImageIcon } from "lucide-react";
+import { Heart, ImageIcon } from "lucide-react";
+import { AdBadge } from "@/components/home/ad-badge";
 
 export interface CatalogCardSlide {
   id: string;
@@ -15,6 +16,7 @@ interface CatalogCardImageSliderProps {
   slides?: CatalogCardSlide[];
   scrubRatio?: number | null;
   hoverScrub?: boolean;
+  sponsored?: boolean;
 }
 
 export function CatalogCardImageSlider({
@@ -23,8 +25,10 @@ export function CatalogCardImageSlider({
   slides = [],
   scrubRatio = null,
   hoverScrub = false,
+  sponsored = false,
 }: CatalogCardImageSliderProps) {
   const [index, setIndex] = useState(0);
+  const [adMenuOpen, setAdMenuOpen] = useState(false);
   const hasSlides = slides.length > 0;
 
   const displayIndex = useMemo(() => {
@@ -35,92 +39,86 @@ export function CatalogCardImageSlider({
   }, [scrubRatio, slides.length, index]);
 
   const currentSlide = hasSlides ? slides[displayIndex] : null;
-  const showControls = hasSlides && slides.length > 1 && !hoverScrub;
+  const canCycle = slides.length > 1 && !hoverScrub;
 
-  const goPrev = (event: React.MouseEvent) => {
+  const goTo = (next: number, event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    if (!hasSlides) return;
-    setIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    if (slides.length < 2) return;
+    setIndex((next + slides.length) % slides.length);
   };
 
-  const goNext = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!hasSlides) return;
-    setIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  const handlePhotoClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!canCycle) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const clickedLeft = event.clientX - rect.left < rect.width / 2;
+    goTo(displayIndex + (clickedLeft ? -1 : 1), event);
   };
 
   return (
-    <div
-      className="relative aspect-[16/10] w-full overflow-hidden rounded-t-[14px] bg-gray-50"
-      aria-hidden={!hasSlides}
-    >
-      {currentSlide?.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={currentSlide.imageUrl}
-          alt={currentSlide.title || "Фото карточки"}
-          className="h-full w-full object-cover transition-opacity duration-150"
-          loading="lazy"
-          decoding="async"
-          sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 25vw"
-        />
-      ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
-          <ImageIcon className="h-6 w-6" />
-          <span className="text-xs">{hasSlides ? "Без фото" : "Слайдер изображений"}</span>
-        </div>
-      )}
+    <div className="relative z-[3] overflow-visible pointer-events-auto" aria-hidden={!hasSlides}>
+      <div
+        className="relative aspect-[16/10] w-full overflow-hidden rounded-t-[14px] bg-gray-50"
+        onClick={canCycle ? handlePhotoClick : undefined}
+      >
+        {currentSlide?.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={currentSlide.imageUrl}
+            alt={currentSlide.title || "Фото карточки"}
+            className="h-full w-full object-cover transition-opacity duration-150"
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400">
+            <ImageIcon className="h-6 w-6" />
+            <span className="text-xs">{hasSlides ? "Без фото" : "Слайдер изображений"}</span>
+          </div>
+        )}
 
-      {onToggleFavorite && (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onToggleFavorite();
-          }}
-          className="pointer-events-auto absolute top-2 right-2 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-gray-500 shadow-sm transition-colors hover:text-gray-900"
-          aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
-        >
-          <Heart className={`h-4 w-4 ${isFavorite ? "fill-gray-900 text-gray-900" : ""}`} />
-        </button>
-      )}
-
-      {showControls && (
-        <>
+        {onToggleFavorite ? (
           <button
             type="button"
-            onClick={goPrev}
-            className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white/90 text-gray-500"
-            aria-label="Предыдущее фото"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onToggleFavorite();
+            }}
+            className={`pointer-events-auto absolute top-2 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-300 bg-white/95 text-gray-500 shadow-sm transition-colors hover:text-gray-900 ${
+              sponsored ? "left-2" : "right-2"
+            }`}
+            aria-label={isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
           >
-            <ChevronLeft className="h-3.5 w-3.5 shrink-0" />
+            <Heart className={`h-4 w-4 ${isFavorite ? "fill-gray-900 text-gray-900" : ""}`} />
           </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2 z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white/90 text-gray-500"
-            aria-label="Следующее фото"
-          >
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 translate-x-px" />
-          </button>
-        </>
-      )}
+        ) : null}
 
-      {hasSlides && slides.length > 1 && (
-        <div className="pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-          {slides.map((slide, slideIndex) => (
-            <span
-              key={slide.id}
-              className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                slideIndex === displayIndex ? "bg-gray-900" : "bg-gray-300"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+        {hasSlides && slides.length > 1 ? (
+          <div
+            className="absolute bottom-2.5 left-1/2 z-10 flex h-[14px] w-[38px] -translate-x-1/2 items-center justify-center gap-1 rounded-[7px] bg-white/85"
+            role="tablist"
+            aria-label="Фото карточки"
+          >
+            {slides.map((slide, slideIndex) => (
+              <button
+                key={slide.id}
+                type="button"
+                role="tab"
+                aria-label={`Фото ${slideIndex + 1}`}
+                aria-selected={slideIndex === displayIndex}
+                className={`h-1.5 w-1.5 rounded-full p-0 ${
+                  slideIndex === displayIndex ? "bg-[#101828]" : "bg-[#d1d5dc]"
+                }`}
+                onClick={(event) => goTo(slideIndex, event)}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {sponsored ? <AdBadge onOpenChange={setAdMenuOpen} /> : null}
     </div>
   );
 }

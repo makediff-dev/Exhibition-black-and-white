@@ -213,4 +213,16 @@ export const HOME_ORDER_CATEGORIES: HomeOrderCategory[] = RAW_HOME_ORDER_CATEGOR
   }),
 );
 
+const CURRENT_ORDER_SOURCES: Array<{ categoryIndex: number; orderIndex: number }> = [
+  { categoryIndex: 0, orderIndex: 1 },
+  { categoryIndex: 0, orderIndex: 2 },
+  { categoryIndex: 0, orderIndex: 3 },
+  { categoryIndex: 0, orderIndex: 4 },
+  { categoryIndex: 1, orderIndex: 1 },
+];
+
+export const CURRENT_HOME_ORDERS: HomeOrderCard[] = CURRENT_ORDER_SOURCES.map(
+  ({ categoryIndex, orderIndex }) => HOME_ORDER_CATEGORIES[categoryIndex].orders[orderIndex],
+);
+
 export const CONTRACTOR_REGISTRATION_INTENT_KEY = "registration-intent-contractor";

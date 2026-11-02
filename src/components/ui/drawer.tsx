@@ -13,12 +13,14 @@ interface DrawerProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  side?: "left" | "right";
+  side?: "left" | "right" | "bottom";
   closeLabel?: string;
   footer?: ReactNode;
   bodyClassName?: string;
+  footerClassName?: string;
   belowHeader?: boolean;
   hideChrome?: boolean;
+  fullScreen?: boolean;
 }
 
 export function Drawer({
@@ -30,8 +32,10 @@ export function Drawer({
   closeLabel = "Закрыть меню",
   footer,
   bodyClassName,
+  footerClassName,
   belowHeader = false,
   hideChrome = false,
+  fullScreen = false,
 }: DrawerProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -57,7 +61,10 @@ export function Drawer({
         aria-labelledby={titleId}
         className={cn(
           styles.panel,
-          side === "right" ? styles.panelRight : styles.panelLeft,
+          side === "bottom" && styles.panelBottom,
+          side === "right" && styles.panelRight,
+          side === "left" && styles.panelLeft,
+          fullScreen && styles.panelFull,
           belowHeader && styles.panelBelowHeader,
         )}
       >
@@ -76,12 +83,12 @@ export function Drawer({
               className={styles.close}
               aria-label={closeLabel}
             >
-              <X className="h-5 w-5" aria-hidden="true" />
+              <X className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
         )}
         <div className={cn(styles.body, bodyClassName)}>{children}</div>
-        {footer ? <div className={styles.footer}>{footer}</div> : null}
+        {footer ? <div className={cn(styles.footer, footerClassName)}>{footer}</div> : null}
       </div>
     </div>,
     document.body,

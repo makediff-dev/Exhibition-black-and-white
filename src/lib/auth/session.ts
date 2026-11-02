@@ -47,3 +47,10 @@ export function registerHref(role?: UserRole | null, returnUrl?: string | null) 
   const query = params.toString();
   return query ? `/register?${query}` : "/register";
 }
+
+export function addCompanyHref(role?: UserRole | null) {
+  const params = new URLSearchParams();
+  params.set("addCompany", "1");
+  if (role) params.set("role", role);
+  return `/register?${params.toString()}`;
+}

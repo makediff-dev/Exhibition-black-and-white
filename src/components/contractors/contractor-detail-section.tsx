@@ -18,7 +18,10 @@ import {
   getContractorCheckHref,
   getContractorPortfolioHref,
 } from "@/lib/utils/contractor-profile-links";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
+import { roleStarStyle } from "@/lib/utils/role-accent";
 import { withFromParam } from "@/lib/utils/message-related-links";
+import { formatReviewCount } from "@/lib/utils/formatters";
 
 const MOCK_REQUISITES: Record<
   string,
@@ -95,8 +98,11 @@ export function ContractorDetailSection({
 }: Props) {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const { accountRole: sessionRole } = useCabinetSession();
   const { requests, responses } = usePrototypeStore();
   const from = useSearchParams().get("from");
+  const role = accountRole ?? sessionRole ?? user?.role ?? null;
+  const ctaVariant = role === "customer" ? "teal" : "primary";
 
   const contractor = SEED_CONTRACTORS.find((entry) => entry.id === contractorId);
   if (!contractor) return null;
@@ -123,7 +129,7 @@ export function ContractorDetailSection({
   };
 
   const services = SEED_SERVICES.filter((service) => service.contractorId === contractor.id);
-  const linkRole = accountRole ?? user?.role ?? null;
+  const linkRole = role;
 
   return (
     <>
@@ -152,13 +158,16 @@ export function ContractorDetailSection({
             {contractor.city} · {contractor.geography}
           </p>
           <p className="text-sm text-gray-600 flex items-center gap-1 mb-6">
-            <Star className="h-4 w-4 fill-gray-900" />
-            {contractor.rating} · {contractor.reviewCount} отзывов
+            <Star
+              className={`h-4 w-4 ${roleStarStyle(role) ? "fill-current" : "fill-gray-900"}`}
+              style={roleStarStyle(role)}
+            />
+            {contractor.rating} · {formatReviewCount(contractor.reviewCount)}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant="primary">Пригласить в заявку</Button>
+              <Button variant={ctaVariant}>Пригласить в заявку</Button>
             </Link>
             <Link
               href={from ? withFromParam(`/services?contractor=${contractor.id}`, from) : `/services?contractor=${contractor.id}`}
@@ -187,7 +196,7 @@ export function ContractorDetailSection({
                   <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
                 </Card>
               ) : (
-                <div className="catalog-cards-grid">
+                <div className="catalog-cards-grid catalog-cards-grid--projects">
                   {contractor.portfolio.map((item) => (
                     <PortfolioCard
                       key={item.id}

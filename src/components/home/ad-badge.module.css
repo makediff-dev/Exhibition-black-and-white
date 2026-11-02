@@ -1,0 +1,100 @@
+.root {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 6px 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.banner {
+  top: 12px;
+  right: 12px;
+  border-radius: 8px;
+}
+
+.label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #101828;
+  white-space: nowrap;
+}
+
+.name {
+  display: inline;
+}
+
+.more {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.more:hover {
+  background: rgba(16, 24, 40, 0.06);
+}
+
+.more img {
+  display: block;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 4;
+  display: flex;
+  width: 240px;
+  max-width: min(240px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid #d1d5dc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 2px rgba(16, 24, 40, 0.06);
+  text-align: left;
+}
+
+.menuCaption {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #6a7282;
+}
+
+.menuName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: #101828;
+}
+
+.menuMeta {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #4a5565;
+}
+
+@media (max-width: 768px) {
+  .name {
+    display: none;
+  }
+}

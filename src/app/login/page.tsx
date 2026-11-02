@@ -125,7 +125,7 @@ function LoginContent() {
               Забыли пароль?
             </Link>
           </div>
-          <Button type="submit" variant="teal" className="w-full">
+          <Button type="submit" variant="green" className="w-full">
             Войти
           </Button>
         </form>

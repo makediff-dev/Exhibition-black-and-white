@@ -63,6 +63,7 @@ interface AuthState {
   login: (role: UserRole) => void;
   logout: () => void;
   switchAccount: (accountId: string) => CompanyProfile | null;
+  addCompany: (profile: CompanyProfile) => void;
   updateUser: (updates: Partial<CompanyProfile>) => void;
   setShowEdoPrompt: (show: boolean) => void;
   setShowCompanyRegistrationPrompt: (show: boolean) => void;
@@ -116,6 +117,15 @@ export const useAuthStore = create<AuthState>()(
         });
         return nextUser;
       },
+      addCompany: (profile) =>
+        set((state) => {
+          if (state.accessibleAccounts.some((account) => account.id === profile.id)) {
+            return state;
+          }
+          return {
+            accessibleAccounts: [...state.accessibleAccounts, profile],
+          };
+        }),
       updateUser: (updates) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,

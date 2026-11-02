@@ -13,9 +13,10 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatServicePrice } from "@/lib/utils/formatters";
+import { formatPrice, formatReviewCount, formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
-import { getCabinetBackHref } from "@/lib/utils/message-related-links";
+import { getCabinetBackHref, keepsCabinetSidebar } from "@/lib/utils/message-related-links";
+import { roleStarStyle } from "@/lib/utils/role-accent";
 import { getCheckoutHref } from "@/lib/utils/cart-routes";
 import { isStandardizedPricedService } from "@/lib/catalog/standardized-service";
 
@@ -79,6 +80,8 @@ export default function ServiceDetailPage() {
   };
 
   const backFallbackHref = getCabinetBackHref(from, "/services", accountRole);
+  const inCabinetView = Boolean(accountRole && from && keepsCabinetSidebar(from, accountRole));
+  const ctaVariant = inCabinetView ? "primary" : "teal";
 
   return (
     <CabinetAwareLayout>
@@ -107,8 +110,11 @@ export default function ServiceDetailPage() {
                   {" · "}{service.city}
                 </p>
                 <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                  <Star className="h-4 w-4 fill-gray-900" />
-                  {service.rating} · {service.reviewCount} отзывов
+                  <Star
+                    className={`h-4 w-4 ${roleStarStyle(accountRole) ? "fill-current" : "fill-gray-900"}`}
+                    style={roleStarStyle(accountRole)}
+                  />
+                  {service.rating} · {formatReviewCount(service.reviewCount)}
                 </p>
               </div>
               <button
@@ -224,7 +230,9 @@ export default function ServiceDetailPage() {
                       <p className="text-sm font-medium">{review.author}</p>
                       <span className="text-xs text-gray-600">{review.date}</span>
                     </div>
-                    <p className="text-xs mt-1">★ {review.rating}</p>
+                    <p className="text-xs mt-1" style={roleStarStyle(accountRole)}>
+                      ★ {review.rating}
+                    </p>
                     <p className="text-sm text-gray-700 mt-2">{review.text}</p>
                   </Card>
                 ))}
@@ -284,13 +292,13 @@ export default function ServiceDetailPage() {
               </div>
 
               {canDirectOrder && (
-                <Button className="w-full" variant="primary" onClick={handleOrder}>
+                <Button className="w-full" variant={ctaVariant} onClick={handleOrder}>
                   Заказать услугу
                 </Button>
               )}
               <Button
                 className="w-full cursor-pointer"
-                variant={canDirectOrder ? "ghost" : "primary"}
+                variant={canDirectOrder ? "ghost" : ctaVariant}
                 onClick={() => router.push(`/requests/new?serviceId=${service.id}`)}
               >
                 Запросить предложение

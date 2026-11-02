@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/states";
 import { ReviewsList } from "@/components/contractors/reviews-list";
 import type { CompanyProfile, ContractorReview } from "@/data/types";
 import { findContractorForUser } from "@/lib/utils/user-entity-map";
-import { formatDate } from "@/lib/utils/formatters";
+import { formatDate, formatReviewCount } from "@/lib/utils/formatters";
 
 interface Props {
   user: CompanyProfile | null;
@@ -28,7 +28,7 @@ export function ContractorReviewsSection({ user }: Props) {
             <Star className="h-6 w-6" /> {user?.rating ?? contractor?.rating}
           </p>
           <p className="text-sm text-gray-600">
-            {user?.reviewCount ?? contractor?.reviewCount} отзывов
+            {formatReviewCount(user?.reviewCount ?? contractor?.reviewCount ?? 0)}
           </p>
         </div>
       </Card>

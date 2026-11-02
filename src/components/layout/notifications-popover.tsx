@@ -80,7 +80,12 @@ export function NotificationsPopover({
         aria-haspopup="dialog"
         onClick={() => setOpen((current) => !current)}
       >
-        <Bell className="h-4 w-4" />
+        {compactLabel ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src="/home/menu-bell.svg" alt="" width={16} height={16} aria-hidden="true" />
+        ) : (
+          <Bell className="h-4 w-4" />
+        )}
         {compactLabel ? <span>Уведомления</span> : null}
         {unreadCount > 0 ? (
           <span className={styles.badge}>{unreadCount > 9 ? "9+" : unreadCount}</span>

@@ -125,6 +125,10 @@ npm start
 - Уведомления, сообщения, бронирования
 - Черновики регистрации и заявок
 
+## Интерактивные контролы
+
+Наведение, неактивное состояние и цвета кнопок для всех разделов описаны в [docs/interactive-controls.md](docs/interactive-controls.md). Токены: `src/constants/interactive-controls.ts`. В коде используйте `Button` из `@/components/ui/button` и варианты из этой таблицы, без inline-цветов.
+
 ## Адаптивность
 
 - Desktop: от 1280px

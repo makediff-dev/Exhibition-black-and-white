@@ -43,7 +43,7 @@ export function HomeNewOrdersSection() {
 
   return (
     <>
-      <HomeScrollSection title="Срочные заказы" linkHref="/requests" linkLabel="Все заказы">
+      <HomeScrollSection title="Срочные заказы" linkHref="/services" linkLabel="Все заказы">
         {URGENT_HOME_ORDERS.map((order) => (
           <HomeOrderCardItem key={order.id} order={order} onRespond={handleRespond} buttonVariant="blue" />
         ))}
@@ -53,7 +53,7 @@ export function HomeNewOrdersSection() {
         <HomeScrollSection
           key={category.title}
           title={category.title}
-          linkHref="/requests"
+          linkHref="/services"
           linkLabel="Все заказы"
         >
           {category.orders.map((order) => (

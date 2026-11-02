@@ -5,6 +5,10 @@ import type { PublicVenue } from "@/constants/venues";
 
 const SLIDES_PER_CARD = 3;
 
+export function isSponsoredCatalogIndex(index: number): boolean {
+  return index % 3 === 0;
+}
+
 function numericSeed(value: string, fallback: number): number {
   const parsed = Number.parseInt(value.replace(/\D/g, ""), 10);
   return Number.isFinite(parsed) ? parsed : fallback;

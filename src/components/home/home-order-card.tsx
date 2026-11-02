@@ -9,18 +9,24 @@ interface HomeOrderCardProps {
   onRespond: (order: HomeOrderCard) => void;
   buttonVariant?: HomeTileButtonVariant;
   buttonLabel?: string;
+  imageUrls?: string[];
+  sponsored?: boolean;
 }
 
 export function HomeOrderCardItem({
   order,
   onRespond,
-  buttonVariant = "blue",
+  buttonVariant = "primary",
   buttonLabel = "Откликнуться",
+  imageUrls,
+  sponsored = false,
 }: HomeOrderCardProps) {
   return (
     <HomeTileCard
       title={order.title}
       imageUrl={order.imageUrl}
+      imageUrls={imageUrls}
+      sponsored={sponsored}
       meta={[
         { label: "Бюджет", value: order.budget },
         { label: "Срок", value: order.deadlineLabel },

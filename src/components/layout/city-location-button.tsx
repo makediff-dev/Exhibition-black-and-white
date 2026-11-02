@@ -1,13 +1,19 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CITIES } from "@/constants/categories";
 import { usePrototypeStore } from "@/lib/store";
+import { cn } from "@/lib/utils/cn";
 
-export function CityLocationButton({ className }: { className?: string }) {
+interface CityLocationButtonProps {
+  className?: string;
+  variant?: "header" | "menu";
+}
+
+export function CityLocationButton({ className, variant = "header" }: CityLocationButtonProps) {
   const selectedCity = usePrototypeStore((state) => state.selectedCity);
   const setSelectedCity = usePrototypeStore((state) => state.setSelectedCity);
   const [open, setOpen] = useState(false);
@@ -22,8 +28,18 @@ export function CityLocationButton({ className }: { className?: string }) {
         aria-label={`Выбрать город: ${selectedCity || "не выбран"}`}
         onClick={() => setOpen(true)}
       >
-        <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="truncate">{selectedCity || "Город"}</span>
+        {variant === "menu" ? (
+          <>
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{selectedCity || "Город"}</span>
+            <ChevronDown className={cn("ml-auto h-4 w-4 shrink-0")} aria-hidden="true" />
+          </>
+        ) : (
+          <>
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="truncate">{selectedCity || "Город"}</span>
+          </>
+        )}
       </button>
       <Modal open={open} onClose={() => setOpen(false)} title="Выбор города">
         <div className="grid gap-2">

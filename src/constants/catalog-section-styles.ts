@@ -3,8 +3,8 @@ export type CatalogSection = "events" | "services" | "contractors" | "venues";
 export type CatalogAccentVariant = "teal" | "blue" | "green" | "purple" | "violet" | "pink";
 
 export const CATALOG_SECTION_ACCENT: Record<CatalogSection, CatalogAccentVariant> = {
-  events: "teal",
-  services: "blue",
+  events: "blue",
+  services: "teal",
   contractors: "purple",
   venues: "violet",
 };
@@ -24,9 +24,9 @@ export const CATALOG_ACCENT_TOKENS: Record<CatalogAccentVariant, CatalogAccentTo
     buttonVariant: "teal",
   },
   blue: {
-    accent: "#2939eb",
-    accentHover: "#2230c7",
-    accentSoft: "#eef0fe",
+    accent: "var(--role-organizer)",
+    accentHover: "var(--role-organizer-hover)",
+    accentSoft: "var(--role-organizer-soft)",
     buttonVariant: "blue",
   },
   green: {

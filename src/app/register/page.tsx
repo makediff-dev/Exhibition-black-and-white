@@ -36,7 +36,7 @@ import {
 import { ROLE_LABELS } from "@/constants/statuses";
 import { parseRegisterRole } from "@/lib/auth/session";
 import { CONTRACTOR_REGISTRATION_INTENT_KEY } from "@/constants/home-orders";
-import type { UserRole } from "@/data/types";
+import type { CompanyProfile, UserRole } from "@/data/types";
 
 const REGISTRATION_STEPS = [
   "Роль",
@@ -141,6 +141,34 @@ interface RegistrationDraft {
   messengerNotificationsAccepted?: boolean;
 }
 
+function profileFromRegistration(form: RegistrationDraft): CompanyProfile {
+  const role = form.role ?? "customer";
+  return {
+    id: `user-${role}-${Date.now()}`,
+    name: form.companyName?.trim() || "Новая компания",
+    inn: form.inn?.trim() || "",
+    ogrn: form.ogrn?.trim() || "",
+    address: form.address?.trim() || "",
+    director: form.director?.trim() || form.contactName?.trim() || "",
+    mainOkved: form.mainOkved?.trim() || "",
+    additionalOkved: form.additionalOkved ?? [],
+    role,
+    edoStatus: form.edoSkipped ? "not_connected" : form.edoVerified ? "connected" : "pending",
+    moderationStatus: "pending",
+    verified: false,
+    cities: form.cities ?? [],
+    categories: form.categories ?? [],
+    industries: form.industries,
+    hasProduction: Boolean(form.hasProduction),
+    rating: 0,
+    reviewCount: 0,
+    description: form.description?.trim() || "",
+    actualAddress: form.actualAddress?.trim(),
+    website: form.website?.trim(),
+    phone: form.companyPhone?.trim() || form.phone?.trim(),
+  };
+}
+
 function createEmptyRegistrationForm(): RegistrationDraft {
   return {
     role: undefined,
@@ -199,11 +227,14 @@ function RegisterPageContent() {
   const storeDraft = usePrototypeStore((s) => s.registrationDraft) as RegistrationDraft;
   const setRegistrationDraft = usePrototypeStore((s) => s.setRegistrationDraft);
   const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const addCompany = useAuthStore((s) => s.addCompany);
+  const isAddCompanyFlow = isAuthenticated;
 
   const draft = isRegistrationContinuation ? storeDraft : ({} as RegistrationDraft);
   const individualEmailConfirmed = draft.individualEmailConfirmed ?? false;
   const individualEmailSent = draft.individualEmailSent ?? false;
-  const showCompanyFlow = individualEmailConfirmed;
+  const showCompanyFlow = individualEmailConfirmed || isAddCompanyFlow;
   const awaitingEmailConfirmation = individualEmailSent && !individualEmailConfirmed;
   const [step, setStep] = useState(showCompanyFlow ? (draft.step ?? 0) : 0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -245,6 +276,12 @@ function RegisterPageContent() {
     },
     [form, step, setRegistrationDraft]
   );
+
+  useEffect(() => {
+    if (!isAddCompanyFlow || isRegistrationContinuation) return;
+    const roleParam = parseRegisterRole(searchParams.get("role"));
+    setForm((prev) => (prev.role === roleParam ? prev : { ...prev, role: roleParam }));
+  }, [isAddCompanyFlow, isRegistrationContinuation, searchParams]);
 
   useEffect(() => {
     if (step !== 6 || canResend) return;
@@ -417,10 +454,12 @@ function RegisterPageContent() {
         if (phoneError) nextErrors.phone = phoneError;
         const emailError = validateEmail(form.email ?? "");
         if (emailError) nextErrors.email = emailError;
-        const passwordError = validatePasswordStrength(form.password ?? "");
-        if (passwordError) nextErrors.password = passwordError;
-        const matchError = validatePasswordMatch(form.password ?? "", form.confirmPassword ?? "");
-        if (matchError) nextErrors.confirmPassword = matchError;
+        if (!isAddCompanyFlow) {
+          const passwordError = validatePasswordStrength(form.password ?? "");
+          if (passwordError) nextErrors.password = passwordError;
+          const matchError = validatePasswordMatch(form.password ?? "", form.confirmPassword ?? "");
+          if (matchError) nextErrors.confirmPassword = matchError;
+        }
         break;
       }
       case 4:
@@ -503,6 +542,10 @@ function RegisterPageContent() {
   const handleComplete = () => {
     saveDraft({ ...form, step: 7 }, 7);
     setShowCompanyRegistrationPrompt(false);
+    if (isAddCompanyFlow && form.role) {
+      addCompany(profileFromRegistration(form));
+      showToast("Компания добавлена в список в шапке");
+    }
     router.push("/moderation");
   };
 
@@ -539,11 +582,15 @@ function RegisterPageContent() {
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="mx-auto mb-8 w-full max-w-3xl text-center">
-          <h1 className="text-2xl font-bold mb-2">Регистрация</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {isAddCompanyFlow ? "Добавить компанию" : "Регистрация"}
+          </h1>
           <p className="text-sm text-gray-600">
-            {showCompanyFlow
-              ? "Создайте аккаунт компании на маркетплейсе"
-              : "Сначала создайте личный аккаунт физического лица"}
+            {isAddCompanyFlow
+              ? "Зарегистрируйте ещё одну компанию в текущем аккаунте, без повторного входа"
+              : showCompanyFlow
+                ? "Создайте аккаунт компании на маркетплейсе"
+                : "Сначала создайте личный аккаунт физического лица"}
           </p>
           {form.role && showCompanyFlow ? (
             <p className="mt-3 text-sm text-gray-700">
@@ -614,7 +661,7 @@ function RegisterPageContent() {
                 <span>Получать уведомления от сервиса (необязательно)</span>
               </label>
 
-              <Button type="submit" variant="teal" className="w-full">
+              <Button type="submit" variant="green" className="w-full">
                 Отправить
               </Button>
             </form>
@@ -632,7 +679,7 @@ function RegisterPageContent() {
               <Link
                 href={`/verify?from=register&type=email&contact=${encodeURIComponent(form.email ?? "")}`}
               >
-                <Button variant="teal">Подтвердить email</Button>
+                <Button variant="green">Подтвердить email</Button>
               </Link>
             </div>
           </div>
@@ -681,7 +728,7 @@ function RegisterPageContent() {
                 </div>
                 <Button
                   type="button"
-                  variant="teal"
+                  variant="green"
                   onClick={handleFindCompany}
                   className="shrink-0"
                 >
@@ -794,7 +841,7 @@ function RegisterPageContent() {
               {form.edoRequestStatus !== "confirmed" && !form.edoAuthorityScan && (
                 <Button
                   type="button"
-                  variant="teal"
+                  variant="green"
                   onClick={
                     form.edoRequestStatus === "pending"
                       ? handleCheckEdoConfirmation
@@ -868,21 +915,25 @@ function RegisterPageContent() {
               onChange={(e) => updateField("email", e.target.value)}
               error={errors.email}
             />
-            <PasswordInput
-              label="Пароль"
-              value={form.password}
-              onChange={(e) => updateField("password", e.target.value)}
-              error={errors.password}
-              hint="Латинские буквы, не менее 6 символов, специальный символ"
-              autoComplete="new-password"
-            />
-            <PasswordInput
-              label="Подтверждение пароля"
-              value={form.confirmPassword}
-              onChange={(e) => updateField("confirmPassword", e.target.value)}
-              error={errors.confirmPassword}
-              autoComplete="new-password"
-            />
+            {isAddCompanyFlow ? null : (
+              <>
+                <PasswordInput
+                  label="Пароль"
+                  value={form.password}
+                  onChange={(e) => updateField("password", e.target.value)}
+                  error={errors.password}
+                  hint="Латинские буквы, не менее 6 символов, специальный символ"
+                  autoComplete="new-password"
+                />
+                <PasswordInput
+                  label="Подтверждение пароля"
+                  value={form.confirmPassword}
+                  onChange={(e) => updateField("confirmPassword", e.target.value)}
+                  error={errors.confirmPassword}
+                  autoComplete="new-password"
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -1219,7 +1270,7 @@ function RegisterPageContent() {
                 </button>
               )}
             </div>
-            <Button type="button" variant="teal" className="w-full" onClick={handleCodeSubmit}>
+            <Button type="button" variant="green" className="w-full" onClick={handleCodeSubmit}>
               Подтвердить email
             </Button>
           </div>
@@ -1237,7 +1288,7 @@ function RegisterPageContent() {
               Обычно модерация занимает до 24 часов. Вы получите уведомление на e-mail,
               указанный при регистрации.
             </p>
-            <Button variant="teal" onClick={handleComplete}>Перейти к статусу модерации</Button>
+            <Button variant="green" onClick={handleComplete}>Перейти к статусу модерации</Button>
           </div>
         )}
 
@@ -1252,7 +1303,7 @@ function RegisterPageContent() {
               Назад
             </Button>
             {step < 6 && (
-              <Button type="button" variant="teal" onClick={goNext}>
+              <Button type="button" variant="green" onClick={goNext}>
                 {step === 5 ? "Отправить код на почту" : "Далее"}
               </Button>
             )}
@@ -1261,12 +1312,14 @@ function RegisterPageContent() {
           </>
         )}
 
-        <p className="text-sm text-center mt-6 text-gray-600">
-          Уже есть аккаунт?{" "}
-          <Link href="/login" className="underline font-medium text-gray-900">
-            Войти
-          </Link>
-        </p>
+        {isAddCompanyFlow ? null : (
+          <p className="text-sm text-center mt-6 text-gray-600">
+            Уже есть аккаунт?{" "}
+            <Link href="/login" className="underline font-medium text-gray-900">
+              Войти
+            </Link>
+          </p>
+        )}
         </div>
       </main>
       <Footer />

@@ -20,7 +20,7 @@ export default function PublicContractorPage() {
   }
 
   return (
-    <CabinetAwareLayout title={contractor.name}>
+    <CabinetAwareLayout>
       <ContractorDetailSection contractorId={id} backFallbackHref="/contractors" />
     </CabinetAwareLayout>
   );

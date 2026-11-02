@@ -3,25 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore } from "@/lib/store";
-import { loginHref } from "@/lib/auth/session";
+import { loginHref, registerHref } from "@/lib/auth/session";
 import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { CityLocationButton } from "@/components/layout/city-location-button";
+import { CompanyPickerSheet } from "@/components/layout/company-picker-sheet";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
 import styles from "./public-header.module.css";
 
-const NAV_LINKS = [
+const CATALOG_NAV_LINKS = [
   { href: "/events", label: "Выставки и мероприятия" },
   { href: "/contractors", label: "Исполнители" },
   { href: "/services", label: "Услуги" },
   { href: "/venues", label: "Площадки" },
 ];
+
+const MOBILE_NAV_LINKS = [...CATALOG_NAV_LINKS, { href: "/how-it-works", label: "Как это работает" }];
 
 function isActiveNavLink(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -29,12 +29,20 @@ function isActiveNavLink(pathname: string, href: string) {
 
 export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [companySheetOpen, setCompanySheetOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
-  const requestButtonVariant = getAccountRoleTheme(user?.role ?? null)?.buttonVariant ?? "primary";
+  const desktopNavLinks = isAuthenticated ? CATALOG_NAV_LINKS : MOBILE_NAV_LINKS;
+  const cabinetHref = user?.role ? `/account/${user.role}` : "/login";
+
+  const closeMenu = () => setMobileOpen(false);
+  const openCompanySheet = () => {
+    setMobileOpen(false);
+    setCompanySheetOpen(true);
+  };
 
   return (
-    <header className={styles.header}>
+    <header className={cn(styles.header, isAuthenticated ? styles.headerAuth : styles.headerGuest)}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-white focus:px-3 focus:py-2">
         Перейти к содержимому
       </a>
@@ -46,7 +54,7 @@ export function PublicHeader() {
           </Link>
 
           <nav className={styles.nav}>
-            {NAV_LINKS.map((link) => {
+            {desktopNavLinks.map((link) => {
               const active = isActiveNavLink(pathname, link.href);
               return (
                 <Link
@@ -69,28 +77,40 @@ export function PublicHeader() {
 
           <div className={styles.actions}>
             {isAuthenticated ? (
-              <>
-                <NotificationsPopover />
-                <Link href="/messages" className={styles.messagesButton} aria-label="Сообщения">
-                  <MessageSquare className="h-4 w-4" />
+              <div className={styles.authActions}>
+                <Link href="/requests/new" className={styles.placeOrderButton}>
+                  Разместить заказ
                 </Link>
-                <div className={styles.desktopActions}>
-                  {user?.role === "customer" ? (
-                    <Link href="/requests/new" className="shrink-0">
-                      <Button size="sm" variant={requestButtonVariant} className={styles.requestButton}>
-                        Разместить заявку
-                      </Button>
-                    </Link>
-                  ) : null}
-                  <AccountSwitcher />
-                </div>
-              </>
+                <AccountSwitcher
+                  triggerLabel="Личный кабинет"
+                  triggerClassName={styles.cabinetButton}
+                />
+              </div>
             ) : (
-              <Link href={loginHref(pathname)} className={styles.loginButton}>
-                Вход
-              </Link>
+              <div className={styles.guestActions}>
+                <Link href={loginHref(pathname)} className={styles.loginOutlineButton}>
+                  Войти
+                </Link>
+                <Link href="/requests/new" className={styles.placeOrderButton}>
+                  Разместить заказ
+                </Link>
+              </div>
             )}
           </div>
+
+          {!isAuthenticated ? (
+            <div className={styles.guestMobileBar}>
+              <HeaderSearch compact className={styles.guestMobileSearch} />
+              <Link href={loginHref(pathname)} className={styles.loginOutlineButton}>
+                Войти
+              </Link>
+            </div>
+          ) : (
+            <div className={styles.authMobileBar}>
+              <HeaderSearch compact className={styles.guestMobileSearch} />
+              <AccountSwitcher variant="avatar" onOpenSheet={() => setCompanySheetOpen(true)} />
+            </div>
+          )}
 
           <button
             type="button"
@@ -98,85 +118,82 @@ export function PublicHeader() {
             onClick={() => setMobileOpen(true)}
             aria-label="Меню"
           >
-            <Menu className="h-5 w-5" />
+            <span className={styles.menuIcon} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
           </button>
         </div>
       </div>
 
       <Drawer
         open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
+        onClose={closeMenu}
         title="Меню"
         side="right"
+        fullScreen
         closeLabel="Закрыть меню"
+        bodyClassName={styles.drawerBody}
+        footerClassName={styles.drawerFooterWrap}
         footer={
           <div className={styles.drawerFooter}>
             {isAuthenticated ? (
-              <AccountSwitcher fullWidth onNavigate={() => setMobileOpen(false)} />
-            ) : null}
-            {isAuthenticated && user?.role ? (
-              <Link href={`/account/${user.role}`} className="w-full" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full" variant="teal">
+              <>
+                <AccountSwitcher variant="card" onOpenSheet={openCompanySheet} />
+                <Link href="/requests/new" className={styles.menuPrimaryButton} onClick={closeMenu}>
+                  Разместить заказ
+                </Link>
+                <Link href={cabinetHref} className={styles.menuOutlineButton} onClick={closeMenu}>
                   Личный кабинет
-                </Button>
-              </Link>
+                </Link>
+              </>
             ) : (
-              <Link href={loginHref(pathname)} className="w-full" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full" variant="teal">
-                  Войти в личный кабинет
-                </Button>
-              </Link>
+              <>
+                <Link href={registerHref()} className={styles.menuPrimaryButton} onClick={closeMenu}>
+                  Зарегистрироваться
+                </Link>
+                <Link href={loginHref(pathname)} className={styles.menuOutlineButton} onClick={closeMenu}>
+                  Войти
+                </Link>
+              </>
             )}
-            {isAuthenticated && user?.role === "customer" ? (
-              <Link href="/requests/new" className="w-full" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full" variant={requestButtonVariant}>
-                  Разместить заявку
-                </Button>
-              </Link>
-            ) : null}
           </div>
         }
       >
         <nav className={styles.drawerNav}>
-          <HeaderSearch className={styles.drawerPhoneOnly} onNavigate={() => setMobileOpen(false)} />
+          <HeaderSearch onNavigate={closeMenu} />
           <div className={styles.drawerLinks}>
-            {NAV_LINKS.map((link) => {
+            {MOBILE_NAV_LINKS.map((link) => {
               const active = isActiveNavLink(pathname, link.href);
               return (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={cn(
-                    "text-sm py-2 border-b border-gray-200",
-                    active && "font-semibold text-[#28b5b3]",
-                  )}
+                  className={cn(styles.menuLink, active && styles.menuLinkActive)}
                   aria-current={active ? "page" : undefined}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={closeMenu}
                 >
                   {link.label}
                 </Link>
               );
             })}
           </div>
-          <CityLocationButton
-            className={cn(styles.drawerPhoneOnly, styles.drawerUtility)}
-          />
+          <CityLocationButton variant="menu" className={styles.menuUtility} />
           {isAuthenticated ? (
             <>
-              <div className={styles.drawerPhoneOnly}>
-                <NotificationsPopover compactLabel onNavigate={() => setMobileOpen(false)} />
-              </div>
-              <Link
-                href="/messages"
-                className={cn(styles.drawerPhoneOnly, styles.drawerUtility)}
-                onClick={() => setMobileOpen(false)}
-              >
-                Сообщения
+              <NotificationsPopover compactLabel onNavigate={closeMenu} />
+              <Link href={cabinetHref} className={styles.menuUtility} onClick={closeMenu}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/home/menu-message.svg" alt="" width={16} height={16} aria-hidden="true" />
+                <span>Сообщения</span>
               </Link>
             </>
           ) : null}
         </nav>
       </Drawer>
+
+      <CompanyPickerSheet open={companySheetOpen} onClose={() => setCompanySheetOpen(false)} />
     </header>
   );
 }

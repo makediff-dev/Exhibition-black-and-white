@@ -1,12 +1,26 @@
 import Link from "next/link";
 import styles from "./footer.module.css";
 
+const SECTION_LINKS = [
+  { href: "/events", label: "Мероприятия" },
+  { href: "/contractors", label: "Исполнители" },
+  { href: "/services", label: "Услуги" },
+  { href: "/venues", label: "Площадки" },
+  { href: "/how-it-works", label: "Как работает сервис" },
+] as const;
+
+const LEGAL_LINKS = [
+  { href: "/legal/terms", label: "Условия использования" },
+  { href: "/legal/privacy", label: "Политика конфиденциальности" },
+  { href: "/contacts", label: "Контакты" },
+] as const;
+
 export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
-        <div className={styles.grid}>
-          <div>
+        <div className={styles.columns}>
+          <div className={styles.brand}>
             <Link href="/" className={styles.logo}>
               <span className={styles.logoMark}>Э</span>
               <span className={styles.logoText}>ЭКСПО</span>
@@ -16,45 +30,35 @@ export function Footer() {
               платформе.
             </p>
           </div>
-          <div>
-            <h4 className={styles.columnTitle}>Разделы</h4>
+
+          <nav className={styles.column} aria-labelledby="footer-sections">
+            <p id="footer-sections" className={styles.columnTitle}>
+              Разделы
+            </p>
             <ul className={styles.list}>
-              <li>
-                <Link href="/events">Мероприятия</Link>
-              </li>
-              <li>
-                <Link href="/contractors">Исполнители</Link>
-              </li>
-              <li>
-                <Link href="/services">Услуги</Link>
-              </li>
-              <li>
-                <Link href="/venues">Площадки</Link>
-              </li>
-              <li>
-                <Link href="/how-it-works">Как работает сервис</Link>
-              </li>
+              {SECTION_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
             </ul>
-          </div>
-          <div>
-            <h4 className={styles.columnTitle}>Правовая информация</h4>
+          </nav>
+
+          <nav className={styles.column} aria-labelledby="footer-legal">
+            <p id="footer-legal" className={styles.columnTitle}>
+              Правовая информация
+            </p>
             <ul className={styles.list}>
-              <li>
-                <Link href="/legal/terms">Условия использования</Link>
-                <span className="ml-1 text-xs text-gray-500">(документ ещё не опубликован)</span>
-              </li>
-              <li>
-                <Link href="/legal/privacy">Политика конфиденциальности</Link>
-                <span className="ml-1 text-xs text-gray-500">(документ ещё не опубликован)</span>
-              </li>
-              <li>
-                <Link href="/contacts">Контакты</Link>
-                <span className="ml-1 text-xs text-gray-500">(поддержка в прототипе недоступна)</span>
-              </li>
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
             </ul>
-          </div>
+          </nav>
         </div>
-        <p className={styles.bottom}>© 2026 Маркетплейс выставочной индустрии. UX-прототип.</p>
+
+        <p className={styles.copyright}>© 2026 Маркетплейс выставочной индустрии</p>
       </div>
     </footer>
   );

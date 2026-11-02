@@ -17,7 +17,9 @@ export type ButtonVariant =
   | "green"
   | "purple"
   | "violet"
-  | "pink";
+  | "pink"
+  | "cta"
+  | "ctaGhost";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -29,30 +31,34 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const catalogAccent = useCatalogAccent();
     const accountTheme = useAccountTheme();
     const resolvedVariant =
-      variant === "primary" && catalogAccent
-        ? catalogAccent.buttonVariant
-        : accountTheme && variant === "primary"
-          ? accountTheme.buttonVariant
+      variant === "primary" && accountTheme
+        ? accountTheme.buttonVariant
+        : variant === "primary" && catalogAccent
+          ? catalogAccent.buttonVariant
           : variant;
 
     const outlineClass =
       catalogAccent || accountTheme
-        ? "bg-white !text-[#171717] hover:bg-gray-50 border border-[#dddddd] hover:border-[#171717]"
-        : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-900";
+        ? "bg-white !text-[#171717] hover:bg-[var(--interactive-hover-fill)] border border-[var(--interactive-border)] hover:border-[var(--interactive-border-hover)]"
+        : "bg-white text-gray-900 hover:bg-[var(--interactive-hover-fill)] border border-gray-900";
 
     const variants: Record<ButtonVariant, string> = {
       primary: "bg-gray-900 text-white hover:bg-gray-800 border border-gray-900",
-      secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300",
+      secondary:
+        "bg-white text-[#171717] hover:bg-[var(--interactive-hover-fill)] border border-[var(--interactive-border)] hover:border-[var(--interactive-border-hover)]",
       outline: outlineClass,
       "teal-outline": "bg-white text-[#28b5b3] hover:bg-[#eaf8f7] border border-[#28b5b3]",
-      "soft-outline": "bg-white text-[#101828] hover:text-[#171717] border border-[#dddddd] hover:border-[#171717]",
+      "soft-outline":
+        "bg-white text-[#101828] hover:bg-[var(--interactive-hover-fill)] hover:text-[#171717] border border-[var(--interactive-border)] hover:border-[var(--interactive-border-hover)]",
       ghost: "bg-transparent text-gray-900 hover:bg-gray-100 border-0",
-      teal: "bg-[var(--role-customer)] text-white hover:bg-[var(--role-customer-hover)] border border-[var(--role-customer)]",
-      blue: "bg-[var(--role-organizer)] text-white hover:bg-[var(--role-organizer-hover)] border border-[var(--role-organizer)]",
-      green: "bg-[var(--platform-accent)] text-white hover:bg-[var(--platform-accent-hover)] border border-[var(--platform-accent)]",
-      purple: "bg-[var(--role-contractor)] text-white hover:bg-[var(--role-contractor-hover)] border border-[var(--role-contractor)]",
-      violet: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)]",
-      pink: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)]",
+      teal: "bg-[var(--role-customer)] text-white hover:bg-[var(--role-customer-hover)] border border-[var(--role-customer)] hover:border-[var(--role-customer-hover)]",
+      blue: "bg-[var(--role-organizer)] text-white hover:bg-[var(--role-organizer-hover)] border border-[var(--role-organizer)] hover:border-[var(--role-organizer-hover)]",
+      green: "bg-[var(--platform-accent)] text-white hover:bg-[var(--platform-accent-hover)] border border-[var(--platform-accent)] hover:border-[var(--platform-accent-hover)]",
+      purple: "bg-[var(--role-contractor)] text-white hover:bg-[var(--role-contractor-hover)] border border-[var(--role-contractor)] hover:border-[var(--role-contractor-hover)]",
+      violet: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)] hover:border-[var(--role-venue-hover)]",
+      pink: "bg-[var(--role-venue)] text-white hover:bg-[var(--role-venue-hover)] border border-[var(--role-venue)] hover:border-[var(--role-venue-hover)]",
+      cta: "bg-white text-[#101828] font-semibold hover:opacity-[0.92] border-0",
+      ctaGhost: "bg-transparent text-white border-[1.5px] border-[rgba(255,255,255,0.85)] hover:bg-[rgba(255,255,255,0.16)]",
     };
     const sizes = {
       sm: "px-3 py-1.5 text-xs",

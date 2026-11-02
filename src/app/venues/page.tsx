@@ -1,19 +1,20 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Filter } from "lucide-react";
-import { VenueCard } from "@/components/catalog/venue-card";
+import { HomeTileCard } from "@/components/home/home-tile-card";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { useToast } from "@/components/ui/toast-provider";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES } from "@/constants/categories";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { PUBLIC_VENUES } from "@/constants/venues";
-import { useFavoritesStore } from "@/lib/store";
+import { isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 
 const SORT_OPTIONS = [
   { value: "name", label: "По названию" },
@@ -39,12 +40,10 @@ function VenuesPageFallback() {
 const VENUES_ACCENT = CATALOG_SECTION_ACCENT.venues;
 
 function VenuesPageContent() {
-  const { showToast } = useToast();
-  const toggleVenueFavorite = useFavoritesStore((state) => state.toggleVenueFavorite);
-  const isVenueFavorite = useFavoritesStore((state) => state.isVenueFavorite);
+  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [city, setCity] = useState("");
   const [sort, setSort] = useState("name");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -140,32 +139,26 @@ function VenuesPageContent() {
               <>
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
                 <div className="catalog-cards-grid">
-                  {filtered.map((venue, index) => {
-                    const favoriteId = venue.catalogId ?? venue.id;
-                    const canFavorite = Boolean(venue.catalogId);
-
-                    return (
-                      <VenueCard
-                        key={venue.id}
-                        venue={venue}
-                        cardIndex={index}
-                        isFavorite={canFavorite ? isVenueFavorite(favoriteId) : false}
-                        onToggleFavorite={
-                          canFavorite
-                            ? () => {
-                                const added = toggleVenueFavorite(favoriteId);
-                                showToast(
-                                  added
-                                    ? `«${venue.name}» добавлена в избранное`
-                                    : `«${venue.name}» удалена из избранного`,
-                                  added ? "success" : "info",
-                                );
-                              }
-                            : undefined
-                        }
-                      />
-                    );
-                  })}
+                  {filtered.map((venue, index) => (
+                    <HomeTileCard
+                      key={venue.id}
+                      title={venue.name}
+                      imageUrls={
+                        venue.imageUrl
+                          ? [venue.imageUrl, ...pickHomeImages(HOME_IMAGES.venue, index).filter((url) => url !== venue.imageUrl)].slice(0, 3)
+                          : pickHomeImages(HOME_IMAGES.venue, index)
+                      }
+                      imageAlt={venue.name}
+                      sponsored={isSponsoredCatalogIndex(index)}
+                      meta={[
+                        { label: "Место", value: venue.city },
+                        { label: "Павильоны", value: venue.halls },
+                      ]}
+                      buttonLabel="Подробнее"
+                      buttonHref={`/venues/${venue.id}`}
+                      buttonVariant="pink"
+                    />
+                  ))}
                 </div>
               </>
             )}

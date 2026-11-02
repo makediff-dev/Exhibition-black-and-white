@@ -8,12 +8,12 @@ import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import type { Contractor } from "@/data/types";
-import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
-import { getContractorCardSlides } from "@/lib/utils/catalog-card-images";
+import { getContractorCardSlides, isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 import {
   getContractorCheckHref,
   getContractorProfileHref,
 } from "@/lib/utils/contractor-profile-links";
+import { formatReviewCount } from "@/lib/utils/formatters";
 
 interface ContractorCardProps {
   contractor: Contractor;
@@ -26,17 +26,15 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
     () => getContractorCardSlides(contractor.id, contractor.name, cardIndex),
     [contractor.id, contractor.name, cardIndex],
   );
-  const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
-
   return (
-    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full">
       <Link
         href={getContractorProfileHref(contractor.id)}
         className="absolute inset-0 z-0"
         aria-label={`Открыть профиль ${contractor.name}`}
       />
 
-      <CatalogCardImageSlider slides={slides} scrubRatio={scrubRatio} hoverScrub />
+      <CatalogCardImageSlider slides={slides} sponsored={isSponsoredCatalogIndex(cardIndex)} />
 
       <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0 pointer-events-none">
         <div className="flex flex-col flex-1">
@@ -54,7 +52,7 @@ export function ContractorCard({ contractor, cardIndex = 0, onInvite }: Contract
           </div>
           <p className="text-xs text-gray-600 mt-2 flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-gray-900" />
-            {contractor.rating} · {contractor.reviewCount} отзывов
+            {contractor.rating} · {formatReviewCount(contractor.reviewCount)}
           </p>
         </div>
 

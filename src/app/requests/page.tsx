@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { PublicHeader } from "@/components/layout/public-header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/states";
 import { Tabs } from "@/components/ui/tabs";
 import { RequestOrderCard } from "@/components/requests/request-order-card";
@@ -26,23 +28,38 @@ const TAB_STATUSES: { id: string; label: string }[] = [
 function RequestsContent() {
   const { user, isAuthenticated } = useAuthStore();
   const { requests, deals, responses } = usePrototypeStore();
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [activeTab, setActiveTab] = useState<string>("published");
 
   const filtered = useMemo(() => {
-    let list = requests.filter((request) => requestListTab(request, responses, deals) === activeTab);
+    const query = search.trim().toLowerCase();
+    let list = query
+      ? requests.filter((request) => request.status !== "draft")
+      : requests.filter((request) => requestListTab(request, responses, deals) === activeTab);
+
     if (isAuthenticated && user?.role === "customer") {
       list = list.filter((request) => request.customerId === user.id);
     }
     if (isAuthenticated && user?.role === "contractor") {
-      list = requests.filter((request) => {
-        if (activeTab === "published") {
-          return isRequestVisibleToContractor(request, user, responses, deals);
-        }
-        return false;
+      list = query
+        ? requests.filter((request) => isRequestVisibleToContractor(request, user, responses, deals))
+        : requests.filter((request) => {
+            if (activeTab === "published") {
+              return isRequestVisibleToContractor(request, user, responses, deals);
+            }
+            return false;
+          });
+    }
+    if (query) {
+      list = list.filter((request) => {
+        const haystack = `${request.title} ${request.category} ${request.city} ${request.description}`.toLowerCase();
+        return haystack.includes(query);
       });
     }
+
     return list.sort((a, b) => (b.publishedAt ?? b.deadline).localeCompare(a.publishedAt ?? a.deadline));
-  }, [requests, responses, deals, activeTab, isAuthenticated, user]);
+  }, [requests, responses, deals, activeTab, isAuthenticated, user, search]);
 
   const tabCounts = useMemo(() => {
     const base =
@@ -66,6 +83,14 @@ function RequestsContent() {
 
   return (
     <>
+      <div className="mb-4">
+        <Input
+          label="Поиск"
+          placeholder="Название, категория, город..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
       <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} className="mb-6" />
 
       {filtered.length === 0 ? (
@@ -97,7 +122,7 @@ function RequestsContent() {
   );
 }
 
-export default function RequestsPage() {
+function RequestsPageBody() {
   const { isAuthenticated, user } = useAuthStore();
   const isContractor = user?.role === "contractor";
   const pageTitle = isContractor ? "Доступные заявки" : "Мои заявки";
@@ -139,5 +164,13 @@ export default function RequestsPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function RequestsPage() {
+  return (
+    <Suspense fallback={null}>
+      <RequestsPageBody />
+    </Suspense>
   );
 }

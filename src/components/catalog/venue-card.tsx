@@ -10,8 +10,7 @@ import { CardDescription, CardTitle } from "@/components/ui/card";
 import type { PublicVenue } from "@/constants/venues";
 import { getVenueStats } from "@/lib/utils/venue-stats";
 import { formatPrice } from "@/lib/utils/formatters";
-import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
-import { getVenueCardSlides } from "@/lib/utils/catalog-card-images";
+import { getVenueCardSlides, isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 
 interface VenueCardProps {
   venue: PublicVenue;
@@ -31,10 +30,8 @@ export function VenueCard({
     () => getVenueCardSlides(venue, cardIndex),
     [venue, cardIndex],
   );
-  const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
-
   return (
-    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full">
       <Link
         href={`/venues/${venue.id}`}
         className="absolute inset-0 z-0"
@@ -45,8 +42,7 @@ export function VenueCard({
         isFavorite={Boolean(onToggleFavorite)}
         onToggleFavorite={onToggleFavorite}
         slides={slides}
-        scrubRatio={scrubRatio}
-        hoverScrub
+        sponsored={isSponsoredCatalogIndex(cardIndex)}
       />
 
       <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">

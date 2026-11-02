@@ -12,8 +12,8 @@ export function HomeFaqSection() {
           <div className={styles.faqWrap}>
             <h2 className={styles.faqTitle}>Часто задаваемые вопросы</h2>
             <div className={styles.faqList}>
-              {HOME_FAQ_ITEMS.map((item) => (
-                <details key={item.title} className={styles.faqItem}>
+              {HOME_FAQ_ITEMS.map((item, index) => (
+                <details key={item.title} className={styles.faqItem} open={index === 0}>
                   <summary className={styles.faqSummary}>
                     <span>{item.title}</span>
                     <ChevronDown className={styles.faqSummaryIcon} aria-hidden="true" />

@@ -2,14 +2,18 @@
 
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
-import { CITIES, EVENT_INDUSTRIES } from "@/constants/categories";
+import { cn } from "@/lib/utils/cn";
+import { HOME_FILTER_PRESETS, type HomeFilterPreset } from "./home-filter-presets";
 import styles from "./home-page.module.css";
 
-export function HomeCardsFilters() {
+interface HomeCardsFiltersProps {
+  preset?: HomeFilterPreset;
+}
+
+export function HomeCardsFilters({ preset = "orders" }: HomeCardsFiltersProps) {
+  const fields = HOME_FILTER_PRESETS[preset];
   const [open, setOpen] = useState(false);
-  const [range, setRange] = useState("");
-  const [city, setCity] = useState("moscow");
-  const [industry, setIndustry] = useState("");
+  const [values, setValues] = useState<Record<string, string>>({});
   const filtersId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -35,54 +39,36 @@ export function HomeCardsFilters() {
     };
   }, [open]);
 
-  const fields = (
+  const selects = (
     <>
-      <div className={styles.filterSelectWrap}>
-        <select
-          className={styles.filterSelect}
-          value={range}
-          aria-label="Выбрать диапазон"
-          onChange={(event: ChangeEvent<HTMLSelectElement>) => setRange(event.target.value)}
+      {fields.map((field) => (
+        <div
+          key={field.id}
+          className={cn(styles.filterSelectWrap, field.hug && styles.filterSelectWrapHug)}
         >
-          <option value="">Выбрать диапазон</option>
-          <option value="week">Ближайшая неделя</option>
-          <option value="month">Ближайший месяц</option>
-          <option value="quarter">Ближайшие 3 месяца</option>
-        </select>
-        <ChevronDown className={styles.filterSelectIcon} aria-hidden="true" />
-      </div>
-      <div className={styles.filterSelectWrap}>
-        <select
-          className={styles.filterSelect}
-          value={city}
-          aria-label="Город"
-          onChange={(event: ChangeEvent<HTMLSelectElement>) => setCity(event.target.value)}
-        >
-          <option value="moscow">Мероприятия в Москве</option>
-          {CITIES.filter((item) => item !== "Москва").map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className={styles.filterSelectIcon} aria-hidden="true" />
-      </div>
-      <div className={styles.filterSelectWrap}>
-        <select
-          className={styles.filterSelect}
-          value={industry}
-          aria-label="Отрасль"
-          onChange={(event: ChangeEvent<HTMLSelectElement>) => setIndustry(event.target.value)}
-        >
-          <option value="">По отраслям</option>
-          {EVENT_INDUSTRIES.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className={styles.filterSelectIcon} aria-hidden="true" />
-      </div>
+          {field.hug ? (
+            <span className={styles.filterSelectSizer} aria-hidden="true">
+              {values[field.id] || field.placeholder}
+            </span>
+          ) : null}
+          <select
+            className={styles.filterSelect}
+            value={values[field.id] ?? ""}
+            aria-label={field.placeholder}
+            onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+              setValues((current) => ({ ...current, [field.id]: event.target.value }))
+            }
+          >
+            <option value="">{field.placeholder}</option>
+            {field.options.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className={styles.filterSelectIcon} aria-hidden="true" />
+        </div>
+      ))}
     </>
   );
 
@@ -100,7 +86,7 @@ export function HomeCardsFilters() {
         Фильтры
       </button>
       <div id={filtersId} className={styles.filtersRow}>
-        {fields}
+        {selects}
       </div>
       {open ? (
         <div
@@ -121,7 +107,7 @@ export function HomeCardsFilters() {
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
-          <div className={styles.filtersDrawer}>{fields}</div>
+          <div className={styles.filtersDrawer}>{selects}</div>
         </div>
       ) : null}
     </div>

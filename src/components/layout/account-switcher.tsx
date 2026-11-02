@@ -1,20 +1,36 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, ChevronDown, LogOut, Plus } from "lucide-react";
 import { ROLE_LABELS } from "@/constants/statuses";
+import { getAccountRoleTheme } from "@/constants/account-role-themes";
+import { addCompanyHref } from "@/lib/auth/session";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
+import { companyInitials } from "@/lib/utils/company-initials";
 import styles from "./account-switcher.module.css";
 
 interface Props {
   className?: string;
   onNavigate?: () => void;
   fullWidth?: boolean;
+  triggerLabel?: string;
+  triggerClassName?: string;
+  variant?: "button" | "card" | "avatar";
+  onOpenSheet?: () => void;
 }
 
-export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Props) {
+export function AccountSwitcher({
+  className,
+  onNavigate,
+  fullWidth = false,
+  triggerLabel = "Личный кабинет",
+  triggerClassName,
+  variant = "button",
+  onOpenSheet,
+}: Props) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const accessibleAccounts = useAuthStore((state) => state.accessibleAccounts);
@@ -38,15 +54,29 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
 
   const accounts = accessibleAccounts.length > 0 ? accessibleAccounts : [user];
 
-  const handleSelect = (accountId: string) => {
+  const openCabinet = (accountId: string) => {
     const nextUser = switchAccount(accountId);
     setOpen(false);
     onNavigate?.();
-    const target = nextUser ?? accounts.find((account) => account.id === accountId);
+    const target = nextUser ?? accounts.find((account) => account.id === accountId) ?? user;
     if (target?.role) {
       router.push(`/account/${target.role}`);
     }
   };
+
+  const handleTrigger = () => {
+    if (onOpenSheet) {
+      onOpenSheet();
+      return;
+    }
+
+    setOpen((value) => !value);
+  };
+
+  const companyLabel = user.displayName ?? user.name;
+  const roleLabel = user.role ? ROLE_LABELS[user.role] : "Кабинет";
+  const theme = getAccountRoleTheme(user.role ?? null);
+  const initials = companyInitials(companyLabel);
 
   const handleLogout = () => {
     setOpen(false);
@@ -59,36 +89,57 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
     <div ref={rootRef} className={cn("relative min-w-0", fullWidth && "w-full", className)}>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={handleTrigger}
         className={cn(
-          styles.trigger,
-          "inline-flex w-auto max-w-[180px] items-center justify-between gap-2 whitespace-nowrap border border-gray-900 bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50",
-          fullWidth && "w-full max-w-none"
+          variant === "card" && styles.cardTrigger,
+          variant === "avatar" && styles.avatarTrigger,
+          variant === "button" && styles.trigger,
+          variant === "button" && fullWidth && "w-full",
+          triggerClassName,
         )}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-label={`Текущая организация: ${user.name}`}
+        aria-expanded={onOpenSheet ? undefined : open}
+        aria-haspopup={onOpenSheet ? undefined : "listbox"}
+        aria-label={variant === "button" ? triggerLabel : companyLabel}
       >
-        <span className="min-w-0 flex-1 truncate text-left">{user.name}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")} />
+        {variant === "card" ? (
+          <>
+            <span className={styles.avatar} style={theme ? { background: theme.accent } : undefined}>
+              {initials}
+            </span>
+            <span className={styles.cardText}>
+              <span className={styles.cardName}>{companyLabel}</span>
+              <span className={styles.cardMeta}>
+                {roleLabel} · текущий
+              </span>
+            </span>
+            <ChevronsUpDown className={styles.icon} aria-hidden="true" />
+          </>
+        ) : variant === "avatar" ? (
+          <>
+            <span className={styles.avatarLg} style={theme ? { background: theme.accent } : undefined}>
+              {initials}
+            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/home/menu-chevron.svg" alt="" width={14} height={14} aria-hidden="true" />
+          </>
+        ) : (
+          <>
+            <span>{triggerLabel}</span>
+            <ChevronDown className={cn(styles.chevron, open && styles.chevronOpen)} aria-hidden="true" />
+          </>
+        )}
       </button>
 
-      {open && (
+      {open ? (
         <div
-          className={cn(
-            styles.menu,
-            "absolute right-0 top-full z-50 mt-1 w-max max-w-[min(280px,calc(100vw-32px))] overflow-hidden border border-gray-300 bg-white shadow-sm",
-            fullWidth && "left-0 right-0 min-w-0"
-          )}
+          className={cn(styles.menu, fullWidth && "left-0 right-0 w-full")}
           role="listbox"
+          aria-label="Выберите организацию"
         >
-          {accounts.length > 1 && (
-            <p className="px-3 py-2 text-xs text-gray-500 border-b border-gray-200">
-              Переключить организацию
-            </p>
-          )}
+          <p className={styles.caption}>Выберите организацию</p>
           {accounts.map((account) => {
             const isActive = account.id === user.id;
+            const roleLabel = account.role ? ROLE_LABELS[account.role] : "Кабинет";
 
             return (
               <button
@@ -96,32 +147,30 @@ export function AccountSwitcher({ className, onNavigate, fullWidth = false }: Pr
                 type="button"
                 role="option"
                 aria-selected={isActive}
-                onClick={() => handleSelect(account.id)}
-                className={cn(
-                  "w-full px-3 py-[10px] text-left border-b border-gray-100 last:border-b-0 hover:bg-gray-50",
-                  isActive && "bg-gray-100"
-                )}
+                onClick={() => openCabinet(account.id)}
+                className={cn(styles.account, isActive && styles.accountActive)}
               >
-                <p className="text-sm font-medium">{account.name}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {account.role ? ROLE_LABELS[account.role] : "Кабинет"}
+                <p className={styles.accountName}>{account.name}</p>
+                <p className={styles.accountMeta}>
+                  {roleLabel}
                   {isActive ? " · текущий" : ""}
                 </p>
               </button>
             );
           })}
-          <div className="border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-2 px-3 py-[10px] text-left text-sm hover:bg-gray-50"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              Выйти из аккаунта
-            </button>
-          </div>
+          <Link href={addCompanyHref()} className={styles.action} onClick={() => {
+            setOpen(false);
+            onNavigate?.();
+          }}>
+            <Plus className={styles.icon} aria-hidden="true" />
+            Добавить компанию
+          </Link>
+          <button type="button" onClick={handleLogout} className={styles.action}>
+            <LogOut className={styles.icon} aria-hidden="true" />
+            Выйти из аккаунта
+          </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

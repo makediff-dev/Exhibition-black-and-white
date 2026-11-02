@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { SEED_SERVICES } from "@/data/mocks/seed";
-import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
+import { pickHomeImages, HOME_IMAGES } from "@/constants/home-images";
 import { formatServicePrice } from "@/lib/utils/formatters";
 import { HomeScrollSection } from "./home-scroll-section";
 import { HomeTileCard } from "./home-tile-card";
@@ -16,7 +16,8 @@ export function HomeRecommendedServicesSection() {
         <HomeTileCard
           key={service.id}
           title={service.title}
-          imageUrl={pickHomeImage(HOME_IMAGES.stand, index)}
+          imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+          sponsored={index === 0}
           meta={[
             { label: "Исполнитель", value: service.contractorName },
             { label: "Цена", value: formatServicePrice(service) },

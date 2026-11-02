@@ -1,15 +1,15 @@
 "use client";
 
 import { useRef, type CSSProperties } from "react";
+import { HOME_BLOCK_CARD_THEME } from "@/constants/home-catalog-order";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import { listUpcomingEvents } from "@/lib/state/event-machine";
-import { pickHomeImage, HOME_IMAGES } from "@/constants/home-images";
+import { pickHomeImage, pickHomeImages, HOME_IMAGES } from "@/constants/home-images";
 import { useFitCardCount } from "@/hooks/use-fit-card-count";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useShowMore } from "@/hooks/use-show-more";
 import { formatShortDate } from "@/lib/utils/formatters";
 import { HomeTileCard } from "./home-tile-card";
-import { HomeSectionLink } from "./home-section-link";
 import { HomeShowMoreActions } from "./home-show-more-button";
 import { HomeCardsFilters } from "./home-cards-filters";
 import styles from "./home-page.module.css";
@@ -31,14 +31,10 @@ export function HomeEventsSection() {
       <div className={styles.container}>
         <div className={styles.containerInner}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              <span className={styles.sectionTitleDesktop}>Ближайшие выставки и мероприятия</span>
-              <span className={styles.sectionTitleMobile}>Ближайшие выставки</span>
-            </h2>
-            <HomeSectionLink href="/events">Все мероприятия</HomeSectionLink>
+            <h2 className={styles.sectionTitle}>Ближайшие мероприятия</h2>
           </div>
 
-          <HomeCardsFilters />
+          <HomeCardsFilters preset="events" />
 
           <div
             ref={gridRef}
@@ -50,7 +46,9 @@ export function HomeEventsSection() {
                 key={key}
                 title={event.title}
                 imageUrl={pickHomeImage(HOME_IMAGES.events, index)}
+                imageUrls={pickHomeImages(HOME_IMAGES.events, index)}
                 imageAlt="Фотография выставочного мероприятия"
+                sponsored={index === 0}
                 meta={[
                   { label: "Место", value: event.city },
                   {
@@ -60,7 +58,7 @@ export function HomeEventsSection() {
                 ]}
                 buttonLabel="Откликнуться"
                 buttonHref={`/events/${event.id}`}
-                buttonVariant="purple"
+                buttonVariant={HOME_BLOCK_CARD_THEME.events.buttonVariant ?? "blue"}
               />
             ))}
           </div>

@@ -31,12 +31,16 @@
 }
 
 .triggerLabeled {
+  position: relative;
   gap: 8px;
   justify-content: flex-start;
   width: 100%;
+  min-height: 40px;
   padding: 8px 0;
   border-radius: 0;
   font-size: 14px;
+  line-height: 20px;
+  color: #171717;
 }
 
 .triggerLabeled:hover {
@@ -61,7 +65,7 @@
 
 .triggerLabeled .badge {
   position: static;
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .panel {

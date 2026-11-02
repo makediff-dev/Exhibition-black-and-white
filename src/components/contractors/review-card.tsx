@@ -3,6 +3,8 @@
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ContractorReview } from "@/data/types";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
+import { roleStarStyle } from "@/lib/utils/role-accent";
 import { formatDate } from "@/lib/utils/formatters";
 
 interface Props {
@@ -11,6 +13,8 @@ interface Props {
 }
 
 export function ReviewCard({ review, onClick }: Props) {
+  const { accountRole } = useCabinetSession();
+  const filledStarStyle = roleStarStyle(accountRole);
   const photos = review.photos ?? [];
   const photoPreview = photos.slice(0, 3);
   const extraPhotos = Math.max(photos.length - photoPreview.length, 0);
@@ -47,7 +51,14 @@ export function ReviewCard({ review, onClick }: Props) {
           {Array.from({ length: 5 }).map((_, index) => (
             <Star
               key={`${review.id}-star-${index}`}
-              className={`h-4 w-4 ${index < review.rating ? "fill-gray-900 text-gray-900" : "text-gray-300"}`}
+              className={`h-4 w-4 ${
+                index < review.rating
+                  ? filledStarStyle
+                    ? "fill-current"
+                    : "fill-gray-900 text-gray-900"
+                  : "text-gray-300"
+              }`}
+              style={index < review.rating ? filledStarStyle : undefined}
             />
           ))}
         </div>

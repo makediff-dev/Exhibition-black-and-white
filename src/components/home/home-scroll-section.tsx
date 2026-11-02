@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils/cn";
 import { useFitCardCount } from "@/hooks/use-fit-card-count";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useShowMore } from "@/hooks/use-show-more";
-import { HomeSectionLink } from "./home-section-link";
 import { HomeShowMoreActions } from "./home-show-more-button";
 import { HomeCardsFilters } from "./home-cards-filters";
+import type { HomeFilterPreset } from "./home-filter-presets";
 import styles from "./home-page.module.css";
 
 interface HomeScrollSectionProps {
@@ -27,9 +27,11 @@ interface HomeScrollSectionProps {
   linkLabel?: string;
   children: ReactNode;
   showFilters?: boolean;
+  filterPreset?: HomeFilterPreset;
   showActions?: boolean;
   denseGrid?: boolean;
   minCardWidth?: number;
+  mobileCount?: number;
   variant?: "grid" | "slider";
 }
 
@@ -40,9 +42,11 @@ export function HomeScrollSection({
   linkLabel = "Все",
   children,
   showFilters = true,
+  filterPreset = "orders",
   showActions = true,
   denseGrid = false,
   minCardWidth,
+  mobileCount,
   variant = "grid",
 }: HomeScrollSectionProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -61,7 +65,7 @@ export function HomeScrollSection({
     (title && title.length > 28 ? title.split(/\s+/).slice(0, 2).join(" ") : undefined);
 
   const isMobile = useIsMobile();
-  const pageSize = isMobile ? 3 : fitCount;
+  const pageSize = isMobile ? (mobileCount ?? (denseGrid ? 4 : 2)) : fitCount;
   const { visibleItems, canShowMore, isAllVisible, showMore } = useShowMore(baseChildren, {
     initialCount: pageSize,
     step: pageSize,
@@ -111,10 +115,9 @@ export function HomeScrollSection({
                   title
                 )}
               </h2>
-              {linkHref ? <HomeSectionLink href={linkHref}>{linkLabel}</HomeSectionLink> : null}
             </div>
           ) : null}
-          {showFilters ? <HomeCardsFilters /> : null}
+          {showFilters ? <HomeCardsFilters preset={filterPreset} /> : null}
           {isSlider ? (
             <div className={styles.scrollRow} style={rowStyle}>
               <div ref={trackRef} className={styles.scrollTrack}>

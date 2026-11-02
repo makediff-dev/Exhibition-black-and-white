@@ -75,3 +75,7 @@ export const HOME_IMAGES = {
 export function pickHomeImage(images: readonly string[], index: number): string {
   return images[index % images.length];
 }
+
+export function pickHomeImages(images: readonly string[], index: number, count = 3): string[] {
+  return Array.from({ length: count }, (_, offset) => pickHomeImage(images, index + offset));
+}

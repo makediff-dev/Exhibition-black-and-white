@@ -2,19 +2,22 @@
 
 import { Suspense } from "react";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Filter } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
-import { ContractorCard } from "@/components/catalog/contractor-card";
-import { InviteContractorModal } from "@/components/contractors/invite-contractor-modal";
+import { HomeTileCard } from "@/components/home/home-tile-card";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { SEED_CONTRACTORS } from "@/data/mocks/seed";
-import type { Contractor } from "@/data/types";
+import { isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
+import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
+import { formatReviewCount } from "@/lib/utils/formatters";
 
 const SORT_OPTIONS = [
   { value: "rating-desc", label: "По рейтингу" },
@@ -143,7 +146,8 @@ function ContractorsPageFallback() {
 }
 
 function ContractorsPageContent() {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -153,7 +157,6 @@ function ContractorsPageContent() {
   const [urgentOnly, setUrgentOnly] = useState(false);
   const [sort, setSort] = useState("rating-desc");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [inviteContractor, setInviteContractor] = useState<Contractor | null>(null);
 
   const filtered = useMemo(() => {
     let list = SEED_CONTRACTORS.filter((c) => {
@@ -256,11 +259,22 @@ function ContractorsPageContent() {
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
                 <div className="catalog-cards-grid">
                   {filtered.map((contractor, index) => (
-                    <ContractorCard
+                    <HomeTileCard
                       key={contractor.id}
-                      contractor={contractor}
-                      cardIndex={index}
-                      onInvite={setInviteContractor}
+                      title={contractor.name}
+                      imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+                      imageAlt="Фотография стенда исполнителя"
+                      sponsored={isSponsoredCatalogIndex(index)}
+                      meta={[
+                        { label: "Город", value: contractor.city },
+                        {
+                          label: "Рейтинг",
+                          value: `★ ${contractor.rating} · ${formatReviewCount(contractor.reviewCount)}`,
+                        },
+                      ]}
+                      buttonLabel="Подробнее"
+                      buttonHref={getContractorProfileHref(contractor.id)}
+                      buttonVariant="purple"
                     />
                   ))}
                 </div>
@@ -303,11 +317,6 @@ function ContractorsPageContent() {
         />
       </Drawer>
 
-      <InviteContractorModal
-        open={Boolean(inviteContractor)}
-        contractor={inviteContractor}
-        onClose={() => setInviteContractor(null)}
-      />
     </CabinetAwareLayout>
   );
 }

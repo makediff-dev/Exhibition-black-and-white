@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ServiceCard } from "@/components/catalog/service-card";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { CabinetHomeTile } from "@/components/account/cabinet-home-tile";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { SEED_EVENTS } from "@/data/mocks/seed";
 import type { CompanyProfile } from "@/data/types";
 import { usePrototypeStore } from "@/lib/store";
 import { getContractorIdForUser } from "@/lib/utils/user-entity-map";
-import { formatShortDate } from "@/lib/utils/formatters";
+import { formatServicePrice, formatShortDate } from "@/lib/utils/formatters";
 import { withFromParam } from "@/lib/utils/message-related-links";
 
 interface Props {
@@ -45,11 +45,18 @@ export function ContractorDashboardSection({ user }: Props) {
           </Link>
         </div>
         <div className="catalog-cards-grid">
-          {catalogServices.map((service) => (
-            <ServiceCard
+          {catalogServices.map((service, index) => (
+            <CabinetHomeTile
               key={service.id}
-              service={service}
-              from="dashboard"
+              title={service.title}
+              imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+              imageAlt={service.title}
+              meta={[
+                { label: "Исполнитель", value: service.contractorName },
+                { label: "Цена", value: formatServicePrice(service) },
+              ]}
+              buttonLabel="Подробнее"
+              buttonHref={withFromParam(`/services/${service.id}`, "dashboard")}
             />
           ))}
         </div>
@@ -63,22 +70,22 @@ export function ContractorDashboardSection({ user }: Props) {
           </Link>
         </div>
         <div className="catalog-cards-grid">
-          {upcomingEvents.map((event) => (
-            <Link key={event.id} href={withFromParam(`/events/${event.id}`, "dashboard")}>
-              <Card hoverable className="h-full">
-                <CardTitle className="text-base leading-snug">{event.title}</CardTitle>
-                <CardDescription className="mt-2">
-                  {event.venue}, {event.city}
-                </CardDescription>
-                <p className="text-sm text-gray-700 mt-3">{event.industry}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {formatShortDate(event.startDate)}
-                  {event.endDate && event.endDate !== event.startDate
-                    ? ` — ${formatShortDate(event.endDate)}`
-                    : ""}
-                </p>
-              </Card>
-            </Link>
+          {upcomingEvents.map((event, index) => (
+            <CabinetHomeTile
+              key={event.id}
+              title={event.title}
+              imageUrls={pickHomeImages(HOME_IMAGES.events, index)}
+              imageAlt="Фотография выставочного мероприятия"
+              meta={[
+                { label: "Место", value: event.city },
+                {
+                  label: "Срок",
+                  value: `${formatShortDate(event.startDate)} — ${formatShortDate(event.endDate)}`,
+                },
+              ]}
+              buttonLabel="Откликнуться"
+              buttonHref={withFromParam(`/events/${event.id}`, "dashboard")}
+            />
           ))}
         </div>
       </section>

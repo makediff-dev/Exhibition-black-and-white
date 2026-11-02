@@ -71,7 +71,7 @@ export default function EventBookingPage() {
         backFallbackHref={getCabinetBackHref(from, eventHref, user?.role)}
       >
         <Link href={eventHref}>
-          <Button variant="teal">К мероприятию</Button>
+          <Button variant="blue">К мероприятию</Button>
         </Link>
       </CabinetAwareLayout>
     );
@@ -176,7 +176,7 @@ export default function EventBookingPage() {
         <aside>
           <div className="catalog-content-box sticky top-20 space-y-4 p-4">
             {quote ? (
-              <div className="space-y-3 rounded-[10px] border border-[#28b5b3] bg-[#eaf8f7] p-4">
+              <div className="space-y-3 rounded-[10px] border border-[var(--catalog-accent,var(--account-accent,#2939eb))] bg-[var(--catalog-accent-soft,var(--account-accent-soft,#eef0fe))] p-4">
                 <p className="text-sm font-semibold text-gray-900">
                   Выбрана площадь: {quote.label}
                 </p>
@@ -219,7 +219,7 @@ export default function EventBookingPage() {
 
             <Button
               className="w-full"
-              variant="teal"
+              variant="blue"
               disabled={!canSubmit}
               onClick={() => setConfirmOpen(true)}
             >
@@ -238,7 +238,6 @@ export default function EventBookingPage() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleBook}
-        accent="teal"
         title="Подтверждение бронирования"
         message={
           quote

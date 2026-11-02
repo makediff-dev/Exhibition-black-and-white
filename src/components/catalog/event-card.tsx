@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CardDescription, CardTitle } from "@/components/ui/card";
 import type { Event } from "@/data/types";
 import { formatShortDate } from "@/lib/utils/formatters";
-import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
-import { getEventCardSlides } from "@/lib/utils/catalog-card-images";
+import { getEventCardSlides, isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 import { getEventStatus } from "@/lib/state/event-machine";
 
 const EVENT_CATEGORY_LABELS: Record<Event["category"], string> = {
@@ -31,17 +30,15 @@ export function EventCard({ event, recommended = false, imageIndex = 0 }: EventC
     () => getEventCardSlides(event, imageIndex),
     [event, imageIndex],
   );
-  const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
-
   return (
-    <CatalogCard className="relative flex flex-col h-full" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full">
       <Link
         href={`/events/${event.id}`}
         className="absolute inset-0 z-0"
         aria-label={`Открыть мероприятие «${event.title}»`}
       />
 
-      <CatalogCardImageSlider slides={slides} scrubRatio={scrubRatio} hoverScrub />
+      <CatalogCardImageSlider slides={slides} sponsored={isSponsoredCatalogIndex(imageIndex)} />
 
       <div className="relative z-10 flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">
         <div className="flex flex-col flex-1 pointer-events-none">
@@ -78,7 +75,7 @@ export function EventCard({ event, recommended = false, imageIndex = 0 }: EventC
 
         <div className="mt-auto pt-4 pointer-events-auto">
           <Link href={`/events/${event.id}`} className="block w-full">
-            <Button size="sm" variant="teal" className="w-full">
+            <Button size="sm" variant="blue" className="w-full">
               Подробнее
             </Button>
           </Link>

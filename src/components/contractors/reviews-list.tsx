@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAccountTheme } from "@/components/account/account-theme-provider";
 import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
+import { roleAccentToken } from "@/lib/utils/role-accent";
 import { ReviewCard } from "@/components/contractors/review-card";
 import { EmptyState } from "@/components/ui/states";
 import type { ContractorReview } from "@/data/types";
 import { cn } from "@/lib/utils/cn";
-import { pluralizeRu } from "@/lib/utils/formatters";
+import { formatReviewCount } from "@/lib/utils/formatters";
 
 type ReviewFilter = "all" | "positive" | "negative";
 
@@ -30,8 +31,9 @@ interface Props {
 
 export function ReviewsList({ reviews, onSelect }: Props) {
   const [filter, setFilter] = useState<ReviewFilter>("all");
-  const accountTheme = useAccountTheme();
   const catalogAccent = useCatalogAccent();
+  const { accountRole } = useCabinetSession();
+  const roleAccent = roleAccentToken(accountRole);
   const visible = useMemo(
     () => reviews.filter((review) => matchesFilter(review, filter)),
     [reviews, filter]
@@ -52,13 +54,19 @@ export function ReviewsList({ reviews, onSelect }: Props) {
               className={cn(
                 "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
                 isActive
-                  ? catalogAccent
-                    ? "border-[var(--catalog-accent)] bg-[var(--catalog-accent)] text-white"
-                    : accountTheme
-                      ? "border-[var(--account-accent)] bg-[var(--account-accent)] text-white"
-                      : "border-gray-900 bg-gray-900 text-white"
+                  ? roleAccent || catalogAccent
+                    ? "border-transparent text-white"
+                    : "border-gray-900 bg-gray-900 text-white"
                   : "border-gray-300 bg-transparent text-gray-700 hover:border-gray-900",
               )}
+              style={
+                isActive && (roleAccent || catalogAccent)
+                  ? {
+                      backgroundColor: roleAccent ?? "var(--catalog-accent)",
+                      borderColor: roleAccent ?? "var(--catalog-accent)",
+                    }
+                  : undefined
+              }
             >
               {item.label}
             </button>
@@ -66,7 +74,7 @@ export function ReviewsList({ reviews, onSelect }: Props) {
         })}
       </div>
       <p className="text-sm text-gray-600">
-        {pluralizeRu(visible.length, ["отзыв", "отзыва", "отзывов"])}
+        {formatReviewCount(visible.length)}
         {filter !== "all" ? " по выбранному фильтру" : ""}
       </p>
       {visible.length === 0 ? (

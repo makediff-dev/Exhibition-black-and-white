@@ -5,19 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CatalogCard } from "@/components/catalog/catalog-card";
 import { CatalogCardImageSlider } from "@/components/catalog/catalog-card-image-slider";
-import { useAccountTheme } from "@/components/account/account-theme-provider";
-import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { CardTitle } from "@/components/ui/card";
-import { getAccountRoleTheme } from "@/constants/account-role-themes";
 import { useAuthStore, useCartStore, usePrototypeStore } from "@/lib/store";
-import { formatServicePrice } from "@/lib/utils/formatters";
+import { formatReviewCount, formatServicePrice } from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import type { Service } from "@/data/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast-provider";
-import { useCatalogCardHoverScrub } from "@/lib/hooks/use-catalog-card-hover-scrub";
-import { getServiceCardSlides } from "@/lib/utils/catalog-card-images";
+import { getServiceCardSlides, isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 
 interface ServiceCardProps {
   service: Service;
@@ -44,7 +40,7 @@ function formatContractorServicesLabel(count: number): string {
 
 export function ServiceCard({
   service,
-  cardIndex = 0,
+  cardIndex,
   isFavorite = false,
   onToggleFavorite,
   onAdd,
@@ -56,22 +52,16 @@ export function ServiceCard({
   const role = useAuthStore((s) => s.user?.role);
   const addItem = useCartStore((s) => s.addItem);
   const { showToast } = useToast();
-  const accountTheme = useAccountTheme();
-  const catalogAccent = useCatalogAccent();
-  const roleTheme = getAccountRoleTheme(role ?? null);
-  const ctaVariant =
-    accountTheme?.buttonVariant ?? roleTheme?.buttonVariant ?? catalogAccent?.buttonVariant ?? "blue";
+  const ctaVariant = "teal";
   const contractorServicesCount = allServices.filter(
     (item) => item.contractorId === service.contractorId,
   ).length;
   const contractorServicesLabel = formatContractorServicesLabel(contractorServicesCount);
 
   const slides = useMemo(
-    () => getServiceCardSlides(service, cardIndex),
+    () => getServiceCardSlides(service, cardIndex ?? 0),
     [service, cardIndex],
   );
-  const { scrubRatio, cardHoverHandlers } = useCatalogCardHoverScrub(slides.length);
-
   const handleAddToCart = () => {
     if (onAdd) {
       onAdd();
@@ -88,7 +78,7 @@ export function ServiceCard({
   };
 
   return (
-    <CatalogCard className="relative flex flex-col h-full cursor-pointer" {...cardHoverHandlers}>
+    <CatalogCard className="relative flex flex-col h-full cursor-pointer">
       <Link
         href={from ? withFromParam(`/services/${service.id}`, from) : `/services/${service.id}`}
         className="absolute inset-0 z-[1]"
@@ -100,8 +90,7 @@ export function ServiceCard({
           isFavorite={isFavorite}
           onToggleFavorite={onToggleFavorite}
           slides={slides}
-          scrubRatio={scrubRatio}
-          hoverScrub
+          sponsored={typeof cardIndex === "number" && isSponsoredCatalogIndex(cardIndex)}
         />
 
         <div className="flex flex-col flex-1 px-0 pt-3 pb-4 min-h-0">
@@ -112,7 +101,7 @@ export function ServiceCard({
             </p>
             <p className="text-lg font-semibold mt-3">{formatServicePrice(service)}</p>
             <p className="text-xs text-gray-600 mt-1">
-              ★ {service.rating} · {service.reviewCount} отзывов
+              ★ {service.rating} · {formatReviewCount(service.reviewCount)}
             </p>
             <Link
               href={`/services?contractor=${service.contractorId}`}

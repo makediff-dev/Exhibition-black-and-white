@@ -2,23 +2,24 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Filter, ShoppingCart } from "lucide-react";
-import { ServiceCard } from "@/components/catalog/service-card";
+import { HomeTileCard } from "@/components/home/home-tile-card";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
 import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { EmptyState, LoadingState } from "@/components/ui/states";
-import { useToast } from "@/components/ui/toast-provider";
 import { CATALOG_SECTION_ACCENT } from "@/constants/catalog-section-styles";
 import { CITIES, SERVICE_CATEGORIES } from "@/constants/categories";
-import type { Service } from "@/data/types";
+import { HOME_IMAGES, pickHomeImages } from "@/constants/home-images";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
-import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
+import { usePrototypeStore } from "@/lib/store";
+import { isSponsoredCatalogIndex } from "@/lib/utils/catalog-card-images";
 import { getCartHref } from "@/lib/utils/cart-routes";
+import { formatServicePrice } from "@/lib/utils/formatters";
 
 const SERVICES_ACCENT = CATALOG_SECTION_ACCENT.services;
 
@@ -47,17 +48,12 @@ function ServicesPageFallback() {
 
 function ServicesPageContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const { showToast } = useToast();
   const { accountRole } = useCabinetSession();
   const cartHref = getCartHref(accountRole);
-  const addItem = useCartStore((s) => s.addItem);
-  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
-  const isFavorite = useFavoritesStore((s) => s.isFavorite);
   const services = usePrototypeStore((s) => s.services);
 
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [city, setCity] = useState(searchParams.get("city") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [contractorId, setContractorId] = useState(searchParams.get("contractor") ?? "");
@@ -97,20 +93,6 @@ function ServicesPageContent() {
 
     return list;
   }, [services, search, city, category, contractorId, sort]);
-
-  const handleAdd = (service: Service) => {
-    addItem({ serviceId: service.id, quantity: 1, comment: "", files: [] });
-    showToast(`«${service.title}» добавлено в корзину`, "success");
-    router.push(cartHref);
-  };
-
-  const handleToggleFavorite = (service: Service) => {
-    const added = toggleFavorite(service.id);
-    showToast(
-      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
-      added ? "success" : "info"
-    );
-  };
 
   const resetFilters = () => {
     setSearch("");
@@ -197,14 +179,18 @@ function ServicesPageContent() {
                 <p className="text-sm text-gray-600 mb-4">Найдено: {filtered.length}</p>
                 <div className="catalog-cards-grid">
                   {filtered.map((service, index) => (
-                    <ServiceCard
+                    <HomeTileCard
                       key={service.id}
-                      service={service}
-                      cardIndex={index}
-                      onAdd={() => handleAdd(service)}
-                      isFavorite={isFavorite(service.id)}
-                      onToggleFavorite={() => handleToggleFavorite(service)}
-                      plainPortfolio
+                      title={service.title}
+                      imageUrls={pickHomeImages(HOME_IMAGES.stand, index)}
+                      sponsored={isSponsoredCatalogIndex(index)}
+                      meta={[
+                        { label: "Исполнитель", value: service.contractorName },
+                        { label: "Цена", value: formatServicePrice(service) },
+                      ]}
+                      buttonLabel="Подробнее"
+                      buttonHref={`/services/${service.id}`}
+                      buttonVariant="primary"
                     />
                   ))}
                 </div>

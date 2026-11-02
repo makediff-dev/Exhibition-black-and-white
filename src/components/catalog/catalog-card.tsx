@@ -6,7 +6,7 @@ export function CatalogCard({ className, ...props }: CardProps) {
     <Card
       flush
       className={cn(
-        "border-0 rounded-[14px] overflow-hidden bg-transparent shadow-none",
+        "border-0 rounded-[14px] overflow-visible bg-transparent shadow-none hover:z-[2] focus-within:z-[2]",
         className,
       )}
       {...props}

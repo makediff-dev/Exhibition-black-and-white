@@ -1,7 +1,5 @@
 import type { UserRole } from "@/data/types";
 
-const ACCOUNT_ROLES = new Set<UserRole>(["customer", "contractor", "venue", "organizer"]);
-
 interface ContractorProfileLinkOptions {
   role?: UserRole | null;
   from?: string;
@@ -25,26 +23,16 @@ export function getContractorProfileHref(
   options?: ContractorProfileLinkOptions
 ) {
   const suffix = buildQuery(options);
-
-  if (options?.role && ACCOUNT_ROLES.has(options.role)) {
-    return `/account/${options.role}/contractors/${contractorId}${suffix}`;
-  }
-
   return `/contractors/${contractorId}${suffix}`;
 }
 
 export function getContractorPortfolioHref(
   contractorId: string,
   itemId: string,
-  role?: UserRole | null,
+  _role?: UserRole | null,
   from?: string | null
 ) {
   const suffix = buildQuery({ from: from ?? undefined });
-
-  if (role && ACCOUNT_ROLES.has(role)) {
-    return `/account/${role}/contractors/${contractorId}/portfolio/${itemId}${suffix}`;
-  }
-
   return `/contractors/${contractorId}/portfolio/${itemId}${suffix}`;
 }
 
@@ -53,11 +41,6 @@ export function getContractorCheckHref(
   options?: Pick<ContractorProfileLinkOptions, "role" | "from">
 ) {
   const suffix = buildQuery(options);
-
-  if (options?.role && ACCOUNT_ROLES.has(options.role)) {
-    return `/account/${options.role}/contractors/${contractorId}/check${suffix}`;
-  }
-
   return `/contractors/${contractorId}/check${suffix}`;
 }
 
@@ -66,11 +49,6 @@ export function getContractorCheckSubscribeHref(
   options?: ContractorProfileLinkOptions
 ) {
   const suffix = buildQuery(options);
-
-  if (options?.role && ACCOUNT_ROLES.has(options.role)) {
-    return `/account/${options.role}/contractors/${contractorId}/check/subscribe${suffix}`;
-  }
-
   return `/contractors/${contractorId}/check/subscribe${suffix}`;
 }
 
