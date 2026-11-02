@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { HOME_FILTER_PRESETS, type HomeFilterPreset } from "./home-filter-presets";
+import { HOME_FILTER_PRESETS, type HomeFilterField, type HomeFilterPreset } from "./home-filter-presets";
 import styles from "./home-page.module.css";
 
 interface HomeCardsFiltersProps {
@@ -11,7 +11,7 @@ interface HomeCardsFiltersProps {
 }
 
 export function HomeCardsFilters({ preset = "orders" }: HomeCardsFiltersProps) {
-  const fields = HOME_FILTER_PRESETS[preset];
+  const fields: HomeFilterField[] = HOME_FILTER_PRESETS[preset];
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const filtersId = useId();
@@ -44,9 +44,9 @@ export function HomeCardsFilters({ preset = "orders" }: HomeCardsFiltersProps) {
       {fields.map((field) => (
         <div
           key={field.id}
-          className={cn(styles.filterSelectWrap, field.hug && styles.filterSelectWrapHug)}
+          className={cn(styles.filterSelectWrap, field.hug === true && styles.filterSelectWrapHug)}
         >
-          {field.hug ? (
+          {field.hug === true ? (
             <span className={styles.filterSelectSizer} aria-hidden="true">
               {values[field.id] || field.placeholder}
             </span>

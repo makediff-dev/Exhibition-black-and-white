@@ -28,6 +28,6 @@ export const HOME_FILTER_PRESETS = {
     { id: "sort", placeholder: "Сортировка", options: ["По популярности", "По названию"] },
     { id: "dates", placeholder: "Даты", options: ["Ближайшая неделя", "Ближайший месяц", "Ближайшие 3 месяца"] },
   ],
-} as const satisfies Record<string, HomeFilterField[]>;
+} satisfies Record<string, HomeFilterField[]>;
 
 export type HomeFilterPreset = keyof typeof HOME_FILTER_PRESETS;

@@ -14,6 +14,11 @@ import { HowItWorksContactForm } from "./how-it-works-contact-form";
 import styles from "./how-it-works.module.css";
 
 const SECTION_IDS = HOW_IT_WORKS_NAV.map((item) => item.id);
+type SectionId = (typeof SECTION_IDS)[number];
+
+function isSectionId(id: string): id is SectionId {
+  return SECTION_IDS.includes(id as SectionId);
+}
 
 function hashId(hash: string) {
   return hash.replace(/^#/, "");
@@ -33,7 +38,7 @@ export function HowItWorksPage() {
   useEffect(() => {
     const applyHash = () => {
       const id = hashId(window.location.hash);
-      if (id && SECTION_IDS.includes(id as (typeof SECTION_IDS)[number])) {
+      if (isSectionId(id)) {
         ignoreObserverUntil.current = Date.now() + 700;
         setActiveId(id);
       }
@@ -52,7 +57,9 @@ export function HowItWorksPage() {
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target.id) setActiveId(visible.target.id);
+        if (visible?.target.id && isSectionId(visible.target.id)) {
+          setActiveId(visible.target.id);
+        }
       },
       { rootMargin: "-90px 0px -55% 0px", threshold: [0.12, 0.35, 0.6] },
     );
