@@ -2,6 +2,7 @@
   margin-top: auto;
   background: #f3f4f6;
   color: #101828;
+  overflow: hidden;
 }
 
 .inner {
@@ -102,13 +103,23 @@
 }
 
 .copyright {
+  position: relative;
   margin: 0;
   padding-top: 20px;
-  border-top: 1px solid #d1d5dc;
   font-size: 13px;
   line-height: 1.2;
   font-weight: 400;
   color: #4a5565;
+}
+
+.copyright::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  border-top: 1px solid #d1d5dc;
+  content: "";
+  transform: translateX(-50%);
 }
 
 @media (min-width: 1800px) {
