@@ -549,7 +549,7 @@ export function RequestWizard({
 
   return (
     <div
-      className="space-y-6 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!ring-0 [&_select:focus]:!border-[var(--request-accent-muted)] [&_select:focus]:!ring-0 [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!ring-0"
+      className="space-y-6 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!shadow-none [&_input:focus]:!outline-none [&_input:focus]:!ring-0 [&_select:focus]:!border-[var(--request-accent-muted)] [&_select:focus]:!shadow-none [&_select:focus]:!outline-none [&_select:focus]:!ring-0 [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!shadow-none [&_textarea:focus]:!outline-none [&_textarea:focus]:!ring-0"
       style={
         {
           "--account-accent": "var(--platform-accent)",
