@@ -11,7 +11,11 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { CITIES, EVENT_INDUSTRIES, SERVICE_CATEGORIES } from "@/constants/categories";
+import {
+  CITIES,
+  EVENT_INDUSTRIES,
+  SERVICE_CATEGORIES,
+} from "@/constants/categories";
 import {
   formatSectionContentForDisplay,
   isDescriptionSectionFilled,
@@ -24,12 +28,19 @@ import {
 import { isMeaningfulRequestDraft } from "@/lib/domain/form-validation";
 import { usePrototypeHydrated } from "@/lib/hooks/use-prototype-hydrated";
 import { getPrototypeNowDateIso } from "@/lib/time/now";
-import { REQUEST_FORMAT_DESCRIPTIONS, REQUEST_FORMAT_LABELS } from "@/constants/statuses";
+import {
+  REQUEST_FORMAT_DESCRIPTIONS,
+  REQUEST_FORMAT_LABELS,
+} from "@/constants/statuses";
 import { SEED_CONTRACTORS, SEED_EVENTS } from "@/data/mocks/seed";
 import type { Request, RequestFormat, TorSection } from "@/data/types";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { cn } from "@/lib/utils/cn";
-import { formatPrice, formatRequestDeadline, formatShortDate } from "@/lib/utils/formatters";
+import {
+  formatPrice,
+  formatRequestDeadline,
+  formatShortDate,
+} from "@/lib/utils/formatters";
 import {
   formatEventMonthLabel,
   getEventMonthKey,
@@ -48,7 +59,12 @@ const STEPS = [
   "Публикация",
 ];
 
-const FORMATS: RequestFormat[] = ["open_request", "closed_request", "urgent", "safe_deal"];
+const FORMATS: RequestFormat[] = [
+  "open_request",
+  "closed_request",
+  "urgent",
+  "safe_deal",
+];
 
 const BUDGET_TYPE_DESCRIPTIONS: Record<string, string> = {
   range: "Вилка «от — до».",
@@ -81,7 +97,9 @@ export interface RequestWizardData {
   invitedContractorIds: string[];
 }
 
-const defaultData = (format: RequestFormat = "open_request"): RequestWizardData => ({
+const defaultData = (
+  format: RequestFormat = "open_request",
+): RequestWizardData => ({
   format,
   category: "",
   eventId: "",
@@ -125,16 +143,17 @@ function applyInitialParams(
     | "initialCategory"
     | "initialTitle"
     | "initialDescription"
-  >
+  >,
 ): RequestWizardData {
-  let next = { ...base };
+  const next = { ...base };
   if (params.initialFormat) next.format = params.initialFormat;
   if (params.initialCategory) {
     next.category = params.initialCategory;
     next.torSections = createRequestSections(params.initialCategory);
   }
   if (params.initialTitle && !next.title) next.title = params.initialTitle;
-  if (params.initialDescription && !next.description) next.description = params.initialDescription;
+  if (params.initialDescription && !next.description)
+    next.description = params.initialDescription;
   if (params.initialEventId) {
     const event = SEED_EVENTS.find((item) => item.id === params.initialEventId);
     next.eventId = params.initialEventId;
@@ -169,7 +188,13 @@ function getWizardTabId() {
   return next;
 }
 
-function readDraftEnvelope(raw: Record<string, unknown> | null | undefined): WizardDraftEnvelope | null {
+function createRequestId() {
+  return `req-${Date.now()}`;
+}
+
+function readDraftEnvelope(
+  raw: Record<string, unknown> | null | undefined,
+): WizardDraftEnvelope | null {
   if (!raw || Object.keys(raw).length === 0) return null;
   if (raw.schemaVersion === 1 && raw.data && typeof raw.data === "object") {
     return raw as unknown as WizardDraftEnvelope;
@@ -219,10 +244,14 @@ export function RequestWizard({
       initialCategory,
       initialTitle,
       initialDescription,
-    })
+    }),
   );
-  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify({ step: 0, data }));
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    JSON.stringify({ step: 0, data }),
+  );
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [restoredNotice, setRestoredNotice] = useState(false);
   const [conflictNotice, setConflictNotice] = useState(false);
   const [ready, setReady] = useState(false);
@@ -253,7 +282,7 @@ export function RequestWizard({
         if (!silent) showToast("Не удалось сохранить черновик", "error");
       }
     },
-    [setRequestWizardDraft, showToast]
+    [setRequestWizardDraft, showToast],
   );
 
   const saveDraft = useCallback(() => {
@@ -263,32 +292,43 @@ export function RequestWizard({
   useEffect(() => {
     if (!hydrated || ready) return;
     const envelope = readDraftEnvelope(requestWizardDraft);
-    if (envelope && isMeaningfulRequestDraft(envelope as unknown as Record<string, unknown>)) {
-      const merged = applyInitialParams(
-        {
-          ...defaultData(initialFormat),
-          ...envelope.data,
-          torSections: envelope.data.torSections?.length
-            ? envelope.data.torSections
-            : createRequestSections(envelope.data.category ?? initialCategory ?? ""),
-        },
-        {
-          initialFormat,
-          initialEventId,
-          initialContractorId,
-          initialCategory,
-          initialTitle,
-          initialDescription,
-        }
-      );
-      setData(merged);
-      setStep(envelope.step || 0);
-      revisionRef.current = envelope.revision || 0;
-      setSavedSnapshot(JSON.stringify({ step: envelope.step || 0, data: merged }));
-      setRestoredNotice(true);
-      setSaveStatus("saved");
-    }
-    setReady(true);
+    const restoreTimer = window.setTimeout(() => {
+      if (
+        envelope &&
+        isMeaningfulRequestDraft(envelope as unknown as Record<string, unknown>)
+      ) {
+        const merged = applyInitialParams(
+          {
+            ...defaultData(initialFormat),
+            ...envelope.data,
+            torSections: envelope.data.torSections?.length
+              ? envelope.data.torSections
+              : createRequestSections(
+                  envelope.data.category ?? initialCategory ?? "",
+                ),
+          },
+          {
+            initialFormat,
+            initialEventId,
+            initialContractorId,
+            initialCategory,
+            initialTitle,
+            initialDescription,
+          },
+        );
+        setData(merged);
+        setStep(envelope.step || 0);
+        revisionRef.current = envelope.revision || 0;
+        setSavedSnapshot(
+          JSON.stringify({ step: envelope.step || 0, data: merged }),
+        );
+        setRestoredNotice(true);
+        setSaveStatus("saved");
+      }
+      setReady(true);
+    }, 0);
+
+    return () => window.clearTimeout(restoreTimer);
   }, [
     hydrated,
     ready,
@@ -303,7 +343,10 @@ export function RequestWizard({
 
   useEffect(() => {
     if (!ready) return;
-    if (!isMeaningfulRequestDraft({ data } as Record<string, unknown>) && revisionRef.current === 0) {
+    if (
+      !isMeaningfulRequestDraft({ data } as Record<string, unknown>) &&
+      revisionRef.current === 0
+    ) {
       return;
     }
     const timer = window.setTimeout(() => {
@@ -341,7 +384,9 @@ export function RequestWizard({
         setData(remote.data);
         setStep(remote.step);
         revisionRef.current = remote.revision;
-        setSavedSnapshot(JSON.stringify({ step: remote.step, data: remote.data }));
+        setSavedSnapshot(
+          JSON.stringify({ step: remote.step, data: remote.data }),
+        );
       } catch {
         setSaveStatus("error");
       }
@@ -352,7 +397,7 @@ export function RequestWizard({
 
   const selectedEvent = useMemo(
     () => SEED_EVENTS.find((e) => e.id === data.eventId),
-    [data.eventId]
+    [data.eventId],
   );
 
   const eventMonthOptions = useMemo(() => {
@@ -368,9 +413,14 @@ export function RequestWizard({
 
   const filteredEvents = useMemo(() => {
     return SEED_EVENTS.filter((event) => {
-      if (eventIndustryFilter && event.industry !== eventIndustryFilter) return false;
+      if (eventIndustryFilter && event.industry !== eventIndustryFilter)
+        return false;
       if (eventCityFilter && event.city !== eventCityFilter) return false;
-      if (eventMonthFilter && getEventMonthKey(event.startDate) !== eventMonthFilter) return false;
+      if (
+        eventMonthFilter &&
+        getEventMonthKey(event.startDate) !== eventMonthFilter
+      )
+        return false;
       if (!matchesEventSearch(event, eventSearch)) return false;
       return true;
     });
@@ -385,7 +435,6 @@ export function RequestWizard({
     });
   };
 
-
   const addMandatoryFile = (itemId: string, fileName: string) => {
     update({
       mandatoryFiles: {
@@ -399,7 +448,9 @@ export function RequestWizard({
     update({
       mandatoryFiles: {
         ...data.mandatoryFiles,
-        [itemId]: (data.mandatoryFiles[itemId] ?? []).filter((name) => name !== fileName),
+        [itemId]: (data.mandatoryFiles[itemId] ?? []).filter(
+          (name) => name !== fileName,
+        ),
       },
     });
   };
@@ -417,7 +468,7 @@ export function RequestWizard({
   const today = getPrototypeNowDateIso();
   const publishIssues = useMemo(
     () => collectRequestWizardIssues(data, today),
-    [data, today]
+    [data, today],
   );
   const isPublishReady = publishIssues.length === 0;
   const dateIssue = publishIssues.find((issue) => issue.step === 4);
@@ -437,12 +488,12 @@ export function RequestWizard({
     return !publishIssues.some((issue) => issue.step === step);
   }, [step, publishIssues]);
 
-  const publish = () => {
+  const handlePublish = () => {
     if (!isPublishReady) {
       showToast("Исправьте ошибки из списка перед публикацией", "error");
       return;
     }
-    const id = `req-${Date.now()}`;
+    const id = createRequestId();
     const request: Request = {
       id,
       title: data.title,
@@ -457,7 +508,8 @@ export function RequestWizard({
       requirements: data.requirements,
       expectedResult: data.expectedResult,
       eventId: data.eventId || undefined,
-      invitedContractorIds: data.format === "closed_request" ? data.invitedContractorIds : [],
+      invitedContractorIds:
+        data.format === "closed_request" ? data.invitedContractorIds : [],
       responseCount: 0,
       publishedAt: today,
       customerId: user?.id ?? "user-customer",
@@ -477,9 +529,11 @@ export function RequestWizard({
         ...data.files,
         ...Object.entries(data.mandatoryFiles).flatMap(([itemId, names]) =>
           names.map((name) => {
-            const label = schema.fileItems.find((item) => item.id === itemId)?.label ?? itemId;
+            const label =
+              schema.fileItems.find((item) => item.id === itemId)?.label ??
+              itemId;
             return `[${label}] ${name}`;
-          })
+          }),
         ),
       ],
       cloudLinks: data.cloudLinks.trim() || undefined,
@@ -487,13 +541,25 @@ export function RequestWizard({
     };
     setRequestWizardDraft({});
     revisionRef.current = 0;
-    setSavedSnapshot(JSON.stringify({ step: 0, data: defaultData(data.format) }));
+    setSavedSnapshot(
+      JSON.stringify({ step: 0, data: defaultData(data.format) }),
+    );
     onPublished(request);
   };
 
   return (
-    <div className="space-y-6">
-      <StepIndicator steps={STEPS} currentStep={step} />
+    <div
+      className="space-y-6"
+      style={
+        {
+          "--account-accent": "var(--platform-accent)",
+          "--account-accent-hover": "var(--platform-accent-hover)",
+          "--account-accent-soft": "#e8f8ee",
+          "--account-accent-border": "var(--platform-accent)",
+        } as React.CSSProperties
+      }
+    >
+      <StepIndicator steps={STEPS} currentStep={step} green />
       {draftStatusLabel(saveStatus) ? (
         <p className="text-xs text-gray-600" aria-live="polite">
           {draftStatusLabel(saveStatus)}
@@ -528,7 +594,8 @@ export function RequestWizard({
       ) : null}
       {conflictNotice ? (
         <p className="text-sm text-red-700">
-          Черновик изменён в другой вкладке. Текущие несохранённые правки не перезаписаны.
+          Черновик изменён в другой вкладке. Текущие несохранённые правки не
+          перезаписаны.
         </p>
       ) : null}
 
@@ -541,11 +608,13 @@ export function RequestWizard({
                 onClick={() => update({ format })}
                 className={
                   data.format === format
-                    ? "border-gray-900 ring-1 ring-gray-900 bg-[var(--account-accent-soft,#eef0fe)]"
+                    ? "border-[var(--platform-accent)] ring-1 ring-[var(--platform-accent)] bg-[#e8f8ee]"
                     : ""
                 }
               >
-                <CardTitle className="text-sm">{REQUEST_FORMAT_LABELS[format]}</CardTitle>
+                <CardTitle className="text-sm">
+                  {REQUEST_FORMAT_LABELS[format]}
+                </CardTitle>
                 <CardDescription className="text-xs mt-2">
                   {REQUEST_FORMAT_DESCRIPTIONS[format]}
                 </CardDescription>
@@ -561,7 +630,9 @@ export function RequestWizard({
               </p>
               <div className="grid sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                 {SEED_CONTRACTORS.map((contractor) => {
-                  const selected = data.invitedContractorIds.includes(contractor.id);
+                  const selected = data.invitedContractorIds.includes(
+                    contractor.id,
+                  );
                   return (
                     <button
                       key={contractor.id}
@@ -570,18 +641,22 @@ export function RequestWizard({
                       className={cn(
                         "text-left border px-3 py-2 text-sm transition-colors rounded-card",
                         selected
-                          ? "border-[var(--account-accent,#2939eb)] bg-[var(--account-accent-soft,#eef0fe)] font-medium"
-                          : "border-gray-300 hover:border-[var(--account-accent,#2939eb)] hover:bg-[var(--account-accent-soft,#eef0fe)]",
+                          ? "border-[var(--platform-accent)] bg-[#e8f8ee] font-medium"
+                          : "border-gray-300 hover:border-[var(--platform-accent)] hover:bg-[#e8f8ee]",
                       )}
                     >
                       {contractor.name}
-                      <span className="block text-xs text-gray-600 mt-0.5">{contractor.city}</span>
+                      <span className="block text-xs text-gray-600 mt-0.5">
+                        {contractor.city}
+                      </span>
                     </button>
                   );
                 })}
               </div>
               {data.invitedContractorIds.length === 0 && (
-                <p className="text-xs text-red-600">Выберите хотя бы одного исполнителя</p>
+                <p className="text-xs text-red-600">
+                  Выберите хотя бы одного исполнителя
+                </p>
               )}
             </div>
           )}
@@ -610,7 +685,9 @@ export function RequestWizard({
 
       {step === 2 && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-700">Привязка к мероприятию (необязательно):</p>
+          <p className="text-sm text-gray-700">
+            Привязка к мероприятию (необязательно):
+          </p>
 
           <Input
             label="Поиск по названию"
@@ -626,7 +703,10 @@ export function RequestWizard({
               onChange={(e) => setEventIndustryFilter(e.target.value)}
               options={[
                 { value: "", label: "Все отрасли" },
-                ...EVENT_INDUSTRIES.map((industry) => ({ value: industry, label: industry })),
+                ...EVENT_INDUSTRIES.map((industry) => ({
+                  value: industry,
+                  label: industry,
+                })),
               ]}
             />
             <Select
@@ -642,10 +722,7 @@ export function RequestWizard({
               label="Дата"
               value={eventMonthFilter}
               onChange={(e) => setEventMonthFilter(e.target.value)}
-              options={[
-                { value: "", label: "Все даты" },
-                ...eventMonthOptions,
-              ]}
+              options={[{ value: "", label: "Все даты" }, ...eventMonthOptions]}
             />
           </div>
 
@@ -654,15 +731,15 @@ export function RequestWizard({
               type="button"
               onClick={() => selectEvent("")}
               className={`w-full text-left px-3 py-3 text-sm transition-colors hover:bg-gray-50 ${
-                !data.eventId
-                  ? "bg-[var(--account-accent-soft,#eef0fe)] font-medium"
-                  : ""
+                !data.eventId ? "bg-[#e8f8ee] font-medium" : ""
               }`}
             >
               Без привязки к мероприятию
             </button>
             {filteredEvents.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-gray-600">Мероприятия не найдены</p>
+              <p className="px-3 py-4 text-sm text-gray-600">
+                Мероприятия не найдены
+              </p>
             ) : (
               filteredEvents.map((event) => (
                 <button
@@ -670,14 +747,13 @@ export function RequestWizard({
                   type="button"
                   onClick={() => selectEvent(event.id)}
                   className={`w-full text-left px-3 py-3 text-sm transition-colors hover:bg-gray-50 ${
-                    data.eventId === event.id
-                      ? "bg-[var(--account-accent-soft,#eef0fe)] font-medium"
-                      : ""
+                    data.eventId === event.id ? "bg-[#e8f8ee] font-medium" : ""
                   }`}
                 >
                   <span className="block">{event.title}</span>
                   <span className="block text-xs text-gray-600 mt-1">
-                    {event.industry} · {event.city} · {formatShortDate(event.startDate)}
+                    {event.industry} · {event.city} ·{" "}
+                    {formatShortDate(event.startDate)}
                   </span>
                 </button>
               ))
@@ -696,10 +772,16 @@ export function RequestWizard({
           freeformDescription={data.freeformDescription}
           onTitleChange={(title) => update({ title })}
           onSummaryChange={(description) => update({ description })}
-          onExpectedResultChange={(expectedResult) => update({ expectedResult })}
+          onExpectedResultChange={(expectedResult) =>
+            update({ expectedResult })
+          }
           onSectionsChange={(torSections) => update({ torSections })}
-          onDescriptionModeChange={(descriptionMode) => update({ descriptionMode })}
-          onFreeformDescriptionChange={(freeformDescription) => update({ freeformDescription })}
+          onDescriptionModeChange={(descriptionMode) =>
+            update({ descriptionMode })
+          }
+          onFreeformDescriptionChange={(freeformDescription) =>
+            update({ freeformDescription })
+          }
           compact={data.format === "urgent"}
         />
       )}
@@ -711,10 +793,14 @@ export function RequestWizard({
             start={data.executionStart}
             end={data.executionEnd}
             minDate={today}
-            onChange={(executionStart, executionEnd) => update({ executionStart, executionEnd })}
+            onChange={(executionStart, executionEnd) =>
+              update({ executionStart, executionEnd })
+            }
             placeholder="Выберите период в календаре"
           />
-          {dateIssue ? <p className="text-xs text-red-600">{dateIssue.message}</p> : null}
+          {dateIssue ? (
+            <p className="text-xs text-red-600">{dateIssue.message}</p>
+          ) : null}
         </div>
       )}
 
@@ -724,7 +810,9 @@ export function RequestWizard({
             id="wizard-field-budget"
             label="Тип бюджета"
             value={data.budget.type}
-            onChange={(e) => update({ budget: { ...data.budget, type: e.target.value } })}
+            onChange={(e) =>
+              update({ budget: { ...data.budget, type: e.target.value } })
+            }
             options={[
               { value: "range", label: "Диапазон" },
               { value: "fixed", label: "Фиксированный" },
@@ -742,7 +830,12 @@ export function RequestWizard({
                 type="number"
                 value={data.budget.min ?? ""}
                 onChange={(e) =>
-                  update({ budget: { ...data.budget, min: Number(e.target.value) || undefined } })
+                  update({
+                    budget: {
+                      ...data.budget,
+                      min: Number(e.target.value) || undefined,
+                    },
+                  })
                 }
               />
               <Input
@@ -750,7 +843,12 @@ export function RequestWizard({
                 type="number"
                 value={data.budget.max ?? ""}
                 onChange={(e) =>
-                  update({ budget: { ...data.budget, max: Number(e.target.value) || undefined } })
+                  update({
+                    budget: {
+                      ...data.budget,
+                      max: Number(e.target.value) || undefined,
+                    },
+                  })
                 }
               />
             </div>
@@ -761,7 +859,12 @@ export function RequestWizard({
               type="number"
               value={data.budget.min ?? ""}
               onChange={(e) =>
-                update({ budget: { ...data.budget, min: Number(e.target.value) || undefined } })
+                update({
+                  budget: {
+                    ...data.budget,
+                    min: Number(e.target.value) || undefined,
+                  },
+                })
               }
             />
           )}
@@ -775,7 +878,9 @@ export function RequestWizard({
             label="Дополнительные файлы"
             files={data.files}
             onUpload={(name) => update({ files: [...data.files, name] })}
-            onRemove={(name) => update({ files: data.files.filter((item) => item !== name) })}
+            onRemove={(name) =>
+              update({ files: data.files.filter((item) => item !== name) })
+            }
           />
 
           <div className="space-y-4">
@@ -791,7 +896,10 @@ export function RequestWizard({
                     {index + 1}. {item.label}
                     {item.required ? " *" : " (необязательно)"}
                     {item.hint && (
-                      <span className="font-normal text-gray-600"> ({item.hint})</span>
+                      <span className="font-normal text-gray-600">
+                        {" "}
+                        ({item.hint})
+                      </span>
                     )}
                   </p>
                   <div className="mt-2">
@@ -809,23 +917,28 @@ export function RequestWizard({
 
           <div className="space-y-2">
             <p className="text-sm text-gray-700">
-              Прикрепите ссылки на облачное хранилище, если туда загружены дополнительные материалы, необходимые для реализации проекта
+              Прикрепите ссылки на облачное хранилище, если туда загружены
+              дополнительные материалы, необходимые для реализации проекта
             </p>
             <Textarea
               label="Ссылки на облачное хранилище"
               value={data.cloudLinks}
               onChange={(e) => update({ cloudLinks: e.target.value })}
-              placeholder={"https://disk.yandex.ru/...\nhttps://drive.google.com/..."}
+              placeholder={
+                "https://disk.yandex.ru/...\nhttps://drive.google.com/..."
+              }
             />
           </div>
         </div>
       )}
 
       {step === 7 && (
-        <div className="border border-gray-900 p-4 space-y-4 bg-gray-50 rounded-card">
+        <div className="border border-[var(--platform-accent)] p-4 space-y-4 bg-gray-50 rounded-card">
           {!isPublishReady && (
             <div className="border border-red-300 bg-red-50 p-3 space-y-2 rounded-card">
-              <p className="text-sm font-medium text-red-800">Нельзя опубликовать, пока не исправлены поля:</p>
+              <p className="text-sm font-medium text-red-800">
+                Нельзя опубликовать, пока не исправлены поля:
+              </p>
               <ul className="space-y-1">
                 {publishIssues.map((issue) => (
                   <li key={`${issue.step}-${issue.message}`}>
@@ -844,13 +957,35 @@ export function RequestWizard({
           <h3 className="font-semibold">Предпросмотр заявки</h3>
           <div className="flex flex-wrap gap-2">
             <Badge>{REQUEST_FORMAT_LABELS[data.format]}</Badge>
-            <Badge variant="outline">{data.category || "—"}</Badge>
-            <Badge variant="dashed">{data.city}</Badge>
+            <Badge
+              variant="outline"
+              useRoleAccent={false}
+              className="!text-[var(--platform-accent)] !border-[var(--platform-accent)]"
+            >
+              {data.category || "—"}
+            </Badge>
+            <Badge
+              variant="dashed"
+              useRoleAccent={false}
+              className="!text-[var(--platform-accent)] !border-[var(--platform-accent)]"
+            >
+              {data.city}
+            </Badge>
           </div>
           <div className="space-y-2 text-sm">
-            <p><span className="font-medium">Название:</span> {data.title}</p>
-            <p><span className="font-medium">Краткое описание:</span> {data.description}</p>
-            <p><span className="font-medium">Диапазон выполнения:</span> {formatRequestDeadline(`${data.executionStart}/${data.executionEnd}`)}</p>
+            <p>
+              <span className="font-medium">Название:</span> {data.title}
+            </p>
+            <p>
+              <span className="font-medium">Краткое описание:</span>{" "}
+              {data.description}
+            </p>
+            <p>
+              <span className="font-medium">Диапазон выполнения:</span>{" "}
+              {formatRequestDeadline(
+                `${data.executionStart}/${data.executionEnd}`,
+              )}
+            </p>
             <p>
               <span className="font-medium">Бюджет:</span>{" "}
               {data.budget.type === "hidden"
@@ -870,14 +1005,19 @@ export function RequestWizard({
                   ? data.invitedContractorIds
                       .map(
                         (id) =>
-                          SEED_CONTRACTORS.find((contractor) => contractor.id === id)?.name ?? id
+                          SEED_CONTRACTORS.find(
+                            (contractor) => contractor.id === id,
+                          )?.name ?? id,
                       )
                       .join(", ")
                   : "—"}
               </p>
             )}
             {selectedEvent && (
-              <p><span className="font-medium">Мероприятие:</span> {selectedEvent.title}</p>
+              <p>
+                <span className="font-medium">Мероприятие:</span>{" "}
+                {selectedEvent.title}
+              </p>
             )}
             <p>
               <span className="font-medium">Формат описания:</span>{" "}
@@ -885,61 +1025,88 @@ export function RequestWizard({
                 ? "ТЗ в свободной форме"
                 : "Полноценное ТЗ"}
             </p>
-            <p><span className="font-medium">Файлов:</span> {data.files.length}</p>
+            <p>
+              <span className="font-medium">Файлов:</span> {data.files.length}
+            </p>
             {data.cloudLinks.trim() && (
-              <p><span className="font-medium">Ссылки на облако:</span> {data.cloudLinks.trim()}</p>
+              <p>
+                <span className="font-medium">Ссылки на облако:</span>{" "}
+                {data.cloudLinks.trim()}
+              </p>
             )}
             {data.descriptionMode === "structured" && (
               <p>
                 <span className="font-medium">Разделов описания:</span>{" "}
-                {data.torSections.filter((section) => isDescriptionSectionFilled(section.title, section.content)).length}
+                {
+                  data.torSections.filter((section) =>
+                    isDescriptionSectionFilled(section.title, section.content),
+                  ).length
+                }
               </p>
             )}
           </div>
-          {data.descriptionMode === "freeform" && data.freeformDescription.trim() && (
-            <div className="border-t border-gray-300 pt-4 space-y-3">
-              <div>
-                <p className="text-sm font-medium">ТЗ в свободной форме</p>
-                <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-6">
-                  {data.freeformDescription}
-                </p>
+          {data.descriptionMode === "freeform" &&
+            data.freeformDescription.trim() && (
+              <div className="border-t border-gray-300 pt-4 space-y-3">
+                <div>
+                  <p className="text-sm font-medium">ТЗ в свободной форме</p>
+                  <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-6">
+                    {data.freeformDescription}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           {data.descriptionMode === "structured" &&
-            data.torSections.some((section) => isDescriptionSectionFilled(section.title, section.content)) && (
-            <div className="border-t border-gray-300 pt-4 space-y-3">
-              {data.torSections
-                .filter((section) => isDescriptionSectionFilled(section.title, section.content))
-                .map((section, index) => (
-                  <div key={section.id}>
-                    <p className="text-sm font-medium">{index + 1}. {section.title}</p>
-                    <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-4">
-                      {formatSectionContentForDisplay(section.title, section.content)}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          )}
+            data.torSections.some((section) =>
+              isDescriptionSectionFilled(section.title, section.content),
+            ) && (
+              <div className="border-t border-gray-300 pt-4 space-y-3">
+                {data.torSections
+                  .filter((section) =>
+                    isDescriptionSectionFilled(section.title, section.content),
+                  )
+                  .map((section, index) => (
+                    <div key={section.id}>
+                      <p className="text-sm font-medium">
+                        {index + 1}. {section.title}
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap line-clamp-4">
+                        {formatSectionContentForDisplay(
+                          section.title,
+                          section.content,
+                        )}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            )}
         </div>
       )}
 
       <div className="grid w-full grid-cols-[1fr_auto] items-start gap-3 border-t border-gray-300 pt-4">
         <div className="flex flex-wrap gap-2">
           {step > 0 && (
-            <Button variant="outline" onClick={() => goToStep(step - 1)}>
+            <Button variant="green-outline" onClick={() => goToStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" />
               Назад
             </Button>
           )}
-          <Button variant="ghost" onClick={saveDraft}>
+          <Button
+            variant="ghost"
+            className="text-[var(--platform-accent)] hover:bg-[#e8f8ee] hover:text-[var(--platform-accent-hover)]"
+            onClick={saveDraft}
+          >
             Сохранить черновик
           </Button>
         </div>
         <div className="flex flex-col items-end gap-1">
           {step < STEPS.length - 1 ? (
             <>
-              <Button disabled={!canProceed} onClick={() => goToStep(step + 1)}>
+              <Button
+                variant="green"
+                disabled={!canProceed}
+                onClick={() => goToStep(step + 1)}
+              >
                 Далее
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -951,7 +1118,11 @@ export function RequestWizard({
             </>
           ) : (
             <>
-              <Button disabled={!isPublishReady} onClick={publish}>
+              <Button
+                variant="green"
+                disabled={!isPublishReady}
+                onClick={handlePublish}
+              >
                 <Check className="h-4 w-4" />
                 Опубликовать
               </Button>
@@ -964,7 +1135,6 @@ export function RequestWizard({
           )}
         </div>
       </div>
-
     </div>
   );
 }

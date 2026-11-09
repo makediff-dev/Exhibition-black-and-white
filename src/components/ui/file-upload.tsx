@@ -45,7 +45,9 @@ export function FileUpload({
     const matchesType =
       allowed.length === 0 ||
       allowed.some((rule) =>
-        rule.startsWith(".") ? fileName.endsWith(rule) : file.type.includes(rule.replace("*", ""))
+        rule.startsWith(".")
+          ? fileName.endsWith(rule)
+          : file.type.includes(rule.replace("*", "")),
       );
     if (!matchesType) {
       setStatus("error");
@@ -93,7 +95,10 @@ export function FileUpload({
             : "border-gray-400 hover:border-gray-900",
         )}
       >
-        <label htmlFor={inputId} className="flex w-full cursor-pointer items-center gap-2">
+        <label
+          htmlFor={inputId}
+          className="flex w-full cursor-pointer items-center gap-2"
+        >
           <Upload className="h-4 w-4" aria-hidden="true" />
           <span>{status === "uploading" ? "Загрузка…" : label}</span>
         </label>
@@ -130,8 +135,13 @@ export function FileUpload({
       {visibleFiles.length > 0 && (
         <ul className="mt-2 space-y-1">
           {visibleFiles.map((fileName) => (
-            <li key={fileName} className="text-xs text-gray-600 flex items-center gap-2">
-              <span className="border border-gray-300 px-1 rounded-button">файл</span>
+            <li
+              key={fileName}
+              className="text-xs text-gray-600 flex items-center gap-2"
+            >
+              <span className="border border-gray-300 px-1 rounded-button">
+                файл
+              </span>
               <span>{fileName}</span>
               <button
                 type="button"
@@ -155,11 +165,13 @@ export function StepIndicator({
   currentStep,
   centered = false,
   wide = false,
+  green = false,
 }: {
   steps: string[];
   currentStep: number;
   centered?: boolean;
   wide?: boolean;
+  green?: boolean;
 }) {
   return (
     <div className={cn("pb-2", centered && "text-center")}>
@@ -176,23 +188,43 @@ export function StepIndicator({
         {steps.map((step, i) => (
           <div
             key={step}
-            className={cn("flex items-center gap-2 shrink-0", wide && "flex-1 last:flex-none")}
+            className={cn(
+              "flex items-center gap-2 shrink-0",
+              wide && "flex-1 last:flex-none",
+            )}
           >
             <div
               className={cn(
                 "flex h-7 w-7 items-center justify-center text-xs font-medium border shrink-0 rounded-button",
-                i < currentStep ? "bg-gray-900 text-white border-gray-900" :
-                i === currentStep ? "border-gray-900 text-gray-900" :
-                "border-gray-300 text-gray-400"
+                i < currentStep
+                  ? green
+                    ? "bg-[var(--platform-accent)] text-white border-[var(--platform-accent)]"
+                    : "bg-gray-900 text-white border-gray-900"
+                  : i === currentStep
+                    ? green
+                      ? "border-[var(--platform-accent)] text-[var(--platform-accent)]"
+                      : "border-gray-900 text-gray-900"
+                    : "border-gray-300 text-gray-400",
               )}
             >
               {i + 1}
             </div>
-            <span className={cn("text-xs hidden sm:inline", wide ? "whitespace-nowrap" : "truncate", i <= currentStep ? "text-gray-900" : "text-gray-400")}>
+            <span
+              className={cn(
+                "text-xs hidden sm:inline",
+                wide ? "whitespace-nowrap" : "truncate",
+                i <= currentStep ? "text-gray-900" : "text-gray-400",
+              )}
+            >
               {step}
             </span>
             {i < steps.length - 1 && (
-              <div className={cn("hidden sm:block h-px bg-gray-300", wide ? "flex-1 min-w-4" : "w-4 shrink-0")} />
+              <div
+                className={cn(
+                  "hidden sm:block h-px bg-gray-300",
+                  wide ? "flex-1 min-w-4" : "w-4 shrink-0",
+                )}
+              />
             )}
           </div>
         ))}

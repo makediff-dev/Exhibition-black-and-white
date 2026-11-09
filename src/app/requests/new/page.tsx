@@ -17,7 +17,12 @@ import { canCreateRequest } from "@/lib/auth/authorization";
 import { ForbiddenState } from "@/components/ui/states";
 import { ROLE_LABELS } from "@/constants/statuses";
 
-const VALID_FORMATS: RequestFormat[] = ["open_request", "closed_request", "urgent", "safe_deal"];
+const VALID_FORMATS: RequestFormat[] = [
+  "open_request",
+  "closed_request",
+  "urgent",
+  "safe_deal",
+];
 
 function NewRequestContent() {
   const searchParams = useSearchParams();
@@ -28,15 +33,21 @@ function NewRequestContent() {
 
   const formatParam = searchParams.get("format") as RequestFormat | null;
   const initialFormat =
-    formatParam && VALID_FORMATS.includes(formatParam) ? formatParam : undefined;
+    formatParam && VALID_FORMATS.includes(formatParam)
+      ? formatParam
+      : undefined;
   const initialEventId = searchParams.get("eventId") ?? undefined;
   const initialContractorId = searchParams.get("contractorId") ?? undefined;
   const serviceId = searchParams.get("serviceId");
   const services = usePrototypeStore((state) => state.services);
-  const linkedService = serviceId ? services.find((item) => item.id === serviceId) : undefined;
+  const linkedService = serviceId
+    ? services.find((item) => item.id === serviceId)
+    : undefined;
   const initialCategory =
     linkedService?.category ?? searchParams.get("category") ?? undefined;
-  const initialTitle = linkedService ? `Запрос предложения: ${linkedService.title}` : undefined;
+  const initialTitle = linkedService
+    ? `Запрос предложения: ${linkedService.title}`
+    : undefined;
   const initialDescription = linkedService?.description;
 
   const handlePublished = (request: Request) => {
@@ -54,17 +65,17 @@ function NewRequestContent() {
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <Card className="text-center py-8">
-          <CheckCircle className="h-12 w-12 mx-auto mb-4" />
+          <CheckCircle className="h-12 w-12 mx-auto mb-4 text-[var(--platform-accent)]" />
           <CardTitle>Заявка опубликована</CardTitle>
           <CardDescription className="mt-2">
             Заявка «{published.title}» доступна исполнителям
           </CardDescription>
           <div className="flex flex-wrap gap-2 justify-center mt-6">
             <Link href={`/requests/${published.id}`}>
-              <Button>Открыть заявку</Button>
+              <Button variant="green">Открыть заявку</Button>
             </Link>
             <Link href="/requests">
-              <Button variant="outline">К списку заявок</Button>
+              <Button variant="green-outline">К списку заявок</Button>
             </Link>
           </div>
         </Card>
@@ -85,13 +96,14 @@ function NewRequestContent() {
         </label>
 
         <p className="text-sm text-gray-700">
-          Вы получите информацию об откликах исполнителей в личный кабинет и на почту.
-          Вы также можете настроить уведомление об откликах на телефон, указанный при регистрации.
+          Вы получите информацию об откликах исполнителей в личный кабинет и на
+          почту. Вы также можете настроить уведомление об откликах на телефон,
+          указанный при регистрации.
         </p>
 
         <p className="text-sm text-gray-700">
-          После этого вы сможете заказать расширенную проверку исполнителей, выбрать конкретного
-          и договориться с ним о цене.
+          После этого вы сможете заказать расширенную проверку исполнителей,
+          выбрать конкретного и договориться с ним о цене.
         </p>
       </div>
     );
@@ -116,7 +128,11 @@ function NewRequestPageInner() {
 
   if (isAuthenticated && user && !createAccess.allowed) {
     return (
-      <AppShell title="Новая заявка" showBack backFallbackHref={`/account/${user.role}`}>
+      <AppShell
+        title="Новая заявка"
+        showBack
+        backFallbackHref={`/account/${user.role}`}
+      >
         <ForbiddenState
           title="Заявку размещает заказчик"
           description={createAccess.reason}
@@ -135,11 +151,7 @@ function NewRequestPageInner() {
 
   if (isAuthenticated && user) {
     return (
-      <AppShell
-        title="Новая заявка"
-        showBack
-        backFallbackHref="/requests"
-      >
+      <AppShell title="Новая заявка" showBack backFallbackHref="/requests">
         {content}
       </AppShell>
     );
