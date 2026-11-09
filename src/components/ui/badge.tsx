@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { cn } from "@/lib/utils/cn";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
@@ -11,12 +12,23 @@ interface BadgeProps {
   variant?: "solid" | "outline" | "dashed" | "muted";
   icon?: LucideIcon;
   className?: string;
+  useRoleAccent?: boolean;
+  style?: CSSProperties;
 }
 
-export function Badge({ children, variant = "outline", icon: Icon, className }: BadgeProps) {
+export function Badge({
+  children,
+  variant = "outline",
+  icon: Icon,
+  className,
+  useRoleAccent = true,
+  style,
+}: BadgeProps) {
   const catalogAccent = useCatalogAccent();
   const { accountRole } = useCabinetSession();
-  const roleStyle = roleBadgeStyle(accountRole, variant);
+  const roleStyle = useRoleAccent
+    ? roleBadgeStyle(accountRole, variant)
+    : undefined;
 
   const variants = {
     solid: catalogAccent
@@ -38,7 +50,7 @@ export function Badge({ children, variant = "outline", icon: Icon, className }: 
         roleStyle ? undefined : variants[variant],
         className,
       )}
-      style={roleStyle}
+      style={{ ...roleStyle, ...style }}
     >
       {Icon && <Icon className="h-3 w-3" />}
       {children}

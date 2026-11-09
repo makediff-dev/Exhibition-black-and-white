@@ -41,7 +41,8 @@ const STATUS_OPTIONS: {
   {
     value: "rejected",
     label: "Отклонено",
-    description: "Заявка не прошла модерацию. Можно исправить и отправить повторно",
+    description:
+      "Заявка не прошла модерацию. Можно исправить и отправить повторно",
     icon: XCircle,
   },
   {
@@ -75,10 +76,11 @@ export default function ModerationPage() {
 
   const draft = registrationDraft as RegistrationDraft;
   const [status, setStatus] = useState<ModerationStatus>(
-    draft.moderationStatus ?? "pending"
+    draft.moderationStatus ?? "pending",
   );
 
-  const current = STATUS_OPTIONS.find((s) => s.value === status) ?? STATUS_OPTIONS[3];
+  const current =
+    STATUS_OPTIONS.find((s) => s.value === status) ?? STATUS_OPTIONS[3];
   const StatusIcon = current.icon;
 
   const handleClarifyData = () => {
@@ -103,7 +105,10 @@ export default function ModerationPage() {
       ...registrationDraft,
       moderationStatus: next,
     });
-    showToast(`Статус изменён: ${STATUS_OPTIONS.find((s) => s.value === next)?.label}`, "info");
+    showToast(
+      `Статус изменён: ${STATUS_OPTIONS.find((s) => s.value === next)?.label}`,
+      "info",
+    );
   };
 
   return (
@@ -111,111 +116,126 @@ export default function ModerationPage() {
       <PublicHeader />
       <main className="flex-1 mx-auto max-w-site w-full px-4 py-8">
         <div className="mx-auto w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-2">Статус модерации</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Отслеживайте проверку данных вашей компании
-        </p>
+          <h1 className="text-2xl font-bold mb-2">Статус модерации</h1>
+          <p className="text-sm text-gray-600 mb-6">
+            Отслеживайте проверку данных вашей компании
+          </p>
 
-        <Card className="mb-6">
-          <div className="flex items-start gap-4">
-            <StatusIcon className="h-8 w-8 shrink-0 text-[#28b5b3]" />
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <CardTitle>{current.label}</CardTitle>
-                <Badge variant={status === "approved" ? "solid" : "outline"}>
-                  {current.label}
-                </Badge>
+          <Card className="mb-6">
+            <div className="flex items-start gap-4">
+              <StatusIcon className="h-8 w-8 shrink-0 text-[var(--platform-accent)]" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <CardTitle>{current.label}</CardTitle>
+                  <Badge
+                    variant={status === "approved" ? "solid" : "outline"}
+                    useRoleAccent={false}
+                    className={
+                      status === "approved"
+                        ? "!bg-[var(--platform-accent)] !text-white !border-[var(--platform-accent)]"
+                        : "!text-[var(--platform-accent)] !border-[var(--platform-accent)]"
+                    }
+                  >
+                    {current.label}
+                  </Badge>
+                </div>
+                <CardDescription>{current.description}</CardDescription>
+                {(draft.companyName || draft.role) && (
+                  <dl className="mt-4 space-y-1 text-sm">
+                    {draft.companyName && (
+                      <div className="flex gap-2">
+                        <dt className="text-gray-500">Компания:</dt>
+                        <dd>{draft.companyName}</dd>
+                      </div>
+                    )}
+                    {draft.role && (
+                      <div className="flex gap-2">
+                        <dt className="text-gray-500">Роль:</dt>
+                        <dd>
+                          {ROLE_LABELS[draft.role as keyof typeof ROLE_LABELS]}
+                        </dd>
+                      </div>
+                    )}
+                    {draft.contactName && (
+                      <div className="flex gap-2">
+                        <dt className="text-gray-500">Контакт:</dt>
+                        <dd>{draft.contactName}</dd>
+                      </div>
+                    )}
+                    {draft.email && (
+                      <div className="flex gap-2">
+                        <dt className="text-gray-500">Email:</dt>
+                        <dd>{draft.email}</dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
               </div>
-              <CardDescription>{current.description}</CardDescription>
-              {(draft.companyName || draft.role) && (
-                <dl className="mt-4 space-y-1 text-sm">
-                  {draft.companyName && (
-                    <div className="flex gap-2">
-                      <dt className="text-gray-500">Компания:</dt>
-                      <dd>{draft.companyName}</dd>
-                    </div>
-                  )}
-                  {draft.role && (
-                    <div className="flex gap-2">
-                      <dt className="text-gray-500">Роль:</dt>
-                      <dd>{ROLE_LABELS[draft.role as keyof typeof ROLE_LABELS]}</dd>
-                    </div>
-                  )}
-                  {draft.contactName && (
-                    <div className="flex gap-2">
-                      <dt className="text-gray-500">Контакт:</dt>
-                      <dd>{draft.contactName}</dd>
-                    </div>
-                  )}
-                  {draft.email && (
-                    <div className="flex gap-2">
-                      <dt className="text-gray-500">Email:</dt>
-                      <dd>{draft.email}</dd>
-                    </div>
-                  )}
-                </dl>
-              )}
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {status === "needs_clarification" && (
-          <div className="rounded-button border border-[#28b5b3] bg-gray-50 p-4 mb-6 flex gap-3 text-sm">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <div>
-              <p className="font-medium mb-1">Запрос модератора</p>
+          {status === "needs_clarification" && (
+            <div className="rounded-button border border-[var(--platform-accent)] bg-gray-50 p-4 mb-6 flex gap-3 text-sm">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-medium mb-1">Запрос модератора</p>
+                <p className="text-gray-600">
+                  Пожалуйста, загрузите выписку из ЕГРЮЛ и уточните категории
+                  услуг. После исправления отправьте заявку повторно.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {status === "rejected" && (
+            <div className="rounded-button border border-[var(--platform-accent)] p-4 mb-6 text-sm">
+              <p className="font-medium mb-1">Причина отклонения</p>
               <p className="text-gray-600">
-                Пожалуйста, загрузите выписку из ЕГРЮЛ и уточните категории услуг.
-                После исправления отправьте заявку повторно.
+                Данные компании не совпадают с реестром. Проверьте ИНН и
+                повторите регистрацию.
               </p>
             </div>
-          </div>
-        )}
+          )}
 
-        {status === "rejected" && (
-          <div className="rounded-button border border-[#28b5b3] p-4 mb-6 text-sm">
-            <p className="font-medium mb-1">Причина отклонения</p>
-            <p className="text-gray-600">
-              Данные компании не совпадают с реестром. Проверьте ИНН и повторите регистрацию.
-            </p>
-          </div>
-        )}
+          {status === "approved" && (
+            <div className="mb-6">
+              <Link href={`/account/${draft.role ?? "customer"}`}>
+                <Button variant="green" className="w-full">
+                  Перейти в личный кабинет
+                </Button>
+              </Link>
+            </div>
+          )}
 
-        {status === "approved" && (
-          <div className="mb-6">
-            <Link href={`/account/${draft.role ?? "customer"}`}>
-              <Button variant="teal" className="w-full">Перейти в личный кабинет</Button>
-            </Link>
-          </div>
-        )}
-
-        {(status === "needs_clarification" || status === "rejected") && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            <Button variant="teal" onClick={handleClarifyData}>Уточнить данные</Button>
-            <Button variant="teal-outline" onClick={handleEditApplication}>
-              Редактировать заявку
-            </Button>
-          </div>
-        )}
-
-        <div className="border-t border-gray-200 pt-6">
-          <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">
-            Демо: переключить статус
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {STATUS_OPTIONS.map((opt) => (
-              <Button
-                key={opt.value}
-                type="button"
-                variant={status === opt.value ? "teal" : "teal-outline"}
-                size="sm"
-                onClick={() => handleDemoStatus(opt.value)}
-              >
-                {opt.label}
+          {(status === "needs_clarification" || status === "rejected") && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Button variant="green" onClick={handleClarifyData}>
+                Уточнить данные
               </Button>
-            ))}
+              <Button variant="green-outline" onClick={handleEditApplication}>
+                Редактировать заявку
+              </Button>
+            </div>
+          )}
+
+          <div className="border-t border-gray-200 pt-6">
+            <p className="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wide">
+              Демо: переключить статус
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {STATUS_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.value}
+                  type="button"
+                  variant={status === opt.value ? "green" : "green-outline"}
+                  size="sm"
+                  onClick={() => handleDemoStatus(opt.value)}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
         </div>
       </main>
       <Footer />

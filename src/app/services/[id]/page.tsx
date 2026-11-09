@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
-import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  notFound,
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Star, Heart } from "lucide-react";
 import { CabinetAwareLayout } from "@/components/layout/cabinet-aware-layout";
@@ -12,17 +17,37 @@ import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast-provider";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
-import { useCartStore, useFavoritesStore, usePrototypeStore } from "@/lib/store";
-import { formatPrice, formatReviewCount, formatServicePrice } from "@/lib/utils/formatters";
+import {
+  useCartStore,
+  useFavoritesStore,
+  usePrototypeStore,
+} from "@/lib/store";
+import {
+  formatPrice,
+  formatReviewCount,
+  formatServicePrice,
+} from "@/lib/utils/formatters";
 import { getContractorProfileHref } from "@/lib/utils/contractor-profile-links";
-import { getCabinetBackHref, keepsCabinetSidebar } from "@/lib/utils/message-related-links";
-import { roleStarStyle } from "@/lib/utils/role-accent";
+import { getCabinetBackHref } from "@/lib/utils/message-related-links";
+import { CATALOG_ACCENT_TOKENS } from "@/constants/catalog-section-styles";
 import { getCheckoutHref } from "@/lib/utils/cart-routes";
 import { isStandardizedPricedService } from "@/lib/catalog/standardized-service";
 
 const MOCK_REVIEWS = [
-  { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
-  { id: "rv2", author: "ООО «Бета»", rating: 4, text: "Хороший сервис, рекомендуем", date: "2025-11-22" },
+  {
+    id: "rv1",
+    author: "ООО «Альфа»",
+    rating: 5,
+    text: "Качественное выполнение в срок",
+    date: "2025-12-10",
+  },
+  {
+    id: "rv2",
+    author: "ООО «Бета»",
+    rating: 4,
+    text: "Хороший сервис, рекомендуем",
+    date: "2025-11-22",
+  },
 ];
 
 export default function ServiceDetailPage() {
@@ -40,24 +65,33 @@ export default function ServiceDetailPage() {
   const services = usePrototypeStore((s) => s.services);
   const service = services.find((s) => s.id === id);
 
-  const [selectedVariantId, setSelectedVariantId] = useState(service?.variants?.[0]?.id ?? "");
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    service?.variants?.[0]?.id ?? "",
+  );
   const [quantity, setQuantity] = useState(1);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   if (!service) notFound();
 
-  const photoCards = service.photoCards?.filter((card) => card.imageUrl || card.title || card.caption) ?? [];
+  const photoCards =
+    service.photoCards?.filter(
+      (card) => card.imageUrl || card.title || card.caption,
+    ) ?? [];
   const currentPhotoCard = photoCards[photoIndex];
 
-  const selectedVariant = service.variants?.find((v) => v.id === selectedVariantId);
+  const selectedVariant = service.variants?.find(
+    (v) => v.id === selectedVariantId,
+  );
   const unitPrice = selectedVariant?.price ?? service.price;
   const canDirectOrder = isStandardizedPricedService(service);
 
   const handleToggleFavorite = () => {
     const added = toggleFavorite(service.id);
     showToast(
-      added ? `«${service.title}» добавлено в избранное` : `«${service.title}» удалено из избранного`,
-      added ? "success" : "info"
+      added
+        ? `«${service.title}» добавлено в избранное`
+        : `«${service.title}» удалено из избранного`,
+      added ? "success" : "info",
     );
   };
 
@@ -80,8 +114,12 @@ export default function ServiceDetailPage() {
   };
 
   const backFallbackHref = getCabinetBackHref(from, "/services", accountRole);
-  const inCabinetView = Boolean(accountRole && from && keepsCabinetSidebar(from, accountRole));
-  const ctaVariant = inCabinetView ? "primary" : "teal";
+  const serviceAccent = CATALOG_ACCENT_TOKENS.teal.accent;
+  const serviceAccentStyle = {
+    color: serviceAccent,
+    fill: serviceAccent,
+    borderColor: serviceAccent,
+  };
 
   return (
     <CabinetAwareLayout>
@@ -92,164 +130,196 @@ export default function ServiceDetailPage() {
       />
 
       <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Badge variant="outline" className="mb-2">{service.category}</Badge>
-                <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
-                <p className="text-sm text-gray-600">
-                  <Link
-                    href={getContractorProfileHref(service.contractorId, {
-                      role: from ? accountRole : undefined,
-                      from: from ?? undefined,
-                    })}
-                    className="underline"
-                  >
-                    {service.contractorName}
-                  </Link>
-                  {" · "}{service.city}
-                </p>
-                <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                  <Star
-                    className={`h-4 w-4 ${roleStarStyle(accountRole) ? "fill-current" : "fill-gray-900"}`}
-                    style={roleStarStyle(accountRole)}
-                  />
-                  {service.rating} · {formatReviewCount(service.reviewCount)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
-                className="shrink-0 text-gray-900 hover:text-gray-600"
-                aria-label={isFavorite(service.id) ? "Убрать из избранного" : "В избранное"}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Badge
+                variant="outline"
+                className="mb-2"
+                useRoleAccent={false}
+                style={serviceAccentStyle}
               >
-                <Heart className={`h-5 w-5 ${isFavorite(service.id) ? "fill-gray-900" : ""}`} />
-              </button>
+                {service.category}
+              </Badge>
+              <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
+              <p className="text-sm text-gray-600">
+                <Link
+                  href={getContractorProfileHref(service.contractorId, {
+                    role: from ? accountRole : undefined,
+                    from: from ?? undefined,
+                  })}
+                  className="underline"
+                >
+                  {service.contractorName}
+                </Link>
+                {" · "}
+                {service.city}
+              </p>
+              <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                <Star className="h-4 w-4 fill-[#28b5b3] text-[#28b5b3]" />
+                {service.rating} · {formatReviewCount(service.reviewCount)}
+              </p>
             </div>
-
-            {photoCards.length > 0 && (
-              <section className="space-y-4">
-                <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
-                <div className="border border-[#dddddd] rounded-[14px] overflow-hidden">
-                  <div className="aspect-[16/10] bg-gray-50 relative">
-                    {currentPhotoCard?.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={currentPhotoCard.imageUrl}
-                        alt={currentPhotoCard.title || service.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-sm text-gray-400">
-                        Фото карточки
-                      </div>
-                    )}
-                    {photoCards.length > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setPhotoIndex((prev) => (prev === 0 ? photoCards.length - 1 : prev - 1))}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
-                          aria-label="Предыдущая карточка"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPhotoIndex((prev) => (prev === photoCards.length - 1 ? 0 : prev + 1))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
-                          aria-label="Следующая карточка"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="p-4 border-t border-gray-200">
-                    {currentPhotoCard?.title && (
-                      <p className="text-sm font-semibold">{currentPhotoCard.title}</p>
-                    )}
-                    {currentPhotoCard?.caption && (
-                      <p className="text-sm text-gray-700 mt-1">{currentPhotoCard.caption}</p>
-                    )}
-                  </div>
-                </div>
-                {photoCards.length > 1 && (
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    {photoCards.map((card, index) => (
-                      <button
-                        key={card.id}
-                        type="button"
-                        onClick={() => setPhotoIndex(index)}
-                        className={`rounded-[10px] border p-3 text-left text-sm ${index === photoIndex ? "border-[#171717]" : "border-[#dddddd]"}`}
-                      >
-                        <p className="font-medium">{card.title || `Карточка ${index + 1}`}</p>
-                        {card.caption && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{card.caption}</p>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            <section>
-              <h2 className="text-lg font-semibold mb-2">Описание</h2>
-              <p className="text-sm text-gray-700">{service.description}</p>
-            </section>
-
-            <section className="grid sm:grid-cols-2 gap-4 text-sm">
-              <Card>
-                <p className="font-medium mb-1">Условия</p>
-                <p className="text-gray-700">{service.terms}</p>
-                {service.guaranteeRefund && (
-                  <p className="text-gray-900 mt-2 text-xs border border-dashed border-gray-400 px-2 py-1 inline-block">
-                    Гарантия результата или возврат денежных средств
-                  </p>
-                )}
-              </Card>
-              <Card>
-                <p className="font-medium mb-1">Срок выполнения</p>
-                <p className="text-gray-700">{service.deadline}</p>
-              </Card>
-              {service.prepaymentPercent !== undefined && (
-                <Card className="sm:col-span-2">
-                  <p className="font-medium mb-1">Условия оплаты</p>
-                  <p className="text-gray-700">
-                    Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
-                  </p>
-                </Card>
-              )}
-            </section>
-
-            <section>
-              <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
-              <div className="space-y-3">
-                {MOCK_REVIEWS.map((review) => (
-                  <Card key={review.id}>
-                    <div className="flex justify-between">
-                      <p className="text-sm font-medium">{review.author}</p>
-                      <span className="text-xs text-gray-600">{review.date}</span>
-                    </div>
-                    <p className="text-xs mt-1" style={roleStarStyle(accountRole)}>
-                      ★ {review.rating}
-                    </p>
-                    <p className="text-sm text-gray-700 mt-2">{review.text}</p>
-                  </Card>
-                ))}
-              </div>
-            </section>
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              className="shrink-0 text-[#28b5b3]"
+              aria-label={
+                isFavorite(service.id) ? "Убрать из избранного" : "В избранное"
+              }
+            >
+              <Heart
+                className={`h-5 w-5 ${isFavorite(service.id) ? "fill-[#28b5b3]" : ""}`}
+              />
+            </button>
           </div>
 
-          <aside>
-            <Card className="sticky top-20 space-y-4">
-              <p className="text-2xl font-bold">
-                {formatServicePrice({
-                  price: unitPrice,
-                  priceFormat: selectedVariant ? "фиксированная" : service.priceFormat,
-                })}
-              </p>
+          {photoCards.length > 0 && (
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold">Ключевые характеристики</h2>
+              <div className="border border-[#dddddd] rounded-[14px] overflow-hidden">
+                <div className="aspect-[16/10] bg-gray-50 relative">
+                  {currentPhotoCard?.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={currentPhotoCard.imageUrl}
+                      alt={currentPhotoCard.title || service.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-sm text-gray-400">
+                      Фото карточки
+                    </div>
+                  )}
+                  {photoCards.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPhotoIndex((prev) =>
+                            prev === 0 ? photoCards.length - 1 : prev - 1,
+                          )
+                        }
+                        className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
+                        aria-label="Предыдущая карточка"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPhotoIndex((prev) =>
+                            prev === photoCards.length - 1 ? 0 : prev + 1,
+                          )
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-[10px] border border-[#dddddd] bg-white/95"
+                        aria-label="Следующая карточка"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="p-4 border-t border-gray-200">
+                  {currentPhotoCard?.title && (
+                    <p className="text-sm font-semibold">
+                      {currentPhotoCard.title}
+                    </p>
+                  )}
+                  {currentPhotoCard?.caption && (
+                    <p className="text-sm text-gray-700 mt-1">
+                      {currentPhotoCard.caption}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {photoCards.length > 1 && (
+                <div className="grid sm:grid-cols-3 gap-3">
+                  {photoCards.map((card, index) => (
+                    <button
+                      key={card.id}
+                      type="button"
+                      onClick={() => setPhotoIndex(index)}
+                      className={`rounded-[10px] border p-3 text-left text-sm ${index === photoIndex ? "border-[#171717]" : "border-[#dddddd]"}`}
+                    >
+                      <p className="font-medium">
+                        {card.title || `Карточка ${index + 1}`}
+                      </p>
+                      {card.caption && (
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                          {card.caption}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
-              {canDirectOrder && service.variants && service.variants.length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold mb-2">Описание</h2>
+            <p className="text-sm text-gray-700">{service.description}</p>
+          </section>
+
+          <section className="grid sm:grid-cols-2 gap-4 text-sm">
+            <Card>
+              <p className="font-medium mb-1">Условия</p>
+              <p className="text-gray-700">{service.terms}</p>
+              {service.guaranteeRefund && (
+                <p className="text-gray-900 mt-2 text-xs border border-dashed border-gray-400 px-2 py-1 inline-block">
+                  Гарантия результата или возврат денежных средств
+                </p>
+              )}
+            </Card>
+            <Card>
+              <p className="font-medium mb-1">Срок выполнения</p>
+              <p className="text-gray-700">{service.deadline}</p>
+            </Card>
+            {service.prepaymentPercent !== undefined && (
+              <Card className="sm:col-span-2">
+                <p className="font-medium mb-1">Условия оплаты</p>
+                <p className="text-gray-700">
+                  Предоплата {service.prepaymentPercent}%, постоплата{" "}
+                  {100 - service.prepaymentPercent}%
+                </p>
+              </Card>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold mb-3">Отзывы</h2>
+            <div className="space-y-3">
+              {MOCK_REVIEWS.map((review) => (
+                <Card key={review.id}>
+                  <div className="flex justify-between">
+                    <p className="text-sm font-medium">{review.author}</p>
+                    <span className="text-xs text-gray-600">{review.date}</span>
+                  </div>
+                  <p className="text-xs mt-1 text-[#28b5b3]">
+                    ★ {review.rating}
+                  </p>
+                  <p className="text-sm text-gray-700 mt-2">{review.text}</p>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside>
+          <Card className="sticky top-20 space-y-4">
+            <p className="text-2xl font-bold">
+              {formatServicePrice({
+                price: unitPrice,
+                priceFormat: selectedVariant
+                  ? "фиксированная"
+                  : service.priceFormat,
+              })}
+            </p>
+
+            {canDirectOrder &&
+              service.variants &&
+              service.variants.length > 0 && (
                 <Select
                   label="Вариант"
                   value={selectedVariantId}
@@ -261,51 +331,64 @@ export default function ServiceDetailPage() {
                 />
               )}
 
-              {canDirectOrder ? (
-                <>
-                  <Select
-                    label="Количество"
-                    value={String(quantity)}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
-                  />
-                  <p className="text-sm text-gray-600">
-                    Итого:{" "}
-                    <span className="font-semibold text-gray-900">{formatPrice(unitPrice * quantity)}</span>
-                  </p>
-                </>
-              ) : (
+            {canDirectOrder ? (
+              <>
+                <Select
+                  label="Количество"
+                  value={String(quantity)}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  options={[1, 2, 3, 4, 5].map((n) => ({
+                    value: String(n),
+                    label: String(n),
+                  }))}
+                />
                 <p className="text-sm text-gray-600">
-                  Цена указана как ориентир. Состав и итог нужно согласовать в запросе предложения.
+                  Итого:{" "}
+                  <span className="font-semibold text-gray-900">
+                    {formatPrice(unitPrice * quantity)}
+                  </span>
                 </p>
-              )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-600">
+                Цена указана как ориентир. Состав и итог нужно согласовать в
+                запросе предложения.
+              </p>
+            )}
 
-              <div className="space-y-2">
-                <p className="text-xs text-gray-600">
-                  <span className="font-medium text-gray-900">Заказать услугу</span> — если предмет и цена
-                  уже определены, можно сразу оформить позицию.
-                </p>
-                <p className="text-xs text-gray-600">
-                  <span className="font-medium text-gray-900">Запросить предложение</span> — если нужно
-                  индивидуальное ТЗ или коммерческое предложение.
-                </p>
-              </div>
-
-              {canDirectOrder && (
-                <Button className="w-full" variant={ctaVariant} onClick={handleOrder}>
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">
+                <span className="font-medium text-gray-900">
                   Заказать услугу
-                </Button>
-              )}
-              <Button
-                className="w-full cursor-pointer"
-                variant={canDirectOrder ? "ghost" : ctaVariant}
-                onClick={() => router.push(`/requests/new?serviceId=${service.id}`)}
-              >
-                Запросить предложение
+                </span>{" "}
+                — если предмет и цена уже определены, можно сразу оформить
+                позицию.
+              </p>
+              <p className="text-xs text-gray-600">
+                <span className="font-medium text-gray-900">
+                  Запросить предложение
+                </span>{" "}
+                — если нужно индивидуальное ТЗ или коммерческое предложение.
+              </p>
+            </div>
+
+            {canDirectOrder && (
+              <Button className="w-full" variant="teal" onClick={handleOrder}>
+                Заказать услугу
               </Button>
-            </Card>
-          </aside>
-        </div>
+            )}
+            <Button
+              className="w-full cursor-pointer"
+              variant={canDirectOrder ? "ghost" : "teal"}
+              onClick={() =>
+                router.push(`/requests/new?serviceId=${service.id}`)
+              }
+            >
+              Запросить предложение
+            </Button>
+          </Card>
+        </aside>
+      </div>
     </CabinetAwareLayout>
   );
 }

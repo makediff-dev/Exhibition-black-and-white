@@ -41,11 +41,11 @@ export function CabinetAwareLayout({
   const from = searchParams.get("from");
   const catalogAccent = catalogAccentFromPathname(pathname);
   const showCabinetSidebar =
-    inCabinet &&
-    accountRole &&
-    keepsCabinetSidebar(from, accountRole);
-  const publicContent = catalogAccent ? (
-    <CatalogAccentProvider accent={catalogAccent}>{children}</CatalogAccentProvider>
+    inCabinet && accountRole && keepsCabinetSidebar(from, accountRole);
+  const catalogContent = catalogAccent ? (
+    <CatalogAccentProvider accent={catalogAccent}>
+      {children}
+    </CatalogAccentProvider>
   ) : (
     children
   );
@@ -60,8 +60,10 @@ export function CabinetAwareLayout({
         backFallbackHref={backFallbackHref}
         actions={actions}
       >
-        {description ? <p className="text-sm text-gray-600 mb-4 -mt-2">{description}</p> : null}
-        <div className={className}>{children}</div>
+        {description ? (
+          <p className="text-sm text-gray-600 mb-4 -mt-2">{description}</p>
+        ) : null}
+        <div className={className}>{catalogContent}</div>
       </AppShell>
     );
   }
@@ -77,17 +79,25 @@ export function CabinetAwareLayout({
           className,
         )}
       >
-        {showBack && <BackButton fallbackHref={backFallbackHref} className="mb-4" />}
+        {showBack && (
+          <BackButton fallbackHref={backFallbackHref} className="mb-4" />
+        )}
         {(title || actions) && (
           <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              {title ? <h1 className="text-2xl font-bold text-gray-900">{title}</h1> : null}
-              {description ? <p className="mt-1 text-sm text-gray-600">{description}</p> : null}
+              {title ? (
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+              ) : null}
+              {description ? (
+                <p className="mt-1 text-sm text-gray-600">{description}</p>
+              ) : null}
             </div>
-            {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+            {actions ? (
+              <div className="flex flex-wrap gap-2">{actions}</div>
+            ) : null}
           </div>
         )}
-        {publicContent}
+        {catalogContent}
       </main>
       <Footer />
     </div>

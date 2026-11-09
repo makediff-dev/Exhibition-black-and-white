@@ -18,10 +18,17 @@ import {
   getContractorCheckHref,
   getContractorPortfolioHref,
 } from "@/lib/utils/contractor-profile-links";
+import { CATALOG_ACCENT_TOKENS } from "@/constants/catalog-section-styles";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
-import { roleStarStyle } from "@/lib/utils/role-accent";
 import { withFromParam } from "@/lib/utils/message-related-links";
 import { formatReviewCount } from "@/lib/utils/formatters";
+
+const CONTRACTOR_ACCENT = CATALOG_ACCENT_TOKENS.purple.accent;
+const CONTRACTOR_ACCENT_STYLE = {
+  color: CONTRACTOR_ACCENT,
+  fill: CONTRACTOR_ACCENT,
+  borderColor: CONTRACTOR_ACCENT,
+};
 
 const MOCK_REQUISITES: Record<
   string,
@@ -92,7 +99,6 @@ export function ContractorDetailSection({
   backFallbackHref,
   accountRole = null,
   fromResponses = false,
-  fromEvent = false,
   requestId,
   responseId,
 }: Props) {
@@ -102,13 +108,18 @@ export function ContractorDetailSection({
   const { requests, responses } = usePrototypeStore();
   const from = useSearchParams().get("from");
   const role = accountRole ?? sessionRole ?? user?.role ?? null;
-  const ctaVariant = role === "customer" ? "teal" : "primary";
 
-  const contractor = SEED_CONTRACTORS.find((entry) => entry.id === contractorId);
+  const contractor = SEED_CONTRACTORS.find(
+    (entry) => entry.id === contractorId,
+  );
   if (!contractor) return null;
 
-  const request = requestId ? requests.find((item) => item.id === requestId) : undefined;
-  const response = responseId ? responses.find((item) => item.id === responseId) : undefined;
+  const request = requestId
+    ? requests.find((item) => item.id === requestId)
+    : undefined;
+  const response = responseId
+    ? responses.find((item) => item.id === responseId)
+    : undefined;
 
   const showFollowUpActions =
     isAuthenticated &&
@@ -128,7 +139,9 @@ export function ContractorDetailSection({
     director: "—",
   };
 
-  const services = SEED_SERVICES.filter((service) => service.contractorId === contractor.id);
+  const services = SEED_SERVICES.filter(
+    (service) => service.contractorId === contractor.id,
+  );
   const linkRole = role;
 
   return (
@@ -144,9 +157,33 @@ export function ContractorDetailSection({
         contractor.inRsvya ||
         contractor.inSroVz) && (
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {contractor.verified && <Badge variant="solid">Проверен</Badge>}
-          {contractor.hasProduction && <Badge variant="outline">Своё производство</Badge>}
-          <ContractorRegistryBadges inRsvya={contractor.inRsvya} inSroVz={contractor.inSroVz} />
+          {contractor.verified && (
+            <Badge
+              variant="solid"
+              useRoleAccent={false}
+              style={{
+                backgroundColor: CONTRACTOR_ACCENT,
+                borderColor: CONTRACTOR_ACCENT,
+                color: "#fff",
+              }}
+            >
+              Проверен
+            </Badge>
+          )}
+          {contractor.hasProduction && (
+            <Badge
+              variant="outline"
+              useRoleAccent={false}
+              style={CONTRACTOR_ACCENT_STYLE}
+            >
+              Своё производство
+            </Badge>
+          )}
+          <ContractorRegistryBadges
+            inRsvya={contractor.inRsvya}
+            inSroVz={contractor.inSroVz}
+            useRoleAccent={false}
+          />
         </div>
       )}
 
@@ -158,19 +195,20 @@ export function ContractorDetailSection({
             {contractor.city} · {contractor.geography}
           </p>
           <p className="text-sm text-gray-600 flex items-center gap-1 mb-6">
-            <Star
-              className={`h-4 w-4 ${roleStarStyle(role) ? "fill-current" : "fill-gray-900"}`}
-              style={roleStarStyle(role)}
-            />
+            <Star className="h-4 w-4 fill-[#0AAEE4] text-[#0AAEE4]" />
             {contractor.rating} · {formatReviewCount(contractor.reviewCount)}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <Link href={`/requests/new?contractorId=${contractor.id}`}>
-              <Button variant={ctaVariant}>Пригласить в заявку</Button>
+              <Button variant="purple">Пригласить в заявку</Button>
             </Link>
             <Link
-              href={from ? withFromParam(`/services?contractor=${contractor.id}`, from) : `/services?contractor=${contractor.id}`}
+              href={
+                from
+                  ? withFromParam(`/services?contractor=${contractor.id}`, from)
+                  : `/services?contractor=${contractor.id}`
+              }
             >
               <Button variant="outline">Услуги исполнителя</Button>
             </Link>
@@ -182,7 +220,10 @@ export function ContractorDetailSection({
               <p className="text-sm text-gray-700">{contractor.description}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {contractor.categories.map((category) => (
-                  <span key={category} className="text-xs border border-[#dddddd] rounded-[10px] px-2 py-1">
+                  <span
+                    key={category}
+                    className="text-xs border border-[#dddddd] rounded-[10px] px-2 py-1"
+                  >
                     {category}
                   </span>
                 ))}
@@ -193,7 +234,9 @@ export function ContractorDetailSection({
               <h2 className="text-lg font-semibold mb-3">Портфолио</h2>
               {contractor.portfolio.length === 0 ? (
                 <Card>
-                  <p className="text-sm text-gray-600">Портфолио пока не добавлено</p>
+                  <p className="text-sm text-gray-600">
+                    Портфолио пока не добавлено
+                  </p>
                 </Card>
               ) : (
                 <div className="catalog-cards-grid catalog-cards-grid--projects">
@@ -201,7 +244,12 @@ export function ContractorDetailSection({
                     <PortfolioCard
                       key={item.id}
                       item={item}
-                      href={getContractorPortfolioHref(contractor.id, item.id, linkRole, from)}
+                      href={getContractorPortfolioHref(
+                        contractor.id,
+                        item.id,
+                        linkRole,
+                        from,
+                      )}
                     />
                   ))}
                 </div>
@@ -226,11 +274,17 @@ export function ContractorDetailSection({
                   {services.map((service) => (
                     <Link
                       key={service.id}
-                      href={from ? withFromParam(`/services/${service.id}`, from) : `/services/${service.id}`}
+                      href={
+                        from
+                          ? withFromParam(`/services/${service.id}`, from)
+                          : `/services/${service.id}`
+                      }
                     >
                       <Card hoverable className="h-full">
                         <CardTitle>{service.title}</CardTitle>
-                        <p className="text-xs text-gray-600 mt-1">{service.category}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {service.category}
+                        </p>
                       </Card>
                     </Link>
                   ))}

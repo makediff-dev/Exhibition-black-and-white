@@ -6,6 +6,7 @@ interface ContractorRegistryBadgesProps {
   inSroVz?: boolean;
   stacked?: boolean;
   className?: string;
+  useRoleAccent?: boolean;
 }
 
 export function ContractorRegistryBadges({
@@ -13,22 +14,39 @@ export function ContractorRegistryBadges({
   inSroVz,
   stacked = false,
   className,
+  useRoleAccent = true,
 }: ContractorRegistryBadgesProps) {
   if (!inRsvya && !inSroVz) return null;
 
   if (!stacked) {
     return (
       <>
-        {inRsvya && <Badge variant="outline">Входит в РСВЯ</Badge>}
-        {inSroVz && <Badge variant="outline">Входит в СРО ВЗ</Badge>}
+        {inRsvya && (
+          <Badge variant="outline" useRoleAccent={useRoleAccent}>
+            Входит в РСВЯ
+          </Badge>
+        )}
+        {inSroVz && (
+          <Badge variant="outline" useRoleAccent={useRoleAccent}>
+            Входит в СРО ВЗ
+          </Badge>
+        )}
       </>
     );
   }
 
   return (
     <div className={cn("flex flex-col items-start gap-1 mt-2", className)}>
-      {inRsvya && <Badge variant="outline">Входит в РСВЯ</Badge>}
-      {inSroVz && <Badge variant="outline">Входит в СРО ВЗ</Badge>}
+      {inRsvya && (
+        <Badge variant="outline" useRoleAccent={useRoleAccent}>
+          Входит в РСВЯ
+        </Badge>
+      )}
+      {inSroVz && (
+        <Badge variant="outline" useRoleAccent={useRoleAccent}>
+          Входит в СРО ВЗ
+        </Badge>
+      )}
     </div>
   );
 }

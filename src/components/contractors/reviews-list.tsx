@@ -33,15 +33,21 @@ export function ReviewsList({ reviews, onSelect }: Props) {
   const [filter, setFilter] = useState<ReviewFilter>("all");
   const catalogAccent = useCatalogAccent();
   const { accountRole } = useCabinetSession();
-  const roleAccent = roleAccentToken(accountRole);
+  const roleAccent = catalogAccent
+    ? catalogAccent.accent
+    : roleAccentToken(accountRole);
   const visible = useMemo(
     () => reviews.filter((review) => matchesFilter(review, filter)),
-    [reviews, filter]
+    [reviews, filter],
   );
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Фильтр отзывов по оценке">
+      <div
+        className="flex flex-wrap gap-2"
+        role="tablist"
+        aria-label="Фильтр отзывов по оценке"
+      >
         {FILTERS.map((item) => {
           const isActive = filter === item.id;
           return (
@@ -62,8 +68,8 @@ export function ReviewsList({ reviews, onSelect }: Props) {
               style={
                 isActive && (roleAccent || catalogAccent)
                   ? {
-                      backgroundColor: roleAccent ?? "var(--catalog-accent)",
-                      borderColor: roleAccent ?? "var(--catalog-accent)",
+                      backgroundColor: roleAccent ?? catalogAccent?.accent,
+                      borderColor: roleAccent ?? catalogAccent?.accent,
                     }
                   : undefined
               }

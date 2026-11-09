@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { ContractorReview } from "@/data/types";
+import { useCatalogAccent } from "@/components/catalog/catalog-accent-provider";
 import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
 import { roleStarStyle } from "@/lib/utils/role-accent";
 import { formatDate } from "@/lib/utils/formatters";
@@ -14,14 +15,19 @@ interface Props {
 
 export function ReviewCard({ review, onClick }: Props) {
   const { accountRole } = useCabinetSession();
-  const filledStarStyle = roleStarStyle(accountRole);
+  const catalogAccent = useCatalogAccent();
+  const filledStarStyle = catalogAccent
+    ? { color: catalogAccent.accent, fill: catalogAccent.accent }
+    : roleStarStyle(accountRole);
   const photos = review.photos ?? [];
   const photoPreview = photos.slice(0, 3);
   const extraPhotos = Math.max(photos.length - photoPreview.length, 0);
 
   const content = (
     <Card className="h-full flex flex-col">
-      <p className="text-sm font-medium leading-snug mb-[10px]">{review.author}</p>
+      <p className="text-sm font-medium leading-snug mb-[10px]">
+        {review.author}
+      </p>
 
       <p className="text-sm text-gray-700 flex-1">{review.text}</p>
 
@@ -43,7 +49,9 @@ export function ReviewCard({ review, onClick }: Props) {
       )}
 
       {review.videos && review.videos.length > 0 && (
-        <p className="text-xs text-gray-500 mt-1">Видео: {review.videos.join(", ")}</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Видео: {review.videos.join(", ")}
+        </p>
       )}
 
       <div className="mt-[10px] flex items-end justify-between gap-3">
@@ -62,14 +70,20 @@ export function ReviewCard({ review, onClick }: Props) {
             />
           ))}
         </div>
-        <span className="text-xs text-gray-500 shrink-0">{formatDate(review.date)}</span>
+        <span className="text-xs text-gray-500 shrink-0">
+          {formatDate(review.date)}
+        </span>
       </div>
     </Card>
   );
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className="w-full text-left h-full">
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left h-full"
+      >
         {content}
       </button>
     );

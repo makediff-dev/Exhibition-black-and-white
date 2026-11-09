@@ -8,11 +8,33 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Service } from "@/data/types";
-import { formatPrice, formatReviewCount, formatServicePrice } from "@/lib/utils/formatters";
+import { CATALOG_ACCENT_TOKENS } from "@/constants/catalog-section-styles";
+import {
+  formatPrice,
+  formatReviewCount,
+  formatServicePrice,
+} from "@/lib/utils/formatters";
+
+const SERVICE_ACCENT_STYLE = {
+  color: CATALOG_ACCENT_TOKENS.teal.accent,
+  fill: CATALOG_ACCENT_TOKENS.teal.accent,
+};
 
 const MOCK_REVIEWS = [
-  { id: "rv1", author: "ООО «Альфа»", rating: 5, text: "Качественное выполнение в срок", date: "2025-12-10" },
-  { id: "rv2", author: "ООО «Бета»", rating: 4, text: "Хороший сервис, рекомендуем", date: "2025-11-22" },
+  {
+    id: "rv1",
+    author: "ООО «Альфа»",
+    rating: 5,
+    text: "Качественное выполнение в срок",
+    date: "2025-12-10",
+  },
+  {
+    id: "rv2",
+    author: "ООО «Бета»",
+    rating: 4,
+    text: "Хороший сервис, рекомендуем",
+    date: "2025-11-22",
+  },
 ];
 
 interface Props {
@@ -27,7 +49,10 @@ export function ContractorServiceDetailSection({
   onEdit,
 }: Props) {
   const [photoIndex, setPhotoIndex] = useState(0);
-  const photoCards = service.photoCards?.filter((card) => card.imageUrl || card.title || card.caption) ?? [];
+  const photoCards =
+    service.photoCards?.filter(
+      (card) => card.imageUrl || card.title || card.caption,
+    ) ?? [];
   const currentPhotoCard = photoCards[photoIndex];
 
   return (
@@ -36,11 +61,16 @@ export function ContractorServiceDetailSection({
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <Badge variant="outline" className="mb-2">{service.category}</Badge>
+          <Badge variant="outline" className="mb-2" useRoleAccent={false}>
+            {service.category}
+          </Badge>
           <h1 className="text-2xl font-bold mb-2">{service.title}</h1>
           <p className="text-sm text-gray-600">{service.city}</p>
           <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-            <Star className="h-4 w-4 fill-gray-900" />
+            <Star
+              className="h-4 w-4 fill-current"
+              style={SERVICE_ACCENT_STYLE}
+            />
             {service.rating} · {formatReviewCount(service.reviewCount)}
           </p>
         </div>
@@ -91,7 +121,11 @@ export function ContractorServiceDetailSection({
                 <>
                   <button
                     type="button"
-                    onClick={() => setPhotoIndex((prev) => (prev === 0 ? photoCards.length - 1 : prev - 1))}
+                    onClick={() =>
+                      setPhotoIndex((prev) =>
+                        prev === 0 ? photoCards.length - 1 : prev - 1,
+                      )
+                    }
                     className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
                     aria-label="Предыдущая карточка"
                   >
@@ -99,7 +133,11 @@ export function ContractorServiceDetailSection({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPhotoIndex((prev) => (prev === photoCards.length - 1 ? 0 : prev + 1))}
+                    onClick={() =>
+                      setPhotoIndex((prev) =>
+                        prev === photoCards.length - 1 ? 0 : prev + 1,
+                      )
+                    }
                     className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center border border-gray-300 bg-white/95"
                     aria-label="Следующая карточка"
                   >
@@ -110,10 +148,14 @@ export function ContractorServiceDetailSection({
             </div>
             <div className="p-4 border-t border-gray-200">
               {currentPhotoCard?.title && (
-                <p className="text-sm font-semibold">{currentPhotoCard.title}</p>
+                <p className="text-sm font-semibold">
+                  {currentPhotoCard.title}
+                </p>
               )}
               {currentPhotoCard?.caption && (
-                <p className="text-sm text-gray-700 mt-1">{currentPhotoCard.caption}</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  {currentPhotoCard.caption}
+                </p>
               )}
             </div>
           </div>
@@ -143,7 +185,8 @@ export function ContractorServiceDetailSection({
           <Card className="sm:col-span-2">
             <p className="font-medium mb-1">Условия оплаты</p>
             <p className="text-gray-700">
-              Предоплата {service.prepaymentPercent}%, постоплата {100 - service.prepaymentPercent}%
+              Предоплата {service.prepaymentPercent}%, постоплата{" "}
+              {100 - service.prepaymentPercent}%
             </p>
           </Card>
         )}
@@ -158,7 +201,9 @@ export function ContractorServiceDetailSection({
                 <p className="text-sm font-medium">{review.author}</p>
                 <span className="text-xs text-gray-600">{review.date}</span>
               </div>
-              <p className="text-xs mt-1">★ {review.rating}</p>
+              <p className="text-xs mt-1" style={SERVICE_ACCENT_STYLE}>
+                ★ {review.rating}
+              </p>
               <p className="text-sm text-gray-700 mt-2">{review.text}</p>
             </Card>
           ))}
