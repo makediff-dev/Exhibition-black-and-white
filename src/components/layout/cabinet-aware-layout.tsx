@@ -74,30 +74,37 @@ export function CabinetAwareLayout({
       <main
         id="main-content"
         className={cn(
-          "flex-1 w-full px-4 py-6 md:px-6",
-          constrained && "mx-auto max-w-site",
-          className,
+          "flex-1 w-full py-6",
+          constrained && "mx-auto max-w-[1920px]",
         )}
       >
-        {showBack && (
-          <BackButton fallbackHref={backFallbackHref} className="mb-4" />
-        )}
-        {(title || actions) && (
-          <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              {title ? (
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              ) : null}
-              {description ? (
-                <p className="mt-1 text-sm text-gray-600">{description}</p>
+        <div
+          className={cn(
+            "w-full px-4 md:px-6",
+            constrained && "mx-auto max-w-site",
+            className,
+          )}
+        >
+          {showBack && (
+            <BackButton fallbackHref={backFallbackHref} className="mb-4" />
+          )}
+          {(title || actions) && (
+            <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                {title ? (
+                  <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                ) : null}
+                {description ? (
+                  <p className="mt-1 text-sm text-gray-600">{description}</p>
+                ) : null}
+              </div>
+              {actions ? (
+                <div className="flex flex-wrap gap-2">{actions}</div>
               ) : null}
             </div>
-            {actions ? (
-              <div className="flex flex-wrap gap-2">{actions}</div>
-            ) : null}
-          </div>
-        )}
-        {catalogContent}
+          )}
+          {catalogContent}
+        </div>
       </main>
       <Footer />
     </div>

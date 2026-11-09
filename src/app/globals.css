@@ -47,7 +47,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --max-width-site: 1760px;
+  --container-site: 1760px;
 }
 
 @layer utilities {
@@ -56,6 +56,10 @@
   .shadow-md {
     box-shadow: 0 0 4px rgba(16, 24, 40, 0.06);
   }
+}
+
+.max-w-site {
+  max-width: 1760px;
 }
 
 html {
@@ -167,12 +171,6 @@ a:active:not([aria-disabled="true"]) {
 @media (min-width: 1800px) {
   .catalog-list-layout {
     max-width: 1760px;
-  }
-}
-
-@media (min-width: 1920px) {
-  .catalog-list-layout {
-    max-width: none;
   }
 }
 
