@@ -19,6 +19,12 @@
   color: #171717;
 }
 
+.contentFrame {
+  width: 100%;
+  max-width: 1920px;
+  margin-inline: auto;
+}
+
 .container {
   width: 100%;
   max-width: 1440px;
@@ -157,7 +163,8 @@
 .scrollTrack .categoryCard {
   flex: 0 0
     calc(
-      (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) / var(--scroll-visible-cards)
+      (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) /
+        var(--scroll-visible-cards)
     );
   min-width: 0;
   scroll-snap-align: start;
@@ -183,7 +190,8 @@
 .scrollTrack .tileCard {
   flex: 0 0
     calc(
-      (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) / var(--scroll-visible-cards)
+      (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) /
+        var(--scroll-visible-cards)
     );
   align-self: stretch;
   scroll-snap-align: start;
@@ -197,7 +205,8 @@
     (
         (100% - (var(--scroll-visible-cards) - 1) * var(--scroll-card-gap)) /
           var(--scroll-visible-cards)
-      ) * 10 / 16 / 2
+      ) *
+      10 / 16 / 2
   );
   transform: translateY(-50%);
   width: var(--scroll-arrow-size);
@@ -365,19 +374,35 @@
 }
 
 .quickActionToneCustomer {
-  background: linear-gradient(159.44deg, var(--role-customer) 0%, #6ad7a8 100.01%);
+  background: linear-gradient(
+    159.44deg,
+    var(--role-customer) 0%,
+    #6ad7a8 100.01%
+  );
 }
 
 .quickActionToneContractor {
-  background: linear-gradient(160deg, var(--role-contractor) 0%, var(--role-contractor-hover) 100%);
+  background: linear-gradient(
+    160deg,
+    var(--role-contractor) 0%,
+    var(--role-contractor-hover) 100%
+  );
 }
 
 .quickActionToneOrganizer {
-  background: linear-gradient(160deg, var(--role-organizer) 0%, var(--role-organizer-hover) 100%);
+  background: linear-gradient(
+    160deg,
+    var(--role-organizer) 0%,
+    var(--role-organizer-hover) 100%
+  );
 }
 
 .quickActionToneVenue {
-  background: linear-gradient(160deg, var(--role-venue) 0%, var(--role-venue-hover) 100%);
+  background: linear-gradient(
+    160deg,
+    var(--role-venue) 0%,
+    var(--role-venue-hover) 100%
+  );
 }
 
 .quickActionsTitle {
@@ -401,7 +426,6 @@
   overflow: hidden;
   border-radius: 10px;
 }
-
 
 .quickActionTop {
   flex: 0 0 auto;

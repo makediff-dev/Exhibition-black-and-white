@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className={`flex flex-col min-h-screen ${styles.page}`}>
       <PublicHeader />
-      <main>
+      <main className={styles.contentFrame}>
         <HomeHero />
         <HomePromoSlider />
         <HomeMain />
