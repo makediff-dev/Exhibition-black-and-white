@@ -86,7 +86,7 @@ export function RequestDescriptionForm({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!ring-[var(--request-accent-muted)] [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!ring-[var(--request-accent-muted)]">
       <Input
         id="wizard-field-title"
         label="Название заявки *"
@@ -122,11 +122,13 @@ export function RequestDescriptionForm({
               className={cn(
                 "rounded-card border p-4 text-left transition-colors",
                 descriptionMode === option.id
-                  ? "border-gray-900 bg-[var(--account-accent-soft,#eef0fe)] ring-1 ring-gray-900"
-                  : "border-gray-300 hover:border-gray-900",
+                  ? "border-[var(--request-accent-muted)] bg-[var(--request-accent-muted-soft)] ring-1 ring-[var(--request-accent-muted)]"
+                  : "border-gray-300 hover:border-[var(--request-accent-muted)] hover:bg-[var(--request-accent-muted-soft)]",
               )}
             >
-              <p className="text-sm font-medium text-gray-900">{option.label}</p>
+              <p className="text-sm font-medium text-gray-900">
+                {option.label}
+              </p>
               <p className="mt-1 text-xs text-gray-600">{option.description}</p>
             </button>
           ))}
@@ -138,13 +140,16 @@ export function RequestDescriptionForm({
           <Textarea
             label="ТЗ в свободной форме *"
             value={freeformDescription}
-            onChange={(event) => onFreeformDescriptionChange(event.target.value)}
+            onChange={(event) =>
+              onFreeformDescriptionChange(event.target.value)
+            }
             placeholder="Опишите задачу своими словами: цели, параметры стенда, пожелания по дизайну, сроки и другие важные детали"
             className="min-h-[280px]"
           />
           <p className="text-xs text-gray-600">
-            * На этапе проработки проекта нужно будет вернуться к составлению подробного ТЗ.
-            Так больше шансов, что исполнитель попадёт в ваши ожидания.
+            * На этапе проработки проекта нужно будет вернуться к составлению
+            подробного ТЗ. Так больше шансов, что исполнитель попадёт в ваши
+            ожидания.
           </p>
         </div>
       ) : (
@@ -161,12 +166,16 @@ export function RequestDescriptionForm({
               <section key={section.id} className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-900">
                   {index + 1}. {section.title}
-                  {section.required && <span className="text-gray-500"> *</span>}
+                  {section.required && (
+                    <span className="text-gray-500"> *</span>
+                  )}
                 </h3>
 
                 <div className="space-y-3">
                   {template?.fields.map((field) => {
-                    const fieldValue = values._legacy ? "" : (values[field.id] ?? "");
+                    const fieldValue = values._legacy
+                      ? ""
+                      : (values[field.id] ?? "");
 
                     if (field.type === "textarea") {
                       return (
@@ -174,7 +183,13 @@ export function RequestDescriptionForm({
                           key={field.id}
                           label={`${field.label}${field.required ? " *" : ""}`}
                           value={fieldValue}
-                          onChange={(event) => updateField(section.id, field.id, event.target.value)}
+                          onChange={(event) =>
+                            updateField(
+                              section.id,
+                              field.id,
+                              event.target.value,
+                            )
+                          }
                           placeholder={field.placeholder}
                         />
                       );
@@ -187,8 +202,12 @@ export function RequestDescriptionForm({
                         type={field.type === "date" ? "date" : "text"}
                         label={`${field.label}${field.required ? " *" : ""}`}
                         value={fieldValue}
-                        onChange={(event) => updateField(section.id, field.id, event.target.value)}
-                        placeholder={field.type === "date" ? undefined : field.placeholder}
+                        onChange={(event) =>
+                          updateField(section.id, field.id, event.target.value)
+                        }
+                        placeholder={
+                          field.type === "date" ? undefined : field.placeholder
+                        }
                       />
                     );
                   })}
@@ -199,8 +218,8 @@ export function RequestDescriptionForm({
 
           {!compact && (
             <p className="text-xs text-gray-600">
-              Всего разделов: {sections.length}. Дополнительные материалы
-              можно приложить на шаге «Файлы».
+              Всего разделов: {sections.length}. Дополнительные материалы можно
+              приложить на шаге «Файлы».
             </p>
           )}
         </div>

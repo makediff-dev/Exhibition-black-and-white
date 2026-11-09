@@ -556,6 +556,8 @@ export function RequestWizard({
           "--account-accent-hover": "var(--platform-accent-hover)",
           "--account-accent-soft": "#e8f8ee",
           "--account-accent-border": "var(--platform-accent)",
+          "--request-accent-muted": "#79b99c",
+          "--request-accent-muted-soft": "#eef7f2",
         } as React.CSSProperties
       }
     >
@@ -1086,16 +1088,12 @@ export function RequestWizard({
       <div className="grid w-full grid-cols-[1fr_auto] items-start gap-3 border-t border-gray-300 pt-4">
         <div className="flex flex-wrap gap-2">
           {step > 0 && (
-            <Button variant="green-outline" onClick={() => goToStep(step - 1)}>
+            <Button variant="outline" onClick={() => goToStep(step - 1)}>
               <ChevronLeft className="h-4 w-4" />
               Назад
             </Button>
           )}
-          <Button
-            variant="ghost"
-            className="text-[var(--platform-accent)] hover:bg-[#e8f8ee] hover:text-[var(--platform-accent-hover)]"
-            onClick={saveDraft}
-          >
+          <Button variant="ghost" onClick={saveDraft}>
             Сохранить черновик
           </Button>
         </div>
