@@ -549,7 +549,7 @@ export function RequestWizard({
 
   return (
     <div
-      className="space-y-6"
+      className="space-y-6 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!ring-0 [&_select:focus]:!border-[var(--request-accent-muted)] [&_select:focus]:!ring-0 [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!ring-0"
       style={
         {
           "--account-accent": "var(--platform-accent)",

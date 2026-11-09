@@ -86,7 +86,7 @@ export function RequestDescriptionForm({
   };
 
   return (
-    <div className="space-y-8 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!ring-[var(--request-accent-muted)] [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!ring-[var(--request-accent-muted)]">
+    <div className="space-y-8 [&_input:focus]:!border-[var(--request-accent-muted)] [&_input:focus]:!ring-0 [&_textarea:focus]:!border-[var(--request-accent-muted)] [&_textarea:focus]:!ring-0">
       <Input
         id="wizard-field-title"
         label="Название заявки *"
@@ -122,8 +122,8 @@ export function RequestDescriptionForm({
               className={cn(
                 "rounded-card border p-4 text-left transition-colors",
                 descriptionMode === option.id
-                  ? "border-[var(--request-accent-muted)] bg-[var(--request-accent-muted-soft)] ring-1 ring-[var(--request-accent-muted)]"
-                  : "border-gray-300 hover:border-[var(--request-accent-muted)] hover:bg-[var(--request-accent-muted-soft)]",
+                  ? "border-[var(--request-accent-muted)] bg-[var(--request-accent-muted-soft)]"
+                  : "border-gray-300 hover:border-[var(--request-accent-muted)]",
               )}
             >
               <p className="text-sm font-medium text-gray-900">
