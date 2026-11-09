@@ -5,7 +5,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
-import { getNavForRole, isNavItemActive, resolveActiveNavSlug } from "@/constants/nav-menus";
+import {
+  getNavForRole,
+  isNavItemActive,
+  resolveActiveNavSlug,
+} from "@/constants/nav-menus";
 import { useAuthStore, usePrototypeStore } from "@/lib/store";
 import { PublicHeader } from "./public-header";
 import { currentReturnPath, loginHref } from "@/lib/auth/session";
@@ -43,18 +47,26 @@ export function AppShell({
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const showCompanyRegistrationPrompt = useAuthStore((s) => s.showCompanyRegistrationPrompt);
-  const setShowCompanyRegistrationPrompt = useAuthStore((s) => s.setShowCompanyRegistrationPrompt);
+  const showCompanyRegistrationPrompt = useAuthStore(
+    (s) => s.showCompanyRegistrationPrompt,
+  );
+  const setShowCompanyRegistrationPrompt = useAuthStore(
+    (s) => s.setShowCompanyRegistrationPrompt,
+  );
   const deals = usePrototypeStore((s) => s.deals);
   const nav = getNavForRole(user?.role || "");
-  const resolvedAccountRole = accountRole ?? (user?.role as AccountRole | undefined);
+  const resolvedAccountRole =
+    accountRole ?? (user?.role as AccountRole | undefined);
 
   const dealNavSlug = useMemo(() => {
     const match = pathname.match(/^\/deals\/([^/?#]+)/);
     if (!match) return undefined;
     const deal = deals.find((item) => item.id === match[1]);
     if (!deal) return undefined;
-    if (deal.status === "completed" && nav.some((item) => item.slug === "completed-projects")) {
+    if (
+      deal.status === "completed" &&
+      nav.some((item) => item.slug === "completed-projects")
+    ) {
       return "completed-projects";
     }
     return "active-projects";
@@ -84,7 +96,9 @@ export function AppShell({
   useLayoutEffect(() => {
     const positionActiveLink = (navElement: HTMLElement | null) => {
       if (!navElement || navElement.clientHeight <= 0) return;
-      const activeLink = navElement.querySelector<HTMLElement>('[data-nav-active="true"]');
+      const activeLink = navElement.querySelector<HTMLElement>(
+        '[data-nav-active="true"]',
+      );
       if (!activeLink) return;
 
       const viewTop = navElement.scrollTop;
@@ -106,14 +120,19 @@ export function AppShell({
   const handleLogout = () => {
     const dest = currentReturnPath(
       typeof window !== "undefined" ? window.location.pathname : pathname,
-      typeof window !== "undefined" ? window.location.search : searchParams.toString(),
+      typeof window !== "undefined"
+        ? window.location.search
+        : searchParams.toString(),
       typeof window !== "undefined" ? window.location.hash : "",
     );
     logout();
     router.replace(loginHref(dest));
   };
 
-  const renderNavLink = (item: (typeof nav)[number], onNavigate?: () => void) => {
+  const renderNavLink = (
+    item: (typeof nav)[number],
+    onNavigate?: () => void,
+  ) => {
     const isActive =
       resolvedActiveNavSlug !== undefined
         ? item.slug === resolvedActiveNavSlug
@@ -145,126 +164,160 @@ export function AppShell({
 
   const cabinetBody = (
     <div className={shellStyles.cabinetLayout}>
-        <aside
-          className={cn(
-            "hidden lg:flex w-60 shrink-0 border-r border-[var(--surface-border)] flex-col",
-            shellStyles.sidebar,
-            resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
-          )}
+      <aside
+        className={cn(
+          "hidden lg:flex w-60 shrink-0 border-r border-[var(--surface-border)] flex-col",
+          shellStyles.sidebar,
+          resolvedAccountRole ? styles.accountSidebar : "bg-gray-50",
+        )}
+      >
+        <nav
+          ref={sidebarNavRef}
+          className={cn("space-y-0.5", shellStyles.sidebarNav)}
         >
-          <nav ref={sidebarNavRef} className={cn("space-y-0.5", shellStyles.sidebarNav)}>
-            {nav.map((item) => renderNavLink(item))}
-          </nav>
-          {user && (
-            <div className="p-3 border-t border-gray-300">
-              <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+          {nav.map((item) => renderNavLink(item))}
+        </nav>
+        {user && (
+          <div className="p-3 border-t border-gray-300">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Выйти
+            </Button>
+          </div>
+        )}
+      </aside>
+
+      <div className="lg:hidden">
+        <Drawer
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          title="Меню кабинета"
+          side="left"
+          closeLabel="Закрыть меню"
+          belowHeader
+          hideChrome
+          bodyClassName={shellStyles.mobileCabinetDrawerBody}
+          footer={
+            user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  setSidebarOpen(false);
+                  handleLogout();
+                }}
+              >
                 <LogOut className="h-4 w-4" />
                 Выйти
               </Button>
-            </div>
-          )}
-        </aside>
-
-        <div className="lg:hidden">
-          <Drawer
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            title="Меню кабинета"
-            side="left"
-            closeLabel="Закрыть меню"
-            belowHeader
-            hideChrome
-            bodyClassName={shellStyles.mobileCabinetDrawerBody}
-            footer={
-              user ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    setSidebarOpen(false);
-                    handleLogout();
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Выйти
-                </Button>
-              ) : null
-            }
-          >
-            {resolvedAccountRole ? (
-              <AccountThemeProvider role={resolvedAccountRole} tokensOnly>
-                <nav
-                  ref={mobileNavRef}
-                  className={cn("space-y-1", shellStyles.sidebarNav, shellStyles.mobileCabinetNav)}
-                >
-                  {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
-                </nav>
-              </AccountThemeProvider>
-            ) : (
+            ) : null
+          }
+        >
+          {resolvedAccountRole ? (
+            <AccountThemeProvider role={resolvedAccountRole} tokensOnly>
               <nav
                 ref={mobileNavRef}
-                className={cn("space-y-1", shellStyles.sidebarNav, shellStyles.mobileCabinetNav)}
-              >
-                {nav.map((item) => renderNavLink(item, () => setSidebarOpen(false)))}
-              </nav>
-            )}
-          </Drawer>
-        </div>
-
-        <main id="main-content" ref={mainRef} className={cn("p-4 md:p-6", shellStyles.main)}>
-          <button
-            type="button"
-            className={cn(
-              "lg:hidden mb-3 inline-flex min-h-11 min-w-11 items-center gap-2 px-2 text-sm",
-              resolvedAccountRole && styles.accountMenuButton,
-            )}
-            aria-expanded={sidebarOpen}
-            aria-haspopup="dialog"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-4 w-4" aria-hidden="true" /> Меню кабинета
-          </button>
-          <div className="w-full">
-            {showCompanyRegistrationPrompt && (
-              <div
                 className={cn(
-                  "mb-4 border p-4 text-sm rounded-card",
-                  resolvedAccountRole ? styles.accountPromptBanner : "border-gray-900 bg-gray-50",
+                  "space-y-1",
+                  shellStyles.sidebarNav,
+                  shellStyles.mobileCabinetNav,
                 )}
               >
-                <p className="font-semibold mb-1">Зарегистрируйте компанию</p>
-                <p className="text-gray-600 mb-3">
-                  Вы подтвердили личный аккаунт. Теперь можно зарегистрировать компанию и выбрать
-                  роль на платформе. Без регистрации юридического лица многие функции сервиса
-                  будут недоступны.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Link href="/register">
-                    <Button size="sm">Зарегистрировать компанию</Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowCompanyRegistrationPrompt(false)}
-                  >
-                    Закрыть
-                  </Button>
+                {nav.map((item) =>
+                  renderNavLink(item, () => setSidebarOpen(false)),
+                )}
+              </nav>
+            </AccountThemeProvider>
+          ) : (
+            <nav
+              ref={mobileNavRef}
+              className={cn(
+                "space-y-1",
+                shellStyles.sidebarNav,
+                shellStyles.mobileCabinetNav,
+              )}
+            >
+              {nav.map((item) =>
+                renderNavLink(item, () => setSidebarOpen(false)),
+              )}
+            </nav>
+          )}
+        </Drawer>
+      </div>
+
+      <main
+        id="main-content"
+        ref={mainRef}
+        className={cn("p-4 md:p-6", shellStyles.main)}
+      >
+        <button
+          type="button"
+          className={cn(
+            "lg:hidden mb-3 inline-flex min-h-11 min-w-11 items-center gap-2 px-2 text-sm",
+            resolvedAccountRole && styles.accountMenuButton,
+          )}
+          aria-expanded={sidebarOpen}
+          aria-haspopup="dialog"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu className="h-4 w-4" aria-hidden="true" /> Меню кабинета
+        </button>
+        <div className={shellStyles.mainContent}>
+          {showCompanyRegistrationPrompt && (
+            <div
+              className={cn(
+                "mb-4 border p-4 text-sm rounded-card",
+                resolvedAccountRole
+                  ? styles.accountPromptBanner
+                  : "border-gray-900 bg-gray-50",
+              )}
+            >
+              <p className="font-semibold mb-1">Зарегистрируйте компанию</p>
+              <p className="text-gray-600 mb-3">
+                Вы подтвердили личный аккаунт. Теперь можно зарегистрировать
+                компанию и выбрать роль на платформе. Без регистрации
+                юридического лица многие функции сервиса будут недоступны.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/register">
+                  <Button size="sm">Зарегистрировать компанию</Button>
+                </Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowCompanyRegistrationPrompt(false)}
+                >
+                  Закрыть
+                </Button>
+              </div>
+            </div>
+          )}
+          {showBack && (
+            <BackButton fallbackHref={backFallbackHref} className="mb-2" />
+          )}
+          {(title || actions) && (
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              {title && (
+                <h1 className="w-full min-w-0 text-xl font-bold text-gray-900 lg:flex-1">
+                  {title}
+                </h1>
+              )}
+              {actions && (
+                <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">
+                  {actions}
                 </div>
-              </div>
-            )}
-            {showBack && (
-              <BackButton fallbackHref={backFallbackHref} className="mb-2" />
-            )}
-            {(title || actions) && (
-              <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                {title && <h1 className="w-full min-w-0 text-xl font-bold text-gray-900 lg:flex-1">{title}</h1>}
-                {actions && <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:justify-end">{actions}</div>}
-              </div>
-            )}
-            {children}
-          </div>
-        </main>
+              )}
+            </div>
+          )}
+          {children}
+        </div>
+      </main>
     </div>
   );
 
@@ -272,7 +325,10 @@ export function AppShell({
     <div className={cn("flex flex-col", shellStyles.page)}>
       <PublicHeader />
       {resolvedAccountRole ? (
-        <AccountThemeProvider role={resolvedAccountRole} className="flex-1 min-h-0 w-full">
+        <AccountThemeProvider
+          role={resolvedAccountRole}
+          className="flex-1 min-h-0 w-full"
+        >
           {cabinetBody}
         </AccountThemeProvider>
       ) : (
