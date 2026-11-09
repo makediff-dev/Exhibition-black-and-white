@@ -162,6 +162,10 @@ a:active:not([aria-disabled="true"]) {
   background: #fcfcfc;
 }
 
+.public-page-content {
+  padding-inline: 48px;
+}
+
 .catalog-list-layout {
   max-width: 1440px;
   padding-inline: 48px;
@@ -181,12 +185,14 @@ a:active:not([aria-disabled="true"]) {
 }
 
 @media (max-width: 1280px) {
+  .public-page-content,
   .catalog-list-layout {
     padding-inline: 24px;
   }
 }
 
 @media (max-width: 768px) {
+  .public-page-content,
   .catalog-list-layout {
     padding-inline: 16px;
   }

@@ -80,7 +80,7 @@ export function CabinetAwareLayout({
       >
         <div
           className={cn(
-            "w-full px-4 md:px-6 min-[1281px]:px-12",
+            "public-page-content w-full",
             constrained &&
               "mx-auto max-w-[1440px] min-[1800px]:max-w-site min-[1920px]:max-w-none",
             className,
