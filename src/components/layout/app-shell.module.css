@@ -32,6 +32,12 @@
   margin-inline: auto;
 }
 
+@media (min-width: 1281px) {
+  .mainContent {
+    padding-right: 24px;
+  }
+}
+
 @media (min-width: 768px) {
   .main {
     padding-bottom: 1.5rem;
