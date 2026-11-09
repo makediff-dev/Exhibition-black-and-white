@@ -243,13 +243,24 @@ export default function EventDetailPage() {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
           <div>
             <div className="flex flex-wrap gap-2 mb-3">
-              <Badge variant="outline">{EVENT_CATEGORY_LABELS[event.category]}</Badge>
-              <Badge variant="dashed">{event.industry}</Badge>
-              <Badge variant={eventLifecycle.code === "completed" ? "dashed" : "outline"}>
+              <Badge variant="outline" useRoleAccent={false}>
+                {EVENT_CATEGORY_LABELS[event.category]}
+              </Badge>
+              <Badge variant="dashed" useRoleAccent={false}>
+                {event.industry}
+              </Badge>
+              <Badge
+                variant={
+                  eventLifecycle.code === "completed" ? "dashed" : "outline"
+                }
+                useRoleAccent={false}
+              >
                 {eventLifecycle.label}
               </Badge>
               {bookingOpen && (
-                <Badge variant="outline">Можно запросить площадь</Badge>
+                <Badge variant="outline" useRoleAccent={false}>
+                  Можно запросить площадь
+                </Badge>
               )}
             </div>
 
@@ -427,7 +438,10 @@ export default function EventDetailPage() {
                       <p className="text-xs text-gray-600 mt-1">Архивная информация о зале</p>
                     ) : (
                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <Badge variant={hall.available ? "outline" : "dashed"}>
+                        <Badge
+                          variant={hall.available ? "outline" : "dashed"}
+                          useRoleAccent={false}
+                        >
                           {hall.available ? "Доступен" : "Занят"}
                         </Badge>
                         {hall.available && HALL_REMAINING_SPOTS[hall.id] && (
