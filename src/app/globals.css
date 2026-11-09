@@ -174,13 +174,19 @@ a:active:not([aria-disabled="true"]) {
   }
 }
 
-@media (max-width: 1279px) {
+@media (min-width: 1920px) {
+  .catalog-list-layout {
+    max-width: none;
+  }
+}
+
+@media (max-width: 1280px) {
   .catalog-list-layout {
     padding-inline: 24px;
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .catalog-list-layout {
     padding-inline: 16px;
   }

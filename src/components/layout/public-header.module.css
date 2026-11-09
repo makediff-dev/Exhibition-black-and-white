@@ -431,12 +431,24 @@
   }
 }
 
-@media (max-width: 1279px) {
+@media (min-width: 1920px) {
   .inner {
-    padding: 0 16px;
+    max-width: 1920px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .inner {
+    padding-inline: 24px;
   }
 
   .row {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .inner {
+    padding-inline: 16px;
   }
 }
