@@ -1,127 +1,161 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
-import {
-  ArrowDown,
-  ArrowRight,
-  BadgeCheck,
-  Banknote,
-  Check,
-  ChevronDown,
-  CircleCheck,
-  CircleDollarSign,
-  CircleHelp,
-  Clock3,
-  FileCheck2,
-  FileText,
-  Handshake,
-  Info,
-  LockKeyhole,
-  Mail,
-  MessageSquareText,
-  Search,
-  Send,
-  ShieldCheck,
-  Star,
-  UserRoundCheck,
-  UsersRound,
-} from "lucide-react";
-import { useToast } from "@/components/ui/toast-provider";
+import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties, type FormEvent, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Check } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { useCabinetSession } from "@/lib/hooks/use-cabinet-session";
+import { addCompanyHref, registerHref } from "@/lib/auth/session";
 import styles from "./how-it-works-figma.module.css";
 
 const roles = [
   {
     id: "customer",
     label: "Заказчик",
-    title: "Заказчик",
-    description: "Находит исполнителей и размещает заказы",
-    image: "/how-it-works/role-customer-volume.svg",
-    flat: "/how-it-works/role-customer-flat.svg",
+    title: "Заказчикам",
+    description: "Экспонентам и компаниям, которым нужен стенд, услуги к мероприятию или место на выставке.",
+    image: "/how-it-works/role-detail-customer-exact.svg",
+    cardImage: "/how-it-works/role-card-customer.svg",
+    cardArrow: "/how-it-works/role-card-customer-arrow.svg",
+    flat: "/how-it-works/role-tab-customer-exact.svg",
     color: "#28b5b3",
-    steps: ["Разместить заказ", "Получить отклики", "Выбрать исполнителя", "Принять работу"],
+    linkColor: "#1a7d7b",
+    softColor: "#eaf8f7",
+    steps: ["Зарегистрируйте компанию и подключите ЭДО.", "Разместите заказ через конструктор или добавьте готовые услуги из каталога в корзину.", "Сравните отклики исполнителей в таблице: цена, срок, условия, рейтинг.", "Выберите исполнителя — заказ станет сделкой с этапами.", "Оплатите счёт этапа — после оплаты исполнитель начинает работу.", "Примите этапы, подпишите акты и УПД в ЭДО и оставьте отзыв."],
+    partners: [
+      ["Исполнители", "Заказ в одном из трёх форматов или услуга из каталога"],
+      ["Организатор мероприятия", "Аренда площади под стенд и услуги организатора"],
+      ["Площадка", "Услуги площадки: пропуска, аккредитация, электричество"],
+    ],
+    sections: ["Заказы", "Корзина", "Отклики", "Проекты", "Оплаты", "Документы", "Проверки исполнителей", "Избранное", "Отзывы", "Сотрудники"],
+    secondaryLabel: "Смотреть исполнителей",
+    secondaryHref: "/contractors",
   },
   {
     id: "contractor",
     label: "Исполнитель",
-    title: "Исполнитель",
-    description: "Находит проекты и предлагает свои услуги",
-    image: "/how-it-works/role-contractor-volume.svg",
-    flat: "/how-it-works/role-contractor-flat.svg",
+    title: "Исполнителям",
+    description: "Застройщикам стендов и подрядчикам выставочных услуг.",
+    image: "/how-it-works/role-detail-contractor-exact.svg",
+    cardImage: "/how-it-works/role-card-contractor.svg",
+    cardArrow: "/how-it-works/role-card-contractor-arrow.svg",
+    flat: "/how-it-works/role-tab-contractor-exact.svg",
     color: "#0aaee4",
-    steps: ["Заполнить профиль", "Найти заказ", "Отправить отклик", "Выполнить работу"],
+    linkColor: "#0a7ba3",
+    softColor: "#e7f7fc",
+    steps: ["Зарегистрируйте компанию и подключите ЭДО.", "Заполните профиль: услуги с ценами, портфолио, города и производственные мощности.", "Откликайтесь на заказы из ленты по вашим категориям и городам: цена, срок, условия.", "Заказчик выбрал вас — заказ стал сделкой с этапами.", "Начинайте этап после оплаты его счёта и передавайте результат в сделке.", "Банк перечисляет вашу долю в момент оплаты счёта, документы приходят в ЭДО."],
+    partners: [
+      ["Заказчики", "Отклики на заказы и продажа услуг из каталога"],
+      ["Организаторы", "Заказы на застройку и услуги к мероприятию, услуги организатора для застройщиков"],
+      ["Площадки", "Услуги для монтажа: пропуска, электричество, аренда техники"],
+      ["Другие исполнители", "Наём подрядчиков и соисполнителей: разместите заказ или купите их услуги в каталоге"],
+    ],
+    sections: ["Профиль", "Услуги", "Портфолио", "Доступные заказы", "Отклики", "Проекты", "График работ", "Выплаты", "Мои заказы", "Корзина", "Оплаты", "Документы", "Отзывы"],
+    secondaryLabel: "Смотреть заказы",
+    secondaryHref: "/requests",
   },
   {
     id: "organizer",
     label: "Организатор",
-    title: "Организатор",
-    description: "Публикует мероприятия и привлекает участников",
-    image: "/how-it-works/role-organizer-volume.svg",
-    flat: "/how-it-works/role-organizer-flat.svg",
+    title: "Организаторам",
+    description: "Организаторам выставок, форумов и конференций.",
+    image: "/how-it-works/role-detail-organizer-exact.svg",
+    cardImage: "/how-it-works/role-card-organizer.svg",
+    cardArrow: "/how-it-works/role-card-organizer-arrow.svg",
+    flat: "/how-it-works/role-tab-organizer-exact.svg",
     color: "#2939eb",
-    steps: ["Добавить событие", "Открыть регистрацию", "Собрать участников", "Провести мероприятие"],
+    linkColor: "#2939eb",
+    softColor: "#eaebfd",
+    steps: ["Зарегистрируйте компанию и подключите ЭДО.", "Создайте мероприятие или заберите своё из каталога — он наполнен заранее.", "Найдите площадку: свободные даты, залы и планировки — и отправьте запрос брони.", "Площадка подтверждает бронь — сервис создаёт заказ и счёт.", "Нарежьте площадь на лоты и продавайте места и услуги экспонентам.", "Ведите входящие заказы экспонентов и исходящие — площадке и подрядчикам."],
+    partners: [
+      ["Площадка", "Аренда зала: бронь на монтаж, проведение и демонтаж"],
+      ["Экспоненты", "Продажа площади под стенды и услуг организатора"],
+      ["Исполнители", "Заказы на застройку и выставочные услуги, услуги организатора для застройщиков"],
+    ],
+    sections: ["Мероприятия", "Аренда площадки", "Забрать мероприятие", "Заказы", "Оплаты", "Документы"],
+    secondaryLabel: "Смотреть площадки",
+    secondaryHref: "/venues",
   },
   {
     id: "venue",
     label: "Площадка",
-    title: "Площадка",
-    description: "Размещает пространства и получает заявки",
-    image: "/how-it-works/role-venue-volume.svg",
-    flat: "/how-it-works/role-venue-flat.svg",
+    title: "Площадкам",
+    description: "Выставочным центрам, павильонам и залам.",
+    image: "/how-it-works/role-detail-venue-exact.svg",
+    cardImage: "/how-it-works/role-card-venue.svg",
+    cardArrow: "/how-it-works/role-card-venue-arrow.svg",
+    flat: "/how-it-works/role-tab-venue-exact.svg",
     color: "#683bd9",
-    steps: ["Добавить площадку", "Указать условия", "Получить запрос", "Подтвердить бронь"],
+    linkColor: "#683bd9",
+    softColor: "#f0ebfb",
+    steps: ["Зарегистрируйте компанию и подключите ЭДО.", "Добавьте залы с характеристиками, PDF-планировки, лоты и календарь занятости.", "Получайте запросы брони от организаторов — подтверждайте или отклоняйте с причиной.", "После подтверждения сервис создаёт заказ и счёт организатору.", "Принимайте заказы услуг площадки: пропуска, аккредитация, аренда техники, электричество.", "Следите за оплатами и начислениями, документы приходят в ЭДО."],
+    partners: [
+      ["Организаторы", "Аренда залов и площади на период мероприятия"],
+      ["Экспоненты и застройщики", "Заказ услуг площадки"],
+      ["Исполнители", "Наём подрядчиков для своих задач: разместите заказ или купите их услуги в каталоге"],
+    ],
+    sections: ["Залы", "Свободные площади", "Планировки и лоты", "Мероприятия", "Услуги площадки", "Бронирования", "Заказы", "Оплаты", "Документы"],
+    secondaryLabel: "Смотреть мероприятия",
+    secondaryHref: "/events",
   },
 ] as const;
 
 const navigation = [
-  ["overview", "Обзор"],
-  ["registration", "Регистрация"],
-  ["roles", "Роли на платформе"],
-  ["order", "Размещение заказа"],
+  ["overview", "Коротко о сервисе"],
+  ["registration", "Регистрация и допуск"],
+  ["roles", "Работа по ролям"],
+  ["order", "Как разместить заказ"],
   ["responses", "Отклики и сделка"],
   ["payment", "Оплата"],
-  ["documents", "Документы"],
+  ["documents", "Документы и ЭДО"],
   ["trust", "Проверка и рейтинг"],
-  ["disputes", "Споры и возвраты"],
-  ["faq", "Вопросы и ответы"],
+  ["disputes", "Если что-то пошло не так"],
+  ["faq", "Частые вопросы"],
   ["contact", "Связаться с менеджером"],
 ] as const;
 
-const faqs = [
-  ["start", "Сколько стоит регистрация?", "Регистрация и базовые возможности платформы бесплатны. Комиссия возникает только в рамках защищённой сделки."],
-  ["start", "Можно ли совмещать несколько ролей?", "Да. Один аккаунт может работать как заказчик, исполнитель, организатор и площадка. Роли переключаются в личном кабинете."],
-  ["start", "Что доступно до проверки профиля?", "Можно заполнить профиль, изучать каталог и сохранять интересные предложения. Для сделок потребуется пройти проверку."],
-  ["orders", "Как разместить заказ?", "Заполните короткую форму: опишите задачу, сроки, бюджет и выберите открытый или закрытый формат публикации."],
-  ["orders", "Чем открытый заказ отличается от закрытого?", "Открытый заказ виден подходящим исполнителям. В закрытом заказе вы сами выбираете, кого пригласить к отклику."],
-  ["orders", "Можно ли изменить заказ после публикации?", "Да, пока не выбран исполнитель. После начала сделки важные изменения согласуются обеими сторонами."],
-  ["deal", "Как выбрать исполнителя?", "Сравните предложение, рейтинг, портфолио и подтверждённые компетенции. Затем обсудите детали в чате сделки."],
-  ["deal", "Где проходит общение по заказу?", "Все договорённости фиксируются в чате заказа. Это помогает защитить обе стороны при разногласиях."],
-  ["deal", "Как работает безопасная сделка?", "Оплата резервируется до выполнения работы. После подтверждения результата деньги перечисляются исполнителю."],
-  ["payment", "Какими способами можно оплатить?", "Доступна оплата картой и по счёту для юридических лиц. Набор способов зависит от типа аккаунта."],
-  ["payment", "Когда исполнитель получает деньги?", "После того как заказчик примет работу, либо автоматически по окончании установленного срока проверки."],
-  ["documents", "Какие документы формируются?", "Сервис хранит счёт, акт и закрывающие документы. Их можно скачать в карточке завершённой сделки."],
-  ["documents", "Подходит ли сервис для юридических лиц?", "Да. Можно указать реквизиты компании и получать комплект документов для бухгалтерии."],
-  ["trust", "Как проверяются компании?", "Мы сверяем регистрационные данные, реквизиты, профиль и подтверждения выполненных проектов."],
-  ["trust", "Из чего складывается рейтинг?", "На рейтинг влияют завершённые сделки, отзывы, соблюдение сроков и качество заполнения профиля."],
-  ["disputes", "Что делать, если возник спор?", "Не закрывайте сделку и обратитесь к менеджеру из карточки заказа. Команда изучит переписку и материалы."],
-  ["disputes", "Можно ли вернуть оплату?", "Да, если работа не выполнена или стороны согласовали отмену. Условия возврата зависят от статуса сделки."],
-  ["support", "Как быстро отвечает менеджер?", "Обычно мы отвечаем в течение одного рабочего дня. Для активных сделок обращения обрабатываются приоритетно."],
+const approvalRows = [
+  ["Аккаунт создан, компании нет", "Публичные разделы, личный профиль, «Добавить компанию»"],
+  ["ИНН указан, заявление не подписано", "Черновик компании со статусом «Ожидает подписи»"],
+  ["Заявление подписано, идёт модерация", "Профиль компании и документы в ЭДО"],
+  ["Компания одобрена, ЭДО подключён", "Полный кабинет роли"],
+  ["Подпись или ЭДО отозваны", "Профиль и повторное подтверждение. Новые сделки и выплаты — после восстановления"],
 ] as const;
 
-const sectionIcon = {
-  overview: Search,
-  registration: UserRoundCheck,
-  roles: UsersRound,
-  order: FileText,
-  responses: MessageSquareText,
-  payment: CircleDollarSign,
-  documents: FileCheck2,
-  trust: BadgeCheck,
-  disputes: ShieldCheck,
-  faq: CircleHelp,
-  contact: Mail,
-};
+const faqs = [
+  ["general", "Чем сервис лучше привычных способов поиска?", "Исполнителей не нужно искать по сайтам застройщиков, спискам организаторов и тендерам: компании с рейтингом, отзывами и проверкой собраны в одном каталоге. Один заказ уходит всем подходящим исполнителям, отклики сравниваются в таблице. Договор, один счёт и закрывающие документы в ЭДО — внутри сделки."],
+  ["general", "Почему стоит зарегистрироваться сейчас?", "Ранний доступ к заказам, исполнителям и мероприятиям. Вы одними из первых начнёте вести сделки и документы в сервисе."],
+  ["general", "Преимущества для заказчиков", "Размещение заказов, сравнение предложений, один счёт и управление документами в одном месте."],
+  ["general", "Преимущества сервиса для исполнителей", "Заказы по вашим категориям и городам, отклики, управление проектами и выплата в момент оплаты счёта."],
+  ["general", "Как работает система рейтингов?", "Рейтинг складывается из оценок в отзывах. Отзыв можно оставить только после завершения сделки, поэтому оценки ставят компании, которые действительно работали с исполнителем."],
+  ["registration", "Как зарегистрироваться?", "Создайте личный аккаунт, добавьте компанию по ИНН и выберите роль. Затем руководитель или сотрудник с доверенностью подписывает заявление в ЭДО, и компания проходит модерацию."],
+  ["registration", "Зачем подписывать заявление в ЭДО?", "Подпись руководителя или сотрудника с доверенностью подтверждает, что вы вправе действовать от имени компании. Без неё никто не сможет зарегистрировать чужой ИНН и получить доступ к кабинету."],
+  ["registration", "Нужно ли подключать ЭДО?", "Да. Без ЭДО компания не может публиковать заказы, откликаться, вести сделки и получать выплаты."],
+  ["registration", "Можно ли вести несколько компаний в одном аккаунте?", "Да. Добавьте компанию в настройках или в списке компаний в шапке и пройдите подтверждение для неё. Между кабинетами компаний переключайтесь в шапке."],
+  ["registration", "Как пригласить сотрудников?", "Администратор компании приглашает сотрудников в настройках и выдаёт доступ к разделам. Сотрудник регистрирует личный аккаунт и подтверждает полномочия через ЭДО."],
+  ["orders", "Какие форматы заказов есть?", "Открытый запрос — заказ видят все подходящие исполнители, принимаются первые 10 откликов. Закрытый запрос — только приглашённые, не больше 5 исполнителей. Срочная сделка — короткая форма и быстрый подбор."],
+  ["orders", "Чем заказ отличается от услуги из каталога?", "В заказе вы описываете задачу, и исполнители присылают предложения. Услуга из каталога — готовое предложение с ценой: добавляете её в корзину и оформляете сделку."],
+  ["orders", "Как сравнить отклики?", "Выберите два отклика или больше — сервис покажет их в одной таблице: цена, срок, условия, подход, рейтинг и срок действия предложения."],
+  ["orders", "Видит ли гость контакты заказчика?", "Нет. Гость видит заказ без контактов заказчика. Откликнуться можно после регистрации компании и подключения ЭДО."],
+  ["payment", "Как проходит оплата?", "Сервис выставляет один счёт на этап или на всю сделку. Вы оплачиваете его, а банк сам перечисляет сумму исполнителю и комиссию сервису."],
+  ["payment", "Когда исполнитель получает деньги?", "В момент оплаты счёта: банк сразу распределяет платёж, и начисление появляется в разделе «Выплаты» кабинета исполнителя."],
+  ["payment", "Что делать, если работа выполнена некачественно?", "Оставьте замечания к этапу — он вернётся в работу. Если договориться не получится, откройте спор в сделке: решение примет администрация сервиса."],
+  ["documents", "Какие документы формирует сервис?", "Договор, счёт, акт и УПД. Они привязаны к сделке и уходят на подпись в ваш ЭДО."],
+  ["documents", "Где найти закрывающие документы?", "В разделе «Документы» кабинета и во вкладке «Документы» сделки. Если документа не хватает, отправьте контрагенту запрос закрывающих через ЭДО."],
+  ["organizers", "Как организатору забрать своё мероприятие из каталога?", "Найдите выставку в разделе «Забрать мероприятие» кабинета и нажмите «Это моё мероприятие». Администрация сверит компанию и передаст карточку вам — после этого её можно редактировать."],
+  ["organizers", "Как арендовать зал?", "Выберите площадку в каталоге, посмотрите свободные даты, залы и планировки и отправьте запрос брони на монтаж, проведение и демонтаж. После подтверждения сервис создаст заказ и счёт."],
+  ["organizers", "Как площадке принимать брони?", "Заполните залы, планировки и календарь занятости — тогда организаторы увидят свободные даты. Запросы приходят в раздел «Бронирования», где их можно подтвердить или отклонить с причиной."],
+] as const;
+
+const faqCategories = [
+  ["general", "Общие"],
+  ["registration", "Регистрация и ЭДО"],
+  ["orders", "Заказы и отклики"],
+  ["payment", "Оплата и споры"],
+  ["documents", "Документы"],
+  ["organizers", "Организаторам и площадкам"],
+] as const;
 
 function SectionTitle({
   eyebrow,
@@ -135,9 +169,57 @@ function SectionTitle({
   return (
     <header className={styles.sectionHeader}>
       {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
-      <h2>{title}</h2>
-      {description ? <p>{description}</p> : null}
+      <div className={styles.sectionHeading}>
+        <h2>{title}</h2>
+        {description ? <p>{description}</p> : null}
+      </div>
     </header>
+  );
+}
+
+function SemanticStatus({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: "done" | "waiting" | "problem" | "work";
+}) {
+  const toneClass = {
+    done: styles.semanticStatusDone,
+    waiting: styles.semanticStatusWaiting,
+    problem: styles.semanticStatusProblem,
+    work: styles.semanticStatusWork,
+  }[tone];
+
+  return <span className={`${styles.semanticStatus} ${toneClass}`}>{children}</span>;
+}
+
+function FaqItem({
+  answer,
+  initialOpen,
+  question,
+}: {
+  answer: string;
+  initialOpen: boolean;
+  question: string;
+}) {
+  const [isOpen, setIsOpen] = useState(initialOpen);
+
+  return (
+    <details
+      className={styles.faqItem}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+      open={isOpen}
+    >
+      <summary>
+        {question}
+        <span className={styles.faqAssetIcons}>
+          <img className={styles.faqIconDown} src="/how-it-works/faq-chevron-down-rule-exact.svg" alt="" width={20} height={20} />
+          <img className={styles.faqIconUp} src="/how-it-works/faq-chevron-up-rule-exact.svg" alt="" width={20} height={20} />
+        </span>
+      </summary>
+      <p>{answer}</p>
+    </details>
   );
 }
 
@@ -154,11 +236,471 @@ function NumberedList({ items }: { items: readonly string[] }) {
   );
 }
 
+function isValidContact(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes("@")) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  }
+  return trimmed.replace(/\D/g, "").length >= 10;
+}
+
+function ManagerContactForm({
+  modal = false,
+  initialTopic = "",
+  onSubmit,
+}: {
+  modal?: boolean;
+  initialTopic?: string;
+  onSubmit?: () => void;
+}) {
+  const { hydrated, inCabinet, user } = useCabinetSession();
+  const profileDefaults = {
+    name: user?.displayName?.trim() || user?.director?.trim() || "",
+    company: user?.name?.trim() || "",
+    contact: user?.phone?.trim() || "",
+  };
+  const [profileSeed, setProfileSeed] = useState(inCabinet ? user?.id ?? "guest" : "guest");
+  const [sent, setSent] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [name, setName] = useState(inCabinet ? profileDefaults.name : "");
+  const [company, setCompany] = useState(inCabinet ? profileDefaults.company : "");
+  const [contact, setContact] = useState(inCabinet ? profileDefaults.contact : "");
+  const [message, setMessage] = useState("");
+  const [topic, setTopic] = useState(initialTopic);
+  const [topicOpen, setTopicOpen] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [topicSheetMounted, setTopicSheetMounted] = useState(false);
+  const [mobileTopicSheet, setMobileTopicSheet] = useState(false);
+
+  useEffect(() => {
+    setTopicSheetMounted(true);
+    const media = window.matchMedia("(max-width: 1180px)");
+    const apply = () => setMobileTopicSheet(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (!topicOpen || !mobileTopicSheet) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setTopicOpen(false);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [mobileTopicSheet, topicOpen]);
+
+  const nextProfileSeed = hydrated ? (inCabinet ? user?.id ?? "cabinet" : "guest") : profileSeed;
+  if (nextProfileSeed !== profileSeed) {
+    setProfileSeed(nextProfileSeed);
+    setName(inCabinet ? profileDefaults.name : "");
+    setCompany(inCabinet ? profileDefaults.company : "");
+    setContact(inCabinet ? profileDefaults.contact : "");
+  }
+  const topicOptions = [
+    ["registration", "Регистрация и ЭДО"],
+    ["orders", "Заказы и отклики"],
+    ["payment", "Оплата"],
+    ["documents", "Документы"],
+    ["dispute", "Спор по сделке"],
+    ["other", "Другое"],
+  ] as const;
+  const errorMessages: Record<string, string> = {
+    name: "Заполните поле",
+    contact: "Проверьте почту или телефон",
+    topic: "Выберите тему",
+    message: "Напишите, с чем помочь",
+    consent: "Нужно согласие, чтобы отправить сообщение",
+  };
+
+  const setFieldError = (field: string, invalid: boolean) => {
+    setErrors((current) => {
+      if (invalid) return { ...current, [field]: errorMessages[field] };
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const resetForm = () => {
+    setSent(false);
+    setErrors({});
+    setName(inCabinet ? profileDefaults.name : "");
+    setCompany(inCabinet ? profileDefaults.company : "");
+    setContact(inCabinet ? profileDefaults.contact : "");
+    setMessage("");
+    setTopic(initialTopic);
+    setTopicOpen(false);
+    setConsentChecked(false);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextErrors: Record<string, string> = {};
+
+    if (!name.trim()) nextErrors.name = errorMessages.name;
+    if (!isValidContact(contact)) nextErrors.contact = errorMessages.contact;
+    if (!topic) nextErrors.topic = errorMessages.topic;
+    if (!message.trim()) nextErrors.message = errorMessages.message;
+    if (!consentChecked) nextErrors.consent = errorMessages.consent;
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setSent(true);
+    onSubmit?.();
+  };
+
+  const error = (field: string) =>
+    errors[field] ? (
+      <span className={styles.contactFieldError}>
+        <img src="/how-it-works/contact-alert-exact.svg" alt="" width={14} height={14} />
+        <span>{errors[field]}</span>
+      </span>
+    ) : null;
+
+  if (sent) {
+    return (
+      <div className={`${styles.contactForm} ${styles.contactSuccess} ${modal ? styles.contactModalForm : ""}`}>
+        <img src="/how-it-works/contact-sent.svg" alt="" width={40} height={40} />
+        <strong>Сообщение отправлено</strong>
+        <p>Ответим на почту или телефон, который вы указали.</p>
+        <button className={styles.contactSuccessAgain} onClick={resetForm} type="button">
+          Написать ещё
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className={`${styles.contactForm} ${modal ? styles.contactModalForm : ""}`}
+      noValidate
+      onSubmit={handleSubmit}
+    >
+      <label className={errors.name ? styles.contactInvalid : undefined}>
+        Имя
+        <input
+          aria-invalid={Boolean(errors.name)}
+          name="name"
+          onBlur={(event) => setFieldError("name", !event.currentTarget.value.trim())}
+          onChange={(event) => {
+            setName(event.currentTarget.value);
+            if (event.currentTarget.value.trim()) setFieldError("name", false);
+          }}
+          placeholder="Как к вам обращаться"
+          required
+          value={name}
+        />
+        {error("name")}
+      </label>
+      <label>
+        <span className={styles.optionalLabel}>Компания или ИНН <small>необязательно</small></span>
+        <input
+          name="company"
+          onChange={(event) => setCompany(event.currentTarget.value)}
+          placeholder="Если уже регистрировались"
+          value={company}
+        />
+      </label>
+      <label className={`${styles.contactWide} ${errors.contact ? styles.contactInvalid : ""}`}>
+        Почта или телефон
+        <input
+          aria-invalid={Boolean(errors.contact)}
+          name="contact"
+          onBlur={(event) => setFieldError("contact", !isValidContact(event.currentTarget.value))}
+          onChange={(event) => {
+            setContact(event.currentTarget.value);
+            if (isValidContact(event.currentTarget.value)) setFieldError("contact", false);
+          }}
+          placeholder="Для ответа"
+          required
+          value={contact}
+        />
+        {error("contact")}
+      </label>
+      <div
+        className={`${styles.contactField} ${styles.contactWide} ${errors.topic ? styles.contactInvalid : ""}`}
+        onBlur={(event) => {
+          if (mobileTopicSheet) return;
+          if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+            setTopicOpen(false);
+            setFieldError("topic", !topic);
+          }
+        }}
+      >
+        <span id={`contact-topic-label-${modal ? "modal" : "page"}`}>Тема</span>
+        <div className={styles.topicSelect}>
+          <input name="topic" type="hidden" value={topic} />
+          <button
+            aria-controls={`contact-topic-options-${modal ? "modal" : "page"}`}
+            aria-expanded={topicOpen}
+            aria-haspopup="listbox"
+            aria-invalid={Boolean(errors.topic)}
+            aria-labelledby={`contact-topic-label-${modal ? "modal" : "page"}`}
+            className={`${styles.topicSelectTrigger} ${topicOpen ? styles.topicSelectOpen : ""}`}
+            onClick={() => setTopicOpen((current) => !current)}
+            role="combobox"
+            type="button"
+          >
+            <span className={topic ? undefined : styles.topicPlaceholder}>
+              {topicOptions.find(([value]) => value === topic)?.[1] ?? "Выберите тему"}
+            </span>
+            <img
+              aria-hidden="true"
+              className={topicOpen ? styles.topicChevronOpen : undefined}
+              src="/how-it-works/contact-chevron.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+          </button>
+          {topicOpen && !mobileTopicSheet ? (
+            <div
+              className={styles.topicOptions}
+              id={`contact-topic-options-${modal ? "modal" : "page"}`}
+              role="listbox"
+            >
+              {topicOptions.map(([value, label]) => (
+                <button
+                  aria-selected={topic === value}
+                  className={topic === value ? styles.topicOptionSelected : undefined}
+                  key={value}
+                  onClick={() => {
+                    setTopic(value);
+                    setTopicOpen(false);
+                    setFieldError("topic", false);
+                  }}
+                  role="option"
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {topicSheetMounted && topicOpen && mobileTopicSheet
+            ? createPortal(
+                <div className={styles.topicSheetLayer}>
+                  <button
+                    aria-label="Закрыть список тем"
+                    className={styles.topicSheetBackdrop}
+                    onClick={() => setTopicOpen(false)}
+                    type="button"
+                  />
+                  <div
+                    aria-labelledby={`contact-topic-sheet-title-${modal ? "modal" : "page"}`}
+                    className={styles.topicSheet}
+                    id={`contact-topic-options-${modal ? "modal" : "page"}`}
+                    role="dialog"
+                  >
+                    <div className={styles.topicSheetHandle} />
+                    <div className={styles.topicSheetHead}>
+                      <p id={`contact-topic-sheet-title-${modal ? "modal" : "page"}`}>Тема</p>
+                      <button
+                        aria-label="Закрыть"
+                        className={styles.topicSheetClose}
+                        onClick={() => setTopicOpen(false)}
+                        type="button"
+                      >
+                        <img src="/how-it-works/mobile-toc-close.svg" alt="" width={24} height={24} />
+                      </button>
+                    </div>
+                    <div className={styles.topicSheetList} role="listbox">
+                      {topicOptions.map(([value, label]) => {
+                        const selected = topic === value;
+                        return (
+                          <button
+                            aria-selected={selected}
+                            className={selected ? styles.topicSheetOptionSelected : styles.topicSheetOption}
+                            key={value}
+                            onClick={() => {
+                              setTopic(value);
+                              setTopicOpen(false);
+                              setFieldError("topic", false);
+                            }}
+                            role="option"
+                            type="button"
+                          >
+                            <span>{label}</span>
+                            {selected ? (
+                              <img src="/how-it-works/topic-sheet-check.svg" alt="" width={20} height={20} />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
+        </div>
+        {topic === "dispute" ? (
+          <p className={styles.topicHint}>
+            Если спор по конкретной сделке, откройте его в самой сделке — менеджер сразу
+            увидит переписку, этапы и счета.
+          </p>
+        ) : null}
+        {error("topic")}
+      </div>
+      <label className={`${styles.contactWide} ${errors.message ? styles.contactInvalid : ""}`}>
+        Сообщение
+        <textarea
+          aria-invalid={Boolean(errors.message)}
+          name="message"
+          onBlur={(event) => setFieldError("message", !event.currentTarget.value.trim())}
+          onChange={(event) => {
+            setMessage(event.currentTarget.value);
+            if (event.currentTarget.value.trim()) setFieldError("message", false);
+          }}
+          placeholder="Опишите вопрос"
+          required
+          value={message}
+        />
+        {error("message")}
+      </label>
+      <div
+        className={`${styles.consent} ${styles.contactWide} ${consentChecked ? styles.consentChecked : ""} ${errors.consent ? styles.contactInvalid : ""}`}
+      >
+        <label className={styles.consentRow}>
+          <input
+            aria-invalid={Boolean(errors.consent)}
+            checked={consentChecked}
+            name="consent"
+            onBlur={(event) => setFieldError("consent", !event.currentTarget.checked)}
+            onChange={(event) => {
+              setConsentChecked(event.currentTarget.checked);
+              setFieldError("consent", !event.currentTarget.checked);
+            }}
+            type="checkbox"
+            required
+          />
+          <span>
+            Согласен на обработку <Link href="/legal/privacy">персональных данных</Link>
+          </span>
+        </label>
+        {errors.consent ? (
+          <span className={styles.consentError}>
+            <img src="/how-it-works/contact-alert-exact.svg" alt="" width={14} height={14} />
+            <span>{errors.consent}</span>
+          </span>
+        ) : null}
+      </div>
+      <button type="submit">Отправить</button>
+    </form>
+  );
+}
+
 export function HowItWorksFigmaPage() {
-  const { showToast } = useToast();
+  const { inCabinet } = useCabinetSession();
   const [activeSection, setActiveSection] = useState("overview");
   const [activeRole, setActiveRole] = useState<(typeof roles)[number]["id"]>("customer");
   const [faqFilter, setFaqFilter] = useState("all");
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactModalTopic, setContactModalTopic] = useState("");
+  const [contactModalNonce, setContactModalNonce] = useState(0);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sheetMounted, setSheetMounted] = useState(false);
+  const activeNavLabel = navigation.find(([id]) => id === activeSection)?.[1] ?? "Коротко о сервисе";
+
+  const openContactModal = (topic = "") => {
+    setContactModalTopic(topic);
+    setContactModalNonce((current) => current + 1);
+    setContactModalOpen(true);
+  };
+
+  const stickyOffset = useCallback(() => {
+    const compact = window.matchMedia("(max-width: 1180px)").matches;
+    const headerHidden = document.documentElement.classList.contains("how-it-works-header-hidden");
+    const phone = window.matchMedia("(max-width: 767px)").matches;
+    const headerH = compact ? (headerHidden ? 0 : phone ? 56 : 62) : 0;
+    const toc = document.querySelector<HTMLElement>(`.${styles.mobileTocTrigger}`);
+    const tocH = compact ? toc?.offsetHeight ?? 60 : 0;
+    return headerH + tocH;
+  }, []);
+
+  const scrollToPageSection = useCallback(
+    (id: string) => {
+      setActiveSection(id);
+      setMobileNavOpen(false);
+      if (typeof history.replaceState === "function") {
+        history.replaceState(null, "", `#${id}`);
+      }
+      window.setTimeout(() => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY - stickyOffset() - 8;
+        window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      }, 80);
+    },
+    [stickyOffset],
+  );
+
+  useEffect(() => {
+    setSheetMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const media = window.matchMedia("(max-width: 1180px)");
+    let lastY = window.scrollY;
+    let hidden = false;
+
+    const apply = (nextHidden: boolean) => {
+      hidden = nextHidden;
+      if (!media.matches) {
+        root.classList.remove("how-it-works-header-hidden");
+        root.style.removeProperty("--how-it-works-header-offset");
+        return;
+      }
+      root.classList.toggle("how-it-works-header-hidden", hidden);
+      const headerOffset = hidden ? "0px" : window.matchMedia("(max-width: 767px)").matches ? "56px" : "62px";
+      root.style.setProperty("--how-it-works-header-offset", headerOffset);
+    };
+
+    const onScroll = () => {
+      if (!media.matches) {
+        apply(false);
+        lastY = window.scrollY;
+        return;
+      }
+      const y = window.scrollY;
+      if (y < 8) apply(false);
+      else if (y > lastY + 6 && y > 56) apply(true);
+      else if (y < lastY - 6) apply(false);
+      lastY = y;
+    };
+
+    apply(false);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    media.addEventListener("change", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      media.removeEventListener("change", onScroll);
+      root.classList.remove("how-it-works-header-hidden");
+      root.style.removeProperty("--how-it-works-header-offset");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const root = document.documentElement;
+    root.classList.add("how-it-works-sheet-open");
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      root.classList.remove("how-it-works-sheet-open");
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     const sections = navigation
@@ -183,12 +725,6 @@ export function HowItWorksFigmaPage() {
     [faqFilter],
   );
 
-  const handleContact = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.currentTarget.reset();
-    showToast("Запрос отправлен. Менеджер свяжется с вами в течение рабочего дня.");
-  };
-
   return (
     <div className={styles.page}>
       <div className={styles.heroWrap}>
@@ -201,10 +737,12 @@ export function HowItWorksFigmaPage() {
           <div className={styles.heroCopy}>
             <h1>Как работает сервис</h1>
             <p>
-              Всё необходимое для работы в выставочной индустрии — от поиска партнёров
-              до безопасной оплаты и закрывающих документов.
+              Здесь — понятная, короткая инструкция о том, как устроена платформа:
+              быстро поймёте сервис. На этой странице вы найдёте путь каждой роли,
+              правила оплаты и документов и ответы на частые вопросы.
             </p>
           </div>
+          <p className={styles.roleCardsLabel}>Перейти к своей роли</p>
           <div className={styles.roleCards}>
             {roles.map((role) => (
               <button
@@ -212,17 +750,27 @@ export function HowItWorksFigmaPage() {
                 key={role.id}
                 onClick={() => {
                   setActiveRole(role.id);
-                  document.getElementById("roles")?.scrollIntoView({ behavior: "smooth" });
+                  scrollToPageSection("roles");
                 }}
-                style={{ "--role-color": role.color } as CSSProperties}
+                style={
+                  {
+                    "--role-color": role.color,
+                    "--role-link-color": role.linkColor,
+                  } as CSSProperties
+                }
                 type="button"
               >
-                <Image src={role.image} alt="" width={90} height={82} priority />
-                <span>
-                  <strong>{role.title}</strong>
+                <span className={styles.roleCardTop}>
+                  <span className={styles.roleCardHeader}>
+                    <img src={role.cardImage} alt="" height={48} width={48} />
+                    <strong>{role.title}</strong>
+                  </span>
                   <small>{role.description}</small>
                 </span>
-                <ArrowDown aria-hidden="true" size={20} />
+                <span className={styles.roleCardLink}>
+                  Порядок работы
+                  <img src={role.cardArrow} alt="" width={14} height={14} />
+                </span>
               </button>
             ))}
           </div>
@@ -230,125 +778,300 @@ export function HowItWorksFigmaPage() {
       </div>
 
       <div className={`${styles.container} ${styles.contentLayout}`}>
+        <div className={styles.mobileToc}>
+          <button
+            aria-expanded={mobileNavOpen}
+            className={styles.mobileTocTrigger}
+            onClick={() => setMobileNavOpen(true)}
+            type="button"
+          >
+            <span>
+              <small>На этой странице</small>
+              <strong>{activeNavLabel}</strong>
+            </span>
+            <img src="/how-it-works/mobile-toc-chevron.svg" alt="" width={20} height={20} />
+          </button>
+          {sheetMounted && mobileNavOpen
+            ? createPortal(
+                <div className={styles.mobileTocLayer}>
+                  <button
+                    aria-label="Закрыть навигацию по странице"
+                    className={styles.mobileTocBackdrop}
+                    onClick={() => setMobileNavOpen(false)}
+                    type="button"
+                  />
+                  <div
+                    aria-labelledby="mobile-toc-sheet-title"
+                    className={styles.mobileTocSheet}
+                    role="dialog"
+                  >
+                    <div className={styles.mobileTocHandle} />
+                    <div className={styles.mobileTocSheetHead}>
+                      <p id="mobile-toc-sheet-title">На этой странице</p>
+                      <button
+                        aria-label="Закрыть"
+                        className={styles.mobileTocClose}
+                        onClick={() => setMobileNavOpen(false)}
+                        type="button"
+                      >
+                        <img src="/how-it-works/mobile-toc-close.svg" alt="" width={24} height={24} />
+                      </button>
+                    </div>
+                    <nav aria-label="Разделы страницы">
+                      {navigation.map(([id, label]) => {
+                        const isSectionActive = activeSection === id && id !== "roles";
+                        const onSectionClick = (event: MouseEvent<HTMLAnchorElement>) => {
+                          event.preventDefault();
+                          scrollToPageSection(id);
+                        };
+
+                        return (
+                          <Fragment key={id}>
+                            <a
+                              className={isSectionActive ? styles.mobileTocLinkActive : styles.mobileTocLink}
+                              href={`#${id}`}
+                              onClick={onSectionClick}
+                            >
+                              {label}
+                            </a>
+                            {id === "roles"
+                              ? roles.map((role) => {
+                                  const isRoleActive = activeSection === "roles" && activeRole === role.id;
+                                  return (
+                                    <a
+                                      className={isRoleActive ? styles.mobileTocRoleActive : styles.mobileTocRole}
+                                      href="#roles"
+                                      key={role.id}
+                                      onClick={(event) => {
+                                        event.preventDefault();
+                                        setActiveRole(role.id);
+                                        scrollToPageSection("roles");
+                                      }}
+                                    >
+                                      <img
+                                        src={
+                                          isRoleActive
+                                            ? "/how-it-works/sidebar-rule-active-dot.svg"
+                                            : `/how-it-works/sidebar-rule-${role.id}-dot.svg`
+                                        }
+                                        alt=""
+                                        width={8}
+                                        height={8}
+                                      />
+                                      <span>{role.title}</span>
+                                    </a>
+                                  );
+                                })
+                              : null}
+                          </Fragment>
+                        );
+                      })}
+                    </nav>
+                    <div className={styles.mobileTocDivider} />
+                    <button
+                      className={styles.mobileTocManager}
+                      onClick={() => {
+                        setMobileNavOpen(false);
+                        openContactModal();
+                      }}
+                      type="button"
+                    >
+                      Написать менеджеру
+                      <img src="/how-it-works/mobile-toc-manager-arrow.svg" alt="" width={14} height={14} />
+                    </button>
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
+        </div>
         <aside className={styles.sideNav} aria-label="Навигация по странице">
-          <strong>Содержание</strong>
-          <nav>
-            {navigation.map(([id, label]) => {
-              const Icon = sectionIcon[id];
-              return (
-                <a
-                  className={activeSection === id ? styles.sideLinkActive : styles.sideLink}
-                  href={`#${id}`}
-                  key={id}
-                  onClick={() => setActiveSection(id)}
-                >
-                  <Icon size={17} aria-hidden="true" />
-                  <span>{label}</span>
-                </a>
-              );
-            })}
-          </nav>
+          <div className={styles.sideNavGroup}>
+            <strong>На этой странице</strong>
+            <nav>
+              {navigation.map(([id, label]) => (
+                <Fragment key={id}>
+                  <a
+                    className={activeSection === id ? styles.sideLinkActive : styles.sideLink}
+                    href={`#${id}`}
+                    onClick={() => setActiveSection(id)}
+                  >
+                    <span>{label}</span>
+                  </a>
+                  {id === "roles" ? (
+                    <div className={styles.roleNavLinks}>
+                      {roles.map((role) => {
+                        const isRoleActive = activeSection === "roles" && activeRole === role.id;
+
+                        return (
+                          <a
+                            aria-current={isRoleActive ? "true" : undefined}
+                            className={isRoleActive ? styles.roleNavLinkActive : styles.roleNavLink}
+                            href="#roles"
+                            key={role.id}
+                            onClick={() => {
+                              setActiveRole(role.id);
+                              setActiveSection("roles");
+                            }}
+                            style={{ "--role-color": role.color } as CSSProperties}
+                          >
+                            <img
+                              src={
+                                isRoleActive
+                                  ? "/how-it-works/sidebar-rule-active-dot.svg"
+                                  : `/how-it-works/sidebar-rule-${role.id}-dot.svg`
+                              }
+                              alt=""
+                              width={8}
+                              height={8}
+                            />
+                            <span>{role.title}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </Fragment>
+              ))}
+            </nav>
+          </div>
           <div className={styles.sideHelp}>
-            <CircleHelp size={19} />
-            <p>Остались вопросы?</p>
-            <a href="#contact">Написать менеджеру</a>
+            <strong>Остались вопросы?</strong>
+            <p>Менеджер поможет с регистрацией, ЭДО, оплатой и спорными ситуациями.</p>
+            <button type="button" onClick={() => openContactModal()}>
+              Написать менеджеру
+            </button>
           </div>
         </aside>
 
         <main className={styles.mainContent}>
           <section className={styles.section} id="overview">
             <SectionTitle
-              title="Весь цикл работы в одном сервисе"
-              description="Платформа объединяет участников выставочного рынка и помогает провести сделку от первой заявки до закрывающих документов."
+              eyebrow="Коротко о сервисе"
+              title="Пять шагов от регистрации до закрывающих документов"
+              description="Шаги одинаковые для заказа услуг и для аренды площадки. При аренде вместо заказа — запрос брони, вместо откликов — ответ площадки."
             />
-            <div className={styles.stats}>
+            <div className={styles.serviceSteps}>
               {[
-                ["4", "роли на платформе"],
-                ["1", "единый профиль"],
-                ["24/7", "доступ к заказам"],
-                ["100%", "защищённая оплата"],
-              ].map(([value, label]) => (
-                <div key={label}>
-                  <strong>{value}</strong>
-                  <span>{label}</span>
+                ["Регистрация компании", "Личный аккаунт, компания по ИНН и подпись заявления в ЭДО. Затем модерация.", "Регистрация и допуск", "#registration"],
+                ["Поиск или заказ", "Услуга из каталога в корзину, заказ исполнителям или запрос брони площадки.", "Как разместить заказ", "#order"],
+                ["Отклики и выбор", "Исполнители присылают предложения, вы сравниваете их в таблице. Площадка подтверждает или отклоняет бронь.", "Отклики и сделка", "#responses"],
+                ["Оплата одним счётом", "Вы оплачиваете счёт, банк сам делит платёж между исполнителем и сервисом.", "Оплата", "#payment"],
+                ["Приёмка и документы", "Вы принимаете этапы работ, акты и УПД уходят в ваш ЭДО на подпись.", "Документы и ЭДО", "#documents"],
+              ].map(([title, text, action, href], index) => (
+                <div key={title}>
+                  <span className={styles.stepIndex}>{index + 1}</span>
+                  <span className={styles.stepCopy}><strong>{title}</strong><small>{text}</small></span>
+                  <a href={href}>
+                    {action}
+                    <img src="/how-it-works/service-step-arrow-exact.svg" alt="" width={14} height={14} />
+                  </a>
                 </div>
               ))}
-            </div>
-            <div className={styles.processLine}>
-              {["Регистрация", "Поиск партнёра", "Сделка", "Оплата", "Документы"].map(
-                (item, index) => (
-                  <div key={item}>
-                    <span>{index + 1}</span>
-                    <p>{item}</p>
-                    {index < 4 ? <ArrowRight size={18} /> : null}
-                  </div>
-                ),
-              )}
-            </div>
-            <div className={styles.greenNotice}>
-              <ShieldCheck size={23} />
-              <div>
-                <strong>Сделка под защитой платформы</strong>
-                <p>Деньги резервируются и переводятся исполнителю только после приёмки работы.</p>
-              </div>
             </div>
           </section>
 
           <section className={styles.section} id="registration">
             <SectionTitle
-              eyebrow="Шаг 1"
-              title="Регистрация занимает несколько минут"
-              description="Создайте единый аккаунт и выберите роли, в которых планируете работать."
+              eyebrow="Регистрация и доступ"
+              title="Компанию регистрирует только тот, кто вправе её представлять"
+              description="Сервис открывает компанию в ЭДО кабинете, а вам показывают инструменты, если сотрудник с доверенностью. Приглашённый человек не получает кабинет, даже если у компании есть права."
             />
-            <div className={styles.split}>
-              <div className={styles.whiteCard}>
-                <h3>Что нужно сделать</h3>
-                <NumberedList
-                  items={[
-                    "Указать имя, email и телефон",
-                    "Подтвердить контактные данные",
-                    "Выбрать одну или несколько ролей",
-                    "Заполнить профиль компании",
-                  ]}
-                />
-                <Link className={styles.primaryButton} href="/auth/register">
-                  Зарегистрироваться <ArrowRight size={17} />
-                </Link>
+            <div className={styles.registrationContent}>
+              <div className={styles.registrationCards}>
+                {[
+                  ["Личный аккаунт", "ФИО, почта и телефон. Аккаунт ваш личный — к нему можно привязать несколько компаний."],
+                  ["Компания и роль", "Введите ИНН — реквизиты подтянутся из ЕГРЮЛ или ЕГРИП. Выберите роль: заказчик, исполнитель, организатор или площадка."],
+                  ["Подпись в ЭДО", "Подпишите заявление о присоединении квалифицированной электронной подписью у своего оператора ЭДО."],
+                  ["Модерация", "Администрация сервиса проверяет компанию. После одобрения открывается кабинет роли."],
+                ].map(([title, text], index) => (
+                  <article key={title}>
+                    <span>{index + 1}</span>
+                    <div className={styles.registrationCardCopy}>
+                      <h3>{title}</h3>
+                      <p>{text}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
-              <div className={styles.profileCard}>
-                <div className={styles.profileAvatar}>АМ</div>
-                <div>
-                  <span className={styles.status}>Профиль заполнен на 80%</span>
-                  <h3>Алексей Морозов</h3>
-                  <p>Продакшн и монтаж выставочных стендов</p>
+              <div className={styles.registrationSupport}>
+                <div className={styles.registrationHint}>
+                  <img
+                    src="/how-it-works/registration-info-exact.svg"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                  <p>
+                    По вопросам настройки связи с другим оператором ЭДО, пожалуйста, напишите в{" "}
+                    <button
+                      className={styles.inlineContactLink}
+                      onClick={() => openContactModal("registration")}
+                      type="button"
+                    >
+                      техподдержку сервиса
+                    </button>
+                    .
+                  </p>
                 </div>
-                <div className={styles.progress}>
-                  <span />
-                </div>
-                <ul>
-                  <li><Check size={16} /> Контакты подтверждены</li>
-                  <li><Check size={16} /> Реквизиты добавлены</li>
-                  <li><Clock3 size={16} /> Портфолио на проверке</li>
-                </ul>
+                <details className={styles.registrationDisclosure}>
+                  <summary>
+                    <span>Что доступно до одобрения компании</span>
+                    <span className={styles.approvalChevrons} aria-hidden="true">
+                      <img
+                        className={styles.approvalChevronDown}
+                        src="/how-it-works/approval-chevron-down-exact.svg"
+                        alt=""
+                        width={20}
+                        height={20}
+                      />
+                      <img
+                        className={styles.approvalChevronUp}
+                        src="/how-it-works/approval-chevron-up-exact.svg"
+                        alt=""
+                        width={20}
+                        height={20}
+                      />
+                    </span>
+                  </summary>
+                  <div className={styles.approvalTable}>
+                    <div className={styles.approvalTableHeader}>
+                      <span>Состояние компании</span>
+                      <span>Что доступно</span>
+                    </div>
+                    {approvalRows.map(([status, available]) => (
+                      <div className={styles.approvalTableRow} key={status}>
+                        <strong>{status}</strong>
+                        <span>{available}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+              <div className={styles.registrationInfo}>
+                <article>
+                  <h3>Несколько компаний в одном аккаунте</h3>
+                  <p>
+                    Добавьте компанию в настройках или в списке компаний в шапке. У каждой — своя
+                    роль, ЭДО, сделки и документы, а переключаться между кабинетами можно в шапке.
+                  </p>
+                </article>
+                <article>
+                  <h3>Сотрудники</h3>
+                  <p>
+                    Администратор компании приглашает сотрудников и выдаёт доступ к разделам.
+                    Полномочия сотрудника тоже подтверждаются через ЭДО.
+                  </p>
+                </article>
               </div>
             </div>
-            <details className={styles.disclosure}>
-              <summary>
-                <Info size={19} />
-                Что доступно до одобрения профиля
-                <ChevronDown size={19} />
-              </summary>
-              <p>
-                Вы можете изучать каталог, сохранять предложения и заполнять профиль.
-                Для публикации заказов и начала сделок потребуется подтверждение данных.
-              </p>
-            </details>
           </section>
 
           <section className={styles.section} id="roles">
             <SectionTitle
-              title="Выберите роль и начните работу"
-              description="У каждого участника свой сценарий, инструменты и цветовая маркировка. Роли можно совмещать."
+              eyebrow="Работа по ролям"
+              title="У каждой роли свой кабинет и свой порядок работы"
+              description="Роль выбирается при регистрации компании, у каждой компании одна роль. Если вы ведёте несколько компаний, переключайтесь между их кабинетами в меню."
             />
             <div className={styles.roleTabs} role="tablist" aria-label="Роли">
               {roles.map((role) => (
@@ -361,264 +1084,377 @@ export function HowItWorksFigmaPage() {
                   style={{ "--role-color": role.color } as CSSProperties}
                   type="button"
                 >
-                  <Image src={role.flat} alt="" width={28} height={28} />
-                  {role.label}
+                  <img
+                    alt=""
+                    className={styles.roleTabIcon}
+                    height={20}
+                    src={role.flat}
+                    width={20}
+                  />
+                  {role.title}
                 </button>
               ))}
             </div>
             <div
               className={styles.roleDetail}
-              style={{ "--role-color": currentRole.color } as CSSProperties}
+              style={{
+                "--role-color": currentRole.color,
+                "--role-number-color": currentRole.linkColor,
+                "--role-soft-color": currentRole.softColor,
+              } as CSSProperties}
             >
-              <div>
-                <span className={styles.rolePill}>{currentRole.label}</span>
-                <h3>{currentRole.description}</h3>
-                <p>
-                  Работайте в одном кабинете: профиль, сообщения, сделки, оплата и документы
-                  всегда находятся под рукой.
-                </p>
-                <NumberedList items={currentRole.steps} />
-                <Link className={styles.roleAction} href="/auth/register">
-                  Начать как {currentRole.label.toLowerCase()} <ArrowRight size={17} />
+              <header className={styles.roleDetailHeader}>
+                <img src={currentRole.cardImage} alt="" height={48} width={48} />
+                <div>
+                  <h3>{currentRole.title}</h3>
+                  <p>{currentRole.description}</p>
+                </div>
+              </header>
+
+              <div className={styles.roleDetailBody}>
+                <div className={styles.roleWorkflow}>
+                  <h4>Как проходит работа</h4>
+                  <ol>
+                    {currentRole.steps.map((step, index) => (
+                      <li key={step}>
+                        <span>{index + 1}</span>
+                        <p>{step}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <div className={styles.rolePartners}>
+                  <h4>С кем работаете</h4>
+                  <div>
+                    {currentRole.partners.map(([title, description]) => (
+                      <article key={title}>
+                        <h5>{title}</h5>
+                        <p>{description}</p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.roleCabinet}>
+                <h4>Разделы кабинета</h4>
+                <div>
+                  {currentRole.sections.map((item) => <span key={item}>{item}</span>)}
+                </div>
+              </div>
+
+              <div className={styles.roleButtons}>
+                <Link
+                  className={styles.rolePrimaryButton}
+                  href={inCabinet ? addCompanyHref(currentRole.id) : registerHref(currentRole.id)}
+                >
+                  {inCabinet ? "Добавить компанию" : `Зарегистрироваться как ${currentRole.label.toLowerCase()}`}
+                </Link>
+                <Link className={styles.roleSecondaryButton} href={currentRole.secondaryHref}>
+                  {currentRole.secondaryLabel}
+                  <img src="/how-it-works/role-detail-arrow-exact.svg" alt="" width={14} height={14} />
                 </Link>
               </div>
-              <Image src={currentRole.image} alt="" width={230} height={210} />
             </div>
           </section>
 
           <section className={styles.section} id="order">
             <SectionTitle
-              eyebrow="Для заказчика"
-              title="Разместите заказ и получите отклики"
-              description="Опишите задачу один раз — сервис покажет её подходящим специалистам."
+              eyebrow="Как разместить заказ"
+              title="Заказать можно двумя способами: описать задачу или выбрать готовую услугу"
             />
+            <div className={styles.orderMethods}>
+              <article>
+                <div className={styles.orderMethodTop}>
+                  <h3>Заказ через конструктор</h3>
+                  <p>
+                    Вы описываете задачу — исполнители присылают предложения. Для стенда
+                    конструктор открывает подробное техническое задание из девяти разделов,
+                    для остальных услуг хватит свободной формы.
+                  </p>
+                  <div className={styles.tagList}>
+                    {["Формат", "Категория", "Мероприятие", "Описание", "Сроки", "Бюджет", "Файлы", "Публикация"].map((tag, index) => (
+                      <span key={tag}>
+                        <b>{index + 1}</b>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button type="button">Разместить заказ</button>
+              </article>
+              <article>
+                <div className={styles.orderMethodTop}>
+                  <h3>Услуга из каталога</h3>
+                  <p>
+                    Готовое предложение исполнителя с ценой: фиксированной, «от», за м², день
+                    или смену. Добавьте услуги в корзину, привяжите к мероприятию или заказу
+                    и оформите сделку со счётом.
+                  </p>
+                </div>
+                <Link href="/services">
+                  Перейти в каталог услуг
+                  <img src="/how-it-works/order-catalog-arrow-exact.svg" alt="" width={14} height={14} />
+                </Link>
+              </article>
+            </div>
+            <h3 className={styles.subsectionTitle}>Три формата заказа</h3>
             <div className={styles.orderTypes}>
-              <article>
-                <Image src="/how-it-works/order-open.svg" alt="" width={54} height={54} />
-                <h3>Открытый заказ</h3>
-                <p>Виден всем подходящим исполнителям. Получайте и сравнивайте отклики.</p>
-                <span>Больше предложений</span>
-              </article>
-              <article>
-                <Image src="/how-it-works/order-closed.svg" alt="" width={54} height={54} />
-                <h3>Закрытый заказ</h3>
-                <p>Пригласите выбранные компании и обсудите проект конфиденциально.</p>
-                <span>Точный выбор</span>
-              </article>
-              <article>
-                <Image src="/how-it-works/order-urgent.svg" alt="" width={54} height={54} />
-                <h3>Срочный заказ</h3>
-                <p>Выделяется в каталоге и быстрее попадает к свободным исполнителям.</p>
-                <span>Быстрый старт</span>
-              </article>
+              {[
+                {
+                  image: "/how-it-works/order-open.svg",
+                  title: "Открытый запрос",
+                  fields: [
+                    ["Кто видит", "Все подходящие исполнители"],
+                    ["Сколько откликов", "Первые 10"],
+                    ["Когда выбирать", "Нужен широкий выбор и сравнение цен"],
+                  ],
+                },
+                {
+                  image: "/how-it-works/order-closed.svg",
+                  title: "Закрытый запрос",
+                  fields: [
+                    ["Кто видит", "Только приглашённые исполнители"],
+                    ["Сколько откликов", "До 5 исполнителей"],
+                    ["Когда выбирать", "У вас уже есть исполнители на примете"],
+                  ],
+                },
+                {
+                  image: "/how-it-works/order-urgent.svg",
+                  title: "Срочная сделка",
+                  fields: [
+                    ["Кто видит", "До 10 подходящих исполнителей"],
+                    ["Сколько откликов", "Первые 5"],
+                    ["Когда выбирать", "Работы нужны срочно: форма короче, подбор быстрее"],
+                  ],
+                },
+              ].map((format) => (
+                <article key={format.title}>
+                  <div className={styles.orderTypeHeader}>
+                    <img src={format.image} alt="" height={48} width={48} />
+                    <h3>{format.title}</h3>
+                  </div>
+                  {format.fields.map(([label, value]) => (
+                    <div className={styles.orderTypeField} key={label}>
+                      <span>{label}</span>
+                      <p>{value}</p>
+                    </div>
+                  ))}
+                </article>
+              ))}
             </div>
-            <div className={styles.formPreview}>
-              <div>
-                <span className={styles.mutedLabel}>Новый заказ</span>
-                <h3>Разработка и монтаж стенда 48 м²</h3>
-                <p>Москва · Экспоцентр · монтаж до 18 сентября</p>
-              </div>
-              <div className={styles.formPreviewFields}>
-                <span>Категория <b>Застройка стендов</b></span>
-                <span>Бюджет <b>от 900 000 ₽</b></span>
-                <span>Срок откликов <b>5 дней</b></span>
-              </div>
-              <button type="button">Опубликовать заказ</button>
-            </div>
+            <p className={styles.sectionFootnote}>
+              Формат виден на карточке заказа бейджем. Гость видит заказ без контактов заказчика — откликнуться можно после регистрации.
+            </p>
           </section>
 
           <section className={styles.section} id="responses">
             <SectionTitle
-              title="Сравнивайте отклики и заключайте сделку"
-              description="Цена — не единственный критерий. Смотрите рейтинг, опыт, портфолио и подтверждённые компетенции."
+              eyebrow="Отклики и сделка"
+              title="После выбора исполнителя заказ становится сделкой с этапами"
             />
-            <div className={styles.responseTable}>
-              <div className={styles.tableHeader}>
-                <span>Исполнитель</span><span>Стоимость</span><span>Срок</span><span>Рейтинг</span>
-              </div>
-              {[
-                ["Expo Build", "920 000 ₽", "21 день", "4.9"],
-                ["Forma Space", "875 000 ₽", "24 дня", "4.8"],
-                ["Stand Pro", "1 030 000 ₽", "18 дней", "5.0"],
-              ].map((row, index) => (
-                <div className={index === 0 ? styles.tableRowSelected : styles.tableRow} key={row[0]}>
-                  <span><b>{row[0]}</b><small>{18 + index * 7} завершённых проектов</small></span>
-                  <span>{row[1]}</span>
-                  <span>{row[2]}</span>
-                  <span><Star size={15} fill="currentColor" /> {row[3]}</span>
+            <div className={styles.dealOverview}>
+              <ul>
+                {[
+                  "Отклик — это цена, срок, условия, подход и срок действия предложения.",
+                  "Когда откликов два или больше, их можно сравнить в одной таблице.",
+                  "Выбор исполнителя создаёт сделку, остальные отклики отклоняются автоматически.",
+                  "Сделку делят на этапы — у каждого своя сумма, срок и счёт.",
+                  "Переписка привязана к заказу, сделке или брони — история не теряется.",
+                ].map((rule) => (
+                  <li key={rule}>
+                    <span>
+                      <img src="/how-it-works/deal-check-exact.svg" alt="" width={18} height={18} />
+                    </span>
+                    <p>{rule}</p>
+                  </li>
+                ))}
+              </ul>
+              <article className={styles.dealCard}>
+                <header>
+                  <span>Сделка СД-2026-014</span>
+                  <h3>Стенд 36 м² на выставке «Мебель-2026»</h3>
+                </header>
+                <div className={styles.dealTable}>
+                  <div className={styles.dealTableHead}>
+                    <span>Этап</span><span>Сумма</span><span>Статус</span>
+                  </div>
+                  {[
+                    ["1. Дизайн-проект", "85 000 ₽", "Принят", "done"],
+                    ["2. Производство", "250 000 ₽", "В работе", "work"],
+                    ["3. Монтаж", "185 000 ₽", "Ожидает оплаты", "waiting"],
+                  ].map(([stage, sum, status, tone]) => (
+                    <div className={styles.dealTableRow} key={stage}>
+                      <div className={styles.dealStageCopy}>
+                        <span>{stage}</span>
+                        <b>{sum}</b>
+                      </div>
+                      <span className={styles.dealStageStatus}>
+                        <SemanticStatus tone={tone as "done" | "waiting" | "work"}>
+                          {status}
+                        </SemanticStatus>
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className={styles.dealSteps}>
-              {[
-                [MessageSquareText, "Обсуждение", "Уточните детали в чате"],
-                [Handshake, "Согласование", "Зафиксируйте условия"],
-                [LockKeyhole, "Резерв оплаты", "Средства защищены"],
-                [CircleCheck, "Приёмка", "Подтвердите результат"],
-              ].map(([Icon, title, text], index) => (
-                <div key={String(title)}>
-                  <span><Icon size={21} /></span>
-                  <small>0{index + 1}</small>
-                  <h3>{String(title)}</h3>
-                  <p>{String(text)}</p>
-                </div>
-              ))}
-            </div>
-            <div className={styles.greenNotice}>
-              <FileCheck2 size={23} />
-              <div>
-                <strong>Все договорённости сохраняются</strong>
-                <p>Чат, файлы и этапы сделки остаются в карточке заказа и доступны обеим сторонам.</p>
-              </div>
+                <small>Пример. Этап начинается после оплаты своего счёта.</small>
+              </article>
             </div>
           </section>
 
           <section className={styles.section} id="payment">
             <SectionTitle
-              title="Безопасная оплата"
-              description="Заказчик оплачивает работу через платформу, а исполнитель получает деньги после приёмки."
+              eyebrow="Оплата"
+              title="Оплата одним счётом"
+              description="Платёж автоматически распределяется между всеми участниками сделки."
             />
             <div className={styles.paymentFlow}>
               <div>
-                <span className={styles.paymentIcon}><Banknote /></span>
-                <small>01</small>
+                <h3>Сервис выставляет счёт</h3>
+                <p>На этап или на всю сделку</p>
+              </div>
+              <span className={styles.paymentArrow}>
+                <img src="/how-it-works/payment-arrow-exact.svg" alt="" width={20} height={20} />
+              </span>
+              <div>
                 <h3>Заказчик оплачивает</h3>
-                <p>Картой или по счёту для юридического лица.</p>
+                <p>Одним платежом</p>
               </div>
-              <ArrowRight className={styles.paymentArrow} />
+              <span className={styles.paymentArrow}>
+                <img src="/how-it-works/payment-arrow-exact.svg" alt="" width={20} height={20} />
+              </span>
               <div className={styles.paymentProtected}>
-                <span className={styles.paymentIcon}><ShieldCheck /></span>
-                <small>02</small>
-                <h3>Средства резервируются</h3>
-                <p>Исполнитель видит подтверждение и начинает работу.</p>
+                <h3>Банк делит платёж</h3>
+                <p>Автоматически, в момент оплаты</p>
               </div>
-              <ArrowRight className={styles.paymentArrow} />
-              <div>
-                <span className={styles.paymentIcon}><CircleDollarSign /></span>
-                <small>03</small>
-                <h3>Исполнитель получает оплату</h3>
-                <p>Сразу после подтверждения результата заказчиком.</p>
+              <span className={styles.paymentArrow}>
+                <img src="/how-it-works/payment-arrow-exact.svg" alt="" width={20} height={20} />
+              </span>
+              <div className={styles.paymentReceivers}>
+                <span><b>Исполнителю</b><small>Сумма по этапу</small></span>
+                <span><b>Сервису</b><small>Комиссия</small></span>
               </div>
             </div>
-            <div className={styles.summaryCard}>
-              <div>
-                <span>Сумма сделки</span>
-                <strong>920 000 ₽</strong>
-              </div>
-              <div>
-                <span>Статус оплаты</span>
-                <b><ShieldCheck size={17} /> Средства защищены</b>
-              </div>
-              <div>
-                <span>Выплата исполнителю</span>
-                <strong>После приёмки</strong>
-              </div>
-            </div>
+            <ul className={styles.paymentFacts}>
+              <li><Check size={17} /> В счёте видна сумма исполнителю и комиссия сервиса.</li>
+              <li><Check size={17} /> Этап не начинается, пока его счёт не оплачен.</li>
+              <li><Check size={17} /> Ставка комиссии фиксируется в момент выставления счёта — её изменение на выставленный счёт не влияет.</li>
+              <li><Check size={17} /> Исполнитель видит начисления и статус выплаты в разделе «Выплаты».</li>
+            </ul>
           </section>
 
           <section className={styles.section} id="documents">
             <SectionTitle
-              title="Документы всегда под рукой"
-              description="Сервис помогает вести сделки прозрачно и хранит все файлы в одном месте."
+              eyebrow="Документы и ЭДО"
+              title="Договор, счёт, акт и УПД формируются автоматически"
+              description="Документы привязаны к сделке и хранятся не менее чем на 3 года. Подписываются в сервисе оператора."
             />
             <div className={styles.documentGrid}>
               {[
-                ["Счёт на оплату", "Формируется автоматически по реквизитам сделки"],
-                ["Акт выполненных работ", "Становится доступен после завершения заказа"],
-                ["Файлы и приложения", "Брифы, сметы и результаты хранятся в карточке"],
+                ["Договор", "Условия сделки и этапы"],
+                ["Счёт", "На этап или на всю сделку"],
+                ["Акт", "Приёмка выполненного этапа"],
+                ["УПД", "Универсальный передаточный документ"],
               ].map(([title, text]) => (
                 <article key={title}>
-                  <Image src="/how-it-works/file.svg" alt="" width={44} height={44} />
+                  <span>
+                    <img src="/how-it-works/documents-file-exact.svg" alt="" width={20} height={20} />
+                  </span>
                   <h3>{title}</h3>
                   <p>{text}</p>
-                  <a href="#contact">Подробнее <ArrowRight size={15} /></a>
                 </article>
               ))}
             </div>
+            <div className={styles.documentStatuses}>
+              <span>Статусы документа:</span>
+              <SemanticStatus tone="work">Черновик</SemanticStatus>
+              <img src="/how-it-works/documents-arrow-exact.svg" alt="" width={14} height={14} />
+              <SemanticStatus tone="work">Отправлен</SemanticStatus>
+              <img src="/how-it-works/documents-arrow-exact.svg" alt="" width={14} height={14} />
+              <SemanticStatus tone="waiting">На подписи</SemanticStatus>
+              <img src="/how-it-works/documents-arrow-exact.svg" alt="" width={14} height={14} />
+              <SemanticStatus tone="done">Подписан</SemanticStatus>
+              <span>или</span>
+              <SemanticStatus tone="problem">Отклонён</SemanticStatus>
+            </div>
             <div className={styles.infoBanner}>
-              <Info size={21} />
-              <p><strong>Для юридических лиц</strong> — укажите реквизиты один раз, и они будут подставляться в документы автоматически.</p>
+              <img src="/how-it-works/documents-info-exact.svg" alt="" width={20} height={20} />
+              <p>Чтобы подключить ЭДО, откройте в кабинете компании раздел «ЭДО», укажите идентификатор участника и нажмите «Проверить и подключить».</p>
             </div>
           </section>
 
           <section className={styles.section} id="trust">
             <SectionTitle
-              title="Проверка, рейтинг и доверие"
-              description="Мы помогаем принимать решение на основе реального опыта и подтверждённых данных."
+              eyebrow="Проверка и рейтинг"
+              title="Исполнителя можно проверить до сделки, а рейтинг складывается из отзывов по сделкам"
             />
             <div className={styles.trustGrid}>
-              <div className={styles.ratingCard}>
-                <span>Рейтинг исполнителя</span>
-                <strong>4.9</strong>
-                <div>{Array.from({ length: 5 }, (_, index) => <Star key={index} size={21} fill="currentColor" />)}</div>
-                <p>На основе 38 завершённых сделок</p>
+              <div className={styles.trustInfoCard}>
+                <h3>Проверка контрагента</h3>
+                <p>Отчёт о компании: реквизиты, признаки риска, арбитражные дела. Проверку можно заказать из карточки исполнителя или отклика, расширенная проверка — платная.</p>
               </div>
-              <div className={styles.reviewCard}>
-                <div><b>Точно соблюли сроки</b><span>5.0 <Star size={14} fill="currentColor" /></span></div>
-                <p>Команда быстро включилась, предложила понятную смету и отлично справилась с монтажом.</p>
-                <small>Отзыв подтверждён сделкой</small>
+              <div className={styles.trustInfoCard}>
+                <h3>Отзывы и рейтинг</h3>
+                <p>Отзыв можно оставить только после завершения сделки. Рейтинг и число отзывов видны в каталоге и в откликах.</p>
+                <b className={styles.ratingChip}>
+                  <img src="/how-it-works/trust-star-exact.svg" alt="" width={16} height={16} />
+                  4,8 · 42 отзыва
+                </b>
               </div>
             </div>
-            <div className={styles.badges}>
-              {[
-                ["/how-it-works/mark-verified.svg", "Компания проверена", "Реквизиты подтверждены"],
-                ["/how-it-works/mark-production.svg", "Своё производство", "Данные проверены"],
-                ["/how-it-works/mark-xy.svg", "Проверено платформой", "Ручная модерация"],
-                ["/how-it-works/mark-registry.svg", "В реестре поставщиков", "Статус подтверждён"],
-                ["/how-it-works/mark-urgent.svg", "Быстро отвечает", "Среднее время до 1 часа"],
-              ].map(([image, title, text]) => (
-                <div key={title}>
-                  <Image src={image} alt="" width={38} height={38} />
-                  <span><b>{title}</b><small>{text}</small></span>
-                </div>
-              ))}
+            <div className={styles.trustBadgesCard}>
+              <h3>Отметки в каталоге</h3>
+              <p>По отметкам можно отфильтровать исполнителей в каталоге.</p>
+              <div className={styles.badges}>
+                {[
+                  ["/how-it-works/trust-verified-exact.svg", "Проверенный"],
+                  ["/how-it-works/trust-production-exact.svg", "Своё производство"],
+                  ["/how-it-works/trust-xy-exact.svg", "Проверен XY"],
+                  ["/how-it-works/trust-registry-exact.svg", "Проверен по открытым реестрам"],
+                  ["/how-it-works/trust-urgent-exact.svg", "Срочный заказ"],
+                ].map(([image, title]) => (
+                  <div key={title}>
+                    <img src={image} alt="" height={28} width={28} />
+                    <span>{title}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
           <section className={styles.section} id="disputes">
             <SectionTitle
-              title="Если что-то пошло не так"
-              description="Менеджер подключится к ситуации, изучит материалы сделки и поможет найти решение."
+              eyebrow="Если что-то пошло не так"
+              title="Замечания, спор и возврат идут по правилам сделки"
             />
-            <div className={styles.disputeGrid}>
-              <div>
-                <h3>Когда можно открыть спор</h3>
-                <ul>
-                  <li><Check size={16} /> Работа не соответствует согласованному заданию</li>
-                  <li><Check size={16} /> Нарушены сроки выполнения</li>
-                  <li><Check size={16} /> Исполнитель перестал выходить на связь</li>
-                  <li><Check size={16} /> Стороны не могут согласовать результат</li>
-                </ul>
-              </div>
-              <div className={styles.managerCard}>
-                <div className={styles.managerAvatar}>XY</div>
-                <span><b>Персональный менеджер</b><small>Подключится к спору до выплаты</small></span>
-                <a href="#contact">Получить помощь</a>
-              </div>
-            </div>
-            <div className={styles.refundLine}>
-              {["Обращение", "Проверка материалов", "Решение", "Выплата или возврат"].map((item, index) => (
-                <div key={item}><span>{index + 1}</span><p>{item}</p></div>
+            <div className={styles.issueSteps}>
+              {[
+                ["Замечания к этапу", "Заказчик возвращает этап в работу с комментарием. Исполнитель исправляет и снова передаёт результат."],
+                ["Спор", "Если договориться не получилось, откройте спор в сделке. Его рассматривает администрация сервиса и фиксирует решение: выплата исполнителю, возврат заказчику или другой исход."],
+                ["Возврат денег", "Если банк уже распределил платёж, возврат проводится отдельной банковской операцией."],
+              ].map(([title, text], index) => (
+                <article key={title}>
+                  <span>{index + 1}</span>
+                  <div><h3>{title}</h3><p>{text}</p></div>
+                </article>
               ))}
+            </div>
+            <div className={styles.issueHelp}>
+              <p>Сомневаетесь, нужен ли спор? Напишите менеджеру — подскажем, что делать.</p>
+              <button type="button" onClick={() => openContactModal("dispute")}>
+                Написать менеджеру
+              </button>
             </div>
           </section>
 
           <section className={styles.section} id="faq">
             <SectionTitle
+              eyebrow="Частые вопросы"
               title="Вопросы и ответы"
-              description="Коротко о регистрации, заказах, сделках, оплате и документах."
             />
             <div className={styles.faqFilters}>
-              {[
-                ["all", "Все"],
-                ["start", "Начало работы"],
-                ["orders", "Заказы"],
-                ["deal", "Сделка"],
-                ["payment", "Оплата"],
-                ["documents", "Документы"],
-                ["trust", "Проверка"],
-                ["disputes", "Споры"],
-              ].map(([id, label]) => (
+              {[["all", "Все"] as const, ...faqCategories].map(([id, label]) => (
                 <button
                   className={faqFilter === id ? styles.faqFilterActive : styles.faqFilter}
                   key={id}
@@ -629,51 +1465,76 @@ export function HowItWorksFigmaPage() {
                 </button>
               ))}
             </div>
-            <div className={styles.faqList}>
-              {filteredFaq.map(([, question, answer], index) => (
-                <details className={styles.faqItem} key={question} open={faqFilter === "all" && index === 0}>
-                  <summary>{question}<ChevronDown size={20} /></summary>
-                  <p>{answer}</p>
-                </details>
-              ))}
+            <div className={styles.faqGroups}>
+              {faqCategories
+                .filter(([category]) => faqFilter === "all" || faqFilter === category)
+                .map(([category, label], categoryIndex) => (
+                  <div className={styles.faqGroup} key={category}>
+                    <h3>{label}</h3>
+                    <div className={styles.faqList}>
+                      {filteredFaq
+                        .filter(([itemCategory]) => itemCategory === category)
+                        .map(([, question, answer], itemIndex) => (
+                          <FaqItem
+                            answer={answer}
+                            initialOpen={categoryIndex === 0 && itemIndex === 0}
+                            key={`${faqFilter}-${question}`}
+                            question={question}
+                          />
+                        ))}
+                    </div>
+                  </div>
+                ))}
             </div>
           </section>
 
-          <section className={`${styles.section} ${styles.contactSection}`} id="contact">
+          <section className={styles.section} id="contact">
+            <SectionTitle
+              eyebrow="Связаться с менеджером"
+              title="Не нашли ответ — напишите менеджеру"
+            />
+            <div className={styles.contactSection}>
             <div>
-              <SectionTitle
-                title="Не нашли ответ? Спросите менеджера"
-                description="Расскажите о задаче — поможем разобраться в сервисе и выбрать подходящий сценарий."
-              />
-              <div className={styles.contactNotes}>
-                <span><Clock3 size={18} /> Ответим в течение рабочего дня</span>
-                <span><ShieldCheck size={18} /> Данные не передаются третьим лицам</span>
+              <p className={styles.contactLead}>
+                Поможем с регистрацией и подключением ЭДО, ответим на вопросы о заказах,
+                оплате и документах.
+              </p>
+              <div className={styles.contactHint}>
+                <img src="/how-it-works/contact-info.svg" alt="" width={20} height={20} />
+                <p>Спор по конкретной сделке лучше открыть в самой сделке — менеджер сразу увидит переписку, этапы и счета.</p>
               </div>
             </div>
-            <form className={styles.contactForm} onSubmit={handleContact}>
-              <label>Имя<input name="name" placeholder="Как к вам обращаться" required /></label>
-              <label>Email<input name="email" placeholder="name@company.ru" required type="email" /></label>
-              <label>Кто вы
-                <select name="role" defaultValue="customer">
-                  <option value="customer">Заказчик</option>
-                  <option value="contractor">Исполнитель</option>
-                  <option value="organizer">Организатор</option>
-                  <option value="venue">Представитель площадки</option>
-                </select>
-              </label>
-              <label>Ваш вопрос<textarea name="message" placeholder="Опишите задачу или вопрос" required /></label>
-              <label className={styles.consent}><input type="checkbox" required /> Я согласен с политикой обработки данных</label>
-              <button type="submit">Отправить <Send size={17} /></button>
-            </form>
+            <ManagerContactForm />
+            </div>
           </section>
         </main>
       </div>
 
+      <Modal
+        accent="teal"
+        open={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        title="Написать менеджеру"
+        variant="contact"
+      >
+        <ManagerContactForm
+          key={contactModalNonce}
+          initialTopic={contactModalTopic}
+          modal
+        />
+      </Modal>
+
       <section className={styles.bottomCta}>
         <div>
-          <h2>Начните работать в выставочной индустрии</h2>
-          <p>Создайте профиль, найдите партнёров и проведите первую безопасную сделку.</p>
-          <Link href="/auth/register">Зарегистрироваться <ArrowRight size={18} /></Link>
+          <h2>Начните с регистрации компании</h2>
+          <p>Понадобятся ИНН и подключённый ЭДО. Заявление подпишет руководитель или сотрудник с доверенностью.</p>
+          <div className={styles.bottomCtaActions}>
+            <Link href="/auth/register">Зарегистрироваться</Link>
+            <Link href="/orders/new">
+              Разместить заказ
+              <img src="/how-it-works/bottom-cta-arrow-exact.svg" alt="" width={14} height={14} />
+            </Link>
+          </div>
         </div>
       </section>
     </div>

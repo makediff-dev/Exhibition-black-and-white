@@ -130,22 +130,27 @@ export const HOME_HOW_IT_WORKS_STEPS = [
   {
     title: "Регистрация компании",
     text: "ИНН, подтверждение через ЭДО, модерация.",
+    icon: "/home/how-it-works/step-01.svg",
   },
   {
     title: "Поиск или заказ",
     text: "Услуга из каталога, заказ исполнителям или запрос брони площадки.",
+    icon: "/home/how-it-works/step-02.svg",
   },
   {
     title: "Отклики и выбор",
     text: "Предложения исполнителей или ответ площадки на бронь.",
+    icon: "/home/how-it-works/step-03.svg",
   },
   {
     title: "Оплата одним счётом",
     text: "Через T-Bank, банк сам распределяет платёж.",
+    icon: "/home/how-it-works/step-04.svg",
   },
   {
     title: "Приёмка и документы",
     text: "Этапы работ, акты и УПД сами уходят в ЭДО.",
+    icon: "/home/how-it-works/step-05.svg",
   },
 ] as const;
 

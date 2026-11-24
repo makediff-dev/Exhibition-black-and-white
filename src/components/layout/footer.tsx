@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import styles from "./footer.module.css";
 
 const SECTION_LINKS = [
@@ -21,9 +22,8 @@ export function Footer() {
       <div className={styles.inner}>
         <div className={styles.columns}>
           <div className={styles.brand}>
-            <Link href="/" className={styles.logo}>
-              <span className={styles.logoMark}>Э</span>
-              <span className={styles.logoText}>ЭКСПО</span>
+            <Link href="/" className={styles.logo} aria-label="XY">
+              <BrandLogo className={styles.logoImage} size={48} />
             </Link>
             <p className={styles.description}>
               Маркетплейс выставочной индустрии — мероприятия, исполнители, услуги и площадки на одной

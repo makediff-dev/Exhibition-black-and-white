@@ -5,6 +5,13 @@
   z-index: 40;
   border-bottom: 1px solid #dddddd;
   background: #fcfcfc;
+  transition: transform 0.22s ease;
+}
+
+@media (max-width: 1180px) {
+  :global(html.how-it-works-header-hidden) .header {
+    transform: translateY(-100%);
+  }
 }
 
 .inner {
@@ -26,26 +33,15 @@
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
   text-decoration: none;
   color: inherit;
   flex-shrink: 0;
 }
 
-.logoMark {
-  width: 33px;
-  height: 33px;
-  border: 1px solid #171717;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.logoText {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.logoImage {
+  display: block;
+  width: 44px;
+  height: 44px;
 }
 
 .nav {
@@ -450,5 +446,10 @@
 @media (max-width: 768px) {
   .inner {
     padding-inline: 16px;
+  }
+
+  .logoImage {
+    width: 40px;
+    height: 40px;
   }
 }

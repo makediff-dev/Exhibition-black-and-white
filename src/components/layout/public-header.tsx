@@ -9,6 +9,7 @@ import { Drawer } from "@/components/ui/drawer";
 import { AccountSwitcher } from "@/components/layout/account-switcher";
 import { CityLocationButton } from "@/components/layout/city-location-button";
 import { CompanyPickerSheet } from "@/components/layout/company-picker-sheet";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { HeaderSearch } from "@/components/layout/header-search";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { cn } from "@/lib/utils/cn";
@@ -48,9 +49,8 @@ export function PublicHeader() {
       </a>
       <div className={styles.inner}>
         <div className={styles.row}>
-          <Link href="/" className={styles.logo}>
-            <span className={styles.logoMark}>Э</span>
-            <span className={styles.logoText}>ЭКСПО</span>
+          <Link href="/" className={styles.logo} aria-label="XY">
+            <BrandLogo className={styles.logoImage} priority size={44} />
           </Link>
 
           <nav className={styles.nav}>

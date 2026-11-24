@@ -16,6 +16,8 @@ export const HOME_SEEK_TABS = [
     href: "/services",
     placeholder: "Поиск услуг...",
     tone: "service" as const,
+    icon: "/home/seek/service.svg",
+    mobileIcon: "/home/seek/mobile-service.svg",
   },
   {
     id: "contractor" as const,
@@ -24,6 +26,8 @@ export const HOME_SEEK_TABS = [
     href: "/contractors",
     placeholder: "Поиск исполнителей...",
     tone: "contractor" as const,
+    icon: "/home/seek/contractor.svg",
+    mobileIcon: "/home/seek/mobile-contractor.svg",
   },
   {
     id: "event" as const,
@@ -32,6 +36,8 @@ export const HOME_SEEK_TABS = [
     href: "/events",
     placeholder: "Поиск мероприятий...",
     tone: "event" as const,
+    icon: "/home/seek/event.svg",
+    mobileIcon: "/home/seek/mobile-event.svg",
   },
   {
     id: "venue" as const,
@@ -40,6 +46,8 @@ export const HOME_SEEK_TABS = [
     href: "/venues",
     placeholder: "Поиск площадок...",
     tone: "venue" as const,
+    icon: "/home/seek/venue.svg",
+    mobileIcon: "/home/seek/mobile-venue.svg",
   },
   {
     id: "order" as const,
@@ -48,7 +56,8 @@ export const HOME_SEEK_TABS = [
     href: "/requests",
     placeholder: "Поиск заказов...",
     tone: "order" as const,
-    showPlus: true,
+    icon: "/home/seek/order.svg",
+    mobileIcon: "/home/seek/mobile-order.svg",
   },
 ];
 
@@ -149,10 +158,15 @@ export function HomeSeekSection({
                   className={`${styles.seekCard} ${SEEK_TONE_CLASS[tab.tone]} ${muted ? styles.seekCardMuted : ""}`}
                   onClick={() => onSelectTab(tab.id)}
                 >
-                  <p className={styles.seekCardTitle}>
-                    {tab.showPlus ? <span className={styles.seekCardPlus} aria-hidden="true" /> : null}
-                    {tab.title}
-                  </p>
+                  <span className={styles.seekCardHead}>
+                    <span className={styles.seekCardIcon}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={tab.icon} alt="" className={styles.seekCardIconDesktop} width={32} height={32} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={tab.mobileIcon} alt="" className={styles.seekCardIconMobile} width={20} height={20} />
+                    </span>
+                    <span className={styles.seekCardTitle}>{tab.title}</span>
+                  </span>
                   <p className={styles.seekCardText}>{tab.text}</p>
                 </button>
               );
@@ -161,7 +175,8 @@ export function HomeSeekSection({
           <div ref={searchRef} className={styles.seekSearchWrap}>
             <form className={styles.seekSearch} onSubmit={handleSubmit}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/home/hero-search-icon.svg" alt="" className={styles.seekSearchIcon} aria-hidden="true" />
+              <img src="/home/seek/search.svg" alt="" className={`${styles.seekSearchIcon} ${styles.seekSearchIconDesktop}`} aria-hidden="true" />
+              <img src="/home/seek/mobile-search.svg" alt="" className={`${styles.seekSearchIcon} ${styles.seekSearchIconMobile}`} aria-hidden="true" />
               <input
                 name="q"
                 type="search"

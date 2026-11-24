@@ -1387,8 +1387,8 @@
   color: #171717;
   font-size: 28px;
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 31px;
+  letter-spacing: -0.56px;
   text-align: left;
 }
 
@@ -1401,36 +1401,53 @@
   display: grid;
   width: 100%;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  gap: 24px;
 }
 
 .howStepCard {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 188px;
-  padding: 22px;
+  min-height: 196px;
+  padding: 24px;
+  border: 0;
   border-radius: 14px;
   background: #fff;
-  box-shadow: var(--surface-shadow, 0 0 4px rgba(16, 24, 40, 0.06));
+  box-shadow: 0 0 2px rgba(16, 24, 40, 0.06);
+}
+
+.howStepMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
 }
 
 .howStepNumber {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: #e3f7ee;
-  color: var(--color-green);
-  font-size: 14px;
-  font-weight: 600;
+  color: #1f8f5f;
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.howStepDivider {
+  width: 1px;
+  height: 28px;
+  flex: 0 0 auto;
+  background: #e2e4e9;
+}
+
+.howStepIcon {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
 }
 
 .howStepCardTitle {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
   color: #171717;
 }
@@ -1438,7 +1455,8 @@
 .howStepCardText {
   margin: 0;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 20px;
+  font-weight: 400;
   color: #525252;
 }
 
@@ -1447,18 +1465,23 @@
   align-items: center;
   justify-content: center;
   align-self: center;
-  gap: 6px;
-  min-width: 220px;
+  gap: 8px;
   height: 40px;
-  margin-top: 8px;
+  margin-top: 0;
   padding: 0 20px;
-  border: 1px solid #dddddd;
+  border: 1px solid #ddd;
   border-radius: 10px;
   background: #fff;
   color: #171717;
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
+}
+
+.howMoreLink img {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 .howMoreLink:hover {
@@ -1911,6 +1934,7 @@
 
   .howStepsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
 
   .howCardImage {
@@ -2192,16 +2216,30 @@
     display: block;
   }
 
+  .howItWorksSection {
+    padding-block: 64px 0;
+  }
+
+  .howItWorks {
+    gap: 16px;
+  }
+
   .howItWorksTitle {
-    font-size: 28px;
-    line-height: 34px;
+    font-size: 24px;
+    line-height: 30px;
+    letter-spacing: -0.56px;
   }
 
   .howCardsGrid,
   .howStepsGrid {
     grid-template-columns: 1fr;
-    gap: 16px;
-    padding-top: 16px;
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .howStepCard {
+    min-height: 0;
+    padding: 20px;
   }
 
   .howCard {
@@ -2732,11 +2770,12 @@
 }
 
 .seekTitle {
-  margin: 0 0 20px;
+  margin: 0 0 24px;
+  color: #171717;
   font-size: 28px;
-  line-height: 1.1;
+  line-height: 31px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.56px;
 }
 
 .seekGrid {
@@ -2751,7 +2790,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  min-height: 148px;
+  min-height: 0;
   padding: 16px;
   border: 0;
   border-radius: 14px;
@@ -2769,23 +2808,42 @@
   opacity: 0.45;
 }
 
-.seekCardTitle {
-  display: inline-flex;
+.seekCardHead {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
+  width: 100%;
+}
+
+.seekCardIcon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.seekCardIcon .seekCardIconDesktop {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.seekCardIcon .seekCardIconMobile,
+.seekSearchIconMobile {
+  display: none;
+}
+
+.seekCardTitle {
   margin: 0;
+  color: #fff;
   font-size: 16px;
   line-height: 20px;
   font-weight: 600;
-}
-
-.seekCardPlus {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  background: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M7.25 2h1.5v12h-1.5V2ZM2 7.25h12v1.5H2v-1.5Z' fill='black'/%3E%3C/svg%3E")
-    center / contain no-repeat;
 }
 
 .seekCardText {
@@ -2798,19 +2856,19 @@
 
 .seekCardService,
 .seekCardContractor {
-  background: linear-gradient(158deg, #0aaee4 0%, #0893c2 100%);
+  background: linear-gradient(153deg, #0aaee4 0%, #0893c2 100%);
 }
 
 .seekCardEvent {
-  background: linear-gradient(158deg, #2939eb 0%, #2230c7 100%);
+  background: linear-gradient(153deg, #2939eb 0%, #2230c7 100%);
 }
 
 .seekCardVenue {
-  background: linear-gradient(158deg, #683bd9 0%, #5730c0 100%);
+  background: linear-gradient(153deg, #683bd9 0%, #5730c0 100%);
 }
 
 .seekCardOrder {
-  background: linear-gradient(158deg, #28b5b3 0%, #6ad7a8 100%);
+  background: linear-gradient(153deg, #28b5b3 0%, #6ad7a8 100%);
 }
 
 .homeCatalog {
@@ -2824,9 +2882,9 @@
 .seekSearch {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 54px;
-  padding: 8px 8px 8px 18px;
+  gap: 10px;
+  height: 56px;
+  padding: 6px 6px 6px 18px;
   border-radius: 14px;
   background: #f5f5f5;
 }
@@ -2848,16 +2906,16 @@
 }
 
 .seekSearchInput::placeholder {
-  color: #64748b;
+  color: #737373;
 }
 
 .seekSearchButton {
   flex-shrink: 0;
-  height: 38px;
+  height: 44px;
   padding: 0 18px;
-  border: 0;
+  border: 1px solid #37bd85;
   border-radius: 10px;
-  background: var(--color-green);
+  background: #37bd85;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -2875,35 +2933,87 @@
 }
 
 @media (max-width: 768px) {
+  .seekSection {
+    padding-top: 56px;
+    margin-bottom: 56px;
+  }
+
   .seekGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    margin-bottom: 16px;
   }
 
   .seekCard {
-    min-height: 52px;
-    height: 52px;
-    padding: 16px;
+    min-height: 0;
+    height: auto;
+    padding: 16px 12px;
     justify-content: center;
+  }
+
+  .seekCardService,
+  .seekCardContractor {
+    background-image: linear-gradient(160deg, #0aaee4 0%, #0893c2 100%);
+  }
+
+  .seekCardEvent {
+    background-image: linear-gradient(160deg, #2939eb 0%, #2230c7 100%);
+  }
+
+  .seekCardVenue {
+    background-image: linear-gradient(160deg, #683bd9 0%, #5730c0 100%);
+  }
+
+  .seekCardOrder {
+    grid-column: 1 / -1;
+    background-image: linear-gradient(170deg, #28b5b3 0%, #6ad7a8 100%);
+  }
+
+  .seekCardHead {
+    gap: 8px;
+  }
+
+  .seekCardIcon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .seekCardIcon .seekCardIconDesktop,
+  .seekSearchIconDesktop {
+    display: none;
+  }
+
+  .seekCardIcon .seekCardIconMobile {
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
+
+  .seekSearchIconMobile {
+    display: block;
   }
 
   .seekCardText {
     display: none;
   }
 
-  .seekCardOrder {
-    grid-column: 1 / -1;
-  }
-
   .seekTitle {
     font-size: 24px;
     line-height: 30px;
+    letter-spacing: -0.56px;
     margin-bottom: 16px;
   }
 
   .seekSearch {
     height: 56px;
     padding: 6px 6px 6px 14px;
+    gap: 10px;
+  }
+
+  .seekSearch .seekSearchInput {
+    font-size: 15px;
+    text-overflow: ellipsis;
   }
 
   .promoSlide {

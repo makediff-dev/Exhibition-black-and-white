@@ -16,6 +16,10 @@
   background-color: rgba(0, 0, 0, 0.45);
 }
 
+.backdropContact {
+  background-color: rgba(16, 24, 40, 0.4);
+}
+
 .panelHost {
   position: relative;
   z-index: 1;
@@ -30,6 +34,10 @@
   width: min(42rem, 100%);
 }
 
+.panelContact {
+  width: min(576px, 100%);
+}
+
 .panel {
   display: flex;
   flex-direction: column;
@@ -42,12 +50,21 @@
   box-shadow: 0 0 40px rgb(0 0 0 / 0.18);
 }
 
+.panelSurfaceContact {
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(16, 24, 40, 0.16);
+}
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 1.5rem 1.5rem 0;
+}
+
+.headerContact {
+  padding: 20px 20px 0 32px;
 }
 
 .title {
@@ -58,11 +75,24 @@
   color: #111827;
 }
 
+.titleContact {
+  color: #171717;
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+}
+
 .body {
   max-height: min(70dvh, calc(100dvh - 10rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 1.25rem 1.5rem 1.25rem;
+}
+
+.bodyContact {
+  max-height: min(80dvh, calc(100dvh - 7rem));
+  padding: 20px 32px 32px;
+  text-align: left;
 }
 
 .body :global(label) {
@@ -121,12 +151,99 @@
   cursor: pointer;
 }
 
+.closeButtonContact {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+}
+
 .closeButton:hover {
   background-color: #f3f4f6;
   border-radius: 999px;
 }
 
+.closeButtonContact:hover {
+  border-radius: 20px;
+  background-color: #f5f5f5;
+}
+
 .closeIcon {
   width: 1.125rem;
   height: 1.125rem;
+}
+
+.closeIconContact {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes contactSheetIn {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes contactSheetOut {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (max-width: 1180px) {
+  .overlayContact {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+  }
+
+  .backdropContact {
+    background-color: transparent;
+  }
+
+  .panelContact {
+    width: 100%;
+    height: 100%;
+  }
+
+  .panelSurfaceContact {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+    animation: contactSheetIn 0.28s ease;
+  }
+
+  .overlayContactClosing .panelSurfaceContact {
+    animation: contactSheetOut 0.26s ease forwards;
+  }
+
+  .headerContact {
+    min-height: 56px;
+    padding: 8px 8px 8px 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .titleContact {
+    color: #101828;
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 600;
+  }
+
+  .bodyContact {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    max-height: none;
+    min-height: 0;
+    padding: 20px 16px 32px;
+    overflow-y: auto;
+  }
 }
