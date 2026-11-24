@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/layout/footer";
 import { PublicHeader } from "@/components/layout/public-header";
-import { HowItWorksPage } from "@/components/how-it-works/how-it-works-page";
+import { HowItWorksFigmaPage } from "@/components/how-it-works/how-it-works-figma-page";
 
 export const metadata: Metadata = {
   title: "Как работает сервис",
@@ -14,7 +14,7 @@ export default function HowItWorksRoute() {
     <div className="flex min-h-screen flex-col">
       <PublicHeader />
       <main>
-        <HowItWorksPage />
+        <HowItWorksFigmaPage />
       </main>
       <Footer />
     </div>
